@@ -18943,7 +18943,7 @@ static const unsigned char temp_binary_data_88[] =
 "\r\n"
 "  <luaMethod name=\"luaPanelGlobalChanged\">\r\n"
 "    --\r\n"
-"    -- Called when a global variable has changed its value\r\n"
+"    -- Called when a global variable has changed it's value\r\n"
 "    --\r\n"
 "\r\n"
 "    __method_name = function(--[[ number --]] index, --[[ number --]] value)\r\n"

@@ -236,7 +236,7 @@ void CtrlrModulatorProcessor::setValueGeneric(const CtrlrModulatorValue inValue,
 			send the MIDI out and notify the host about the parameter change */
 		const ScopedWriteLock sl(processorLock);
 
-		/* it's the same value, but its forced, send out MIDI and triggerAsyncUpdate
+		/* it's the same value, but it's forced, send out MIDI and triggerAsyncUpdate
 			don't inform the host, it already knows about it
 
 			if mute is true, no midi goes out */
