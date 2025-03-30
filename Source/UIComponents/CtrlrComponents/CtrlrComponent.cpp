@@ -609,7 +609,7 @@ void CtrlrComponent::setGroupped (const bool addToGroup)
 
     if (addToGroup)
     {
-        /* we need to find the group component based on it's name */
+        /* we need to find the group component based on its name */
         groupComponent = dynamic_cast <CtrlrGrouppingComponent*> (owner.getOwnerPanel().getComponent (getProperty(Ids::componentGroupName)));
 
         if (groupComponent == nullptr)

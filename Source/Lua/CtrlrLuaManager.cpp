@@ -290,8 +290,7 @@ bool CtrlrLuaManager::runCode (const String &code, const String name)
 			lua_pop(luaState, 1);
 			return (false);
 		}
-
-		return (true);
+				return (true);
 	}
 	else
 	{
