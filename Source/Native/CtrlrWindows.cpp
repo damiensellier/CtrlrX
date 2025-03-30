@@ -109,14 +109,14 @@ const Result CtrlrWindows::exportWithDefaultPanel(CtrlrPanel*  panelToWrite, con
 		return (Result::fail("Windows Native: exportWithDefaultPanel got nullptr for panel"));
 	}
 
-	FileChooser fc(CTRLR_NEW_INSTANCE_DIALOG_TITLE,
+	FileChooser localfc(CTRLR_NEW_INSTANCE_DIALOG_TITLE,
 		me.getParentDirectory().getChildFile(File::createLegalFileName(panelToWrite->getProperty(Ids::name))).withFileExtension(me.getFileExtension()),
 		"*" + me.getFileExtension(),
 		panelToWrite->getOwner().getProperty(Ids::ctrlrNativeFileDialogs));
 
-	if (fc.browseForFileToSave(true))
+	if (localfc.browseForFileToSave(true))
 	{
-		newMe = fc.getResult();
+		newMe = localfc.getResult();
 		logger.log("File selected: " + newMe.getFullPathName());
 
 		if (!newMe.hasFileExtension(me.getFileExtension()))
@@ -330,7 +330,7 @@ const Result CtrlrWindows::exportWithDefaultPanel(CtrlrPanel*  panelToWrite, con
 		return (Result::fail("Windows Native: Executable file does not exist"));
 	} // End if file does not exist
 	
-	// return (Result::ok()); // Removed v5.6.32
+	return (Result::ok()); // Removed v5.6.32 - I put it back in JG 5.6.32 - is that okay! otherwise: //CtrlrWindows.cpp(335) : warning C4715 : 'CtrlrWindows::exportWithDefaultPanel' : not all control paths return a value
 
 } // end result() overall function
 
@@ -430,7 +430,7 @@ void CtrlrWindows::replaceAllOccurrences(MemoryBlock& targetData, const MemoryBl
 	}
 
 	const uint8* rawData = static_cast<const uint8*>(targetData.getData());
-	size_t dataSize = targetData.getSize();
+	size_t dataSize = targetData.getSize(); 
 	size_t searchSize = searchData.getSize();
 
 	for (size_t i = 0; i <= dataSize - searchSize; ++i)

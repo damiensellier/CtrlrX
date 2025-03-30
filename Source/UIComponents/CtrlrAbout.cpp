@@ -106,8 +106,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     descriptionLabel->setColour (TextEditor::outlineColourId, Colour(getLookAndFeel().findColour (TextEditor::outlineColourId).withAlpha(0.0f)));
     descriptionLabel->setColour (TextEditor::shadowColourId, Colour(getLookAndFeel().findColour (TextEditor::shadowColourId).withAlpha(0.0f)));
     descriptionLabel->setText ("With CtrlrX, control any MIDI enabled hardware: synthesizers, drum machines, effects, samplers.\n"
-                               "You can create your custom user interfaces for your favorite MIDI instruments.\n"
-                               "And host them as VST or AU plugins in your favorite DAWs or as standalone softwares.");
+                               "Create custom user interfaces for your favorite MIDI devices.\n"
+                               "Host your device as VST or AU plugins in your favorite DAW or as standalone software.");
     
     
 
@@ -134,7 +134,7 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     copyrightLabel->setColour (TextEditor::outlineColourId, Colour(getLookAndFeel().findColour (TextEditor::outlineColourId).withAlpha(0.0f)));
     copyrightLabel->setColour (TextEditor::shadowColourId, Colour(getLookAndFeel().findColour (TextEditor::shadowColourId).withAlpha(0.0f)));
     copyrightLabel->setText ("CtrlrX is based on JUCE audio framework by PACE Anti-Piracy Inc.\n"
-                             "Audio Units is a trademark of Apple Computer Inc.\n"
+                             "Audio Unit is a trademark of Apple Computer Inc.\n"
                              "VST is a trademark of Steinberg Media Technologies GmbH.");
     
     

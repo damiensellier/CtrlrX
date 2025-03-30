@@ -211,6 +211,7 @@ class CtrlrModulator : public ChangeBroadcaster, public ValueTree::Listener, pub
 
 
 		const Identifier getComponentType();
+		void setModulatorValue(const int newValue,bool midi); // override omit useless parameter 1 and 3
 		void setModulatorValue(const int newValue, bool vst, bool midi, bool ui);
 		const String getName();
 		bool hasName();

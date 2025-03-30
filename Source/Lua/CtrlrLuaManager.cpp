@@ -1070,6 +1070,12 @@ void CtrlrModulator::setModulatorValue(const int newValue, bool vst, bool midi, 
     processor.setValueGeneric (CtrlrModulatorValue (newValue, ui ? CtrlrModulatorValue::changedByProgram : CtrlrModulatorValue::changedByLua), true, !midi); // Added v5.6.31 to help avoid feedback loops between LUA and (delayed) UI commit 6e5a0b2 by midibox
 }
 
+ void CtrlrModulator::setModulatorValue(const int newValue, bool midi) // Updated v5.6.32. Dnaldoog
+{
+	processor.setValueGeneric(CtrlrModulatorValue(newValue, CtrlrModulatorValue::changedByLua), true, !midi);
+	//processor.setValueGeneric (CtrlrModulatorValue (newValue, ui ? CtrlrModulatorValue::changedByProgram : CtrlrModulatorValue::changedByLua), true, !midi); // Added v5.6.31 to help avoid feedback loops between LUA and (delayed) UI commit 6e5a0b2 by midibox
+}
+
 double CtrlrModulator::getValueMapped() const // Updated v5.6.32. int to double
 {
 	return (processor.getValueMapped());
@@ -1198,7 +1204,8 @@ void CtrlrModulator::wrapForLua (lua_State *L)
 		
         .def("getName", &CtrlrModulator::getName)
         
-		.def("setModulatorValue", &CtrlrModulator::setModulatorValue)
+		.def("setModulatorValue", (void (CtrlrModulator::*)(const int, const bool)) &CtrlrModulator::setModulatorValue)
+		.def("setModulatorValue", (void (CtrlrModulator::*)(const int, const bool, const bool, const bool)) &CtrlrModulator::setModulatorValue)
 		
         .def("getLuaName", &CtrlrModulator::getName)
 		.def("getModulatorName", &CtrlrModulator::getName)
@@ -1248,7 +1255,7 @@ void CtrlrPanelEditor::wrapForLua (lua_State *L)
 	module(L)
 		[
 			class_<CtrlrPanelEditor, CtrlrLuaObject>("CtrlrPanelEditor")
-			.def("getWidth", &CtrlrPanelEditor::getWidth)
+		.def("getWidth", &CtrlrPanelEditor::getWidth)
 		.def("getHeight", &CtrlrPanelEditor::getHeight)
 		.def("getCanvas", &CtrlrPanelEditor::getCanvas)
 		.def("getOwner", &CtrlrPanelEditor::getOwner)
