@@ -79,7 +79,8 @@ namespace luabind
                     rhs.m_called = true;
                 }
 
-                ~proxy_function_caller() LUABIND_MAY_THROW
+                //~proxy_function_caller() LUABIND_MAY_THROW changed JG 4/5/2023
+                ~proxy_function_caller() noexcept (false)
                 {
                     if (m_called) return;
 
@@ -242,7 +243,8 @@ namespace luabind
                     rhs.m_called = true;
                 }
 
-                ~proxy_function_void_caller() LUABIND_MAY_THROW
+                //~proxy_function_void_caller() LUABIND_MAY_THROW
+                ~proxy_function_void_caller() noexcept (false)
                 {
                     if (m_called) return;
 
