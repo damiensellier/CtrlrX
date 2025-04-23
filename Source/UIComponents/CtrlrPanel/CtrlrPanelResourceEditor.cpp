@@ -19,25 +19,25 @@ CtrlrPanelResourceEditor::CtrlrPanelResourceEditor (CtrlrPanelEditor &_owner)
     addAndMakeVisible (resourceList = new TableListBox ("Resource List", this));
     resourceList->setName (L"resourceList");
 
-    addAndMakeVisible (add = new TextButton (L"new button"));
+    addAndMakeVisible (add = new TextButton (L"new button"), -1); // added z index JG 4/23/20025
     add->setTooltip (L"Add new resources");
     add->setButtonText (L"Add");
     add->addListener (this);
     add->setColour (TextButton::buttonColourId, Colour (0xffb2b2b2));
 
-	addAndMakeVisible (remove = new TextButton (""));
+	addAndMakeVisible (remove = new TextButton (""), -1); // added z index JG 4/23/20025
     remove->setTooltip (L"Remove selected resources");
     remove->setButtonText (L"Remove");
     remove->addListener (this);
     remove->setColour (TextButton::buttonColourId, Colour (0xffb2b2b2));
 
-	addAndMakeVisible(move = new TextButton(""));
+	addAndMakeVisible(move = new TextButton(""), -1); // added z index JG 4/23/20025
 	move->setTooltip(L"Move resources to panel folder");
 	move->setButtonText(L"Move...");
 	move->addListener(this);
 	move->setColour(TextButton::buttonColourId, Colour(0xffb2b2b2));
 
-	addAndMakeVisible (reload = new TextButton (""));
+	addAndMakeVisible (reload = new TextButton (""), -1); // added z index JG 4/23/20025
     reload->setTooltip (L"Reload all resources");
     reload->setButtonText (L"Reload");
     reload->addListener (this);
