@@ -207,7 +207,7 @@ const Result CtrlrWindows::exportWithDefaultPanel(CtrlrPanel*  panelToWrite, con
 	File executableFile = newMe; // Assuming the newMe file is the executable
 	if (executableFile.existsAsFile()) {
 
-		if (fileExtension == (".vst3") || (".dll")) { // Updated v5.6.33. Added VST2 .dll
+		if (fileExtension == ".vst3" || fileExtension == ".dll") { // Updated v5.6.33. Added .vst to identify vst2 instances in Cubase for macOS.(fileExtension == ".vst3" || ".vst") was wrong. FIXED on 2025.04.29
 			logger.log("fileExtension is : " + fileExtension);
 
 			// Replace the stock VST3 plugin identifiers with the panel to export ones.
