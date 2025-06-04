@@ -43,7 +43,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        if [ "$RUNNER_OS" == "LInux" ]; then
+        echo "OS: $RUNNER_OS"
+        if [ "$RUNNER_OS" == "Linux" ]; then
           sudo apt install -y binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev
         elif [ "$RUNNER_OS" == "Windows" ]; then
           echo "for future, if we need to install sth on windows"
@@ -63,7 +64,11 @@ jobs:
 
     - name: Show Installer Directory
       run: |
-        ls -l ./Packaging/Linux
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          ls -l ./Packaging/Linux
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          ls -l ./Packaging/Windows
+        fi
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
