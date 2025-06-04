@@ -42,9 +42,13 @@ jobs:
         submodules: recursive
 
     - name: Install dependencies
-      if: runner.os == "ubuntu-latest"
       run: |
-        sudo apt install -y binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev
+        if [ "$RUNNER_OS" == "LInux" ]; then
+          sudo apt install -y binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          echo "for future, if we need to install sth on windows"
+        fi
+        shell: bash
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
