@@ -15,28 +15,24 @@ jobs:
       fail-fast: false
 
       # Set up a matrix to run several configurations.
-      # TODO: add windows and MacOS
-      # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
+      # TODO: add MacOS
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04] # , windows-latest
+        os: [ubuntu-latest, windows-latest]
         build_type: [Release]
-        c_compiler: [gcc] # , cl
+        c_compiler: [gcc, cl]
         include:
-          # - os: windows-latest
-          #   c_compiler: cl
-          #   cpp_compiler: cl
+          - os: windows-latest
+            name: windows
+            c_compiler: cl
+            cpp_compiler: cl
           - os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-24.04
+            name: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
         exclude:
-          # - os: windows-latest
-          #   c_compiler: gcc
+          - os: windows-latest
+            c_compiler: gcc
           - os: ubuntu-latest
-            c_compiler: cl
-          - os: ubuntu-24.04
             c_compiler: cl
 
     steps:
@@ -46,16 +42,9 @@ jobs:
         submodules: recursive
 
     - name: Install dependencies
+      if: runner.os == "ubuntu-latest"
       run: |
-        sudo apt install -y binutils-dev
-        sudo apt install -y libasound2-dev
-        sudo apt install -y libboost-dev
-        sudo apt install -y libfreetype6-dev
-        sudo apt install -y libgl1-mesa-dev libglapi-mesa
-        sudo apt install -y libiberty-dev
-        sudo apt install -y libsframe1
-        sudo apt install -y libudev-dev
-        sudo apt install -y libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev
+        sudo apt install -y binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.

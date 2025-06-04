@@ -358,7 +358,7 @@ function build_now_linux {
 	./build.sh | tee -ia $BUILD_LOG
 	
 	if [ $? -ne 0 ]; then
-		echo "CTRLR: build for VST dailed"
+		echo "CTRLR: build for VST failed"
 		exit 1
 	fi
 	
@@ -370,7 +370,15 @@ function build_now_linux {
 	
 	cp $CTRLR_ROOT/Builds/LinuxMakefile/build/Ctrlr $CTRLR_ROOT/Packaging/Linux/Ctrlr/
 	cp $CTRLR_ROOT/Builds/LinuxMakefile/build/Ctrlr.so $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: build for VST probably failed"
+		exit 1
+	fi
 	cp -r $CTRLR_ROOT/Builds/LinuxMakefile/build/Ctrlr.vst3 $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: build for VST3 probably failed"
+		exit 1
+	fi
 	
 	cp -r $CTRLR_ROOT/Panels $CTRLR_ROOT/Packaging/Linux/Ctrlr/
 	cp -r $CTRLR_ROOT/Doc $CTRLR_ROOT/Packaging/Linux/Ctrlr/
