@@ -46,9 +46,9 @@ function detect_os {
 		if [ -d /cygdrive ]; then
 			CTRLR_ROOT="/cygdrive/c/devel/ctrlr"
 		else
-			CTRLR_ROOT="/c/devel/ctrlr"
+			CTRLR_ROOT="$(dirname $(readlink -f $0))/../"
 		fi
-		VERSION=`c:/devel/ctrlr/Scripts/git-revision.sh`
+		VERSION=`$CTRLR_ROOT/Scripts/git-revision.sh`
 		PACKAGE=$CTRLR_ROOT/Packaging/Windows/Ctrlr-$VERSION.exe
 		BUILD_LOG_WIN32=$CTRLR_ROOT/Builds/Ctrlr-$VERSION.win32.build.log
 		BUILD_LOG_WIN64=$CTRLR_ROOT/Builds/Ctrlr-$VERSION.win64.build.log
