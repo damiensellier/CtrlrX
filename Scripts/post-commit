@@ -59,7 +59,7 @@ function detect_os {
 			NSIS="/cygdrive/c/Program\ Files\ \(x86\)/NSIS/makensis.exe"
 		else
 			MSBUILD=`which MSBuild.exe`
-			NSIS=`which`makensis.exe`
+			NSIS=`which makensis.exe`
 		fi
 		return
 	fi
