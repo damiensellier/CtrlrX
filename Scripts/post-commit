@@ -48,6 +48,7 @@ function detect_os {
 		else
 			CTRLR_ROOT="$(dirname $(readlink -f $0))/../"
 		fi
+		echo "CTRLR_ROOT= $CTRLR_ROOT"
 		VERSION=`$CTRLR_ROOT/Scripts/git-revision.sh`
 		PACKAGE=$CTRLR_ROOT/Packaging/Windows/Ctrlr-$VERSION.exe
 		BUILD_LOG_WIN32=$CTRLR_ROOT/Builds/Ctrlr-$VERSION.win32.build.log
@@ -154,8 +155,8 @@ function windows_msbuild {
 
 function build_now_windows {
 	
-	REVISION_H="c:/devel/ctrlr/Source/Core/CtrlrRevision.h"
-	TEMPLATE_H="c:/devel/ctrlr/Source/Core/CtrlrRevision.template"
+	REVISION_H="$CTRLR_ROOT/Source/Core/CtrlrRevision.h"
+	TEMPLATE_H="$CTRLR_ROOT/Source/Core/CtrlrRevision.template"
 
 	echo -n > $BUILD_LOG_WIN32
 	echo -n > $BUILD_LOG_WIN64	
