@@ -16,7 +16,7 @@ jobs:
       # TODO: add MacOS (intel -> macos-13, arm64 -> macos-14, macos-15, macos-latest)
       matrix:
         include:
-          - os: windows-latest
+          - os: windows-2019 # for vs 2019
             name: windows
             c_compiler: cl
             cpp_compiler: cl
@@ -24,6 +24,10 @@ jobs:
             name: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
+          - os: macos-13
+            name: macos-13
+            c_compiler: clang
+            cpp_compiler: clang++
 
     runs-on: ${{ matrix.os }}
 
