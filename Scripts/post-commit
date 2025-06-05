@@ -1,11 +1,13 @@
 #!/bin/bash
 OSNAME=""
 DATE=`date`
+# binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev
 UBUNTU_PACKAGES="g++ libxrandr-dev libxinerama-dev libxcursor-dev \
 libasound2-dev binutils-dev \
 libfreetype6-dev xorg-dev \
 libgl1-mesa-dev libglapi-mesa \
-libxrandr-dev libudev-dev libgl1-mesa-dev libiberty-dev"
+libxrandr-dev libudev-dev libgl1-mesa-dev libiberty-dev \
+libcurl4-gnutls-dev libsframe1"
 
 CTRLR_ROOT=""
 PACKAGE=""
@@ -14,6 +16,7 @@ BUILD_LOG_WIN64=""
 OUTPUT="ctrlr@ctrlr.org://var/www/ctrlr/nightly/"
 VERSION=""
 ARGS=$1
+PROJECT_NAME=CtrlrX
 
 echo "CTRLR pre-commit HOOK"
 
@@ -66,8 +69,8 @@ function detect_os {
 		ARCH=`uname -m`
 		CTRLR_ROOT="$(dirname $(readlink -f $0))/../"
 		VERSION=`$CTRLR_ROOT/Scripts/git-revision.sh`
-		PACKAGE=$CTRLR_ROOT/Packaging/Linux/Ctrlr-$ARCH-$VERSION.sh
-		BUILD_LOG=$CTRLR_ROOT/Builds/Ctrlr-$ARCH-$VERSION.linux.build.log
+		PACKAGE=$CTRLR_ROOT/Packaging/Linux/${PROJECT_NAME}-$ARCH-$VERSION.sh
+		BUILD_LOG=$CTRLR_ROOT/Builds/${PROJECT_NAME}-$ARCH-$VERSION.linux.build.log
 		CTRLR_KEY="$CTRLR_ROOT/Packaging/ctrlr.key"
 		
 		if [ "$DISTRO" == "Ubuntu" ]; then
@@ -81,8 +84,8 @@ function detect_os {
 		OSNAME="OSX"
 		CTRLR_ROOT="$HOME/devel/ctrlr"
 		VERSION=`$CTRLR_ROOT/Scripts/git-revision.sh`
-		PACKAGE=$CTRLR_ROOT/Packaging/Mac/Ctrlr-$VERSION.dmg
-		BUILD_LOG=$CTRLR_ROOT/Builds/Ctrlr-$VERSION.mac.build.log
+		PACKAGE=$CTRLR_ROOT/Packaging/Mac/${PROJECT_NAME}-$VERSION.dmg
+		BUILD_LOG=$CTRLR_ROOT/Builds/${PROJECT_NAME}-$VERSION.mac.build.log
 		return
 	fi
 }
@@ -368,13 +371,13 @@ function build_now_linux {
 	echo "CTRLR: copy files for package"
 	mkdir -p $CTRLR_ROOT/Packaging/Linux/Ctrlr
 	
-	cp $CTRLR_ROOT/Builds/LinuxMakefile/build/Ctrlr $CTRLR_ROOT/Packaging/Linux/Ctrlr/
-	cp $CTRLR_ROOT/Builds/LinuxMakefile/build/Ctrlr.so $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	cp $CTRLR_ROOT/Builds/LinuxMakefile/build/$PROJECT_NAME  $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	cp $CTRLR_ROOT/Builds/LinuxMakefile/build/$PROJECT_NAME.so  $CTRLR_ROOT/Packaging/Linux/Ctrlr/
 	if [ $? -ne 0 ]; then
 		echo "CTRLR: build for VST probably failed"
 		exit 1
 	fi
-	cp -r $CTRLR_ROOT/Builds/LinuxMakefile/build/Ctrlr.vst3 $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	cp -r $CTRLR_ROOT/Builds/LinuxMakefile/build/$PROJECT_NAME.vst3  $CTRLR_ROOT/Packaging/Linux/Ctrlr/
 	if [ $? -ne 0 ]; then
 		echo "CTRLR: build for VST3 probably failed"
 		exit 1
@@ -384,12 +387,12 @@ function build_now_linux {
 	cp -r $CTRLR_ROOT/Doc $CTRLR_ROOT/Packaging/Linux/Ctrlr/
 	
 	echo "CTRLR: strip binaries"
-	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/Ctrlr
-	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/Ctrlr.so
-	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/Ctrlr.vst3/Contents/x86_64-linux/Ctrlr.so
+	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/$PROJECT_NAME
+	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/$PROJECT_NAME.so
+	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/$PROJECT_NAME.vst3/Contents/x86_64-linux/$PROJECT_NAME.so
 	echo "CTRLR: create self extracting package"
 	
-	$CTRLR_ROOT/Packaging/Linux/makeself.sh --bzip2 --notemp $CTRLR_ROOT/Packaging/Linux/Ctrlr $PACKAGE Ctrlr-$VERSION
+	$CTRLR_ROOT/Packaging/Linux/makeself.sh --bzip2 --notemp $CTRLR_ROOT/Packaging/Linux/Ctrlr $PACKAGE ${PROJECT_NAME}-$VERSION
 	if [ $? -ne 0 ]; then
 		echo "CTRLR: Creating self extractring package failed"
 		exit 1

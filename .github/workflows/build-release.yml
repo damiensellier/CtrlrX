@@ -8,18 +8,13 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
     strategy:
       # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
       fail-fast: false
 
       # Set up a matrix to run several configurations.
-      # TODO: add MacOS
+      # TODO: add MacOS (intel -> macos-13, arm64 -> macos-14, macos-15, macos-latest)
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        build_type: [Release]
-        c_compiler: [gcc, cl]
         include:
           - os: windows-latest
             name: windows
@@ -29,11 +24,8 @@ jobs:
             name: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
-        exclude:
-          - os: windows-latest
-            c_compiler: gcc
-          - os: ubuntu-latest
-            c_compiler: cl
+
+    runs-on: ${{ matrix.os }}
 
     steps:
     - name: Checkout code
@@ -42,6 +34,7 @@ jobs:
         submodules: recursive
 
     - name: Install dependencies
+      shell: bash
       run: |
         echo "OS: $RUNNER_OS"
         if [ "$RUNNER_OS" == "Linux" ]; then
@@ -49,7 +42,6 @@ jobs:
         elif [ "$RUNNER_OS" == "Windows" ]; then
           echo "for future, if we need to install sth on windows"
         fi
-      shell: bash
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
@@ -59,10 +51,11 @@ jobs:
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: Build
-      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
+      shell: bash
       run: Scripts/post-commit
 
     - name: Show Installer Directory
+      shell: bash
       run: |
         if [ "$RUNNER_OS" == "Linux" ]; then
           ls -l ./Packaging/Linux
@@ -73,5 +66,5 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        path: Packaging/Linux/Ctrlr-*.sh
-        name: build-${{ matrix.name }}
+        path: Packaging/Linux/Ctrlr*.sh
+        compression-level: 0
