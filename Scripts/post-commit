@@ -58,8 +58,8 @@ function detect_os {
 			MSBUILD="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/MSBuild.exe"
 			NSIS="/cygdrive/c/Program\ Files\ \(x86\)/NSIS/makensis.exe"
 		else
-			MSBUILD="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/MSBuild.exe"
-			NSIS="/c/Program\ Files\ \(x86\)/NSIS/makensis.exe"
+			MSBUILD=`which MSBuild.exe`
+			NSIS=`which`makensis.exe`
 		fi
 		return
 	fi
