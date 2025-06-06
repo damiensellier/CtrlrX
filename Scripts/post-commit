@@ -83,7 +83,7 @@ function detect_os {
 	
 	if [ "$UNAME" == "Darwin" ]; then
 		OSNAME="OSX"
-		CTRLR_ROOT="$HOME/devel/ctrlr"
+		CTRLR_ROOT="$(dirname $(readlink -f $0))/../"
 		VERSION=`$CTRLR_ROOT/Scripts/git-revision.sh`
 		PACKAGE=$CTRLR_ROOT/Packaging/Mac/${PROJECT_NAME}-$VERSION.dmg
 		BUILD_LOG=$CTRLR_ROOT/Builds/${PROJECT_NAME}-$VERSION.mac.build.log
