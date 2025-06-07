@@ -1,0 +1,79 @@
+name: Build Release
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+
+      # Set up a matrix to run several configurations.
+      # TODO: add MacOS (intel -> macos-13, arm64 -> macos-14, macos-15, macos-latest)
+      matrix:
+        include:
+          - os: windows-2019 # for vs 2019
+            name: windows
+            c_compiler: cl
+            cpp_compiler: cl
+          - os: ubuntu-latest
+            name: ubuntu-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+          - os: macos-13
+            name: macos-13
+            c_compiler: clang
+            cpp_compiler: clang++
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        echo "OS: $RUNNER_OS"
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt install -y binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          echo "for future, if we need to install sth on windows"
+        fi
+
+    - name: Add msbuild to PATH
+      if: runner.os == 'Windows'
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Set reusable strings
+      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+    - name: Build
+      shell: bash
+      run: Scripts/post-commit
+
+    - name: Show Installer Directory
+      id: version
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          ls -lh ./Packaging/Linux
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          ls -lh ./Packaging/Windows
+        fi
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        path: Packaging/Linux/Ctrlr*.sh
+        name: ${{ matrix.os }}-build
