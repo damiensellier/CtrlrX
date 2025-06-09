@@ -16,8 +16,8 @@ jobs:
       # TODO: add MacOS (intel -> macos-13, arm64 -> macos-14, macos-15, macos-latest)
       matrix:
         include:
-          - os: windows-2019 # for vs 2019
-            name: windows
+          - os: windows-latest
+            name: windows-latest
             c_compiler: cl
             cpp_compiler: cl
           - os: ubuntu-latest
@@ -71,10 +71,14 @@ jobs:
           ls -lh ./Packaging/Linux
         elif [ "$RUNNER_OS" == "Windows" ]; then
           ls -lh ./Packaging/Windows
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          ls -lh ./Packaging/MacOS
         fi
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        path: Packaging/Linux/Ctrlr*.sh
-        name: ${{ matrix.os }}-build
+        path: |
+          Packaging/Linux/Ctrlr*.sh
+          Packaging/Windows/Ctrlr*.exe
+        name: CtrlrX-${{ matrix.os }}
