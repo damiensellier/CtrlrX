@@ -44,7 +44,8 @@ jobs:
         if [ "$RUNNER_OS" == "Linux" ]; then
           sudo apt install -y binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev
         elif [ "$RUNNER_OS" == "Windows" ]; then
-          echo "for future, if we need to install sth on windows"
+          # to not clutter the build step logs:
+          ./Scripts/post-commit unpack_boost
         fi
 
     - name: Add msbuild to PATH

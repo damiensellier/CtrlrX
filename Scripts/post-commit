@@ -405,4 +405,10 @@ function build_now_linux {
 }
 
 detect_os
+
+if [ "$1" == "unpack_boost" ]; then
+	unpack_boost
+	exit 0
+fi
+
 build_now
