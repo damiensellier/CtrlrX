@@ -51,6 +51,8 @@ jobs:
     - name: Add msbuild to PATH
       if: runner.os == 'Windows'
       uses: microsoft/setup-msbuild@v2
+      with:
+        msbuild-architecture: x64
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
