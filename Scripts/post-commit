@@ -50,9 +50,9 @@ function detect_os {
 		fi
 		echo "CTRLR_ROOT= $CTRLR_ROOT"
 		VERSION=`$CTRLR_ROOT/Scripts/git-revision.sh`
-		PACKAGE=$CTRLR_ROOT/Packaging/Windows/Ctrlr-$VERSION.exe
-		BUILD_LOG_WIN32=$CTRLR_ROOT/Builds/Ctrlr-$VERSION.win32.build.log
-		BUILD_LOG_WIN64=$CTRLR_ROOT/Builds/Ctrlr-$VERSION.win64.build.log
+		PACKAGE=$CTRLR_ROOT/Packaging/Windows/${PROJECT_NAME}-$VERSION.exe
+		BUILD_LOG_WIN32=$CTRLR_ROOT/Builds/${PROJECT_NAME}-$VERSION.win32.build.log
+		BUILD_LOG_WIN64=$CTRLR_ROOT/Builds/${PROJECT_NAME}-$VERSION.win64.build.log
 		CTRLR_KEY="$CTRLR_ROOT/Packaging/ctrlr.key"
 		if [ -d /cygdrive ]; then
 			MSBUILD="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/MSBuild.exe"
@@ -122,16 +122,17 @@ function windows_create_installer {
 	echo "CTRLR: create installer"
 	echo $CTRLR_ROOT, $NSIS
 	cd $CTRLR_ROOT
-	eval "$NSIS" Packaging/Windows/ctrlr.nsi
+	"$NSIS" Packaging/Windows/ctrlr.nsi
 	if [ $? -ne 0 ]; then
 		echo "CTRLR: failed to create installer package"
 		exit 1
 	fi
 	
-	echo "CTRLR: rename $CTRLR_ROOT/Packaging/Windows/Ctrlr.exe -> $PACKAGE"
-	mv $CTRLR_ROOT/Packaging/Windows/Ctrlr.exe $PACKAGE
+	echo "CTRLR: rename $CTRLR_ROOT/Packaging/Windows/CtrlrX.exe -> $PACKAGE"
+	mv $CTRLR_ROOT/Packaging/Windows/CtrlrX.exe $PACKAGE
 	if [ $? -ne 0 ]; then
 		echo "CTRLR: failed to rename installer package"
+		ls $CTRLR_ROOT/Packaging/Windows/
 		exit 1
 	fi
 }
@@ -159,7 +160,7 @@ function windows_msbuild {
 		# fi
 		echo "CTRLR: Build x64"
 		
-		"$MSBUILD" CtrlrX.sln /target:Rebuild /fileloggerparameters:logfile=Ctrlr-$VERSION.win64.build.log /property:Configuration=Release /property:Platform=x64
+		"$MSBUILD" CtrlrX.sln /target:Rebuild /fileloggerparameters:logfile=Ctrlr-$VERSION.win64.build.log /property:Configuration=Release /property:Platform=x64 /maxCpuCount
 		if [ $? -ne 0 ]; then
 			echo "CTRLR: x64 build failed"
 			exit 1
@@ -186,8 +187,8 @@ function build_now_windows {
 	
 	unpack_boost
 	windows_msbuild
-	windows_create_installer	
-	windows_copy_to_website
+	windows_create_installer
+	#windows_copy_to_website
 }
 
 function build_now_osx {
