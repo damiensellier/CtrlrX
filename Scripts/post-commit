@@ -211,7 +211,7 @@ function build_now_osx {
 	
 	echo "[CTRLR]: Build Standalone"
 	cd $CTRLR_ROOT/Builds/MacOSX
-	xcodebuild -configuration Release_Nightly | tee -ia $BUILD_LOG
+	xcodebuild -configuration Release | tee -ia $BUILD_LOG
 	
 	if [ $? -ne 0 ]; then
 		echo "[CTRLR]: Build failed"
@@ -220,7 +220,7 @@ function build_now_osx {
 
 	echo "[CTRLR]: Build VST"
 	cd $CTRLR_ROOT/Builds/MacOSX
-	xcodebuild -configuration Release_Nightly | tee -ia $BUILD_LOG
+	xcodebuild -configuration Release | tee -ia $BUILD_LOG
 	
 	if [ $? -ne 0 ]; then
 		echo "[CTRLR]: Build failed"
@@ -229,7 +229,7 @@ function build_now_osx {
 	
 	echo "[CTRLR]: Build AU Wrapper"
 	cd $CTRLR_ROOT/Builds/MacOSX
-	xcodebuild -configuration Release_Nightly | tee -ia $BUILD_LOG
+	xcodebuild -configuration Release | tee -ia $BUILD_LOG
 	
 	if [ $? -ne 0 ]; then
 		echo "[CTRLR]: Build failed"
@@ -238,7 +238,7 @@ function build_now_osx {
 	
 	echo "[CTRLR]: Build AU"
 	cd $CTRLR_ROOT/Builds/MacOSX
-	xcodebuild -configuration Release_Nightly | tee -ia $BUILD_LOG
+	xcodebuild -configuration Release | tee -ia $BUILD_LOG
 	
 	if [ $? -ne 0 ]; then
 		echo "[CTRLR]: Build failed"
