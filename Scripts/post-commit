@@ -160,7 +160,7 @@ function windows_msbuild {
 		# fi
 		echo "CTRLR: Build x64"
 		
-		"$MSBUILD" CtrlrX.sln /target:Rebuild /fileloggerparameters:logfile=Ctrlr-$VERSION.win64.build.log /property:Configuration=Release /property:Platform=x64 /maxCpuCount
+		"$MSBUILD" CtrlrX.sln /target:Rebuild /fileloggerparameters:logfile=Ctrlr-$VERSION.win64.build.log /property:Configuration=Release /property:Platform=x64 -maxCpuCount
 		if [ $? -ne 0 ]; then
 			echo "CTRLR: x64 build failed"
 			exit 1
