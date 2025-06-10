@@ -122,7 +122,7 @@ function windows_create_installer {
 	echo "CTRLR: create installer"
 	echo $CTRLR_ROOT, $NSIS
 	cd $CTRLR_ROOT
-	eval $NSIS Packaging/Windows/ctrlr.nsi
+	eval "$NSIS" Packaging/Windows/ctrlr.nsi
 	if [ $? -ne 0 ]; then
 		echo "CTRLR: failed to create installer package"
 		exit 1
