@@ -210,7 +210,7 @@ function build_now_osx {
 	echo "[CTRLR]: Empty build log $BUILD_LOG"
 	echo -n > $BUILD_LOG
 	
-	echo "[CTRLR]: Build Standalone"
+	echo "[CTRLR]: Build"
 	cd $CTRLR_ROOT/Builds/MacOSX
 	xcodebuild -configuration Release | tee -ia $BUILD_LOG
 	
@@ -219,32 +219,32 @@ function build_now_osx {
 		exit 1
 	fi
 
-	echo "[CTRLR]: Build VST"
-	cd $CTRLR_ROOT/Builds/MacOSX
-	xcodebuild -configuration Release | tee -ia $BUILD_LOG
+	# echo "[CTRLR]: Build VST"
+	# cd $CTRLR_ROOT/Builds/MacOSX
+	# xcodebuild -configuration Release | tee -ia $BUILD_LOG
 	
-	if [ $? -ne 0 ]; then
-		echo "[CTRLR]: Build failed"
-		exit 1
-	fi
+	# if [ $? -ne 0 ]; then
+	# 	echo "[CTRLR]: Build failed"
+	# 	exit 1
+	# fi
 	
-	echo "[CTRLR]: Build AU Wrapper"
-	cd $CTRLR_ROOT/Builds/MacOSX
-	xcodebuild -configuration Release | tee -ia $BUILD_LOG
+	# echo "[CTRLR]: Build AU Wrapper"
+	# cd $CTRLR_ROOT/Builds/MacOSX
+	# xcodebuild -configuration Release | tee -ia $BUILD_LOG
 	
-	if [ $? -ne 0 ]; then
-		echo "[CTRLR]: Build failed"
-		exit 1
-	fi
+	# if [ $? -ne 0 ]; then
+	# 	echo "[CTRLR]: Build failed"
+	# 	exit 1
+	# fi
 	
-	echo "[CTRLR]: Build AU"
-	cd $CTRLR_ROOT/Builds/MacOSX
-	xcodebuild -configuration Release | tee -ia $BUILD_LOG
+	# echo "[CTRLR]: Build AU"
+	# cd $CTRLR_ROOT/Builds/MacOSX
+	# xcodebuild -configuration Release | tee -ia $BUILD_LOG
 	
-	if [ $? -ne 0 ]; then
-		echo "[CTRLR]: Build failed"
-		exit 1
-	fi
+	# if [ $? -ne 0 ]; then
+	# 	echo "[CTRLR]: Build failed"
+	# 	exit 1
+	# fi
 	
 	cd $CTRLR_ROOT
 	
