@@ -1,156 +1,155 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Ctrlr\Source\Misc\luabind\luabind\detail">
-      <UniqueIdentifier>{84894BA1-B5EE-5C33-5A32-4314D8F12282}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Misc\luabind\luabind\detail">
+      <UniqueIdentifier>{7ADB9829-69A5-557A-FCAA-8ED6D5B094F8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Misc\luabind\luabind">
-      <UniqueIdentifier>{AAAE515B-F358-BE48-012F-2C7074C3D6D0}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Misc\luabind\luabind">
+      <UniqueIdentifier>{7B37AB58-EAE7-D01D-5549-B89418089C23}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Misc\luabind\src">
-      <UniqueIdentifier>{FD0232C5-B86F-A39F-91E6-1FB9B7CEDA7F}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Misc\luabind\src">
+      <UniqueIdentifier>{FE4B8DF3-EF00-D6CA-27FB-56C546764424}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Misc\luabind">
-      <UniqueIdentifier>{7E6B1BE9-A6F4-83EE-3B40-EB1FAE4D6C72}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Misc\luabind">
+      <UniqueIdentifier>{F2BE6A13-E025-161E-B84A-A900C8E6CF34}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Misc\include">
-      <UniqueIdentifier>{699F1F2C-B001-F34C-DC9E-C3D987ADC3B7}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Misc\include">
+      <UniqueIdentifier>{3CBCF2DB-25EE-2A82-9BC7-3F2756BB7991}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Misc\libusb\include">
-      <UniqueIdentifier>{8288C076-1360-8891-DE0D-124284ADD798}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Misc\libusb\include">
+      <UniqueIdentifier>{AFA1821C-8297-18C8-E447-A6E2B716DA5B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Misc\libusb\src">
-      <UniqueIdentifier>{03EEB81D-189E-6425-D2DD-16BC3093497C}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Misc\libusb\src">
+      <UniqueIdentifier>{ECFBDE5C-A4F8-A168-5263-21BEA3A66FB8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Misc\libusb">
-      <UniqueIdentifier>{193E0FFD-31C5-C134-9F09-980B6F2EEB48}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Misc\libusb">
+      <UniqueIdentifier>{9C2E1348-35F0-0DCC-F7FC-3EB5B5ADE69A}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Misc\lua\include">
-      <UniqueIdentifier>{9E833C57-9814-55C4-DD48-59CCD0464358}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Misc\lua\include">
+      <UniqueIdentifier>{7F778BE2-B889-581E-C952-D7CB8826F1CA}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Misc\lua\src">
-      <UniqueIdentifier>{4ABD972B-C78D-C6C5-BE3E-05104BEA5C9D}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Misc\lua\src">
+      <UniqueIdentifier>{F4F22658-777D-BA99-03F9-647AB70A80F6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Misc\lua">
-      <UniqueIdentifier>{339FE300-3FBE-94D3-F8E7-2F68F1F379BF}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Misc\lua">
+      <UniqueIdentifier>{84403891-9A2D-F5A3-C811-324BC10D92A4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Misc">
-      <UniqueIdentifier>{4CCF6B87-BBD2-7BF5-A4E7-DB560563E598}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Misc">
+      <UniqueIdentifier>{47A72874-E80D-99C5-2481-C96E2EFE76E8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Core\CtrlrManager">
-      <UniqueIdentifier>{DE4F8013-DDBA-5D5E-B8C8-38DC5D124564}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Core\CtrlrManager">
+      <UniqueIdentifier>{FFAB7999-DE14-5FCD-6CCC-C9F8F9803CA4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Core\CtrlrModulator">
-      <UniqueIdentifier>{7FF49B2B-EB98-0E71-32FE-F582463EE2F4}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Core\CtrlrModulator">
+      <UniqueIdentifier>{B7D09097-53D0-36F3-0936-CEE869F66431}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Core\CtrlrPanel">
-      <UniqueIdentifier>{FAEB8815-D605-52F7-5FD7-BF690EF8D1BC}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Core\CtrlrPanel">
+      <UniqueIdentifier>{D2BBD541-8FAF-203C-3108-E77D5FFE0315}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Core\StandaloneWrapper">
-      <UniqueIdentifier>{236FA8F5-04EA-D40C-432A-490E7B1BCFA3}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Core\StandaloneWrapper">
+      <UniqueIdentifier>{790BC3A2-48AA-82DC-A769-67CE6BF23906}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Core">
-      <UniqueIdentifier>{D6225167-DA8E-54D3-A8C5-38CC321A76B2}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Core">
+      <UniqueIdentifier>{25657303-8367-0236-916C-BFB2545F9187}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Lua\Deprecated">
-      <UniqueIdentifier>{6BDFFDE6-67BF-2A8B-1DD6-946135659772}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Lua\Deprecated">
+      <UniqueIdentifier>{5F545C87-4461-A3B9-0229-DC7C00651F32}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Lua\JuceClasses">
-      <UniqueIdentifier>{B085E165-8BF4-DA9D-5026-B60E6173D104}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Lua\JuceClasses">
+      <UniqueIdentifier>{39B6B958-35F1-259F-BA0D-80A01EA9AEE7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Lua\Methods">
-      <UniqueIdentifier>{16973FA3-388B-E86E-4148-E00EC82A31E2}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Lua\Methods">
+      <UniqueIdentifier>{F5EBB88C-CA0A-C215-2564-F881CE34DF47}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Lua">
-      <UniqueIdentifier>{44AA5A48-0A36-2BAD-F339-106C19EC3CD9}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Lua">
+      <UniqueIdentifier>{AB1DFEEF-294D-82B6-9163-A8974CA8D732}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\MIDI\CtrlrMIDILibrary">
-      <UniqueIdentifier>{6AA83B4C-C506-2687-DCC8-240536035846}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\MIDI\CtrlrMIDILibrary">
+      <UniqueIdentifier>{A31D37D1-ED86-DFC6-EA73-B7E156AE2C71}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\MIDI">
-      <UniqueIdentifier>{F40613A8-DE6D-B8A6-B834-49B9014FC55B}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\MIDI">
+      <UniqueIdentifier>{F3A717FA-F1E8-91EF-345F-30EBF412D944}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Native">
-      <UniqueIdentifier>{6916D471-FF9A-F65B-5E14-AD9EAE7594DE}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Native">
+      <UniqueIdentifier>{EC027674-AECC-AD36-2F7E-968A10B549C3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Plugin">
-      <UniqueIdentifier>{14F3AC15-FD92-4E24-E312-1BF819522947}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Plugin">
+      <UniqueIdentifier>{40ECB9A7-8D3B-94BB-4F37-30B4D4390A65}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Resources\Fonts">
-      <UniqueIdentifier>{F87A253B-56FF-3F0A-87D7-CA5607BD7359}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Resources\Fonts">
+      <UniqueIdentifier>{E0268406-024F-0ED1-5870-EE07E46EFC47}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Resources\Icons">
-      <UniqueIdentifier>{C784EEFB-9AA3-9F72-C895-DA6DB1C58A90}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Resources\Icons">
+      <UniqueIdentifier>{230A9983-475C-DBD3-8B60-724648FE4C95}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Resources\Lua\clidebugger">
-      <UniqueIdentifier>{F13159A8-772F-FA84-6EA5-4B09E6D69507}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Resources\Lua\clidebugger">
+      <UniqueIdentifier>{CFE8EF6A-DDFF-B0CF-FA42-0D97E0145165}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Resources\Lua\json4lua">
-      <UniqueIdentifier>{19BF8DD2-A226-783A-E903-97B90B1C6FA9}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Resources\Lua\json4lua">
+      <UniqueIdentifier>{DC2DBE85-42F4-669F-688B-525DB8A3A0F4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Resources\Lua">
-      <UniqueIdentifier>{DE44E2F8-1E4E-A012-531B-28AC71FC4E9E}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Resources\Lua">
+      <UniqueIdentifier>{AAEA550A-161C-F140-E940-2CFACC900F9D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Resources\Misc">
-      <UniqueIdentifier>{B8D84349-E7E8-CA66-E94B-6EAADBBAC73D}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Resources\Misc">
+      <UniqueIdentifier>{BBD15E29-1142-1006-B1D9-36C9E14C3F0D}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Resources\XML">
-      <UniqueIdentifier>{58CDB81E-375A-0CD8-EE98-FB51B255444C}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Resources\XML">
+      <UniqueIdentifier>{383190C3-CCAC-A8D0-4663-71414E596E35}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\Resources">
-      <UniqueIdentifier>{A3034DEE-CBD9-4A9B-4C4D-327B918374CA}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\Resources">
+      <UniqueIdentifier>{3701BA96-FCD2-6532-2238-A2E73171D73A}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrApplicationWindow">
-      <UniqueIdentifier>{E8663518-2715-38FD-DADC-70BC6E4FAAE2}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrApplicationWindow">
+      <UniqueIdentifier>{20D57EB1-E1C8-2E4D-7B69-8D902E581965}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrComponents\Buttons">
-      <UniqueIdentifier>{CF1B13E7-1759-EDF7-6D37-97A1D4D8B323}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrComponents\Buttons">
+      <UniqueIdentifier>{2EDAC8E6-38B1-8D4B-26DB-2F8E771FCA83}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrComponents\Groups">
-      <UniqueIdentifier>{4D2024A1-C6E0-585C-980C-3C5CF4D25780}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrComponents\Groups">
+      <UniqueIdentifier>{F4C9ACDD-6639-9F2F-C932-ADC20BE5D819}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrComponents\Labels">
-      <UniqueIdentifier>{C93EBAC7-D3B7-614B-2E17-AA35562AE0D7}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrComponents\Labels">
+      <UniqueIdentifier>{0339CE00-6B62-6B08-5D3D-96A2FB48C7CA}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrComponents\Sliders">
-      <UniqueIdentifier>{BEF2FC90-D380-25D4-50F7-93F4E30BB8EA}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrComponents\Sliders">
+      <UniqueIdentifier>{DA975BD4-1233-73E5-A0AB-12D90DE231CC}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrComponents\Specials">
-      <UniqueIdentifier>{5F6B26DD-108B-5CA7-D37B-AB2A03EC242E}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrComponents\Specials">
+      <UniqueIdentifier>{696E5926-958D-EC1F-0AB6-0D55CE79F138}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrComponents\Statics">
-      <UniqueIdentifier>{16278E66-89FD-5EF6-BCF8-8CE7D0731780}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrComponents\Statics">
+      <UniqueIdentifier>{C4A6D013-1AFA-132E-5763-E918801D3734}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrComponents">
-      <UniqueIdentifier>{BC5BCEFD-51F9-7502-96BC-DA425BD0053E}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrComponents">
+      <UniqueIdentifier>{B7AB8163-8A83-74B4-3ABF-631CE2C061E5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor">
-      <UniqueIdentifier>{AF57E2D8-D828-1D65-561B-DB9ED0D157BB}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor">
+      <UniqueIdentifier>{108B95E5-1230-B360-44FD-1DBBA64DEEBE}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrLua">
-      <UniqueIdentifier>{49D23991-6F2F-2B85-9B10-D6DBF47B85BD}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrLua">
+      <UniqueIdentifier>{6C191611-85F3-217D-99B1-10AB9E2B3325}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrMIDI">
-      <UniqueIdentifier>{5B05924B-737F-E329-A861-B209EF1CBE2C}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrMIDI">
+      <UniqueIdentifier>{F66D5196-D763-7E68-0C06-6644A8C1DF86}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrPanel">
-      <UniqueIdentifier>{4E75C531-16FE-474D-88EC-000F3C585103}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrPanel">
+      <UniqueIdentifier>{DC5EDD3B-8F8A-0CF5-5E28-C9BBF97F667A}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrPropertyEditors">
-      <UniqueIdentifier>{60C0ECA4-2C1E-D7B8-7032-C35F728B60FC}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrPropertyEditors">
+      <UniqueIdentifier>{7494779B-5CC0-C681-E2C9-FBA0FEF6F843}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents\CtrlrWindowManagers">
-      <UniqueIdentifier>{19131604-1009-E0AE-F885-3DA87C534533}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents\CtrlrWindowManagers">
+      <UniqueIdentifier>{6603965A-315F-301F-F5B8-0410759ACA21}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source\UIComponents">
-      <UniqueIdentifier>{0CB222C4-3DF7-87E3-023A-DA9167EC6BDF}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source\UIComponents">
+      <UniqueIdentifier>{12B51A32-A26B-D356-F9B0-FB4A92ADA99B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr\Source">
-      <UniqueIdentifier>{5A4004B5-F730-F4D4-F816-938BE428F110}</UniqueIdentifier>
+    <Filter Include="CtrlrX\Source">
+      <UniqueIdentifier>{9DB409D0-2A80-DC3B-1D05-07E0141C1D99}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ctrlr">
-      <UniqueIdentifier>{90B37BCE-DCB9-508C-90DB-93CFA9081F9C}</UniqueIdentifier>
+    <Filter Include="CtrlrX">
+      <UniqueIdentifier>{F1479831-C580-5824-04D3-84508E86E670}</UniqueIdentifier>
     </Filter>
     <Filter Include="JUCE Modules\juce_audio_basics\audio_play_head">
       <UniqueIdentifier>{EB58F05A-A968-CEBE-40C4-107CDD8F240F}</UniqueIdentifier>
@@ -422,6 +421,15 @@
     <Filter Include="JUCE Modules\juce_core">
       <UniqueIdentifier>{BAA582FA-40B7-320E-EE7A-4C3892C7BE72}</UniqueIdentifier>
     </Filter>
+    <Filter Include="JUCE Modules\juce_cryptography\encryption">
+      <UniqueIdentifier>{89B3E447-34BE-C691-638E-09796C6B647E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JUCE Modules\juce_cryptography\hashing">
+      <UniqueIdentifier>{9BE78436-DBF4-658C-579B-ED19FFD0EB5D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JUCE Modules\juce_cryptography">
+      <UniqueIdentifier>{21E7FA61-9E0A-4BA1-04B7-AF47AFA9CB8B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="JUCE Modules\juce_data_structures\app_properties">
       <UniqueIdentifier>{632B4C79-AF7D-BFB5-D006-5AE67F607130}</UniqueIdentifier>
     </Filter>
@@ -575,583 +583,583 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\Misc\luabind\src\class.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\class_info.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\class_registry.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\class_rep.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\create_class.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\error.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\exception_handler.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\function.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\function_introspection.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\inheritance.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\link_compatibility.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\lua51compat.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\object_rep.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\open.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\operator.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\pcall.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\scope.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\set_package_preload.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\shared_ptr_converter.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\stack_content_by_name.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\weak_ref.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\luabind\src\wrapper_base.cpp">
-      <Filter>Ctrlr\Source\Misc\luabind\src</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\compat.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\core.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\darwin_usb.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\descriptor.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\enums.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\hotplug.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\io.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\linux_udev.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\linux_usbfs.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\poll_posix.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\poll_windows.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\strerror.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\structs.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\sync.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\threads_posix.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\threads_windows.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\usb.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libusb\src\windows_usb.c">
-      <Filter>Ctrlr\Source\Misc\libusb\src</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\lua\src\lua.c">
-      <Filter>Ctrlr\Source\Misc\lua\src</Filter>
+      <Filter>CtrlrX\Source\Misc\lua\src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\keys.cpp">
-      <Filter>Ctrlr\Source\Misc</Filter>
+      <Filter>CtrlrX\Source\Misc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libr-bfd.c">
-      <Filter>Ctrlr\Source\Misc</Filter>
+      <Filter>CtrlrX\Source\Misc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Misc\libr.c">
-      <Filter>Ctrlr\Source\Misc</Filter>
+      <Filter>CtrlrX\Source\Misc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrManager\CtrlrManager.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrManager</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrManager</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrManager\CtrlrManagerInstance.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrManager</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrManager</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrManager\CtrlrManagerVst.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrManager</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrManager</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrModulator\CtrlrModulator.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrModulator</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrModulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrModulator\CtrlrModulatorProcessor.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrModulator</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrModulator</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrPanel\CtrlrEvaluationScopes.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrPanel\CtrlrPanel.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelFileOperations.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelMIDIInputThread.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelMIDISnapshot.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelProcessor.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelResource.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelResourceManager.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelSchemeMigration.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelUndoManager.cpp">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\StandaloneWrapper\CtrlrStandaloneApplication.cpp">
-      <Filter>Ctrlr\Source\Core\StandaloneWrapper</Filter>
+      <Filter>CtrlrX\Source\Core\StandaloneWrapper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\StandaloneWrapper\CtrlrStandaloneWindow.cpp">
-      <Filter>Ctrlr\Source\Core\StandaloneWrapper</Filter>
+      <Filter>CtrlrX\Source\Core\StandaloneWrapper</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrFontManager.cpp">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrIDManager.cpp">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrLog.cpp">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrProperties.cpp">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrSysexProcessor.cpp">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrSysexProcessorOwned.cpp">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrSysexToken.cpp">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrUtilities.cpp">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrUtilitiesGUI.cpp">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\stdafx.cpp">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Core\stdafx_luabind.cpp">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\Deprecated\CtrlrLuaBigInteger.cpp">
-      <Filter>Ctrlr\Source\Lua\Deprecated</Filter>
+      <Filter>CtrlrX\Source\Lua\Deprecated</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\Deprecated\CtrlrLuaComponentAnimator.cpp">
-      <Filter>Ctrlr\Source\Lua\Deprecated</Filter>
+      <Filter>CtrlrX\Source\Lua\Deprecated</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\Deprecated\CtrlrLuaFile.cpp">
-      <Filter>Ctrlr\Source\Lua\Deprecated</Filter>
+      <Filter>CtrlrX\Source\Lua\Deprecated</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\Deprecated\CtrlrLuaMemoryBlock.cpp">
-      <Filter>Ctrlr\Source\Lua\Deprecated</Filter>
+      <Filter>CtrlrX\Source\Lua\Deprecated</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\Deprecated\CtrlrLuaRectangle.cpp">
-      <Filter>Ctrlr\Source\Lua\Deprecated</Filter>
+      <Filter>CtrlrX\Source\Lua\Deprecated</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\JuceClasses\LAudio.cpp">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\JuceClasses\LComponents.cpp">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\JuceClasses\LCore.cpp">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\JuceClasses\LGraphics.cpp">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\JuceClasses\LJuce.cpp">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\JuceClasses\LMemory.cpp">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\Methods\CtrlrLuaMethod.cpp">
-      <Filter>Ctrlr\Source\Lua\Methods</Filter>
+      <Filter>CtrlrX\Source\Lua\Methods</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\Methods\CtrlrLuaMethodManager.cpp">
-      <Filter>Ctrlr\Source\Lua\Methods</Filter>
+      <Filter>CtrlrX\Source\Lua\Methods</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\Methods\CtrlrLuaMethodManagerCalls.cpp">
-      <Filter>Ctrlr\Source\Lua\Methods</Filter>
+      <Filter>CtrlrX\Source\Lua\Methods</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\CtrlrLuaAudioConverter.cpp">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\CtrlrLuaDebugger.cpp">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\CtrlrLuaManager.cpp">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\CtrlrLuaObject.cpp">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\CtrlrLuaObjectWrapper.cpp">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\CtrlrLuaPanelCanvasLayer.cpp">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\CtrlrLuaUtils.cpp">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\MIDI\CtrlrMIDIDevice.cpp">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\MIDI\CtrlrMIDIDeviceManager.cpp">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\MIDI\CtrlrMIDIFilter.cpp">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\MIDI\CtrlrMidiInputComparator.cpp">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\MIDI\CtrlrMidiInputComparatorMulti.cpp">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\MIDI\CtrlrMidiInputComparatorSingle.cpp">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\MIDI\CtrlrMidiMessage.cpp">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\MIDI\CtrlrMidiMessageEx.cpp">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\MIDI\CtrlrOwnedMidiMessage.cpp">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Native\CtrlrLinux.cpp">
-      <Filter>Ctrlr\Source\Native</Filter>
+      <Filter>CtrlrX\Source\Native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Native\CtrlrMac.cpp">
-      <Filter>Ctrlr\Source\Native</Filter>
+      <Filter>CtrlrX\Source\Native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Native\CtrlrNative.cpp">
-      <Filter>Ctrlr\Source\Native</Filter>
+      <Filter>CtrlrX\Source\Native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Native\CtrlrWindows.cpp">
-      <Filter>Ctrlr\Source\Native</Filter>
+      <Filter>CtrlrX\Source\Native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Plugin\CtrlrProcessor.cpp">
-      <Filter>Ctrlr\Source\Plugin</Filter>
+      <Filter>CtrlrX\Source\Plugin</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Plugin\CtrlrProcessorEditorForLive.cpp">
-      <Filter>Ctrlr\Source\Plugin</Filter>
+      <Filter>CtrlrX\Source\Plugin</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrApplicationWindow\CtrlrDocumentPanel.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrApplicationWindow</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrApplicationWindow</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrApplicationWindow\CtrlrEditor.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrApplicationWindow</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrApplicationWindow</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrApplicationWindow\CtrlrEditorApplicationCommands.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrApplicationWindow</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrApplicationWindow</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrApplicationWindow\CtrlrEditorApplicationCommandsHandlers.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrApplicationWindow</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrApplicationWindow</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrApplicationWindow\CtrlrEditorApplicationCommandsMenus.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrApplicationWindow</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrApplicationWindow</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrApplicationWindow\CtrlrSettings.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrApplicationWindow</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrApplicationWindow</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Buttons\CtrlrButton.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Buttons</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Buttons</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Buttons\CtrlrCustomButtonInternal.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Buttons</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Buttons</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Buttons\CtrlrHyperlink.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Buttons</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Buttons</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Buttons\CtrlrImageButton.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Buttons</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Buttons</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Buttons\CtrlrToggleButton.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Buttons</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Buttons</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Groups\CtrlrGroup.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Groups</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Groups</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Groups\CtrlrTabsComponent.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Groups</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Groups</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Labels\CtrlrImage.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Labels</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Labels</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Labels\CtrlrLabel.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Labels</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Labels</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Labels\CtrlrLCDLabel.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Labels</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Labels</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Sliders\CtrlrFixedImageSlider.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Sliders</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Sliders</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Sliders\CtrlrFixedSlider.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Sliders</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Sliders</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Sliders\CtrlrImageSlider.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Sliders</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Sliders</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Sliders\CtrlrSlider.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Sliders</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Sliders</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Sliders\CtrlrSliderInternal.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Sliders</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Sliders</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrFileListBox.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrListBox.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrMidiKeyboard.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrProgressBar.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrWaveform.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrXYModulator.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrXYSurface.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\Statics\CtrlrArrow.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Statics</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Statics</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\CtrlrCombo.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\CtrlrComponent.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\CtrlrComponentLuaRegistration.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\CtrlrComponentTypeManager.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\CtrlrCustomComponent.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponents\CtrlrFilmStripPainter.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaCodeTokeniser.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditor.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditorSettings.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerControls.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerInfo.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerPrompt.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerStackTrace.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerVars.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditArea.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditor.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorConsole.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorTabs.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodFind.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrMethodEditorTabCloseButton.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\CtrlrLuaConsole.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDIBuffer.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrMIDI</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrMIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDICalculator.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrMIDI</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrMIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDIMon.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrMIDI</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrMIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDISettingsDevices.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrMIDI</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrMIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDISettingsDialog.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrMIDI</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrMIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDISettingsRouting.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrMIDI</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrMIDI</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelCanvas.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelCanvasHandlers.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelCanvasLayer.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelCanvasLayers.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelComponentProperties.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditor.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelFindProperty.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelLayerList.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelLayerListItem.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelModulatorList.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelModulatorListTree.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelProperties.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelResourceEditor.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelUtilities.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelViewport.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrViewport.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPropertyEditors\CtrlrPropertyComponent.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPropertyEditors</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPropertyEditors</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrWindowManagers\CtrlrChildWindow.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrWindowManagers</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrWindowManagers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrWindowManagers\CtrlrChildWindowContainer.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrWindowManagers</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrWindowManagers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrWindowManagers\CtrlrChildWindowContent.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrWindowManagers</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrWindowManagers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrWindowManagers\CtrlrDialogWindow.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrWindowManagers</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrWindowManagers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrWindowManagers\CtrlrManagerWindowManager.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrWindowManagers</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrWindowManagers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrWindowManagers\CtrlrPanelWindowManager.cpp">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrWindowManagers</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrWindowManagers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrAbout.cpp">
-      <Filter>Ctrlr\Source\UIComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrComponentSelection.cpp">
-      <Filter>Ctrlr\Source\UIComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLogViewer.cpp">
-      <Filter>Ctrlr\Source\UIComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrTextEditor.cpp">
-      <Filter>Ctrlr\Source\UIComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrValueMap.cpp">
-      <Filter>Ctrlr\Source\UIComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrValueTreeEditor.cpp">
-      <Filter>Ctrlr\Source\UIComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_basics\buffers\juce_AudioChannelSet.cpp">
       <Filter>JUCE Modules\juce_audio_basics\buffers</Filter>
@@ -1253,9 +1261,6 @@
       <Filter>JUCE Modules\juce_audio_basics\utilities</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_basics\juce_audio_basics.cpp">
-      <Filter>JUCE Modules\juce_audio_basics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_audio_basics\juce_audio_basics.mm">
       <Filter>JUCE Modules\juce_audio_basics</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_devices\audio_io\juce_AudioDeviceManager.cpp">
@@ -1471,9 +1476,6 @@
     <ClCompile Include="..\..\JUCE\modules\juce_audio_devices\native\juce_mac_CoreAudio.cpp">
       <Filter>JUCE Modules\juce_audio_devices\native</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_audio_devices\native\juce_mac_CoreMidi.mm">
-      <Filter>JUCE Modules\juce_audio_devices\native</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_devices\native\juce_win32_ASIO.cpp">
       <Filter>JUCE Modules\juce_audio_devices\native</Filter>
     </ClCompile>
@@ -1493,9 +1495,6 @@
       <Filter>JUCE Modules\juce_audio_devices\sources</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_devices\juce_audio_devices.cpp">
-      <Filter>JUCE Modules\juce_audio_devices</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_audio_devices\juce_audio_devices.mm">
       <Filter>JUCE Modules\juce_audio_devices</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_formats\codecs\flac\libFLAC\bitmath.c">
@@ -1669,16 +1668,10 @@
     <ClCompile Include="..\..\JUCE\modules\juce_audio_formats\juce_audio_formats.cpp">
       <Filter>JUCE Modules\juce_audio_formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_audio_formats\juce_audio_formats.mm">
-      <Filter>JUCE Modules\juce_audio_formats</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_plugin_client\utility\juce_PluginUtilities.cpp">
       <Filter>JUCE Modules\juce_audio_plugin_client\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_plugin_client\juce_audio_plugin_client_utils.cpp">
-      <Filter>JUCE Modules\juce_audio_plugin_client</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_audio_plugin_client\juce_audio_plugin_client_VST_utils.mm">
       <Filter>JUCE Modules\juce_audio_plugin_client</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_processors\format\juce_AudioPluginFormat.cpp">
@@ -1756,9 +1749,6 @@
     <ClCompile Include="..\..\JUCE\modules\juce_audio_processors\format_types\VST3_SDK\public.sdk\source\vst\vstpresetfile.cpp">
       <Filter>JUCE Modules\juce_audio_processors\format_types\VST3_SDK\public.sdk\source\vst</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_audio_processors\format_types\juce_AudioUnitPluginFormat.mm">
-      <Filter>JUCE Modules\juce_audio_processors\format_types</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_processors\format_types\juce_LADSPAPluginFormat.cpp">
       <Filter>JUCE Modules\juce_audio_processors\format_types</Filter>
     </ClCompile>
@@ -1831,9 +1821,6 @@
     <ClCompile Include="..\..\JUCE\modules\juce_audio_processors\juce_audio_processors.cpp">
       <Filter>JUCE Modules\juce_audio_processors</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_audio_processors\juce_audio_processors.mm">
-      <Filter>JUCE Modules\juce_audio_processors</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_utils\audio_cd\juce_AudioCDReader.cpp">
       <Filter>JUCE Modules\juce_audio_utils\audio_cd</Filter>
     </ClCompile>
@@ -1858,22 +1845,10 @@
     <ClCompile Include="..\..\JUCE\modules\juce_audio_utils\native\juce_android_BluetoothMidiDevicePairingDialogue.cpp">
       <Filter>JUCE Modules\juce_audio_utils\native</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_audio_utils\native\juce_ios_BluetoothMidiDevicePairingDialogue.mm">
-      <Filter>JUCE Modules\juce_audio_utils\native</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_utils\native\juce_linux_AudioCDReader.cpp">
       <Filter>JUCE Modules\juce_audio_utils\native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_utils\native\juce_linux_BluetoothMidiDevicePairingDialogue.cpp">
-      <Filter>JUCE Modules\juce_audio_utils\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_audio_utils\native\juce_mac_AudioCDBurner.mm">
-      <Filter>JUCE Modules\juce_audio_utils\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_audio_utils\native\juce_mac_AudioCDReader.mm">
-      <Filter>JUCE Modules\juce_audio_utils\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_audio_utils\native\juce_mac_BluetoothMidiDevicePairingDialogue.mm">
       <Filter>JUCE Modules\juce_audio_utils\native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_utils\native\juce_win_BluetoothMidiDevicePairingDialogue.cpp">
@@ -1892,9 +1867,6 @@
       <Filter>JUCE Modules\juce_audio_utils\players</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_audio_utils\juce_audio_utils.cpp">
-      <Filter>JUCE Modules\juce_audio_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_audio_utils\juce_audio_utils.mm">
       <Filter>JUCE Modules\juce_audio_utils</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_core\containers\juce_AbstractFifo.cpp">
@@ -2030,21 +2002,6 @@
       <Filter>JUCE Modules\juce_core\native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_core\native\juce_linux_Threads.cpp">
-      <Filter>JUCE Modules\juce_core\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_core\native\juce_mac_Files.mm">
-      <Filter>JUCE Modules\juce_core\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_core\native\juce_mac_Network.mm">
-      <Filter>JUCE Modules\juce_core\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_core\native\juce_mac_Strings.mm">
-      <Filter>JUCE Modules\juce_core\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_core\native\juce_mac_SystemStats.mm">
-      <Filter>JUCE Modules\juce_core\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_core\native\juce_mac_Threads.mm">
       <Filter>JUCE Modules\juce_core\native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_core\native\juce_posix_NamedPipe.cpp">
@@ -2224,8 +2181,26 @@
     <ClCompile Include="..\..\JUCE\modules\juce_core\juce_core.cpp">
       <Filter>JUCE Modules\juce_core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_core\juce_core.mm">
-      <Filter>JUCE Modules\juce_core</Filter>
+    <ClCompile Include="..\..\JUCE\modules\juce_cryptography\encryption\juce_BlowFish.cpp">
+      <Filter>JUCE Modules\juce_cryptography\encryption</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_cryptography\encryption\juce_Primes.cpp">
+      <Filter>JUCE Modules\juce_cryptography\encryption</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_cryptography\encryption\juce_RSAKey.cpp">
+      <Filter>JUCE Modules\juce_cryptography\encryption</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_cryptography\hashing\juce_MD5.cpp">
+      <Filter>JUCE Modules\juce_cryptography\hashing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_cryptography\hashing\juce_SHA256.cpp">
+      <Filter>JUCE Modules\juce_cryptography\hashing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_cryptography\hashing\juce_Whirlpool.cpp">
+      <Filter>JUCE Modules\juce_cryptography\hashing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_cryptography\juce_cryptography.cpp">
+      <Filter>JUCE Modules\juce_cryptography</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_data_structures\app_properties\juce_ApplicationProperties.cpp">
       <Filter>JUCE Modules\juce_data_structures\app_properties</Filter>
@@ -2252,9 +2227,6 @@
       <Filter>JUCE Modules\juce_data_structures\values</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_data_structures\juce_data_structures.cpp">
-      <Filter>JUCE Modules\juce_data_structures</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_data_structures\juce_data_structures.mm">
       <Filter>JUCE Modules\juce_data_structures</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_events\broadcasters\juce_ActionBroadcaster.cpp">
@@ -2293,13 +2265,7 @@
     <ClCompile Include="..\..\JUCE\modules\juce_events\native\juce_android_Messaging.cpp">
       <Filter>JUCE Modules\juce_events\native</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_events\native\juce_ios_MessageManager.mm">
-      <Filter>JUCE Modules\juce_events\native</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_events\native\juce_linux_Messaging.cpp">
-      <Filter>JUCE Modules\juce_events\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_events\native\juce_mac_MessageManager.mm">
       <Filter>JUCE Modules\juce_events\native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_events\native\juce_win32_Messaging.cpp">
@@ -2315,9 +2281,6 @@
       <Filter>JUCE Modules\juce_events\timers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_events\juce_events.cpp">
-      <Filter>JUCE Modules\juce_events</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_events\juce_events.mm">
       <Filter>JUCE Modules\juce_events</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_graphics\colour\juce_Colour.cpp">
@@ -2602,12 +2565,6 @@
     <ClCompile Include="..\..\JUCE\modules\juce_graphics\native\juce_linux_IconHelpers.cpp">
       <Filter>JUCE Modules\juce_graphics\native</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_graphics\native\juce_mac_CoreGraphicsContext.mm">
-      <Filter>JUCE Modules\juce_graphics\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_graphics\native\juce_mac_Fonts.mm">
-      <Filter>JUCE Modules\juce_graphics\native</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_graphics\native\juce_mac_IconHelpers.cpp">
       <Filter>JUCE Modules\juce_graphics\native</Filter>
     </ClCompile>
@@ -2630,9 +2587,6 @@
       <Filter>JUCE Modules\juce_graphics\placement</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_graphics\juce_graphics.cpp">
-      <Filter>JUCE Modules\juce_graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_graphics\juce_graphics.mm">
       <Filter>JUCE Modules\juce_graphics</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\application\juce_Application.cpp">
@@ -2908,34 +2862,10 @@
     <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\native\juce_ios_ContentSharer.cpp">
       <Filter>JUCE Modules\juce_gui_basics\native</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\native\juce_ios_FileChooser.mm">
-      <Filter>JUCE Modules\juce_gui_basics\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\native\juce_ios_UIViewComponentPeer.mm">
-      <Filter>JUCE Modules\juce_gui_basics\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\native\juce_ios_Windowing.mm">
-      <Filter>JUCE Modules\juce_gui_basics\native</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\native\juce_linux_FileChooser.cpp">
       <Filter>JUCE Modules\juce_gui_basics\native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\native\juce_linux_Windowing.cpp">
-      <Filter>JUCE Modules\juce_gui_basics\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\native\juce_mac_FileChooser.mm">
-      <Filter>JUCE Modules\juce_gui_basics\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\native\juce_mac_MainMenu.mm">
-      <Filter>JUCE Modules\juce_gui_basics\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\native\juce_mac_MouseCursor.mm">
-      <Filter>JUCE Modules\juce_gui_basics\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\native\juce_mac_NSViewComponentPeer.mm">
-      <Filter>JUCE Modules\juce_gui_basics\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\native\juce_mac_Windowing.mm">
       <Filter>JUCE Modules\juce_gui_basics\native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\native\juce_win32_DragAndDrop.cpp">
@@ -3061,9 +2991,6 @@
     <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\juce_gui_basics.cpp">
       <Filter>JUCE Modules\juce_gui_basics</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_basics\juce_gui_basics.mm">
-      <Filter>JUCE Modules\juce_gui_basics</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\code_editor\juce_CodeDocument.cpp">
       <Filter>JUCE Modules\juce_gui_extra\code_editor</Filter>
     </ClCompile>
@@ -3124,9 +3051,6 @@
     <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\native\juce_ios_PushNotifications.cpp">
       <Filter>JUCE Modules\juce_gui_extra\native</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\native\juce_ios_UIViewComponent.mm">
-      <Filter>JUCE Modules\juce_gui_extra\native</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\native\juce_linux_X11_SystemTrayIcon.cpp">
       <Filter>JUCE Modules\juce_gui_extra\native</Filter>
     </ClCompile>
@@ -3136,19 +3060,10 @@
     <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\native\juce_linux_XEmbedComponent.cpp">
       <Filter>JUCE Modules\juce_gui_extra\native</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\native\juce_mac_AppleRemote.mm">
-      <Filter>JUCE Modules\juce_gui_extra\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\native\juce_mac_NSViewComponent.mm">
-      <Filter>JUCE Modules\juce_gui_extra\native</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\native\juce_mac_PushNotifications.cpp">
       <Filter>JUCE Modules\juce_gui_extra\native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\native\juce_mac_SystemTrayIcon.cpp">
-      <Filter>JUCE Modules\juce_gui_extra\native</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\native\juce_mac_WebBrowserComponent.mm">
       <Filter>JUCE Modules\juce_gui_extra\native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\native\juce_win32_ActiveXComponent.cpp">
@@ -3164,9 +3079,6 @@
       <Filter>JUCE Modules\juce_gui_extra\native</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\juce_gui_extra.cpp">
-      <Filter>JUCE Modules\juce_gui_extra</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\juce_gui_extra.mm">
       <Filter>JUCE Modules\juce_gui_extra</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\BinaryData.cpp">
@@ -3193,6 +3105,9 @@
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_core.cpp">
       <Filter>JUCE Library Code</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\JuceLibraryCode\include_juce_cryptography.cpp">
+      <Filter>JUCE Library Code</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_data_structures.cpp">
       <Filter>JUCE Library Code</Filter>
     </ClCompile>
@@ -3211,967 +3126,970 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\call.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\call_function.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\call_member.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\call_operator_iterate.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\class_registry.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\class_rep.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\constructor.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\convert_to_lua.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\debug.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\decorate_type.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\deduce_signature.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\enum_maker.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\format_signature.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\garbage_collector.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\has_get_pointer.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\inheritance.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\instance_holder.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\link_compatibility.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\make_instance.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\most_derived.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\object.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\object_call.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\object_rep.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\operator_id.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\other.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\pcall.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\pointee_sizeof.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\policy.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\primitives.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\property.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\signature_match.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\stack_utils.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\typetraits.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\detail\yes_no.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind\detail</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind\detail</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\adopt_policy.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\back_reference.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\back_reference_fwd.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\class.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\class_info.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\config.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\container_policy.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\copy_policy.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\dependency_policy.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\discard_result_policy.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\error.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\error_callback_fun.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\exception_handler.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\from_stack.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\function.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\function_converter.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\function_introspection.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\get_main_thread.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\get_pointer.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\handle.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\intrusive_ptr_converter.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\iterator_policy.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\lua_include.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\lua_state_fwd.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\luabind.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\make_function.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\nil.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\no_dependency.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\object.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\object_fwd.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\open.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\operator.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\out_value_policy.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\prefix.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\raw_policy.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\return_reference_to_policy.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\scope.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\set_package_preload.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\shared_ptr_converter.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\stack.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\std_shared_ptr_converter.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\tag_function.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\typeid.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\value_wrapper.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\version.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\weak_ref.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\wrapper_base.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\luabind\yield_policy.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\luabind\build_information.hpp">
-      <Filter>Ctrlr\Source\Misc\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\include\inttypes.h">
-      <Filter>Ctrlr\Source\Misc\include</Filter>
+      <Filter>CtrlrX\Source\Misc\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\include\juce_PluginHostType.h">
-      <Filter>Ctrlr\Source\Misc\include</Filter>
+      <Filter>CtrlrX\Source\Misc\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\include\keys.h">
-      <Filter>Ctrlr\Source\Misc\include</Filter>
+      <Filter>CtrlrX\Source\Misc\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\include\libr.h">
-      <Filter>Ctrlr\Source\Misc\include</Filter>
+      <Filter>CtrlrX\Source\Misc\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\compat.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\darwin_usb.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\enums.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\hotplug.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\libusb.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\libusb_linux.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\libusb_osx.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\libusb_windows.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\libusbi.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\linux_usbfs.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\poll_posix.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\poll_windows.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\structs.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\threads_posix.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\threads_windows.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\version.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\version_nano.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\windows_common.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\libusb\include\windows_usb.h">
-      <Filter>Ctrlr\Source\Misc\libusb\include</Filter>
+      <Filter>CtrlrX\Source\Misc\libusb\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\lua\include\lauxlib.h">
-      <Filter>Ctrlr\Source\Misc\lua\include</Filter>
+      <Filter>CtrlrX\Source\Misc\lua\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\lua\include\lua.h">
-      <Filter>Ctrlr\Source\Misc\lua\include</Filter>
+      <Filter>CtrlrX\Source\Misc\lua\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\lua\include\luaconf.h">
-      <Filter>Ctrlr\Source\Misc\lua\include</Filter>
+      <Filter>CtrlrX\Source\Misc\lua\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Misc\lua\include\lualib.h">
-      <Filter>Ctrlr\Source\Misc\lua\include</Filter>
+      <Filter>CtrlrX\Source\Misc\lua\include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrManager\CtrlrManager.h">
-      <Filter>Ctrlr\Source\Core\CtrlrManager</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrManager</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrManager\CtrlrManagerVst.h">
-      <Filter>Ctrlr\Source\Core\CtrlrManager</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrManager</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrModulator\CtrlrModulator.h">
-      <Filter>Ctrlr\Source\Core\CtrlrModulator</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrModulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrModulator\CtrlrModulatorProcessor.h">
-      <Filter>Ctrlr\Source\Core\CtrlrModulator</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrModulator</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrPanel\CtrlrEvaluationScopes.h">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrPanel\CtrlrPanel.h">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelMIDIInputThread.h">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelMIDISnapshot.h">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelProcessor.h">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelResource.h">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelResourceManager.h">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelSchemeMigration.h">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrPanel\CtrlrPanelUndoManager.h">
-      <Filter>Ctrlr\Source\Core\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\Core\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\StandaloneWrapper\CtrlrStandaloneWindow.h">
-      <Filter>Ctrlr\Source\Core\StandaloneWrapper</Filter>
+      <Filter>CtrlrX\Source\Core\StandaloneWrapper</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrFontManager.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrIDManager.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrIDs.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrInlineUtilitiesGUI.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrLog.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrMacros.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrMainPage.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrProperties.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrRevision.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrSysexProcessor.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrSysexProcessorOwned.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrSysexToken.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrUtilities.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\CtrlrUtilitiesGUI.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\dxtrans.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\stdafx.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Core\stdafx_luabind.h">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\Deprecated\CtrlrLuaBigInteger.h">
-      <Filter>Ctrlr\Source\Lua\Deprecated</Filter>
+      <Filter>CtrlrX\Source\Lua\Deprecated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\Deprecated\CtrlrLuaComponentAnimator.h">
-      <Filter>Ctrlr\Source\Lua\Deprecated</Filter>
+      <Filter>CtrlrX\Source\Lua\Deprecated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\Deprecated\CtrlrLuaFile.h">
-      <Filter>Ctrlr\Source\Lua\Deprecated</Filter>
+      <Filter>CtrlrX\Source\Lua\Deprecated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\Deprecated\CtrlrLuaMemoryBlock.h">
-      <Filter>Ctrlr\Source\Lua\Deprecated</Filter>
+      <Filter>CtrlrX\Source\Lua\Deprecated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\Deprecated\CtrlrLuaRectangle.h">
-      <Filter>Ctrlr\Source\Lua\Deprecated</Filter>
+      <Filter>CtrlrX\Source\Lua\Deprecated</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LAffineTransform.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LAlertWindow.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LAsyncUpdater.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LAttributedString.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LAudioFile.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LAudioFormat.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LAudioPlayHead.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LAudioSampleBuffer.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LAudioThumbnail.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LBigInteger.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LBorderSize.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LBubbleMessageComponent.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LButton.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LColour.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LColourGradient.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LComboBox.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LComponent.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LComponentPeer.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LDrawable.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LExpression.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LFile.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LFileListComponent.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LFileTreeComponent.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LFont.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LGlobalFunctions.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LGlyphArrangement.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LGraphics.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LImage.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LInputStream.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LJuce.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LJustification.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LKeyPress.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LLabel.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LLine.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LLookAndFeel.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LMemoryBlock.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LMemoryInputStream.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LMidiBuffer.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LMidiKeyboardComponent.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LMidiMessage.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LModifierKeys.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LMouseCursor.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LMouseEvent.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Lua\JuceClasses\LMouseInputSource.h">
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LPath.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LPoint.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LPopupMenu.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LRandom.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LRange.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LRectangle.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LRelativeCoordinate.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LResult.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LSlider.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LSparseSet.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LString.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LTextButton.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LTextEditor.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LThread.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LThreadWithProgressWindow.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LTime.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LTimer.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LToggleButton.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LTypeface.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LURL.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LValue.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LValueTree.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LXmlElement.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LZipFile.h">
-      <Filter>Ctrlr\Source\Lua\JuceClasses</Filter>
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\Methods\CtrlrLuaMethod.h">
-      <Filter>Ctrlr\Source\Lua\Methods</Filter>
+      <Filter>CtrlrX\Source\Lua\Methods</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\Methods\CtrlrLuaMethodManager.h">
-      <Filter>Ctrlr\Source\Lua\Methods</Filter>
+      <Filter>CtrlrX\Source\Lua\Methods</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\CtrlrLuaAudioConverter.h">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\CtrlrLuaConverters.h">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\CtrlrLuaDebugger.h">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\CtrlrLuaManager.h">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\CtrlrLuaMultiTimer.h">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\CtrlrLuaObject.h">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\CtrlrLuaObjectWrapper.h">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\CtrlrLuaUtils.h">
-      <Filter>Ctrlr\Source\Lua</Filter>
+      <Filter>CtrlrX\Source\Lua</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\MIDI\CtrlrMIDILibrary\CtrlrMIDILibrary.h">
-      <Filter>Ctrlr\Source\MIDI\CtrlrMIDILibrary</Filter>
+      <Filter>CtrlrX\Source\MIDI\CtrlrMIDILibrary</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\MIDI\CtrlrMIDIDevice.h">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\MIDI\CtrlrMIDIDeviceManager.h">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\MIDI\CtrlrMIDIFilter.h">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\MIDI\CtrlrMidiInputComparator.h">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\MIDI\CtrlrMidiInputComparatorMulti.h">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\MIDI\CtrlrMidiInputComparatorSingle.h">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\MIDI\CtrlrMidiInputComparatorTypes.h">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\MIDI\CtrlrMidiMessage.h">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\MIDI\CtrlrMidiMessageEx.h">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\MIDI\CtrlrOwnedMidiMessage.h">
-      <Filter>Ctrlr\Source\MIDI</Filter>
+      <Filter>CtrlrX\Source\MIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Native\CtrlrGeneric.h">
-      <Filter>Ctrlr\Source\Native</Filter>
+      <Filter>CtrlrX\Source\Native</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Native\CtrlrLinux.h">
-      <Filter>Ctrlr\Source\Native</Filter>
+      <Filter>CtrlrX\Source\Native</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Native\CtrlrMac.h">
-      <Filter>Ctrlr\Source\Native</Filter>
+      <Filter>CtrlrX\Source\Native</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Native\CtrlrNative.h">
-      <Filter>Ctrlr\Source\Native</Filter>
+      <Filter>CtrlrX\Source\Native</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Native\CtrlrWindows.h">
-      <Filter>Ctrlr\Source\Native</Filter>
+      <Filter>CtrlrX\Source\Native</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Plugin\CtrlrProcessor.h">
-      <Filter>Ctrlr\Source\Plugin</Filter>
+      <Filter>CtrlrX\Source\Plugin</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Plugin\CtrlrProcessorEditorForLive.h">
-      <Filter>Ctrlr\Source\Plugin</Filter>
+      <Filter>CtrlrX\Source\Plugin</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrApplicationWindow\CtrlrDocumentPanel.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrApplicationWindow</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrApplicationWindow</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrApplicationWindow\CtrlrEditor.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrApplicationWindow</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrApplicationWindow</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrApplicationWindow\CtrlrSettings.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrApplicationWindow</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrApplicationWindow</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Buttons\CtrlrButton.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Buttons</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Buttons</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Buttons\CtrlrCustomButtonInternal.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Buttons</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Buttons</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Buttons\CtrlrHyperlink.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Buttons</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Buttons</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Buttons\CtrlrImageButton.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Buttons</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Buttons</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Buttons\CtrlrToggleButton.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Buttons</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Buttons</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Groups\CtrlrGroup.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Groups</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Groups</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Groups\CtrlrTabsComponent.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Groups</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Groups</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Labels\CtrlrImage.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Labels</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Labels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Labels\CtrlrLabel.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Labels</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Labels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Labels\CtrlrLCDLabel.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Labels</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Labels</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Sliders\CtrlrFixedImageSlider.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Sliders</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Sliders</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Sliders\CtrlrFixedSlider.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Sliders</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Sliders</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Sliders\CtrlrImageSlider.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Sliders</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Sliders</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Sliders\CtrlrSlider.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Sliders</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Sliders</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Sliders\CtrlrSliderInternal.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Sliders</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Sliders</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrFileListBox.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrListBox.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrMidiKeyboard.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrProgressBar.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrWaveform.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrXYModulator.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Specials\CtrlrXYSurface.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Specials</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Specials</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\Statics\CtrlrArrow.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents\Statics</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents\Statics</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\CtrlrCombo.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\CtrlrComponent.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\CtrlrComponentTypeManager.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\CtrlrCustomComponent.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponents\CtrlrFilmStripPainter.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaCodeTokeniser.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaCodeTokeniserFunctions.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditor.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditorSettings.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerControls.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerInfo.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerPrompt.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerStackTrace.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerVars.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditArea.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditor.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorConsole.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorTabs.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodFind.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrMethodEditorTabCloseButton.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\CtrlrLuaConsole.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrLua</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDIBuffer.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrMIDI</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrMIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDICalculator.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrMIDI</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrMIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDIMon.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrMIDI</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrMIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDISettingsDevices.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrMIDI</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrMIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDISettingsDialog.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrMIDI</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrMIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDISettingsRouting.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrMIDI</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrMIDI</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelCanvas.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelCanvasLayer.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelComponentProperties.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditor.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelFindProperty.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelLayerList.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelLayerListItem.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelModulatorList.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelModulatorListTree.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelProperties.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelResourceEditor.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelUtilities.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelViewport.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrViewport.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPanel</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPropertyEditors\CtrlrPropertyComponent.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrPropertyEditors</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPropertyEditors</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrWindowManagers\CtrlrChildWindow.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrWindowManagers</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrWindowManagers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrWindowManagers\CtrlrChildWindowContainer.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrWindowManagers</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrWindowManagers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrWindowManagers\CtrlrChildWindowContent.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrWindowManagers</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrWindowManagers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrWindowManagers\CtrlrDialogWindow.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrWindowManagers</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrWindowManagers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrWindowManagers\CtrlrManagerWindowManager.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrWindowManagers</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrWindowManagers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrWindowManagers\CtrlrPanelWindowManager.h">
-      <Filter>Ctrlr\Source\UIComponents\CtrlrWindowManagers</Filter>
+      <Filter>CtrlrX\Source\UIComponents\CtrlrWindowManagers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrAbout.h">
-      <Filter>Ctrlr\Source\UIComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrComponentSelection.h">
-      <Filter>Ctrlr\Source\UIComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLogViewer.h">
-      <Filter>Ctrlr\Source\UIComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrTextEditor.h">
-      <Filter>Ctrlr\Source\UIComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrValueMap.h">
-      <Filter>Ctrlr\Source\UIComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrValueTreeEditor.h">
-      <Filter>Ctrlr\Source\UIComponents</Filter>
+      <Filter>CtrlrX\Source\UIComponents</Filter>
     </ClInclude>
     <ClInclude Include="..\..\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h">
       <Filter>JUCE Modules\juce_audio_basics\audio_play_head</Filter>
@@ -5634,6 +5552,27 @@
     <ClInclude Include="..\..\JUCE\modules\juce_core\juce_core.h">
       <Filter>JUCE Modules\juce_core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_cryptography\encryption\juce_BlowFish.h">
+      <Filter>JUCE Modules\juce_cryptography\encryption</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_cryptography\encryption\juce_Primes.h">
+      <Filter>JUCE Modules\juce_cryptography\encryption</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_cryptography\encryption\juce_RSAKey.h">
+      <Filter>JUCE Modules\juce_cryptography\encryption</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_cryptography\hashing\juce_MD5.h">
+      <Filter>JUCE Modules\juce_cryptography\hashing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_cryptography\hashing\juce_SHA256.h">
+      <Filter>JUCE Modules\juce_cryptography\hashing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_cryptography\hashing\juce_Whirlpool.h">
+      <Filter>JUCE Modules\juce_cryptography\hashing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_cryptography\juce_cryptography.h">
+      <Filter>JUCE Modules\juce_cryptography</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\JUCE\modules\juce_data_structures\app_properties\juce_ApplicationProperties.h">
       <Filter>JUCE Modules\juce_data_structures\app_properties</Filter>
     </ClInclude>
@@ -6444,259 +6383,280 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Source\Misc\luabind\build_information.hpp.cmake_in">
-      <Filter>Ctrlr\Source\Misc\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind</Filter>
     </None>
     <None Include="..\..\Source\Misc\luabind\get-deps.sh">
-      <Filter>Ctrlr\Source\Misc\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind</Filter>
     </None>
     <None Include="..\..\Source\Misc\luabind\INSTALL.txt">
-      <Filter>Ctrlr\Source\Misc\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind</Filter>
     </None>
     <None Include="..\..\Source\Misc\luabind\LICENSE.txt">
-      <Filter>Ctrlr\Source\Misc\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind</Filter>
     </None>
     <None Include="..\..\Source\Misc\luabind\README.md">
-      <Filter>Ctrlr\Source\Misc\luabind</Filter>
+      <Filter>CtrlrX\Source\Misc\luabind</Filter>
     </None>
     <None Include="..\..\Source\Core\CtrlrRevision.template">
-      <Filter>Ctrlr\Source\Core</Filter>
+      <Filter>CtrlrX\Source\Core</Filter>
     </None>
     <None Include="..\..\Source\Resources\Fonts\FONT_60sekuntia.ttf">
-      <Filter>Ctrlr\Source\Resources\Fonts</Filter>
+      <Filter>CtrlrX\Source\Resources\Fonts</Filter>
     </None>
     <None Include="..\..\Source\Resources\Fonts\FONT_Computerfont.ttf">
-      <Filter>Ctrlr\Source\Resources\Fonts</Filter>
+      <Filter>CtrlrX\Source\Resources\Fonts</Filter>
     </None>
     <None Include="..\..\Source\Resources\Fonts\FONT_Digit.ttf">
-      <Filter>Ctrlr\Source\Resources\Fonts</Filter>
+      <Filter>CtrlrX\Source\Resources\Fonts</Filter>
     </None>
     <None Include="..\..\Source\Resources\Fonts\FONT_Digital-7.ttf">
-      <Filter>Ctrlr\Source\Resources\Fonts</Filter>
+      <Filter>CtrlrX\Source\Resources\Fonts</Filter>
     </None>
     <None Include="..\..\Source\Resources\Fonts\FONT_DottyShadow.ttf">
-      <Filter>Ctrlr\Source\Resources\Fonts</Filter>
+      <Filter>CtrlrX\Source\Resources\Fonts</Filter>
     </None>
     <None Include="..\..\Source\Resources\Fonts\FONT_Electronic Highway Sign.ttf">
-      <Filter>Ctrlr\Source\Resources\Fonts</Filter>
+      <Filter>CtrlrX\Source\Resources\Fonts</Filter>
     </None>
     <None Include="..\..\Source\Resources\Fonts\FONT_Invasion2000.ttf">
-      <Filter>Ctrlr\Source\Resources\Fonts</Filter>
+      <Filter>CtrlrX\Source\Resources\Fonts</Filter>
     </None>
     <None Include="..\..\Source\Resources\Fonts\FONT_Karmatic Arcade.ttf">
-      <Filter>Ctrlr\Source\Resources\Fonts</Filter>
+      <Filter>CtrlrX\Source\Resources\Fonts</Filter>
     </None>
     <None Include="..\..\Source\Resources\Fonts\FONT_LCD.ttf">
-      <Filter>Ctrlr\Source\Resources\Fonts</Filter>
+      <Filter>CtrlrX\Source\Resources\Fonts</Filter>
     </None>
     <None Include="..\..\Source\Resources\Fonts\FONT_Warenhaus-Standard.ttf">
-      <Filter>Ctrlr\Source\Resources\Fonts</Filter>
+      <Filter>CtrlrX\Source\Resources\Fonts</Filter>
     </None>
     <None Include="..\..\Source\Resources\Fonts\FONT_ZX81.ttf">
-      <Filter>Ctrlr\Source\Resources\Fonts</Filter>
+      <Filter>CtrlrX\Source\Resources\Fonts</Filter>
+    </None>
+    <None Include="..\..\Source\Resources\Icons\github_line.svg">
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
+    </None>
+    <None Include="..\..\Source\Resources\Icons\paypal_colour.svg">
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
+    </None>
+    <None Include="..\..\Source\Resources\Icons\paypal_bw.svg">
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
+    </None>
+    <None Include="..\..\Source\Resources\Icons\github_colour.svg">
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
+    </None>
+    <None Include="..\..\Source\Resources\Icons\github_bw.svg">
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
+    </None>
+    <None Include="..\..\Source\Resources\Icons\vst3_au_juce_mini_logo_bg_rnd.svg">
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
+    </None>
+    <None Include="..\..\Source\Resources\Icons\ctrlrx_logo.svg">
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\add.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\appbar.debug.restart.png">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\appbar.debug.step.into.png">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\appbar.debug.step.out.png">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\appbar.debug.step.over.png">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\bold.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\bug.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\camera.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\camera_special.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\cleanup.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\clear.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\cog.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\copy.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\ctrlr_logo.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\cut.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\done.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\edit.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\file.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\folder.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\folder_open.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\gradient.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\ico_ctrlr_mac.icns">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\invisible.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\italic.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\memory.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\midi.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\nav_next.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\nav_prev.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\new_folder.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\open_in_new.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\paste.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\play.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\radio.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\radio_checked.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\receive.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\search.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\search_off.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\send.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\stop.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\sync.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\trash.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\underline.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\visible.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Icons\wysiwyg.svg">
-      <Filter>Ctrlr\Source\Resources\Icons</Filter>
+      <Filter>CtrlrX\Source\Resources\Icons</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\clidebugger\debugger.lua">
-      <Filter>Ctrlr\Source\Resources\Lua\clidebugger</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua\clidebugger</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\clidebugger\LICENSE">
-      <Filter>Ctrlr\Source\Resources\Lua\clidebugger</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua\clidebugger</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\clidebugger\README.md">
-      <Filter>Ctrlr\Source\Resources\Lua\clidebugger</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua\clidebugger</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\clidebugger\test.lua">
-      <Filter>Ctrlr\Source\Resources\Lua\clidebugger</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua\clidebugger</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\json4lua\json.lua">
-      <Filter>Ctrlr\Source\Resources\Lua\json4lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua\json4lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\json4lua\LICENCE.txt">
-      <Filter>Ctrlr\Source\Resources\Lua\json4lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua\json4lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\gen_LLookAndFeel.cpp.sh">
-      <Filter>Ctrlr\Source\Resources\Lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\gen_LLookAndFeel.h.sh">
-      <Filter>Ctrlr\Source\Resources\Lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\gen_LookAndFeel.lua.sh">
-      <Filter>Ctrlr\Source\Resources\Lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\gen_LookAndFeelBase.cpp.sh">
-      <Filter>Ctrlr\Source\Resources\Lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\gen_LookAndFeelBase.h.sh">
-      <Filter>Ctrlr\Source\Resources\Lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\gen_LookAndFeelParamWrapper-Lua-Member-Binding.sh">
-      <Filter>Ctrlr\Source\Resources\Lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\gen_LookAndFeelParamWrapper.h.sh">
-      <Filter>Ctrlr\Source\Resources\Lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\inspect.lua">
-      <Filter>Ctrlr\Source\Resources\Lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\lf.template">
-      <Filter>Ctrlr\Source\Resources\Lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\LookAndFeel.lua">
-      <Filter>Ctrlr\Source\Resources\Lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Lua\paramWrapper.template">
-      <Filter>Ctrlr\Source\Resources\Lua</Filter>
+      <Filter>CtrlrX\Source\Resources\Lua</Filter>
     </None>
     <None Include="..\..\Source\Resources\Misc\RSRC.zip">
-      <Filter>Ctrlr\Source\Resources\Misc</Filter>
+      <Filter>CtrlrX\Source\Resources\Misc</Filter>
     </None>
     <None Include="..\..\Source\Resources\XML\CtrlrIDs.xml">
-      <Filter>Ctrlr\Source\Resources\XML</Filter>
+      <Filter>CtrlrX\Source\Resources\XML</Filter>
     </None>
     <None Include="..\..\Source\Resources\XML\CtrlrLuaClassTemplates.xml">
-      <Filter>Ctrlr\Source\Resources\XML</Filter>
+      <Filter>CtrlrX\Source\Resources\XML</Filter>
     </None>
     <None Include="..\..\Source\Resources\XML\CtrlrLuaMethodTemplates.xml">
-      <Filter>Ctrlr\Source\Resources\XML</Filter>
+      <Filter>CtrlrX\Source\Resources\XML</Filter>
     </None>
     <None Include="..\..\Source\Resources\XML\CtrlrMidiMultiTemplate.xml">
-      <Filter>Ctrlr\Source\Resources\XML</Filter>
+      <Filter>CtrlrX\Source\Resources\XML</Filter>
     </None>
     <None Include="..\..\Source\Resources\XML\CtrlrMIDITransactions.xml">
-      <Filter>Ctrlr\Source\Resources\XML</Filter>
+      <Filter>CtrlrX\Source\Resources\XML</Filter>
     </None>
     <None Include="..\..\Source\Resources\XML\CtrlrMIDIVendors.xml">
-      <Filter>Ctrlr\Source\Resources\XML</Filter>
+      <Filter>CtrlrX\Source\Resources\XML</Filter>
     </None>
     <None Include="..\..\JUCE\modules\juce_audio_devices\native\oboe\CMakeLists.txt">
       <Filter>JUCE Modules\juce_audio_devices\native\oboe</Filter>
