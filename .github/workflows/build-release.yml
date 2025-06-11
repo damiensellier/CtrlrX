@@ -88,20 +88,26 @@ jobs:
       shell: bash
       run: |
         if [ "$RUNNER_OS" == "Linux" ]; then
-          ls -lh ./Packaging/Linux
+          pushd ./Packaging/Linux
+          ls -lh .
+          echo "ARTIFACT_NAME=`ls -t Ctrlr*sh | head -n 1`" >> $GITHUB_ENV
         elif [ "$RUNNER_OS" == "Windows" ]; then
-          ls -lh ./Packaging/Windows
+          pushd ./Packaging/Windows
+          ls -lh .
+          echo "ARTIFACT_NAME=`ls -t Ctrlr*exe | head -n 1`" >> $GITHUB_ENV
         elif [ "$RUNNER_OS" == "macOS" ]; then
-          ls -lh ./Packaging/MacOS
+          pushd ./Packaging/MacOS
+          ls -lh .
+          echo "ARTIFACT_NAME=`ls -t Ctrlr*dmg | head -n 1`" >> $GITHUB_ENV
         fi
-
+        echo "ARTIFACT_DIRECTORY=`pwd`" >> $GITHUB_ENV
+        popd
+          
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        path: |
-          Packaging/Linux/Ctrlr*.sh
-          Packaging/Windows/Ctrlr*.exe
-        name: CtrlrX-${{ matrix.os }}
+        path: ${{ env.ARTIFACT_DIRECTORY }}/${{ env.ARTIFACT_NAME }}
+        name: ${{ env.ARTIFACT_NAME }}
 
     # Enable tmate debugging of manually-triggered workflows if the input option was provided
     - name: Setup tmate session
