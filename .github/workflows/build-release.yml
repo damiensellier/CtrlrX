@@ -89,18 +89,18 @@ jobs:
       run: |
         if [ "$RUNNER_OS" == "Linux" ]; then
           pushd ./Packaging/Linux
-          ls -lh .
           echo "ARTIFACT_NAME=`ls -t Ctrlr*sh | head -n 1`" >> $GITHUB_ENV
+          echo "ARTIFACT_DIRECTORY=Packaging/Linux" >> $GITHUB_ENV
         elif [ "$RUNNER_OS" == "Windows" ]; then
           pushd ./Packaging/Windows
-          ls -lh .
           echo "ARTIFACT_NAME=`ls -t Ctrlr*exe | head -n 1`" >> $GITHUB_ENV
+          echo "ARTIFACT_DIRECTORY=Packaging/Windows" >> $GITHUB_ENV
         elif [ "$RUNNER_OS" == "macOS" ]; then
           pushd ./Packaging/MacOS
-          ls -lh .
           echo "ARTIFACT_NAME=`ls -t Ctrlr*dmg | head -n 1`" >> $GITHUB_ENV
+          echo "ARTIFACT_DIRECTORY=Packaging/MacOS" >> $GITHUB_ENV
         fi
-        echo "ARTIFACT_DIRECTORY=`pwd`" >> $GITHUB_ENV
+        ls -lh .
         popd
           
     - name: Upload artifact
