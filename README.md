@@ -23,9 +23,15 @@ ToDo
 
 Changelog
 ---------
-#### Version 5.6.34 | 2025.05
+#### Version 5.6.34 | 2025.06.16
+
+* NEW ProTools AAX plugin support (requires codesigning via PACE)
+
 * UPDATED LuaBind Drawable class. LCore.cpp, LGraphics.cpp
-* UPDATED JUCE ZipFile Module. juce_ZipFile.cpp & .h
+* UPDATED LuaBind function addChild() to valueTree class. LCore.cpp
+* ADDED LuaBind function jmap() mapToLog10(), mapFromLog10(), isWithin() to GlobalFunctions. LCore.cpp
+* ADDED LuaBind Parse XML support to XmlDocument class. LCore.cpp
+
 
 
 #### Version 5.6.33 | 2025.05.28

@@ -927,6 +927,36 @@ void LValueTree::wrapForLua (lua_State *L)
 	];
 }
 
+namespace LXmlJuce6Factories // Added v5.6.34. Thanks to @dnaldoog
+/*Convert std::unique_ptr to raw pointer for luabind*/
+{
+	static XmlElement* parseXMLData(const String& xmlData)
+	{
+		std::unique_ptr<XmlElement> doc = XmlDocument::parse(xmlData);
+		if (doc)
+		{
+			return doc.release(); // Transfer ownership to Lua
+		}
+		return nullptr;
+	}
+	
+	static XmlElement* parseXMLFile(const File& fileToParse)
+	{
+		std::unique_ptr<XmlElement> doc = XmlDocument::parse(fileToParse);
+		if (doc)
+		{
+			return doc.release(); // Transfer ownership to Lua
+		}
+		return nullptr;
+	}
+	
+	static XmlElement* safeGetDocumentElement(XmlDocument& doc)
+	{
+		std::unique_ptr<XmlElement> element = doc.getDocumentElement();
+		return element ? element.release() : nullptr;
+	}
+}
+
 void LXmlElement::wrapForLua (lua_State *L)
 {
 	using namespace luabind;
@@ -997,10 +1027,10 @@ void LXmlElement::wrapForLua (lua_State *L)
             .def("getLastParseError", &XmlDocument::getLastParseError)
             .def("setInputSource", &XmlDocument::setInputSource)
             .def("setEmptyTextElementsIgnored", &XmlDocument::setEmptyTextElementsIgnored)
-            /*.scope[
-                def("parse", (XmlElement *(*)(const File &))&XmlDocument::parse),
-                def("parse", (XmlElement *(*)(const String &))&XmlDocument::parse)
-            ]*/
+            .scope[ // Updated v5.6.34. Thanks to @dnaldoog
+                def("parseXML", LXmlJuce6Factories::parseXMLFile),
+                def("parseXML", LXmlJuce6Factories::parseXMLData)
+            ]
     ];
 }
 
