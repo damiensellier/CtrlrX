@@ -179,7 +179,7 @@ const Result CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bo
         
         if (executableFile.existsAsFile()) {
             
-            if (fileExtension == ".vst3" || fileExtension == ".vst") { // Updated v5.6.33. Added .vst to identify vst2 instances in Cubase for macOS.(fileExtension == ".vst3" || ".vst") was wrong. FIXED on 2025.04.29
+            if (fileExtension == ".vst3" || fileExtension == ".vst" || fileExtension == ".aaxplugin") { // Updated v5.6.33. Added .vst to identify vst2 instances in Cubase for macOS.(fileExtension == ".vst3" || ".vst") was wrong. FIXED on 2025.04.29
                 std::cout << "fileExtension is : " << fileExtension << std::endl;
                 logger.log("fileExtension is : " + fileExtension );
                 
@@ -901,7 +901,16 @@ const Result CtrlrMac::setBundleInfo(CtrlrPanel *sourceInfo, const File &bundle)
 		{
 			forEachXmlChildElement (*dict, e1)
 			{
-				if (e1->hasTagName("key") && e1->getAllSubText() == "CFBundleName")
+                if (e1->hasTagName("key") && e1->getAllSubText() == "CFBundleDisplayName")
+                {
+                    XmlElement *cfBundleElement = e1->getNextElementWithTagName("string");
+                    if (cfBundleElement != nullptr)
+                    {
+                        cfBundleElement->deleteAllTextElements();
+                        cfBundleElement->addTextElement(sourceInfo->getProperty(Ids::name).toString());
+                    }
+                }
+                if (e1->hasTagName("key") && e1->getAllSubText() == "CFBundleName")
 				{
 					XmlElement *cfBundleElement = e1->getNextElementWithTagName("string");
 					if (cfBundleElement != nullptr)

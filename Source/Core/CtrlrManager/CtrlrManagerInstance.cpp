@@ -169,11 +169,17 @@ const String CtrlrManager::getInstanceNameForHost() const
 {
 	if (getInstanceMode() == InstanceSingle || getInstanceMode() == InstanceSingleRestriced)
 	{
-		return (ctrlrPlayerInstanceTree.getProperty(Ids::name).toString() + "|" + ctrlrPlayerInstanceTree.getProperty(Ids::panelAuthorName).toString());
+        #ifdef JucePlugin_Build_AAX
+            // This code runs ONLY when building for AAX.
+            return (ctrlrPlayerInstanceTree.getProperty(Ids::name).toString());
+        #else
+            // This code runs for ALL other formats (VST, AU, Standalone).
+            return (ctrlrPlayerInstanceTree.getProperty(Ids::name).toString() + " | " + ctrlrPlayerInstanceTree.getProperty(Ids::panelAuthorName).toString()); // Updated v5.6.34.
+        #endif
 	}
 	else
 	{
-		return ("Ctrlr|Instigator");
+		return ("CtrlrX"); // Updated v5.6.34. Default Plugin Name
 	}
 }
 
@@ -185,7 +191,7 @@ const String CtrlrManager::getInstanceName() const
 	}
 	else
 	{
-		return ("Ctrlr");
+		return ("CtrlrX");
 	}
 }
 

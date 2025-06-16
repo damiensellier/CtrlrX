@@ -26,7 +26,7 @@
  #define JucePlugin_Build_RTAS             0
 #endif
 #ifndef  JucePlugin_Build_AAX
- #define JucePlugin_Build_AAX              0
+ #define JucePlugin_Build_AAX              1
 #endif
 #ifndef  JucePlugin_Build_Standalone
  #define JucePlugin_Build_Standalone       1
@@ -74,13 +74,13 @@
  #define JucePlugin_EditorRequiresKeyboardFocus  1
 #endif
 #ifndef  JucePlugin_Version
- #define JucePlugin_Version                5.6.33
+ #define JucePlugin_Version                5.6.34
 #endif
 #ifndef  JucePlugin_VersionCode
- #define JucePlugin_VersionCode            0x50621
+ #define JucePlugin_VersionCode            0x50622
 #endif
 #ifndef  JucePlugin_VersionString
- #define JucePlugin_VersionString          "5.6.33"
+ #define JucePlugin_VersionString          "5.6.34"
 #endif
 #ifndef  JucePlugin_VSTUniqueID
  #define JucePlugin_VSTUniqueID            JucePlugin_PluginCode
@@ -134,7 +134,7 @@
  #define JucePlugin_AAXProductId           JucePlugin_PluginCode
 #endif
 #ifndef  JucePlugin_AAXCategory
- #define JucePlugin_AAXCategory            0
+ #define JucePlugin_AAXCategory            2048
 #endif
 #ifndef  JucePlugin_AAXDisableBypass
  #define JucePlugin_AAXDisableBypass       0
