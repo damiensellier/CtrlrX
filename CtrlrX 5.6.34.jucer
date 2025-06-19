@@ -12,7 +12,7 @@
               jucerFormatVersion="1" pluginAUMainType="'aumu'" displaySplashScreen="1"
               pluginRTASDisableBypass="0" pluginRTASDisableMultiMono="0" pluginAAXDisableBypass="0"
               pluginAAXDisableMultiMono="0" cppLanguageStandard="14" pluginVST3Category="Instrument,Tools"
-              pluginCharacteristicsValue="pluginEditorRequiresKeys,pluginIsSynth,pluginProducesMidiOut,pluginWantsMidiIn"
+              pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn,pluginProducesMidiOut,pluginEditorRequiresKeys"
               pluginAAXCategory="2048">
   <MAINGROUP id="SRLsFb" name="CtrlrX">
     <GROUP id="{BE407432-92DD-AEAB-3C70-AAE03FCD0B1D}" name="Source">
@@ -1098,7 +1098,7 @@
       </MODULEPATHS>
     </XCODE_MAC>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1"
-                enableGNUExtensions="1" externalLibraries="udev&#10;:libbfd.a&#10;iberty&#10;z&#10;X11&#10;"
+                enableGNUExtensions="1" externalLibraries="udev&#10;:libbfd.a&#10;iberty&#10;z&#10;X11&#10;sframe&#10;zstd"
                 vstLegacyFolder="Source/Misc/vst2sdk" extraCompilerFlags="-w"
                 smallIcon="eqFQC1" bigIcon="eqFQC1">
       <CONFIGURATIONS>

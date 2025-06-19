@@ -59,12 +59,51 @@ bool CtrlrEditor::perform (const InvocationInfo &info)
 			}
 			break;
 
-		case showGlobalSettingsDialog:
+		/*  Updated v5.6.34
+		 case showGlobalSettingsDialog:
 			owner.getWindowManager().showModalDialog ("Ctrlr/Settings", ScopedPointer <CtrlrSettings> (new CtrlrSettings(owner)), true, this);
 			break;
+		 */
 
-		case showAboutDialog:
+		/* Updated v5.6.34. It's not showing up on LINUX
+         case showAboutDialog:
 			owner.getWindowManager().showModalDialog ("Ctrlr/About", ScopedPointer <CtrlrAbout> (new CtrlrAbout(owner)), false, this);
+			break;
+         */
+        case showGlobalSettingsDialog: // Updated v5.6.34.
+		{
+			// 1. Create the dialog component.
+			// JUCE will take ownership when you pass the raw pointer to showModalDialog.
+			// Using a raw pointer here is safe because showModalDialog (or its underlying
+			// mechanism) is designed to take ownership and delete the component.
+			CtrlrSettings* settingsWindow = new CtrlrSettings(owner);
+			
+			// 2. You can optionally keep a WeakReference if you need to access it later,
+			// though for a simple "settings" dialog that you just show and close, it's often not needed.
+			// WeakReference<CtrlrSettings> settingsRef(settingsWindow); // If you needed to access it later
+			
+			// 3. Show the modal dialog, passing the raw pointer.
+			// The JUCE framework will now manage the lifetime of 'aboutWindow'.
+			owner.getWindowManager().showModalDialog ("Ctrlr/Settings", settingsWindow, true, this); // Is resizable
+		}
+			break;
+			
+		case showAboutDialog: // Updated v5.6.34. Alternate version to prevent not showing up on LINUX
+		{
+			// 1. Create the dialog component.
+			// JUCE will take ownership when you pass the raw pointer to showModalDialog.
+			// Using a raw pointer here is safe because showModalDialog (or its underlying
+			// mechanism) is designed to take ownership and delete the component.
+			CtrlrAbout* aboutWindow = new CtrlrAbout(owner);
+			
+			// 2. You can optionally keep a WeakReference if you need to access it later,
+			// though for a simple "About" dialog that you just show and close, it's often not needed.
+			// WeakReference<CtrlrAbout> aboutRef(aboutWindow); // If you needed to access it later
+			
+			// 3. Show the modal dialog, passing the raw pointer.
+			// The JUCE framework will now manage the lifetime of 'aboutWindow'.
+			owner.getWindowManager().showModalDialog ("Ctrlr/About", aboutWindow, false, this); // Is not resizable
+		}
 			break;
 
 		case doZoomIn:
