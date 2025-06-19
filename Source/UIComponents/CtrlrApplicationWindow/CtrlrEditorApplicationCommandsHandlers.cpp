@@ -59,18 +59,18 @@ bool CtrlrEditor::perform (const InvocationInfo &info)
 			}
 			break;
 
-		/*  Updated v5.6.34
 		 case showGlobalSettingsDialog:
 			owner.getWindowManager().showModalDialog ("Ctrlr/Settings", ScopedPointer <CtrlrSettings> (new CtrlrSettings(owner)), true, this);
 			break;
-		 */
+		 
 
 		/* Updated v5.6.34. It's not showing up on LINUX
          case showAboutDialog:
 			owner.getWindowManager().showModalDialog ("Ctrlr/About", ScopedPointer <CtrlrAbout> (new CtrlrAbout(owner)), false, this);
 			break;
          */
-        case showGlobalSettingsDialog: // Updated v5.6.34.
+            
+        /*case showGlobalSettingsDialog: // Updated v5.6.34.
 		{
 			// 1. Create the dialog component.
 			// JUCE will take ownership when you pass the raw pointer to showModalDialog.
@@ -87,7 +87,8 @@ bool CtrlrEditor::perform (const InvocationInfo &info)
 			owner.getWindowManager().showModalDialog ("Ctrlr/Settings", settingsWindow, true, this); // Is resizable
 		}
 			break;
-			
+        */
+
 		case showAboutDialog: // Updated v5.6.34. Alternate version to prevent not showing up on LINUX
 		{
 			// 1. Create the dialog component.
