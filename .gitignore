@@ -1,76 +1,83 @@
 # Operating System & IDE Specific Files
-.DS_Store             # macOS directory metadata
-Thumbs.db             # Windows thumbnail cache
-Desktop.ini           # Windows custom folder settings
-.vs/                  # Visual Studio 2017+ hidden solution folder
-*.user                # Visual Studio user options file
-*.suo                 # Visual Studio solution user options (older VS)
-*.sln.ide             # Some Visual Studio versions
-*.VC.opendb           # Visual Studio temporary database
-*.VC.db               # Visual Studio code Browse database
-*.VC.VC.opendb        # Visual Studio
-.idea/                # IntelliJ/CLion project files
-.vscode/              # VS Code workspace settings (optional - commit if shared config is vital)
-# .vscode/*
-# !.vscode/settings.json # Example: Keep settings.json if needed
+.DS_Store                 # macOS directory metadata
+Thumbs.db                 # Windows thumbnail cache
+Desktop.ini               # Windows custom folder settings
+.vs/                      # Visual Studio 2017+ hidden solution folder
+*.user                    # Visual Studio user options file
+*.suo                     # Visual Studio solution user options (older VS)
+*.sln.ide                 # Some Visual Studio versions
+*.VC.opendb               # Visual Studio temporary database
+*.VC.db                   # Visual Studio code Browse database
+*.VC.VC.opendb            # Visual Studio
+.idea/                    # IntelliJ/CLion project files
+.vscode/                  # VS Code workspace settings (optional - commit if shared config is vital)
+# !.vscode/settings.json  # Example: Keep settings.json if needed
 # !.vscode/tasks.json
 # !.vscode/launch.json
 
+# Code::Blocks Specific Files
+# *.cbp                     # Code::Blocks project file
+# *.depend                  # Code::Blocks dependency file
+# *.layout                  # Code::Blocks layout file
+
 # Compilation and Build Output
 # General build output directories and files for various platforms
-# IMPORTANT: These should NOT contain your source code or project definitions.
-# If your project definitions (e.g. .xcodeproj) are INSIDE these,
-# we need to add exceptions below.
-build/                # Common build output directory (e.g., CMake out-of-source builds)
-bin/                  # Compiled binaries
-obj/                  # Object files
-*.o                   # Object files (Unix/MinGW)
-*.lo                  # Library object files
-*.la                  # Libtool files
-*.so                  # Shared libraries
-*.dll                 # Windows dynamic link libraries
-*.dylib               # macOS dynamic libraries
-*.exe                 # Executables
-*.obj                 # Windows object files
-*.lib                 # Windows static libraries
-*.pdb                 # Program Database (debug info)
-*.ilk                 # Incremental Linker File
-*.exp                 # Export files
-*.idb                 # Intermediate Debugging Information
+# IMPORTANT: These should NOT contain your source code or essential project definitions.
+# If your project definitions (e.g., .xcodeproj) are INSIDE these,
+# you'll need explicit exceptions later.
+build/                    # Common build output directory (e.g., CMake out-of-source builds)
+bin/                      # Compiled binaries directory
+obj/                      # Object files directory
+*.o                       # Object files (Unix/MinGW)
+*.lo                      # Library object files
+*.la                      # Libtool files
+*.so                      # Shared libraries
+*.dll                     # Windows dynamic link libraries
+*.dylib                   # macOS dynamic libraries
+*.exe                     # Executables
+*.obj                     # Windows object files
+*.lib                     # Windows static libraries
+*.pdb                     # Program Database (debug info)
+*.ilk                     # Incremental Linker File
+*.exp                     # Export files
+*.idb                     # Intermediate Debugging Information
 
-# Audio Plugin Formats (Additions for your request)
-*.aaxplugin/         # Avid AAX plugin bundles (treat as directory)
+# Audio Plugin & Application Formats (Built output, ignore these)
+*.aaxplugin/              # Avid AAX plugin bundles (macOS directory/bundle)
+*.vst/                    # Older VST 1/2 plugin bundles (macOS directory/bundle)
+*.vst3/                   # VST3 plugin bundles (macOS directory/bundle)
+*.component/              # Audio Unit plugin bundles (macOS directory/bundle)
+*.app/                    # macOS Application bundles (as directory)
+# For completeness, also ignore these as files, though typically covered by directory ignores
 *.aaxplugin
-*.vst/              # Older VST 1/2 plugin bundles (treat as directory)
 *.vst
-*.vst3/             # VST3 plugin bundles (treat as directory)
 *.vst3
-*.component/        # Audio Unit plugin bundles (treat as directory)
 *.component
 *.exe
 *.app
 
-# Specific IDE/Compiler Temporary Files
+# Specific IDE/Compiler Temporary Directories and Files
 # Visual Studio
-Debug/                # VS Debug build output
-Release/              # VS Release build output
-x64/                  # Often used for build configurations
-Win32/                # Often used for build configurations
-IPCH/                 # Precompiled header cache
-*.ipch                # Precompiled header cache
-*.aps                 # VS resource script cache
-*.ncb                 # IntelliSense database
-*.opendb              # VS database
-*.sdf                 # IntelliSense database
-*.tlog                # Build log files
+Debug/                    # VS Debug build output directory
+Release/                  # VS Release build output directory
+x64/                      # Often used for build configurations directory
+Win32/                    # Often used for build configurations directory
+IPCH/                     # Precompiled header cache directory
+*.ipch                    # Precompiled header cache files
+*.aps                     # VS resource script cache
+*.ncb                     # IntelliSense database
+*.opendb                  # VS database
+*.sdf                     # IntelliSense database
+*.tlog                    # Build log files
 
 # Xcode Specific Ignores (tuned for your Builds folder structure)
-Builds/              # Ignore the entire Builds folder by default (where binaries go)
+Builds/                   # Ignore the entire Builds folder by default (where binaries go)
 
 # EXCEPTIONS: Do NOT ignore the essential Xcode project and workspace files themselves
-# Unignore the project bundle directory itself
+# These contain your project's structure and settings and MUST be tracked.
+# Unignore the project bundle directory itself (e.g., Builds/MacOS/MyProject.xcodeproj/)
 !Builds/*/*.xcodeproj/
-# Unignore the workspace bundle directory itself
+# Unignore the workspace bundle directory itself (e.g., Builds/MacOS/MyWorkspace.xcworkspace/)
 !Builds/*/*.xcworkspace/
 
 # Now, re-ignore common Xcode generated files *within* the project/workspace bundles
@@ -84,19 +91,21 @@ Builds/*/*.xcodeproj/project.xcworkspace/xcuserdata/ # For nested workspaces
 
 # Explicitly ensure the core project definition files are NOT ignored
 !Builds/*/*.xcodeproj/project.pbxproj
+# Explicitly ensure the core workspace definition file is NOT ignored
 !Builds/*/*.xcworkspace/contents.xcworkspacedata
-!Builds/*/*.xcworkspace/xcshareddata/ # For shared schemes/configs
+# Explicitly ensure shared workspace data is NOT ignored (e.g., shared schemes)
+!Builds/*/*.xcworkspace/xcshareddata/
 
 # Linux Makefile/Autotools
-*.mk                  # Generated Makefiles (if your Makefiles are generated, ignore them)
-# !Makefile           # If your root Makefile is hand-written, keep this!
-*.in                  # Autoconf input files (if generated)
-configure             # Autotools configure script (if generated)
-config.status         # Autotools config status
-config.log            # Autotools config log
-autom4te.cache/       # Autotools cache
-libtool               # Libtool script
-tags                  # Ctags output
+*.mk                      # Generated Makefiles (if your Makefiles are generated, ignore them)
+# !Makefile               # If your root Makefile is hand-written and needs to be tracked, uncomment this!
+*.in                      # Autoconf input files (if generated)
+configure                 # Autotools configure script (if generated)
+config.status             # Autotools config status
+config.log                # Autotools config log
+autom4te.cache/           # Autotools cache
+libtool                   # Libtool script
+tags                      # Ctags output
 
 # Juce Specific
 # JuceLibraryCode/ (Commented out - these files MUST be tracked for CI/CD)
@@ -107,8 +116,8 @@ tags                  # Ctags output
 Source/Misc/boost/
 !Source/Misc/boost/boost.zip
 
-.DS_store
+.DS_Store
 
 # Other project-specific ignores
-Panels
-/Panels
+Panels/                   # Ignore the Panels directory and its contents
+# /Panels                 # If 'Panels' can also exist as a file in root and needs ignoring, use this
