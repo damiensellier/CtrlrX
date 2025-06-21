@@ -300,12 +300,17 @@ void LGlobalFunctions::wrapForLua (lua_State *L)
 		def("jlimit", (double (*) (const double, const double, const double))&juce::jlimit<double>),
 		def("isPositiveAndBelow", (bool (*) (const double, const double))&juce::isPositiveAndBelow<double>),
 		def("isPositiveAndNotGreaterThan", (bool (*) (const double, const double))&juce::isPositiveAndNotGreaterThan<double>),
-        def("roundToInt", &juce::roundToInt<double>),
+		def("roundToInt", &juce::roundToInt<double>),
 		def("roundToIntAccurate", &juce::roundToIntAccurate),
 		def("roundDoubleToInt", &juce::roundDoubleToInt),
 		def("roundFloatToInt", &juce::roundFloatToInt),
 		def("isPowerOfTwo", (bool (*) (int))&juce::isPowerOfTwo<int>),
 		def("nextPowerOfTwo", &juce::nextPowerOfTwo),
+		def("jmap", (double (*)(const double, const  double, const  double, const  double, const double)) & juce::jmap<double>), // Added 5.6.34. Thanks to @dnaldoog
+		def("jmap", (double (*)(const double, const double, const double)) & juce::jmap<double>), // Added 5.6.34. Thanks to @dnaldoog
+		def("mapToLog10", (double (*)(const double, const double, const double)) & juce::mapToLog10<double>), // Added 5.6.34. Thanks to @dnaldoog
+		def("mapFromLog10", (double (*)(const double, const double, const double)) & juce::mapFromLog10<double>), // Added 5.6.34. Thanks to @dnaldoog
+		def("isWithin", (double (*)(const double, const double, const double)) & juce::isWithin<double>), // Added 5.6.34. Thanks to @dnaldoog
 
 		def("cos", (double (*) (double))&cos),
 		def("cosf", (float (*) (float))&cosf),
@@ -362,8 +367,8 @@ void LKeyPress::wrapForLua (lua_State *L)
 			.def("isCurrentlyDown", &KeyPress::isCurrentlyDown)
 			.scope
 			[
-                def("createFromDescription", &KeyPress::createFromDescription),
-                def("isKeyCurrentlyDown", &KeyPress::isKeyCurrentlyDown)
+				def("createFromDescription", &KeyPress::createFromDescription),
+				def("isKeyCurrentlyDown", &KeyPress::isKeyCurrentlyDown)
 			]
 			.enum_("KeyCode")
 			[
@@ -470,7 +475,7 @@ void LMouseEvent::wrapForLua (lua_State *L)
 			.def("getScreenY", &MouseEvent::getScreenY)
 			.def("getMouseDownScreenX", &MouseEvent::getMouseDownScreenX)
 			.def("getMouseDownScreenY", &MouseEvent::getMouseDownScreenY)
-            .def_readonly("source", &MouseEvent::source)
+			.def_readonly("source", &MouseEvent::source)
 			.def_readonly("x", &MouseEvent::x)
 			.def_readonly("y", &MouseEvent::y)
 			.def_readonly("mods", &MouseEvent::mods)
@@ -902,7 +907,9 @@ void LValueTree::wrapForLua (lua_State *L)
 				.def("getChildWithName", &ValueTree::getChildWithName)
 				.def("getOrCreateChildWithName", &ValueTree::getOrCreateChildWithName)
 				.def("getChildWithProperty", &ValueTree::getChildWithProperty)
-				.def("addChild", &ValueTree::addChild)
+				//.def("addChild", &ValueTree::addChild) // won't work in 5.6+
+				.def("addChild", (void (ValueTree::*)(const ValueTree&, int, UndoManager*)) &ValueTree::addChild) // Added v5.6.34
+				.def("addChild", (void (ValueTree::*)(const ValueTree&, UndoManager*)) &ValueTree::addChild) // Added v5.6.34
 				.def("removeChild", (void(ValueTree::*)(const ValueTree &, UndoManager *))&ValueTree::removeChild)
 				.def("removeChild", (void(ValueTree::*)(const int, UndoManager *))&ValueTree::removeChild)
 				.def("removeAllChildren", &ValueTree::removeAllChildren)
@@ -918,6 +925,36 @@ void LValueTree::wrapForLua (lua_State *L)
 				.def("removeListener", &ValueTree::removeListener)
 				.def("sendPropertyChangeMessage", &ValueTree::sendPropertyChangeMessage)
 	];
+}
+
+namespace LXmlJuce6Factories // Added v5.6.34. Thanks to @dnaldoog
+/*Convert std::unique_ptr to raw pointer for luabind*/
+{
+	static XmlElement* parseXMLData(const String& xmlData)
+	{
+		std::unique_ptr<XmlElement> doc = XmlDocument::parse(xmlData);
+		if (doc)
+		{
+			return doc.release(); // Transfer ownership to Lua
+		}
+		return nullptr;
+	}
+	
+	static XmlElement* parseXMLFile(const File& fileToParse)
+	{
+		std::unique_ptr<XmlElement> doc = XmlDocument::parse(fileToParse);
+		if (doc)
+		{
+			return doc.release(); // Transfer ownership to Lua
+		}
+		return nullptr;
+	}
+	
+	static XmlElement* safeGetDocumentElement(XmlDocument& doc)
+	{
+		std::unique_ptr<XmlElement> element = doc.getDocumentElement();
+		return element ? element.release() : nullptr;
+	}
 }
 
 void LXmlElement::wrapForLua (lua_State *L)
@@ -971,14 +1008,14 @@ void LXmlElement::wrapForLua (lua_State *L)
 			.def("deleteAllChildElementsWithTagName", &XmlElement::deleteAllChildElementsWithTagName)
 			.def("containsChildElement", &XmlElement::containsChildElement)
 			.def("findParentElementOf", &XmlElement::findParentElementOf)
-            .def("isTextElement", &XmlElement::isTextElement)
-            .def("getText", &XmlElement::getText)
-            .def("setText", &XmlElement::setText)
-            .def("getAllSubText", &XmlElement::getAllSubText)
-            .def("getChildElementAllSubText", &XmlElement::getChildElementAllSubText)
-            .def("addTextElement", &XmlElement::addTextElement)
-            .def("deleteAllTextElements", &XmlElement::deleteAllTextElements)
-            .def("getChildElementAllSubText", &XmlElement::getChildElementAllSubText)
+			.def("isTextElement", &XmlElement::isTextElement)
+			.def("getText", &XmlElement::getText)
+			.def("setText", &XmlElement::setText)
+			.def("getAllSubText", &XmlElement::getAllSubText)
+			.def("getChildElementAllSubText", &XmlElement::getChildElementAllSubText)
+			.def("addTextElement", &XmlElement::addTextElement)
+			.def("deleteAllTextElements", &XmlElement::deleteAllTextElements)
+			.def("getChildElementAllSubText", &XmlElement::getChildElementAllSubText)
             .scope[
                 def("createTextElement", &XmlElement::createTextElement)
             ]
@@ -990,10 +1027,10 @@ void LXmlElement::wrapForLua (lua_State *L)
             .def("getLastParseError", &XmlDocument::getLastParseError)
             .def("setInputSource", &XmlDocument::setInputSource)
             .def("setEmptyTextElementsIgnored", &XmlDocument::setEmptyTextElementsIgnored)
-            /*.scope[
-                def("parse", (XmlElement *(*)(const File &))&XmlDocument::parse),
-                def("parse", (XmlElement *(*)(const String &))&XmlDocument::parse)
-            ]*/
+            .scope[ // Updated v5.6.34. Thanks to @dnaldoog
+                def("parseXML", LXmlJuce6Factories::parseXMLFile),
+                def("parseXML", LXmlJuce6Factories::parseXMLData)
+            ]
     ];
 }
 
@@ -1010,13 +1047,25 @@ void LZipEntry::wrapForLua (lua_State *L)
 	];
 }
 
-void LZipFile::wrapForLua (lua_State *L)
+struct LuaZipFileEntry // Updated v5.6.34. void to struct. Thanks to @dnaldoog
 {
-	LZipEntry::wrapForLua (L);
+    static const ZipFile::ZipEntry* getZipEntryByName(ZipFile* zipFile, const String& entryName)
+    {
+        if (zipFile)
+            return zipFile->getEntry(entryName);
+        else
+            return nullptr;
+    }
+};
 
-	using namespace luabind;
 
-	module(L)
+void LZipFile::wrapForLua(lua_State* L) // Updated v5.6.34. Thanks to @dnaldoog
+{
+    LZipEntry::wrapForLua(L);
+
+    using namespace luabind;
+
+    module(L)
     [
 		class_<ZipFile>("ZipFile")
 			.def(constructor<const File &>())
@@ -1024,9 +1073,9 @@ void LZipFile::wrapForLua (lua_State *L)
 			.def(constructor<InputStream &>())
 			.def(constructor<InputSource *>())
 			.def("getNumEntries", &ZipFile::getNumEntries)
-			.def("getEntry", (const ZipFile::ZipEntry *(ZipFile::*)(int) const noexcept) &ZipFile::getEntry)
 			.def("getIndexOfFileName", &ZipFile::getIndexOfFileName)
-			//.def("getEntry", (const ZipFile::ZipEntry *(ZipFile::*)(const String &) const noexcept) &ZipFile::getEntry)
+			.def("getEntry", (const ZipFile::ZipEntry * (ZipFile::*)(int) const noexcept) &ZipFile::getEntry)
+			.def("getEntry", &LuaZipFileEntry::getZipEntryByName)
 			.def("sortEntriesByFilename", &ZipFile::sortEntriesByFilename)
 			.def("createStreamForEntry", (InputStream *(ZipFile::*)(int)) &ZipFile::createStreamForEntry, adopt(result))
 			.def("createStreamForEntry", (InputStream *(ZipFile::*)(const ZipFile::ZipEntry &)) &ZipFile::createStreamForEntry, adopt(result))

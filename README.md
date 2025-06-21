@@ -15,18 +15,26 @@ ToDo
 
 * Update to the latest version of JUCE 7
 * Upgrade LUABIND to another LUA/C++ library
-* APP/Plugin identifiers properly updated from panel infos in exported instances package. (info.plist, .exe, vst3, etc)
 * Implementation of the entire JUCE ValueTree Class with LUA
 * File path needs to be updated on save while the panel ID is changed (Save vs. Save as...)
 * Re-generating UID must update resource path automatically
-* Modulators located within a tabs must have their properties updated while the tab properties are changed 
-* Allow earlier "Undo" after a modulator has been deleted
+* Modulators located within a tabs must have their properties updated while the tab properties are changed
 
 
 Changelog
 ---------
+#### Version 5.6.34 | 2025.06.16
 
-#### Version 5.6.33 | 2025.05
+* NEW ProTools AAX plugin support (requires codesigning via PACE)
+
+* UPDATED LuaBind Drawable class. LCore.cpp, LGraphics.cpp
+* UPDATED LuaBind function addChild() to valueTree class. LCore.cpp
+* ADDED LuaBind function jmap() mapToLog10(), mapFromLog10(), isWithin() to GlobalFunctions. LCore.cpp
+* ADDED LuaBind Parse XML support to XmlDocument class. LCore.cpp
+
+
+
+#### Version 5.6.33 | 2025.05.28
 * FIXED VST3 Host>CtrlrX interface. Sliders now reacts to Host automations of parameter values. Related Modulators send MIDI output messages. CtrlrProcessor.cpp & .h, CtrlrModulator.cpp & .h, CtrlrModulatorProcessor.cpp & .h
 * FIXED Linux Makefile. CtrlrX requires binutils-dev & libsframe1 installed on the system to compile. Thanks @sgorpi for the PR. Builds/Linux/Makefile/Makefile
 * FIXED ADD, REMOVE, RELOAD resource pane buttons not reacting on certain setups. Z-index added. Thanks to @dnaldoog. CtrlrPanelResourceEditor.cpp
@@ -38,7 +46,6 @@ Changelog
 * ADDED SliderType LinearBarVertical, RotaryHorizontalVerticalDrag, TwoValueHorizontal, TwoValueVertical, ThreeValueHorizontal, ThreeValueVertical. CtrlrComponentTypeManager.h & CtrlrComponentTypeManager.cpp, CtrlrIDs.xml
 
 #### Version 5.6.32 | 2025.04.05
-
 * NEW From now on, uisliders will return double float type values to manage decimals. If required values are integers,  new LUA function has been added : getValueInt()
 getModulatorInt(), getModulatorValueInt(), getMinModulatorValueInt(), getMaxModulatorValueInt(), getValueMappedInt(), getValueNonMappedInt(), getMinMappedInt(), getMaxMappedInt()
 
@@ -173,9 +180,11 @@ With the scripting possibilities inside Ctrlr you can extend you panels in vario
 
 ## Windows
 
-Summary will be added here in the future, links to pdf of build guides by @bijlevel can be found here
+Summary will be added here in the future, links to pdf of build guides by @bijlevel and @dnaldoog can be found here
 
-[Compiling on Windows 10](https://godlike.com.au/fileadmin/godlike/techtools/ctrlr/guides/Compiling_Ctrlr_for_Windows_10_v2.1.pdf)
+[Compiling on Windows 11 with Visual Studio 2022](https://github.com/user-attachments/files/19642077/How.to.compile.Ctrlr.or.CtrlrX.5.6.versions.in.Visual.Studio.2022.pdf)
+
+[Compiling on Windows 10 with Visual Studio 2019](https://godlike.com.au/fileadmin/godlike/techtools/ctrlr/guides/Compiling_Ctrlr_for_Windows_10_v2.1.pdf)
 
 
 ## macOS

@@ -63,26 +63,26 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     
     
     
-    // CTRLRX LOGO SVG
+    // Github LOGO SVG
     addAndMakeVisible (githubLogo = gui::createDrawableButton("Github Logo", BIN2STR(github_colour_svg))); // Updated v5.6.31. It required to drag drop SVG file in the projucer in the icon folder to be embedded
     githubLogo->addListener (this);
     githubLogo->setTooltip (TRANS("Visit CtrlrX github page"));
     githubLogo->setMouseCursor(MouseCursor::PointingHandCursor);
     
-    // ctrlrx link
+    // Github link
     addAndMakeVisible (ctrlrxUrl = new HyperlinkButton ("Visit CtrlrX github page", URL ("https://github.com/damiensellier/CtrlrX")));
     ctrlrxUrl->setTooltip (TRANS("Visit CtrlrX github page"));
     ctrlrxUrl->setFont(14.00f, Font::plain);
     ctrlrxUrl->setJustificationType(Justification::topLeft);
     ctrlrxUrl->setColour (HyperlinkButton::textColourId, Colour(getLookAndFeel().findColour (PopupMenu::highlightedBackgroundColourId)));
     
-    // CTRLRX LOGO SVG
+    // PayPal LOGO SVG
     addAndMakeVisible (paypalLogo = gui::createDrawableButton("PayPal Logo", BIN2STR(paypal_colour_svg))); // Updated v5.6.31. It required to drag drop SVG file in the projucer in the icon folder to be embedded
     paypalLogo->addListener (this);
     paypalLogo->setTooltip (TRANS("Donate to the CtrlrX project"));
     paypalLogo->setMouseCursor(MouseCursor::PointingHandCursor);
     
-    // ctrlrx link
+    // PayPal link
     addAndMakeVisible (ctrlrxDonateUrl = new HyperlinkButton ("Donate to the CtrlrX project", URL ("https://paypal.me/damiensellier"))); // Updated v5.6.31b
     ctrlrxDonateUrl->setTooltip (TRANS("Donate to the CtrlrX project"));
     ctrlrxDonateUrl->setFont(14.00f, Font::plain);
@@ -111,13 +111,13 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     
     
 
-    // CTRLRX LOGO SVG
+    // JUCE & FRIENDS LOGO SVG
     addAndMakeVisible (vst3AuJuceLogo = gui::createDrawableButton("Copyright Logo", BIN2STR(vst3_au_juce_mini_logo_bg_rnd_svg))); // Updated v5.6.31. It required to drag drop SVG file in the projucer in the icon folder to be embedded
     vst3AuJuceLogo->addListener (this);
     vst3AuJuceLogo->setTooltip (TRANS("Visit ctrlr.org"));
     vst3AuJuceLogo->setMouseCursor(MouseCursor::PointingHandCursor);
     
-    // copyright Label
+    // JUCE & FRIENDS Label
     addAndMakeVisible (copyrightLabel = new TextEditor (""));
     copyrightLabel->setFont (Font (13.00f, Font::plain));
     copyrightLabel->setMultiLine (true, true);
@@ -341,6 +341,12 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
 
 CtrlrAbout::~CtrlrAbout()
 {
+    
+	if (ctrlrLogo)         ctrlrLogo->removeListener(this);
+	if (githubLogo)        githubLogo->removeListener(this);
+	if (paypalLogo)        paypalLogo->removeListener(this);
+	if (vst3AuJuceLogo)    vst3AuJuceLogo->removeListener(this);
+    
     ctrlrName = nullptr;
     ctrlrLogo = nullptr;
     vst3AuJuceLogo = nullptr;

@@ -6,6 +6,8 @@
 #include "juce_PluginHostType.h"
 #include "boost/bind.hpp"
 #include "boost/function.hpp"
+#include "CtrlrMacros.h"
+#include "CtrlrLog.h"
 
 #include <fstream> // Added v5.6.33. Required for vst3 logger
 
@@ -57,7 +59,7 @@ class CtrlrProcessor : public AudioProcessor, public ChangeBroadcaster
 
 		void processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages) override;
     
-		AudioProcessorEditor* createEditor();
+		AudioProcessorEditor* createEditor() override;
 		bool useWrapper();
     
         bool hasEditor() const override;

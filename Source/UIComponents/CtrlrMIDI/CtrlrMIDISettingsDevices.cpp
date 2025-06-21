@@ -192,7 +192,7 @@ CtrlrMIDISettingsDevices::CtrlrMIDISettingsDevices (CtrlrPanel &_owner)
     addAndMakeVisible (outputChannel = new ComboBox (String()));
     outputChannel->setEditableText (false);
     outputChannel->setJustificationType (Justification::centredLeft);
-    outputChannel->setTextWhenNothingSelected (TRANS("All"));
+    outputChannel->setTextWhenNothingSelected (TRANS("1")); // Updated v5.5.34. Was "All". BUT There's no OMNI OUT
     outputChannel->setTextWhenNoChoicesAvailable (String());
     outputChannel->addItem (TRANS("All"), 1);
     outputChannel->addItem (TRANS("1"), 2);
@@ -223,7 +223,7 @@ CtrlrMIDISettingsDevices::CtrlrMIDISettingsDevices (CtrlrPanel &_owner)
     addAndMakeVisible (pluginOutputChannel = new ComboBox (String()));
     pluginOutputChannel->setEditableText (false);
     pluginOutputChannel->setJustificationType (Justification::centredLeft);
-    pluginOutputChannel->setTextWhenNothingSelected (TRANS("All"));
+    pluginOutputChannel->setTextWhenNothingSelected (TRANS("1")); // Updated v5.5.34. Was "All". BUT There's no OMNI OUT
     pluginOutputChannel->setTextWhenNoChoicesAvailable (String());
     pluginOutputChannel->addItem (TRANS("All"), 1);
     pluginOutputChannel->addItem (TRANS("1"), 2);

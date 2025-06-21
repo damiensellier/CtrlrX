@@ -4,6 +4,7 @@
 #include "CtrlrApplicationWindow/CtrlrEditor.h"
 #include "CtrlrManager/CtrlrManager.h"
 #include "CtrlrProcessorEditorForLive.h"
+#include "CtrlrMacros.h"
 #include "CtrlrLog.h"
 #include "CtrlrPanel/CtrlrPanelMIDIInputThread.h"
 #include "CtrlrPanel/CtrlrPanel.h"
@@ -15,7 +16,7 @@ CtrlrProcessor::CtrlrProcessor() :
                                     #ifndef JucePlugin_PreferredChannelConfigurations
                                     AudioProcessor (BusesProperties()
                                         #if ! JucePlugin_IsMidiEffect
-                                        //#if ! JucePlugin_IsSynth // Removed v5.6.32. Was disabling all Inputs
+                                        //#if ! JucePlugin_IsSynth // Removed v5.6.32. Was disabling all required Inputs for Audio Channel Insert FX Mode
                                                     .withInput  ("Input",  AudioChannelSet::stereo(), true)
                                         //#endif
                                                     .withOutput ("Output", AudioChannelSet::stereo(), true)
@@ -45,7 +46,14 @@ CtrlrProcessor::CtrlrProcessor() :
 		}
 	}
 
-	ctrlrLog				= new CtrlrLog(overridesTree.getProperty (Ids::ctrlrLogToFile));
+    #if JUCE_DEBUG // Added v5.6.34. Will show the debug log. Was set to (false) by default from the CtrlrManager property ctrlrLogToFile.
+    // If we are in a Debug build, force logging ON
+        ctrlrLog                = new CtrlrLog(true);
+    #else
+    // If we are in any other build (like Release), force logging OFF
+        ctrlrLog                = new CtrlrLog(overridesTree.getProperty (Ids::ctrlrLogToFile));
+    #endif
+    
 	ctrlrManager			= new CtrlrManager(this, *ctrlrLog);
 
 	if (!ctrlrManager->initEmbeddedInstance())
@@ -83,7 +91,7 @@ const String CtrlrProcessor::getName() const
     }
 	else
     {
-		return ("Ctrlr");
+		return ("CtrlrX"); // Updated v5.5.34
     }
 }
 
@@ -98,26 +106,73 @@ void CtrlrProcessor::releaseResources()
 {
 }
 
-void CtrlrProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
+//void CtrlrProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages) // Deprecated v5.6.34
+//{
+//    // _DBG("processBlock MIDI: NumEvents=" + String(midiMessages.getNumEvents()) + ", IsEmpty=" + (midiMessages.isEmpty() ? "true" : "false"));
+//    AudioPlayHead::CurrentPositionInfo info;
+//    if (getPlayHead())
+//    {
+//        getPlayHead()->getCurrentPosition(info);
+//    }
+//
+//    if (midiMessages.getNumEvents() > 0)
+//    {
+//        processPanels(midiMessages, info);
+//    }
+//
+//
+//    midiCollector.removeNextBlockOfMessages (midiMessages, (buffer.getNumSamples() > 0) ? buffer.getNumSamples() : 1);
+//    MidiBuffer::Iterator i(midiMessages);
+//    while (i.getNextEvent(logResult, logSamplePos))
+//    _MOUT("VST OUTPUT", logResult, logSamplePos);
+//}
+
+
+void CtrlrProcessor::processBlock (juce::AudioSampleBuffer& buffer, juce::MidiBuffer& midiMessages) // Updated v5.6.34
 {
+    // _DBG("processBlock MIDI: NumEvents=" + String(midiMessages.getNumEvents()) + ", IsEmpty=" + (midiMessages.isEmpty() ? "true" : "false"));
+    
+    // 1. Clear audio buffer
+    buffer.clear();
+
+    // 2. Get playhead info (optional)
     AudioPlayHead::CurrentPositionInfo info;
     if (getPlayHead())
     {
         getPlayHead()->getCurrentPosition(info);
     }
 
+    // 3. Add incoming host MIDI to your collector via your custom function
+    // This will now apply the 0-timestamp workaround inside addMidiToOutputQueue (const MidiBuffer &buffer)
+    if (midiMessages.getNumEvents() > 0) // Only process if there are events
+    {
+        addMidiToOutputQueue (midiMessages);
+    }
+
+    // 4. Call processPanels with the raw host input (as you had it)
     if (midiMessages.getNumEvents() > 0)
     {
         processPanels(midiMessages, info);
     }
-    
 
-    midiCollector.removeNextBlockOfMessages (midiMessages, (buffer.getNumSamples() > 0) ? buffer.getNumSamples() : 1);
+    // 5. Clear the incoming midiMessages buffer for output
+    midiMessages.clear();
+
+    // 6. Get MIDI messages from the collector for output
+    // (This part of midiCollector should still work as intended for output)
+    midiCollector.removeNextBlockOfMessages (midiMessages, buffer.getNumSamples());
+
+    // 7. Log outgoing MIDI (if enabled and declared locally)
+    /*
     MidiBuffer::Iterator i(midiMessages);
+    juce::MidiMessage logResult;
+    int logSamplePos;
     while (i.getNextEvent(logResult, logSamplePos))
-    _MOUT("VST OUTPUT", logResult, logSamplePos);
+    {
+        _MOUT("VST OUTPUT", logResult, logSamplePos);
+    }
+    */
 }
-
 
 //==============================================================================
 
@@ -338,16 +393,37 @@ void CtrlrProcessor::addMidiToOutputQueue (const MidiMessage &m)
 	midiCollector.addMessageToQueue (m);
 }
 
-void CtrlrProcessor::addMidiToOutputQueue (const MidiBuffer &buffer)
-{
-	MidiBuffer::Iterator i(buffer);
-	MidiMessage m;
-	int time;
+//void CtrlrProcessor::addMidiToOutputQueue (const MidiBuffer &buffer)
+//{
+//	MidiBuffer::Iterator i(buffer);
+//	MidiMessage m;
+//	int time;
+//
+//	while (i.getNextEvent (m, time))
+//	{
+//		midiCollector.addMessageToQueue (m);
+//	}
+//}
 
-	while (i.getNextEvent (m, time))
-	{
-		midiCollector.addMessageToQueue (m);
-	}
+void CtrlrProcessor::addMidiToOutputQueue (const MidiBuffer &buffer) // Updated v5.6.34
+{
+    MidiBuffer::Iterator i(buffer);
+    MidiMessage m;
+    int time;
+
+    while (i.getNextEvent (m, time))
+    {
+        // WORKAROUND FOR JASSERT IN JUCE'S INTERNAL MidiMessageCollector::addMessageToQueue
+        // If the message is at sample position 0, we temporarily shift it to 1
+        // to bypass the strict jassert.
+        if (time == 0)
+            time = 1;
+
+        // Use the only available method, applying the corrected 'time'
+        // JUCE's addMessageToQueue *expects* the message's timestamp to be set.
+        m.setTimeStamp(time); // Set the timestamp of the MidiMessage itself
+        midiCollector.addMessageToQueue (m);
+    }
 }
 
 //==============================================================================
@@ -466,11 +542,21 @@ void CtrlrProcessor::setStateInformation (const XmlElement *xmlState)
 		AlertWindow::showMessageBox (AlertWindow::WarningIcon, "Ctrlr v5", "Ctrl+R key is pressed, resetting to defaults");
 		return;
 	}
+    
+    if (xmlState)
+    {
+        _DBG("CtrlrProcessor::setStateInformation - xmlState is valid. About to call ctrlrManager->restoreState.");
 
-	if (xmlState)
-	{
-		ctrlrManager->restoreState (*xmlState);
-	}
+        // This will call your logMessage, which internally checks 'fileLogger'.
+        if (CtrlrLog::ctrlrLog != nullptr)
+        {
+            CtrlrLog::ctrlrLog->logMessage("--- TEST: Direct Log from setStateInformation ---", CtrlrLog::Debug);
+        }
+        // The AAX Plugin hanging problem when initiating is subsequent to this line
+        ctrlrManager->restoreState (*xmlState);
+
+        _DBG("CtrlrProcessor::setStateInformation - ctrlrManager->restoreState returned. Check for further execution.");
+    }
 }
 
 //==============================================================================

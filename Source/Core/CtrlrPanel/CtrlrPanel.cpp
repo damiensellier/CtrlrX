@@ -95,7 +95,7 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
         setProperty (Ids::panelExportResourceEncryption, 1); // Added v5.6.33. Helps with debugging crash at export on Apple Silicon
         setProperty (Ids::panelExportDelayBtwSteps, 1); // Added v5.6.33. Helps with debugging crash at export on Apple Silicon
         // For VST2 & VST3
-        if (fileExtension == ".vst3" || fileExtension == ".vst") {
+        if (fileExtension == ".vst3" || fileExtension == ".vst" || fileExtension == ".aaxplugin") { // Updated v5.6.34. AAX added
             setProperty (Ids::panelReplaceVst3PluginIds, 1); // Added v5.6.32
         }
         setProperty (Ids::panelExportCodesign, 1); // Added v5.6.33. Helps with debugging crash at export on Apple Silicon
