@@ -1,6 +1,8 @@
 # CtrlrX
 ![alt text](/Source/Resources/Icons/CtrlrX-README-250x315.png?raw=true "CtrlrX")
 
+---
+
 ## Table of Contents
 * [About CtrlrX](#about-ctrlrx)
 * [ToDo](#todo)
@@ -167,8 +169,6 @@ The first thing is to be sure to check the path to the VST2 SDK (only available 
 
 VST3 exported instances of CtrlrX panels are finally working properly. On macOS, you need to export VST3 with at least an ad-hoc signature. This process is managed automatically by CtrlrX; if you have an Apple developer certificate, select it in the appropriate field to prevent the VST3 from being held by Gatekeeper. If you want to sign your Windows exported instances with a PFX Certificate, that's now also possible.
 
-* VST3 is a registered trademark of Steinberg Media Technologies GmbH.
-
 If for some reason you still want to produce your own VST3 intermediates, you can simply disable the unique identifiers replacement process from the appropriate field.
 
 #### Prior v5.6.32
@@ -179,6 +179,8 @@ Unfortunately, exported VST3 instances of your panel will always be named after 
 To export properly identified VST3 plugins, it is then required to build a different stock CTRLR VST3 plugin with JUCE Projucer and Xcode/VS/IDE.
 However, this alternative version of CTRLR VST3 will have the desired panel/plugin identifiers predefined in the Projucer settings (Plugin Name, Manufacturer Name, Plugin ID, Manufacturer ID, etc.).
 This intermediate VST3 plugin will then be able to export a final VST3 version of the panel with the proper identifiers.
+
+* VST3 is a registered trademark of Steinberg Media Technologies GmbH.
 
 ### AAX Support & Build Instructions
 
