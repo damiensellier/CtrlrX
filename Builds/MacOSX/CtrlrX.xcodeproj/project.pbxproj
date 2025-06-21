@@ -2972,7 +2972,7 @@
 				INSTALL_PATH = "$(HOME)/Library/Audio/Plug-Ins/VST/";
 				LIBRARY_STYLE = Bundle;
 				LLVM_LTO = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../../../../SDKs/VST_SDK/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-4-0 /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
@@ -3051,7 +3051,7 @@
 				INSTALL_PATH = "$(HOME)/Library/Audio/Plug-Ins/Components/";
 				LIBRARY_STYLE = Bundle;
 				LLVM_LTO = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../../../../SDKs/VST_SDK/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-4-0 /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
@@ -3127,7 +3127,7 @@
 				INFOPLIST_FILE = Info-VST3.plist;
 				INFOPLIST_PREPROCESS = NO;
 				LIBRARY_STYLE = Bundle;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../../../../SDKs/VST_SDK/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-4-0 /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
@@ -3202,7 +3202,7 @@
 				INFOPLIST_FILE = Info-AU.plist;
 				INFOPLIST_PREPROCESS = NO;
 				LIBRARY_STYLE = Bundle;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../../../../SDKs/VST_SDK/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-4-0 /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
@@ -3277,7 +3277,7 @@
 				INFOPLIST_FILE = Info-Standalone_Plugin.plist;
 				INFOPLIST_PREPROCESS = NO;
 				LLVM_LTO = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../../../../SDKs/VST_SDK/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-4-0 /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
@@ -3355,7 +3355,7 @@
 				INSTALL_PATH = "$(HOME)/Library/Audio/Plug-Ins/VST3/";
 				LIBRARY_STYLE = Bundle;
 				LLVM_LTO = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../../../../SDKs/VST_SDK/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-4-0 /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
@@ -3438,7 +3438,7 @@
 				);
 				LIBRARY_STYLE = Bundle;
 				LLVM_LTO = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../../../../SDKs/VST_SDK/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-4-0 /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
@@ -3511,7 +3511,7 @@
 				);
 				INFOPLIST_FILE = Info-Standalone_Plugin.plist;
 				INFOPLIST_PREPROCESS = NO;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../../../../SDKs/VST_SDK/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-4-0 /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
@@ -3589,7 +3589,7 @@
 					"\"/Users/DYREC/SDKs/aax-sdk-2-4-0/Libs/Debug\"",
 				);
 				LIBRARY_STYLE = Bundle;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../../../../SDKs/VST_SDK/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-4-0 /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
@@ -3711,7 +3711,7 @@
 				);
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				LLVM_LTO = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../../../../SDKs/VST_SDK/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-4-0 /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
@@ -3784,7 +3784,7 @@
 					"$(inherited)",
 				);
 				INSTALL_PATH = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../../../../SDKs/VST_SDK/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-4-0 /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
@@ -3801,7 +3801,7 @@
 		E886C22F980B6C8D8CB0126A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -3857,7 +3857,7 @@
 		F9F02D9F3BCC0444BFFB9028 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -3923,7 +3923,7 @@
 				INFOPLIST_FILE = Info-VST.plist;
 				INFOPLIST_PREPROCESS = NO;
 				LIBRARY_STYLE = Bundle;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../../../../SDKs/VST_SDK/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-4-0 /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces /Users/DYREC/SDKs/aax-sdk-2-4-0/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
