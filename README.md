@@ -1,244 +1,358 @@
+# CtrlrX
 ![alt text](/Source/Resources/Icons/CtrlrX-README-250x315.png?raw=true "CtrlrX")
 
+## Table of Contents
+* [About CtrlrX](#about-ctrlrx)
+* [ToDo](#todo)
+* [Licensing](#licensing)
+  * [AAX Plugin-Specific Licensing & Avid SDK Terms](#aax-plugin-specific-licensing--avid-sdk-terms)
+  * [Crucial Note for Commercial Distribution of AAX Plugins](#crucial-note-for-commercial-distribution-of-aax-plugins-including-those-based-on-this-project)
+* [Compiling CtrlrX](#compiling-ctrlrx)
+  * [Windows](#windows)
+  * [macOS](#macos)
+  * [Linux Build Instructions](#linux-build-instructions)
+* [Exporting Plugin Instances](#exporting-plugin-instances)
+  * [VST2 Support](#vst2-support)
+  * [VST3 Support](#vst3-support)
+  * [AAX Support & Build Instructions](#aax-support--build-instructions)
+  * [AU Support](#au-support)
+  * [AUv3 Support](#auv3-support)
+* [Changelog](#changelog)
+* [Credits](#credits)
+* [Notes](#notes)
 
+---
 
-About
------
+## About CtrlrX
 
-CtlrX is an alternative fork of Roman Kubiak's Ctrlr.
-This project is ONLY aimed at delivering updates, a wiki, documentation, tutorials or anything that the community cannot share on the original Ctrlr github due to credential restrictions. 
-Let's keep the Ctrlr github alive and keep up with what we were all doing there. But for anything that deserves special credentials unavailable there, just let's do it here on CtrlrX.
+CtlrX is an alternative fork of Roman Kubiak's [Ctrlr](https://github.com/your-forked-repo-link-to-ctrlr-if-available).
 
+This project is **ONLY** aimed at delivering updates, a wiki, documentation, tutorials, or anything that the community cannot share on the original Ctrlr GitHub due to credential restrictions. Let's keep the original Ctrlr GitHub alive and continue with what we were all doing there. But for anything that deserves special credentials unavailable there, let's do it here on CtrlrX.
 
-ToDo
-----
+### About the Original Ctrlr
 
-* Update to the latest version of JUCE 7
-* Upgrade LUABIND to another LUA/C++ library
-* Implementation of the entire JUCE ValueTree Class with LUA
-* File path needs to be updated on save while the panel ID is changed (Save vs. Save as...)
+Ctrlr allows you to control any MIDI-enabled hardware: synthesizers, drum machines, samplers, effects. Create custom User Interfaces and host them as VST or AU plugins in your favorite DAWs.
+
+* **Cross Platform:** Works on Windows (XP and up, both 64 and 32bit binaries are available), macOS (10.5 and up), Linux (any modern distro should run it).
+* **Host in your DAW:** Each platform has a VST build of Ctrlr, so you can host your panels as normal VST plugins. For macOS, a special AU build is available.
+* **Customize:** Each panel is an XML file and can be edited in Ctrlr to suit your specific needs.
+* **Extend:** With the scripting possibilities inside Ctrlr, you can extend your panels in various ways. The Lua scripting language gives you access to all panel elements and hooks to various events.
+* **Open Source:** Need special functionality or want to propose a patch/feature update? If you know a bit about C++/JUCE framework, etc., you can always download the source code and build Ctrlr by yourself.
+
+---
+
+## ToDo
+
+* Update to the latest version of JUCE 8
+* Upgrade LUABIND to another LUA/C++ library (LuaBridge, Sol, etc.)
+* Implement the entire JUCE ValueTree Class with LUA
+* Update file path on save when the panel ID is changed (Save vs. Save as...)
 * Re-generating UID must update resource path automatically
-* Modulators located within a tabs must have their properties updated while the tab properties are changed
+* Modulators located within tabs must have their properties updated when the tab properties are changed
+* Link to AAX SDK 2.8 in JUCE GitHub (This specific task will be superseded by the documentation below, as it refers to a different JUCE version's integration)
 
+---
 
-Changelog
----------
+## Licensing
+
+The CtrlrX project is a fork of [Ctrlr](https://github.com/your-forked-repo-link-to-ctrlr-if-available) by Roman Kubiak. The original creator has generously granted permission for derivative works (forks) to choose their own licensing terms.
+
+Specifically, Roman Kubiak stated the following regarding the Ctrlr license:
+
+> "It means that you can use Ctrlr code in two ways."
+>
+> "One is a GPL licence that means if you want to use Ctrlr’s code you must include it with your product."
+>
+> "The other licence means that you can do whatever you want with the code, you don’t need to publish the source code, you just need to mention where did the code come from."
+>
+> "Panels are not covered by this license, you can do whatever you want with them, sell them, give them away whatever, noone else has the rights to them, they are your intelectual property."
+>
+> [Source](https://web.archive.org/web/20240213071445/https://ctrlr.org/forums/topic/ctrlr-licence/#post-37755) (2015-02-11 11:58)
+
+Based on this explicit permission, the core code of this plugin (CtrlrX) is licensed under the **[BSD-3-Clause License](LICENSE.BSD-3.md)** (or **[GPL-2.0-or-later License](LICENSE.GPL-2.0.md)** - *choose and keep only the relevant one for your core project*).
+
+---
+
+### AAX Plugin-Specific Licensing & Avid SDK Terms
+
+This plugin is designed to be compiled as an AAX plugin for Pro Tools. To do so, it utilizes the Avid AAX SDK (version 2.8.1 or newer).
+
+The Avid AAX SDK is available under **commercial or open-source licensing**. For the purposes of this open-source project, we are using the AAX SDK under the terms of the **GNU General Public License v3 (GPLv3)**.
+
+Due to the "copyleft" nature of the GPLv3, the entire distributed AAX plugin (including the portions of this project's code linked with the SDK) **must also be licensed under GPLv3**.
+
+Therefore, any distributed AAX binaries, along with their corresponding source code, are subject to the terms of the GPLv3. You can find the full text of the GPLv3 [here](https://www.gnu.org/licenses/gpl-3.0.en.html).
+
+**By building or using this plugin's AAX version, you acknowledge and agree to the terms of:**
+
+* The [Avid AAX SDK License Agreement](https://developer.avid.com/aax)
+* The [Avid Privacy Policy](https://www.avid.com/legal/privacy-policy-statement)
+
+---
+
+### Crucial Note for Commercial Distribution of AAX Plugins (including those based on this project)
+
+While this project is open-source under GPLv3, the Avid AAX SDK itself offers a dual-licensing model. **If you intend to commercially release a third-party plugin based on this project (or any AAX plugin derived from the Avid AAX SDK), you typically need to obtain a separate commercial license from Avid for the AAX SDK and comply with their specific commercial terms, which often include requirements for AAX plugin code signing via PACE Anti-Piracy tools.**
+
+For information on commercial AAX development and licensing, please contact Avid directly at `audiosdk@avid.com` or visit the [Avid Developer Website](https://developer.avid.com/aax).
+
+---
+
+## Compiling CtrlrX
+
+This section provides instructions on how to build the CtrlrX plugin from source.
+
+### Windows
+
+A summary will be added here in the future. Links to PDF build guides by @bijlevel and @dnaldoog can be found here:
+
+* [Compiling on Windows 11 with Visual Studio 2022](https://github.com/user-attachments/files/19642077/How.to.compile.Ctrlr.or.CtrlrX.5.6.versions.in.Visual.Studio.2022.pdf)
+* [Compiling on Windows 10 with Visual Studio 2019](https://godlike.com.au/fileadmin/godlike/techtools/ctrlr/guides/Compiling_Ctrlr_for_Windows_10_v2.1.pdf)
+
+### macOS
+
+* [Compiling on OSX](https://godlike.com.au/fileadmin/godlike/techtools/ctrlr/guides/My_guide_to_compiling_Ctrlr_for_macOS__Mojave__v2.pdf)
+
+### Linux Build Instructions
+
+For Linux users, it is recommended to use CMake for compiling CtrlrX binaries. This requires certain development dependencies to be installed on your system.
+
+**Required Dependencies (for Debian/Ubuntu-based systems):**
+
+* `libiberty`
+* `binutils` (`binutils-dev`)
+* `SFRAME` (`libsframe1`)
+
+To install the necessary packages, open a terminal and run the appropriate `sudo apt install` command with these dependencies. Please consult your distribution's documentation for the exact command and package names if you encounter issues.
+
+```bash
+sudo apt update
+sudo apt install -y \
+    build-essential \
+    cmake \
+    libxi-dev \
+    libx11-dev \
+    binutils-dev \
+    libudev-dev \
+    libasound2-dev \
+    libtiff-dev \
+    libcurl4-gnutls-dev \
+    libiberty-dev \
+    libxrandr-dev \
+    libxinerama-dev \
+    libxcursor-dev \
+    libfreetype-dev \
+    pkg-config
+```
+
+**Note:** For other Linux distributions (e.g., Fedora, Arch Linux), the package names and installation commands may differ. Please consult your distribution's documentation for the equivalent packages.
+
+---
+
+## Exporting Plugin Instances
+
+This section covers how to export various plugin formats from CtrlrX.
+
+### VST2 Support
+
+Since Steinberg has discontinued the VST2 API, we no longer distribute a VST2 version. However, if you are a licensee to the VST2 SDK, you can still build it.
+
+The first thing is to be sure to check the path to the VST2 SDK (only available from Steinberg's VST3 directory SDK) in Projucer before calling any script builds.
+
+* VST is a registered trademark of Steinberg Media Technologies GmbH.
+
+### VST3 Support
+
+#### UPDATE v5.6.32+
+
+VST3 exported instances of CtrlrX panels are finally working properly. On macOS, you need to export VST3 with at least an ad-hoc signature. This process is managed automatically by CtrlrX; if you have an Apple developer certificate, select it in the appropriate field to prevent the VST3 from being held by Gatekeeper. If you want to sign your Windows exported instances with a PFX Certificate, that's now also possible.
+
+* VST3 is a registered trademark of Steinberg Media Technologies GmbH.
+
+If for some reason you still want to produce your own VST3 intermediates, you can simply disable the unique identifiers replacement process from the appropriate field.
+
+#### Prior v5.6.32
+
+Currently, VST3 instances of Ctrlr panels are not working properly because Ctrlr is not able to generate different VST3 compliant plugin identifiers.
+
+Unfortunately, exported VST3 instances of your panel will always be named after CTRLR | Instigator. The only way to get the correct identifiers for a panel project is to force them at the core during the building step of the VST3 in Xcode/VS/IDE.
+To export properly identified VST3 plugins, it is then required to build a different stock CTRLR VST3 plugin with JUCE Projucer and Xcode/VS/IDE.
+However, this alternative version of CTRLR VST3 will have the desired panel/plugin identifiers predefined in the Projucer settings (Plugin Name, Manufacturer Name, Plugin ID, Manufacturer ID, etc.).
+This intermediate VST3 plugin will then be able to export a final VST3 version of the panel with the proper identifiers.
+
+### AAX Support & Build Instructions
+
+This project is built and tested with **JUCE 6.0.8**. To compile the AAX version of this plugin, you will also need to obtain the **Avid AAX SDK (version 2.8.1 or newer)** separately.
+
+**To build the AAX version of this plugin:**
+
+1.  **Obtain the Avid AAX SDK 2.8.1 (or newer compatible version):**
+    * **Join the Avid Developer Program:** Visit the [Avid Developer website](https://developer.avid.com/aax/) and sign up for the AAX SDK program. This typically involves agreeing to their terms and creating an iLok account.
+    * **Download the AAX SDK:** Once registered, navigate to the SDK download section and download "AAX SDK 2.8.1" (or the latest GPLv3-licensed version available for use with JUCE 6.0.8).
+    * **Extract the SDK:** Extract the downloaded SDK archive to a stable, known location on your system (e.g., `C:\SDKs\AvidAAXSDK_2.8.1\` on Windows or `~/SDKs/AvidAAXSDK_2.8.1/` on macOS/Linux).
+
+2.  **Configure your build environment:**
+    * **If using JUCE's Projucer (recommended for JUCE 6.0.8):**
+        * Open the Projucer application (from your JUCE 6.0.8 clone).
+        * Go to **"Settings"** (gear icon or File > Global Paths).
+        * Under "SDK Locations" or "Module Paths", locate the entry for **"AAX SDK"** and set its path to the root directory of your extracted Avid AAX SDK (e.g., `C:\SDKs\AvidAAXSDK_2.8.1\`).
+        * Open your `.jucer` project file, go to the "Exporters" section, and ensure the AAX format is enabled for your target platform.
+    * **If using CMake:**
+        * Your `CMakeLists.txt` will need to be configured to locate both your JUCE 6.0.8 root and the AAX SDK root.
+        * You'll typically define variables (e.g., `JUCE_ROOT`, `AAX_SDK_ROOT`) and use `find_path` or explicit `set` commands, then pass `AAX_SDK_ROOT` to `juce_add_plugin` via the `AAX_SDK_PATH` argument. (Detailed CMake setup for JUCE 6.0.8 with external SDKs can be complex; a dedicated CMake guide might be needed for this if it's your primary build method).
+
+3.  **Build the binary:** Follow your project's general build instructions (e.g., via your IDE after Projucer generation, or directly with CMake) to compile the AAX target.
+    * [Your specific build command/steps for AAX, e.g., for Projucer: "Open the .jucer project in Projucer, select the AAX target, and click 'Save and Open in IDE'. Then build in your IDE." or for CMake: `cmake --build . --config Release --target CtrlrX_AAX`]
+
+**Additional Notes for Development and Distribution:**
+
+* **Pro Tools Developer Version:** To test unsigned AAX plugins, you will likely need a special "Pro Tools Developer" version of Pro Tools, available through the [Avid Developer Program](https://developer.avid.com/aax).
+* **PACE Codesigning:** For any distributed AAX plugin (commercial or free), you will generally need to go through the AVID authorization process via PACE codesigning tools. This is a requirement for plugins to load in standard (non-developer) Pro Tools versions. This process is managed by Avid and PACE.
+
+* AAX is a registered trademark of Avid Technologies, Inc.
+
+### AU Support
+Tutorial coming soon.
+
+### AUv3 Support
+Tutorial coming soon.
+
+---
+
+## Changelog
+
 #### Version 5.6.34 | 2025.06.16
 
-* NEW ProTools AAX plugin support (requires codesigning via PACE)
-
-* UPDATED LuaBind Drawable class. LCore.cpp, LGraphics.cpp
-* UPDATED LuaBind function addChild() to valueTree class. LCore.cpp
-* ADDED LuaBind function jmap() mapToLog10(), mapFromLog10(), isWithin() to GlobalFunctions. LCore.cpp
-* ADDED LuaBind Parse XML support to XmlDocument class. LCore.cpp
-
-
+* **NEW** ProTools AAX plugin support (requires codesigning via PACE)
+* **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
+* **UPDATED** LuaBind function `addChild()` to `valueTree` class. `LCore.cpp`
+* **ADDED** LuaBind function `jmap()`, `mapToLog10()`, `mapFromLog10()`, `isWithin()` to GlobalFunctions. `LCore.cpp`
+* **ADDED** LuaBind Parse XML support to `XmlDocument` class. `LCore.cpp`
 
 #### Version 5.6.33 | 2025.05.28
-* FIXED VST3 Host>CtrlrX interface. Sliders now reacts to Host automations of parameter values. Related Modulators send MIDI output messages. CtrlrProcessor.cpp & .h, CtrlrModulator.cpp & .h, CtrlrModulatorProcessor.cpp & .h
-* FIXED Linux Makefile. CtrlrX requires binutils-dev & libsframe1 installed on the system to compile. Thanks @sgorpi for the PR. Builds/Linux/Makefile/Makefile
-* FIXED ADD, REMOVE, RELOAD resource pane buttons not reacting on certain setups. Z-index added. Thanks to @dnaldoog. CtrlrPanelResourceEditor.cpp
-* ADDED Property line height base value in Preferences>GUI. CrrlrIDs.h, CtrlrIDs.xml, CtrlrSettings.cpp, CtrlrManager.cpp, CtrlrManagerInstance.cpp, CtrlrPropertyComponent.cpp
-* ADDED LuaBind functions setType(), setMidiMessageType(), setProperty(). CtrlrMidiMessage.cpp
-* ADDED "Encrypt exported panel resources", "Delay between steps at export" & "Codesign exported panel" properties to improve panel export process. CrrlrIDs.h, CtrlrIDs.xml, CtrlrMac.cpp, CtrlrPanel.cpp
-* FIXED Useless menu item "Register file extensions" hidden for macOS binaries. CtrlrEditorApplicationCommandsMenus.cpp
-* ADDED LuaBind function addColumnBreak() for PopupMenu. LComponents.cpp
-* ADDED SliderType LinearBarVertical, RotaryHorizontalVerticalDrag, TwoValueHorizontal, TwoValueVertical, ThreeValueHorizontal, ThreeValueVertical. CtrlrComponentTypeManager.h & CtrlrComponentTypeManager.cpp, CtrlrIDs.xml
+
+* **FIXED** VST3 Host>CtrlrX interface. Sliders now react to Host automations of parameter values. Related Modulators send MIDI output messages. `CtrlrProcessor.cpp` & `CtrlrProcessor.h`, `CtrlrModulator.cpp` & `CtrlrModulator.h`, `CtrlrModulatorProcessor.cpp` & `CtrlrModulatorProcessor.h`
+* **FIXED** Linux Makefile. CtrlrX requires `binutils-dev` & `libsframe1` installed on the system to compile. Thanks @sgorpi for the PR. `Builds/Linux/Makefile/Makefile`
+* **FIXED** ADD, REMOVE, RELOAD resource pane buttons not reacting on certain setups. Z-index added. Thanks to @dnaldoog. `CtrlrPanelResourceEditor.cpp`
+* **ADDED** Property line height base value in Preferences>GUI. `CrrlrIDs.h`, `CtrlrIDs.xml`, `CtrlrSettings.cpp`, `CtrlrManager.cpp`, `CtrlrManagerInstance.cpp`, `CtrlrPropertyComponent.cpp`
+* **ADDED** LuaBind functions `setType()`, `setMidiMessageType()`, `setProperty()`. `CtrlrMidiMessage.cpp`
+* **ADDED** "Encrypt exported panel resources", "Delay between steps at export" & "Codesign exported panel" properties to improve panel export process. `CrrlrIDs.h`, `CtrlrIDs.xml`, `CtrlrMac.cpp`, `CtrlrPanel.cpp`
+* **FIXED** Useless menu item "Register file extensions" hidden for macOS binaries. `CtrlrEditorApplicationCommandsMenus.cpp`
+* **ADDED** LuaBind function `addColumnBreak()` for `PopupMenu`. `LComponents.cpp`
+* **ADDED** SliderType LinearBarVertical, RotaryHorizontalVerticalDrag, TwoValueHorizontal, TwoValueVertical, ThreeValueHorizontal, ThreeValueVertical. `CtrlrComponentTypeManager.h` & `CtrlrComponentTypeManager.cpp`, `CtrlrIDs.xml`
 
 #### Version 5.6.32 | 2025.04.05
-* NEW From now on, uisliders will return double float type values to manage decimals. If required values are integers,  new LUA function has been added : getValueInt()
-getModulatorInt(), getModulatorValueInt(), getMinModulatorValueInt(), getMaxModulatorValueInt(), getValueMappedInt(), getValueNonMappedInt(), getMinMappedInt(), getMaxMappedInt()
 
-* NEW VST3 can now export instances without the need to compile intermediate plugins from the Projucer. VST3 identifiers will be taken from the panel plugin name, plugin ID, Panel Author and manufacturer ID as well as the VST3 plugin type. Exported VST3 plugins are codesigned on export directly with JUCE childProcess() automatically, either with local ad-hoc signature or, if selected, with a developer certificate.
-
-* UPDATED Exported instances will now hide the preferences and shortcut menu items. CtrlrEditorApplicationCommandsMenus.cpp
-* UPDATED Decimal value are now supported for Sliders (ie. 3.1416). CtrlrModulator.cpp & h, CtrlrModulatorProcessor.cpp & h, CtrlrIDs.xml, CtrlrLuaManager.cpp, CtrlrLuaMethodManager.h, CtrlrLuaMethodManagerCalls.cpp, CtrlrFixedImageSlider.cpp, CtrlrFixedImageSlider.cpp, CtrlrImageSlider.cpp, CtrlrSliderInternal.cpp & h
-* UPDATED Decimal interval steps are now supported for Sliders (ie. 0.1)
-* FIXED Useless shortcuts such as "New Panel", "Export" enabled on restricted instances. CtrlrEditorApplicationCommands.cpp
-* FIXED Build Timestamp not updating on macOS. CtrlrX.jucer, CtrlrRevision.h
-* FIXED FileChooser still hanging when exporting instance on OSX Catalina & macOS BigSur. CtrlrManager.cpp
-* FIXED Windows crashing when loading a panel with a faulty modulator callback on value change LUA script. luabind/detail/call_function.hpp, CtrlrModulatorProcessor.cpp
-* ADDED Slider value Suffix (ie. Hz, ms, dB, etc)
-* ADDED JUCE systemStats support for WIN11, macOS 11, macOS 12, macOS 13, macOS 14, macOS 15 and macOS 16. juce_mac_systemStats.cpp, juce_win32_systemStats.cpp, juce_systemStats.h
-* ADDED Enable/Disable  "Run modulator valueChange LUA callback in Bootstrap state". CtrlrManagerInstance.cpp, CtrlrModulatorProcessor.cpp, CrrlrIDs.h, CtrlrIDs.xml, CtrlrSettings.cpp
+* **NEW** From now on, `uiSliders` will return `double float` type values to manage decimals. If required values are integers, a new LUA function has been added: `getValueInt()`, `getModulatorInt()`, `getModulatorValueInt()`, `getMinModulatorValueInt()`, `getMaxModulatorValueInt()`, `getValueMappedInt()`, `getValueNonMappedInt()`, `getMinMappedInt()`, `getMaxMappedInt()`
+* **NEW** VST3 can now export instances without the need to compile intermediate plugins from the Projucer. VST3 identifiers will be taken from the panel plugin name, plugin ID, Panel Author and manufacturer ID as well as the VST3 plugin type. Exported VST3 plugins are codesigned on export directly with JUCE `childProcess()` automatically, either with local ad-hoc signature or, if selected, with a developer certificate.
+* **UPDATED** Exported instances will now hide the preferences and shortcut menu items. `CtrlrEditorApplicationCommandsMenus.cpp`
+* **UPDATED** Decimal values are now supported for Sliders (i.e. 3.1416). `CtrlrModulator.cpp` & `h`, `CtrlrModulatorProcessor.cpp` & `h`, `CtrlrIDs.xml`, `CtrlrLuaManager.cpp`, `CtrlrLuaMethodManager.h`, `CtrlrLuaMethodManagerCalls.cpp`, `CtrlrFixedImageSlider.cpp`, `CtrlrFixedImageSlider.cpp`, `CtrlrImageSlider.cpp`, `CtrlrSliderInternal.cpp` & `h`
+* **UPDATED** Decimal interval steps are now supported for Sliders (i.e. 0.1)
+* **FIXED** Useless shortcuts such as "New Panel", "Export" enabled on restricted instances. `CtrlrEditorApplicationCommands.cpp`
+* **FIXED** Build Timestamp not updating on macOS. `CtrlrX.jucer`, `CtrlrRevision.h`
+* **FIXED** FileChooser still hanging when exporting instance on OSX Catalina & macOS BigSur. `CtrlrManager.cpp`
+* **FIXED** Windows crashing when loading a panel with a faulty modulator callback on value change LUA script. `luabind/detail/call_function.hpp`, `CtrlrModulatorProcessor.cpp`
+* **ADDED** Slider value Suffix (i.e. Hz, ms, dB, etc)
+* **ADDED** JUCE `systemStats` support for WIN11, macOS 11, macOS 12, macOS 13, macOS 14, macOS 15 and macOS 16. `juce_mac_systemStats.cpp`, `juce_win32_systemStats.cpp`, `juce_systemStats.h`
+* **ADDED** Enable/Disable "Run modulator valueChange LUA callback in Bootstrap state". `CtrlrManagerInstance.cpp`, `CtrlrModulatorProcessor.cpp`, `CrrlrIDs.h`, `CtrlrIDs.xml`, `CtrlrSettings.cpp`
 
 #### Version 5.6.31 | 2025.01
-* Security update : Encryption of the panel file in the macOS bundle for restricted instances. CtrlrMac.cpp, CtrlrEditorApplicationCommandsMenu.cpp, CtrlrManager.cpp
 
-* NEW JUCE Class MouseInputSource added to LUA. LCore.cpp,LCore.h, LJuce.cpp, LJuce.h, LMouseInputSource.h
-* NEW algorithm for Roland checksums. CtrlrSysexProcessor.cpp & CtrlrUtilities.cpp
-* NEW settings for LUA Method Editor. CtrlrValueTreeEditor.h CtrlrLuaMethodCodeEditorSettings.cpp & .h CtrlrLuaMethodCodeEditor.cpp CtrlrLuaMethodEditor.cpp CtrlrIDs.h & CtrlrIDs.xml
-
-* FIXED MSB 14 bit numbers sending 0xFF instead of 0x7F. CtrlrSysexProcessor.cpp & CtrlrUtilities.cpp
-* FIXED missing File Management bottom notification bar. CtrlrPanelFileOperations.cpp, CtrlrPanelEditor.cpp, CtrlrPanelEditor.h, CtrlrPanel.cpp, CtrlrPanel.h
-* FIXED missing menuBar on export for log and MIDI monitor windows. CtrlrChildWindowContainer.cpp
-* FIXED uiSlider value not reaching maxValue when using negative values for minValue. CtrlrSlider.cpp
-* FIXED uiImageSlider value not reaching maxValue when using negative values for minValue. CtrlrImageSlider.cpp
-* FIXED black text on black background for Modulator List window. CtrlrPanelModulatorList.cpp
-* FIXED typo in alert when closing dirty panel. CtrlrPanelFileOperations.cpp
-* FIXED parameters count passed to VST host is set from the highest vstindex when a panel is an exported VST/VST3 instance, not (64). CtrlrProcessor.cpp 
-* FIXED LnF panel close button colour on mouseover follows the panel colourScheme. CtrlrDocumentPanel.cpp 
-* FIXED CtrlrModulator Value statement precised to help avoid feedback loops between LUA and (delayed) UI. Commit 6e5a0b2 by midibox. CtrlrLuaManager.cpp
-* FIXED exported VST crashing DAW if panelIsDirty = 0 on export. CtrlPanelFileOperations.cpp
-* FIXED Ctrlr not showing up in Ableton Live. CtrlrX.jucer, CtrlrProcessor.cpp & CtrlrProcessor.h, CtrlrProcessorEditorForLive.cpp & CtrlrProcessorEditorForLive.h
-* FIXED MIDI Monitor IN/OUT turned ON by default. CtrlrManager.cpp
-* FIXED Console window & Midi Monitor crashing Cubase if closed from the Menu File>Close. CtrlrLuaConsole.cpp & CtrlrMIDIMonitor.cpp
-* FIXED LUA mod:getMidiMessage():getProperty("propertyName") CtrlrMidiMessage.cpp & CtrlrMidiMessage.h
-* FIXED exported instances not getting the proper LnF version or colourScheme (popup, child windows etc). CtrlrManagerInstance.cpp, CtrlrEditor.cpp
-* FIXED property pane tabs not showing up on exported instances. CtrlrManagerInstance.cpp
-* FIXED Property Pane tabs not following panel LnF. CtrlrPanelProperties.cpp & CtrlrPanelProperties.h
-* FIXED Child Windows (LUA Editor, console etc) not getting the proper menuBar background. CtrlrChildWindowContainer.cpp
-* FIXED LUA Editor Method Tree selected item not getting the proper colour. CtrlrLuaMethodEditor.cpp
-* FIXED AU AudioUnit version of CtrlX was failing the Apple/Logic Validation Test. CtrlrX.jucer, CtrlrProcessor.cpp & CtrlrProcessor.h
-* FIXED Panel Tabs showing up on exported instances. CtrlrDocumentPanel.cpp
-* FIXED messy preferences window and settings. CtrlrSettings.cpp & CtrlrSettings.cpp ctrlrIDs.h & CtrlrIDs.xml
-* FIXED default New Panel LnF not following global LnF from Global Preferences. ctrlrPanel.cpp ctrlrIDs.h & CtrlrIDs.xml
-* FIXED CtrlrX.ico too dark to be legible on dark backgrounds. ctrlr_logo_circle_v3.svg
-* FIXED FileChooser hanging when exporting instance on OSX Catalina & macOS BigSur. CtrlrManager.cpp
-* FIXED About popup design refurbished with new CtrlrX logo. CtrlrAbout.cpp & CtrlrAbout.h
-* FIXED About popup not getting current build date, fixed with C++ Macro timestamp. CtrlrRevision.h
-* FIXED VST crashing DAW when loading a project with panelIsDirty = 0. CtrlPanelFileOperations.cpp
-* FIXED modulator not reacting to MIDI input messages. CtrlrModulatorProcessor.cpp
-
+* **Security Update:** Encryption of the panel file in the macOS bundle for restricted instances. `CtrlrMac.cpp`, `CtrlrEditorApplicationCommandsMenu.cpp`, `CtrlrManager.cpp`
+* **NEW** JUCE Class `MouseInputSource` added to LUA. `LCore.cpp`, `LCore.h`, `LJuce.cpp`, `LJuce.h`, `LMouseInputSource.h`
+* **NEW** algorithm for Roland checksums. `CtrlrSysexProcessor.cpp` & `CtrlrUtilities.cpp`
+* **NEW** settings for LUA Method Editor. `CtrlrValueTreeEditor.h`, `CtrlrLuaMethodCodeEditorSettings.cpp` & `h`, `CtrlrLuaMethodCodeEditor.cpp`, `CtrlrLuaMethodEditor.cpp`, `CtrlrIDs.h` & `CtrlrIDs.xml`
+* **FIXED** MSB 14 bit numbers sending `0xFF` instead of `0x7F`. `CtrlrSysexProcessor.cpp` & `CtrlrUtilities.cpp`
+* **FIXED** missing File Management bottom notification bar. `CtrlrPanelFileOperations.cpp`, `CtrlrPanelEditor.cpp`, `CtrlrPanelEditor.h`, `CtrlrPanel.cpp`, `CtrlrPanel.h`
+* **FIXED** missing menuBar on export for log and MIDI monitor windows. `CtrlrChildWindowContainer.cpp`
+* **FIXED** `uiSlider` value not reaching `maxValue` when using negative values for `minValue`. `CtrlrSlider.cpp`
+* **FIXED** `uiImageSlider` value not reaching `maxValue` when using negative values for `minValue`. `CtrlrImageSlider.cpp`
+* **FIXED** black text on black background for Modulator List window. `CtrlrPanelModulatorList.cpp`
+* **FIXED** typo in alert when closing dirty panel. `CtrlrPanelFileOperations.cpp`
+* **FIXED** parameters count passed to VST host is set from the highest vstindex when a panel is an exported VST/VST3 instance, not (64). `CtrlrProcessor.cpp`
+* **FIXED** LnF panel close button colour on mouseover follows the panel colourScheme. `CtrlrDocumentPanel.cpp`
+* **FIXED** `CtrlrModulator Value` statement precised to help avoid feedback loops between LUA and (delayed) UI. Commit 6e5a0b2 by midibox. `CtrlrLuaManager.cpp`
+* **FIXED** exported VST crashing DAW if `panelIsDirty = 0` on export. `CtrlPanelFileOperations.cpp`
+* **FIXED** Ctrlr not showing up in Ableton Live. `CtrlrX.jucer`, `CtrlrProcessor.cpp` & `CtrlrProcessor.h`, `CtrlrProcessorEditorForLive.cpp` & `CtrlrProcessorEditorForLive.h`
+* **FIXED** MIDI Monitor IN/OUT turned ON by default. `CtrlrManager.cpp`
+* **FIXED** Console window & Midi Monitor crashing Cubase if closed from the Menu File>Close. `CtrlrLuaConsole.cpp` & `CtrlrMIDIMonitor.cpp`
+* **FIXED** LUA `mod:getMidiMessage():getProperty("propertyName")` `CtrlrMidiMessage.cpp` & `CtrlrMidiMessage.h`
+* **FIXED** exported instances not getting the proper LnF version or colourScheme (popup, child windows etc). `CtrlrManagerInstance.cpp`, `CtrlrEditor.cpp`
+* **FIXED** property pane tabs not showing up on exported instances. `CtrlrManagerInstance.cpp`
+* **FIXED** Property Pane tabs not following panel LnF. `CtrlrPanelProperties.cpp` & `CtrlrPanelProperties.h`
+* **FIXED** Child Windows (LUA Editor, console etc) not getting the proper menuBar background. `CtrlrChildWindowContainer.cpp`
+* **FIXED** LUA Editor Method Tree selected item not getting the proper colour. `CtrlrLuaMethodEditor.cpp`
+* **FIXED** AU AudioUnit version of CtrlX was failing the Apple/Logic Validation Test. `CtrlrX.jucer`, `CtrlrProcessor.cpp` & `CtrlrProcessor.h`
+* **FIXED** Panel Tabs showing up on exported instances. `CtrlrDocumentPanel.cpp`
+* **FIXED** messy preferences window and settings. `CtrlrSettings.cpp` & `CtrlrSettings.cpp`, `ctrlrIDs.h` & `CtrlrIDs.xml`
+* **FIXED** default New Panel LnF not following global LnF from Global Preferences. `ctrlrPanel.cpp`, `ctrlrIDs.h` & `CtrlrIDs.xml`
+* **FIXED** CtrlrX.ico too dark to be legible on dark backgrounds. `ctrlr_logo_circle_v3.svg`
+* **FIXED** FileChooser hanging when exporting instance on OSX Catalina & macOS BigSur. `CtrlrManager.cpp`
+* **FIXED** About popup design refurbished with new CtrlrX logo. `CtrlrAbout.cpp` & `CtrlrAbout.h`
+* **FIXED** About popup not getting current build date, fixed with C++ Macro timestamp. `CtrlrRevision.h`
+* **FIXED** VST crashing DAW when loading a project with `panelIsDirty = 0`. `CtrlPanelFileOperations.cpp`
+* **FIXED** modulator not reacting to MIDI input messages. `CtrlrModulatorProcessor.cpp`
 
 #### Version 5.6.30 | 2024.03.13
+
 * Missing JUCE File Class definitions bound to LUA
 * New LookAndFeel_V4 colourScheme added (V4 JetBlack, V4 YamDX, V4 AkAPC, V4 AkMPC, V4 LexiBlue, V4 KurzGreen, V4 KorGrey, V4 KorGold, V4 ArturOrange, V4 AiraGreen).
 * Colours fixed in the LUA Method Editor and LUA Console
 * File>Save As removes panelDirty asterisk suffix
-* uiButton & uiImageButton can show the MIDI Monitor window by selecting it from the componentInternalFunction property
+* `uiButton` & `uiImageButton` can show the MIDI Monitor window by selecting it from the `componentInternalFunction` property
 * Legacy mode for older panels protects their background colours
 * Close button added to LUA Method Editor Tabs (as in 5.1.198, 5.2 & 5.3 versions)
-* LUA Method Editor Tabs won't shrink and will show a + sign if the TabBar exceeds the window W
+* LUA Method Editor Tabs won't shrink and will show a `+` sign if the TabBar exceeds the window width
 * Close button added to Panel Editor Tabs (as in 5.1.198, 5.2 & 5.3 versions)
-* Panel Editor Tabs won't shrink and will show a + sign if the TabBar exceeds the window W
-
+* Panel Editor Tabs won't shrink and will show a `+` sign if the TabBar exceeds the window width
 
 #### Version 5.6.29
 
 * Implementation of the entire JUCE LookAndFeel_V4 design with all color schemes
 * Panels designed on previous versions (5.3.198 & 5.3.220) are compatible and will automatically use LookAndFeel_V2/V3
-* Implementation of the JUCE ColourSelector popup for every coloUr properties
+* Implementation of the JUCE ColourSelector popup for every colour property
 * Description/ID in the property pane switches without selecting other tabs to update
 * Overall improvement of Ctrlr GUI, component settings and functionalities
 
-
 #### Version 5.6.28
-*  Added support for scalable UI for responsive design via callback on APP/Plugin viewport resize and viewport resize parameters.
-*  Fixed menuBar not showing up issue for non-restricted exported instance.
 
+* Added support for scalable UI for responsive design via callback on APP/Plugin viewport resize and viewport resize parameters.
+* Fixed menuBar not showing up issue for non-restricted exported instance.
 
 #### Version 5.6.27
-*  uiPanelViewPortBackgroundColour property added in the global properties to change the background color of the ViewPort, parent of the Panel canvas.
 
+* `uiPanelViewPortBackgroundColour` property added in the global properties to change the background color of the ViewPort, parent of the Panel canvas.
 
 #### Version 5.6.26
-*  setChangeNotificationOnlyOnRelease added in the component section for all types of sliders. When enabled, it sends the Value only when the mouse button is released.
 
+* `setChangeNotificationOnlyOnRelease` added in the component section for all types of sliders. When enabled, it sends the Value only when the mouse button is released.
 
 #### Version 5.6.25
-* mouseUp, mouseEnter, mouseExit callbacks added in for Generic Components (buttons, sliders etc)
 
+* `mouseUp`, `mouseEnter`, `mouseExit` callbacks added in for Generic Components (buttons, sliders etc)
 
 #### Version 5.6.24
-* ctrlrEditor window showing scrollbars over canvas in Cubase has been fixed
 
+* `ctrlrEditor` window showing scrollbars over canvas in Cubase has been fixed
 
 #### Version 0.0.0
+
 * Current version is forked from Ctrlr 5.6.23
 * Requires unified versioning pattern
 
+---
 
+## Credits
 
-# About Ctrlr
+* Thanks to @romankubiak for developing Ctrlr.
+* Links to contributors coming soon.
 
-Control any MIDI enabled hardware: synthesizers, drum machines, samplers, effects. Create custom User Interfaces. Host them as VST or AU plugins in your favorite DAWs.
+---
 
+## Notes
 
-Cross Platform
---------------
-Works on Windows (XP and up, both 64 and 32bit binaries are available), macOS (10.5 and up), Linux (any modern distro should run it).
-Host in your DAW
+* 
 
-Each platform has a VST build of Ctrlr so you can host your panels as normal VST plugins, for macOS a special AU build is available.
+---
 
-Customize
----------
-Each Panel can be customized by the user, the panels are XML files, every panel can be Edited in Ctrlr to suite your specific needs.
-
-Open Source
------------
-Need special functionality or want to propose a patch/feature update, know a bit about C++/JUCE framework etc. You can always download the source code and build Ctrlr by yourself.
-
-Extend
-------
-With the scripting possibilities inside Ctrlr you can extend you panels in various ways. The LUA scripting language gives you access to all panels elements and hooks to various events.
-
-
-# How to build Ctrlr
-
-
-## Windows
-
-Summary will be added here in the future, links to pdf of build guides by @bijlevel and @dnaldoog can be found here
-
-[Compiling on Windows 11 with Visual Studio 2022](https://github.com/user-attachments/files/19642077/How.to.compile.Ctrlr.or.CtrlrX.5.6.versions.in.Visual.Studio.2022.pdf)
-
-[Compiling on Windows 10 with Visual Studio 2019](https://godlike.com.au/fileadmin/godlike/techtools/ctrlr/guides/Compiling_Ctrlr_for_Windows_10_v2.1.pdf)
-
-
-## macOS
-
-[Compiling on OSX](https://godlike.com.au/fileadmin/godlike/techtools/ctrlr/guides/My_guide_to_compiling_Ctrlr_for_macOS__Mojave__v2.pdf)
-
-
-## Linux
-
-A build.sh script is provided in Builds/Generated/Linux/Standalone, a symlink of that
-script is location in Builds/Generated/Linux/VST and is used to create a precompiled header
-and then to trigger the build using make. You can do that manualy if you like just have
-a look at the script, it's really simple.
-
-A more complex solution exists in Scripts/post-commit, this script will build all solutions
-for the current architecture, it will also prepare the system for the build, unpack boost.zip
-check some packages (on Ubuntu only for now) and start the build. At the end it will create
-a self extracting Ctrlr.sh file in Packaging/Linux (create using makeself.sh), it will also
-try to scp it to ctrlr.org but that will fail without the correct ssh key, you can just comment
-out the scp line in post-commit.
-
-The post-commit script takes an argument "clean" if you wish to clean all the intermididate
-files before building. If you want to ignore any package errors that it reports (i assume you
-know your system better then my script) then just add -f as an option when building.
-
-# How to export plugin instances (AU, AUv3, VST & VST3)
-
-## VST2 Support
-Since Steinberg has discontinued the VST2 API we no longer distribute a VST2. If you are a licensee to the VST2SDK, though, you can still build it. 
-The first thing is to be sure to check the path to the VST2 sdk (only available from Steinberg's VST3 directory sdk) in Projucer before calling any script builds.
-
-## VST3 Support
-### UPDATE v5.6.32+
-VST3 exported instances of CtrlrX panels are finally working properly. On macOS, you need to export VST3 with at least an ad-hoc signature. This process is managed automatically by CtrlrX, if you have an Apple developer certificate, select it in the appropriate field, it will prevent the VST3 to be held by the Gatekeeper. If you want to sign your WIN exported instances with a PFX Certificate, it's now also possible.
-
-If for some reasons you still want to produce your own VST3 intermediates you can simply disable the unique identifiers replacement process from the appropriate field.
-
-### Prior v5.6.32
-Currently VST3 instances of CTRLR panels are not working properly because CTRLR is not able to generate different VST3 compliant plugin identifiers. 
-Unfortunately, exported VST3 instances of your panel will always be named after CTRLR | Instigator. 
-The only way to get the correct identifiers for a panel project is to force them at the core during the building step of the VST3 in Xcode/VS/IDE.
-To export properly identified VST3 plugins it is then required to build a different stock CTRLR VST3 plugin with JUCE Projucer and Xcode/VS/IDE. 
-However, this alternative version of CTRLR VST3 will have the desired panel/plugin identifiers predefined in the Projucer settings. (Plugin Name, Manufacturer Name, Plugin ID, Manufacturer ID etc). 
-This intermediate VST3 plugin will then be able to export a final VST3 version of the panel with the proper identifiers. 
-
-## AU Support
-Tutorial coming soon
-
-## AUv3 Support
-Tutorial coming soon
-
-# Credits
-* Thanks to @romankubiak for developing Ctrlr
-* Links to contributors coming soon
-
-# Notes
-* VST is a registered trademark of Steinberg Media Technologies GmbH
+**Tutorial coming soon.**
