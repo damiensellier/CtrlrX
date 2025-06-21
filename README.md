@@ -5,7 +5,6 @@
 
 ## Table of Contents
 * [About CtrlrX](#about-ctrlrx)
-* [ToDo](#todo)
 * [Licensing](#licensing)
   * [AAX Plugin-Specific Licensing & Avid SDK Terms](#aax-plugin-specific-licensing--avid-sdk-terms)
   * [Crucial Note for Commercial Distribution of AAX Plugins](#crucial-note-for-commercial-distribution-of-aax-plugins-including-those-based-on-this-project)
@@ -19,6 +18,7 @@
   * [AAX Support & Build Instructions](#aax-support--build-instructions)
   * [AU Support](#au-support)
   * [AUv3 Support](#auv3-support)
+* [ToDo](#todo)
 * [Changelog](#changelog)
 * [Credits](#credits)
 * [Notes](#notes)
@@ -40,18 +40,6 @@ Ctrlr allows you to control any MIDI-enabled hardware: synthesizers, drum machin
 * **Customize:** Each panel is an XML file and can be edited in Ctrlr to suit your specific needs.
 * **Extend:** With the scripting possibilities inside Ctrlr, you can extend your panels in various ways. The Lua scripting language gives you access to all panel elements and hooks to various events.
 * **Open Source:** Need special functionality or want to propose a patch/feature update? If you know a bit about C++/JUCE framework, etc., you can always download the source code and build Ctrlr by yourself.
-
----
-
-## ToDo
-
-* Update to the latest version of JUCE 8
-* Upgrade LUABIND to another LUA/C++ library (LuaBridge, Sol, etc.)
-* Implement the entire JUCE ValueTree Class with LUA
-* Update file path on save when the panel ID is changed (Save vs. Save as...)
-* Re-generating UID must update resource path automatically
-* Modulators located within tabs must have their properties updated when the tab properties are changed
-* Link to AAX SDK 2.8 in JUCE GitHub (This specific task will be superseded by the documentation below, as it refers to a different JUCE version's integration)
 
 ---
 
@@ -221,6 +209,14 @@ Tutorial coming soon.
 
 ---
 
+## ToDo
+
+* Update to the latest version of JUCE 8
+* Upgrade LUABIND to another LUA/C++ library (LuaBridge, Sol, etc.)
+* Implement the entire JUCE Classes with LUA
+
+---
+
 ## Changelog
 
 #### Version 5.6.34 | 2025.06.16
@@ -353,8 +349,3 @@ Tutorial coming soon.
 
 ## Notes
 
-* 
-
----
-
-**Tutorial coming soon.**
