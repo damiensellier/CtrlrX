@@ -1,0 +1,116 @@
+name: Build Release
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+
+      # Set up a matrix to run several configurations.
+      # TODO: add MacOS (intel -> macos-13, arm64 -> macos-14, macos-15, macos-latest)
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
+          - os: ubuntu-latest
+            name: ubuntu-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+          - os: macos-13
+            name: macos-13
+            c_compiler: clang
+            cpp_compiler: clang++
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        echo "OS: $RUNNER_OS"
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get update
+          sudo apt install -y binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          # to not clutter the build step logs:
+          ./Scripts/post-commit unpack_boost
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          brew install boost osxutils
+        fi
+
+    - name: Add msbuild to PATH
+      if: runner.os == 'Windows'
+      uses: microsoft/setup-msbuild@v2
+      with:
+        msbuild-architecture: x64
+
+    - name: Set reusable strings
+      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+    - name: Build
+      shell: bash
+      run: Scripts/post-commit
+
+    - name: Show Installer Directory
+      id: version
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          pushd ./Packaging/Linux
+          echo "ARTIFACT_NAME=`ls -t Ctrlr*sh | head -n 1`" >> $GITHUB_ENV
+          echo "ARTIFACT_DIRECTORY=Packaging/Linux" >> $GITHUB_ENV
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          pushd ./Packaging/Windows
+          echo "ARTIFACT_NAME=`ls -t Ctrlr*exe | head -n 1`" >> $GITHUB_ENV
+          echo "ARTIFACT_DIRECTORY=Packaging/Windows" >> $GITHUB_ENV
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          pushd ./Packaging/MacOS
+          echo "ARTIFACT_NAME=`ls -t Ctrlr*dmg | head -n 1`" >> $GITHUB_ENV
+          echo "ARTIFACT_DIRECTORY=Packaging/MacOS" >> $GITHUB_ENV
+        fi
+        ls -lh .
+        popd
+          
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        path: ${{ env.ARTIFACT_DIRECTORY }}/${{ env.ARTIFACT_NAME }}
+        name: ${{ env.ARTIFACT_NAME }}
+
+    # Enable tmate debugging of manually-triggered workflows if the input option was provided
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
