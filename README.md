@@ -34,7 +34,7 @@
 
 ## About CtrlrX
 
-CtlrX by [Damien Sellier](@damiensellier) is an alternative fork of [Ctrlr](https://github.com/your-forked-repo-link-to-ctrlr-if-available) by [Roman Kubiak](@RomanKubiak) under BSD|GPL license. 
+[CtlrX](https://github.com/damiensellier/CtrlrX) by [Damien Sellier](https://github.com/DamienSellier/) is an alternative fork of [Ctrlr](https://github.com/your-forked-repo-link-to-ctrlr-if-available) by [Roman Kubiak](https://github.com/RomanKubiak) under BSD|GPL license. 
 
 This project is **ONLY** aimed at delivering updates, a wiki, documentation, tutorials, or anything that the community cannot share on the original Ctrlr GitHub due to credential restrictions. Let's keep the original Ctrlr GitHub alive and continue with what we were all doing there. But for anything that deserves special credentials unavailable there, let's do it here on CtrlrX.
 
@@ -434,7 +434,7 @@ Tuturial coming soon.
 
 ## Credits
 
-* Thanks to @romankubiak for developing Ctrlr.
+* Thanks to [Roman Kubiak](https://github.com/RomanKubiak) for developing Ctrlr.
 * Links to contributors coming soon.
 
 ---
