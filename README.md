@@ -5,6 +5,7 @@
 
 ## Table of Contents
 * [About CtrlrX](#about-ctrlrx)
+* [Donations](#donations)
 * [Licensing](#licensing)
   * [AAX Plugin-Specific Licensing & Avid SDK Terms](#aax-plugin-specific-licensing--avid-sdk-terms)
   * [Crucial Note for Commercial Distribution of AAX Plugins](#crucial-note-for-commercial-distribution-of-aax-plugins-including-those-based-on-this-project)
@@ -28,7 +29,7 @@
 
 ## About CtrlrX
 
-CtlrX is an alternative fork of Roman Kubiak's [Ctrlr](https://github.com/your-forked-repo-link-to-ctrlr-if-available).
+CtlrX by Damien Sellier @damiensellier is an alternative fork of [Ctrlr](https://github.com/your-forked-repo-link-to-ctrlr-if-available) by Roman Kubiak @RomanKubiak under BSD|GPL license. 
 
 This project is **ONLY** aimed at delivering updates, a wiki, documentation, tutorials, or anything that the community cannot share on the original Ctrlr GitHub due to credential restrictions. Let's keep the original Ctrlr GitHub alive and continue with what we were all doing there. But for anything that deserves special credentials unavailable there, let's do it here on CtrlrX.
 
@@ -41,6 +42,14 @@ Ctrlr allows you to control any MIDI-enabled hardware: synthesizers, drum machin
 * **Customize:** Each panel is an XML file and can be edited in Ctrlr to suit your specific needs.
 * **Extend:** With the scripting possibilities inside Ctrlr, you can extend your panels in various ways. The Lua scripting language gives you access to all panel elements and hooks to various events.
 * **Open Source:** Need special functionality or want to propose a patch/feature update? If you know a bit about C++/JUCE framework, etc., you can always download the source code and build Ctrlr by yourself.
+
+---
+
+## Donations
+
+Development and maintenance of CtrlrX are supported by the community. If you find this project useful and would like to support Damien Sellier, the main person behind CtrlrX, any donations are greatly appreciated.
+
+You can donate via PayPal using this link: **[paypal.me/damiensellier/10](https://paypal.me/damiensellier/10)**
 
 ---
 
