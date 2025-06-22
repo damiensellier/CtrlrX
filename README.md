@@ -87,6 +87,8 @@ CtrlrX is built upon the [JUCE](https://juce.com/) C++ framework for audio appli
 
 Given that CtrlrX is an open-source project, it is generally built and used with JUCE under the terms of the **GPLv3**. This means that if you link CtrlrX with JUCE under its GPLv3 license, the resulting combined work (i.e., CtrlrX) becomes subject to the GPLv3's "copyleft" provisions. Consequently, any distribution of CtrlrX binaries linked with GPLv3-licensed JUCE, along with their corresponding source code, must comply with the GPLv3.
 
+* JUCE is a registered trademark of Raw Material Software Limited acquired by Pace Anti-Piracy Inc.
+
 ---
 
 ### Crucial Note for Commercial Distribution of JUCE based softwares (including those based on this project)
@@ -96,8 +98,6 @@ If you plan to commercially distribute any product (including a derivative of Ct
 For detailed and up-to-date information on JUCE's licensing, please visit the official JUCE website:
 * [https://juce.com/licensing/](https://juce.com/licensing/)
 * [https://juce.com/juce-legal/](https://juce.com/juce-legal/)
-
-* JUCE is a registered trademark of Raw Material Software Limited acquired by Pace Anti-Piracy Inc.
 
 ---
 
