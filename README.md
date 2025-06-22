@@ -176,8 +176,6 @@ The first thing is to be sure to check the path to the VST2 SDK (only available 
 
 To compile the VST3 version of this plugin, ensure your **JUCE installation is correctly set up to include the VST3 SDK**, as it's typically bundled with JUCE.
 
-* VST3 is a registered trademark of Steinberg Media Technologies GmbH.
-
 #### UPDATE v5.6.32+
 
 VST3 exported instances of CtrlrX panels are finally working properly. On macOS, you need to export VST3 with at least an ad-hoc signature. This process is managed automatically by CtrlrX; if you have an Apple developer certificate, select it in the appropriate field to prevent the VST3 from being held by Gatekeeper. If you want to sign your Windows exported instances with a PFX Certificate, that's now also possible.
