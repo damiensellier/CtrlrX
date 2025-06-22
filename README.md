@@ -1,7 +1,6 @@
-# CtrlrX
 ![alt text](/Source/Resources/Icons/CtrlrX-README-250x315.png?raw=true "CtrlrX")
 
----
+
 
 ## Table of Contents
 * [About CtrlrX](#about-ctrlrx)
