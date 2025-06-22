@@ -8,10 +8,11 @@
 * [Donations](#donations)
 * [Licensing](#licensing)
   * [JUCE Framework Licensing](#juce-framework-licensing)
+  * [Crucial Note for Commercial Distribution of JUCE based softwares](#crucial-note-for-commercial-distribution-of-juce-based-softwares-including-those-based-on-this-project)
   * [AAX Plugin-Specific Licensing & Avid SDK Terms](#aax-plugin-specific-licensing--avid-sdk-terms)
   * [Crucial Note for Commercial Distribution of AAX Plugins](#crucial-note-for-commercial-distribution-of-aax-plugins-including-those-based-on-this-project)
   * [AudioUnit (AU/AUv3) Plugin-Specific Licensing & Apple SDK Terms](#audiounit-auauv3-plugin-specific-licensing--apple-sdk-terms)
-  * [Crucial Note for Commercial Distribution & App Store Submission of AU & AUv3 Plugins (including those based on this project](#crucial-note-for-commercial-distribution--app-store-submission-of-au--auv3-plugins-including-those-based-on-this-project)
+  * [Crucial Note for Commercial Distribution & App Store Submission of AU & AUv3 Plugins](#crucial-note-for-commercial-distribution--app-store-submission-of-au--auv3-plugins-including-those-based-on-this-project)
   * [VST3 Plugin-Specific Licensing & Steinberg SDK Terms](#vst3-plugin-specific-licensing--steinberg-sdk-terms)
   * [Crucial Note for Commercial Distribution of VST3 Plugins](#crucial-note-for-commercial-distribution-of-VST3-plugins-including-those-based-on-this-project)
 * [Compiling CtrlrX](#compiling-ctrlrx)
@@ -86,7 +87,10 @@ CtrlrX is built upon the [JUCE](https://juce.com/) C++ framework for audio appli
 
 Given that CtrlrX is an open-source project, it is generally built and used with JUCE under the terms of the **GPLv3**. This means that if you link CtrlrX with JUCE under its GPLv3 license, the resulting combined work (i.e., CtrlrX) becomes subject to the GPLv3's "copyleft" provisions. Consequently, any distribution of CtrlrX binaries linked with GPLv3-licensed JUCE, along with their corresponding source code, must comply with the GPLv3.
 
-**Crucial Note for Commercial Distribution:**
+---
+
+### Crucial Note for Commercial Distribution of JUCE based softwares (including those based on this project)
+
 If you plan to commercially distribute any product (including a derivative of CtrlrX) that uses the JUCE framework, you will typically need to obtain an appropriate **commercial license from JUCE**. Using JUCE under a commercial license allows you to distribute your proprietary products without being bound by the GPLv3's copyleft requirements for your own code.
 
 For detailed and up-to-date information on JUCE's licensing, please visit the official JUCE website:
@@ -133,6 +137,8 @@ Unlike VST3 or AAX, there isn't a separate, redistributable "AudioUnit SDK" with
 For the purposes of this open-source project, the compilation and use of AudioUnit frameworks fall under the general terms of Apple's developer agreements. If this project's core code is licensed under GPLv3 (due to linking with GPLv3-licensed JUCE or other SDKs), then the distributed AU/AUv3 binaries, along with their corresponding source code, are subject to the terms of the GPLv3.
 
 * Audio Unit and AUv3 are trademarks of Apple Inc., registered in the U.S. and other countries.
+
+---
 
 ### Crucial Note for Commercial Distribution & App Store Submission of AU & AUv3 Plugins (including those based on this project)
 If you intend to commercially distribute an AU or AUv3 plugin derived from this project, or submit it to the Mac App Store or iOS App Store, you **must be an enrolled member of the Apple Developer Program** and comply with all terms and conditions of the **Apple Developer Program License Agreement**. This includes requirements for code signing, notarization (for macOS), and adherence to App Store review guidelines.
