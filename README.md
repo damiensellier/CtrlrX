@@ -8,6 +8,7 @@
 * [Licensing](#licensing)
   * [AAX Plugin-Specific Licensing & Avid SDK Terms](#aax-plugin-specific-licensing--avid-sdk-terms)
   * [Crucial Note for Commercial Distribution of AAX Plugins](#crucial-note-for-commercial-distribution-of-aax-plugins-including-those-based-on-this-project)
+  * [VST3 Plugin-Specific Licensing & Steinberg SDK Terms](#vst3-plugin-specific-licensing--steinberg-sdk-terms)
 * [Compiling CtrlrX](#compiling-ctrlrx)
   * [Windows](#windows)
   * [macOS](#macos)
@@ -86,6 +87,26 @@ While this project is open-source under GPLv3, the Avid AAX SDK itself offers a 
 
 For information on commercial AAX development and licensing, please contact Avid directly at `audiosdk@avid.com` or visit the [Avid Developer Website](https://developer.avid.com/aax).
 
+### VST3 Plugin-Specific Licensing & Steinberg SDK Terms
+
+This plugin is designed to be compiled as a VST3 plugin. To do so, it utilizes the Steinberg VST3 SDK.
+
+The Steinberg VST3 SDK is available under a **dual-licensing model**:
+* **GNU General Public License v3 (GPLv3)**: For open-source projects.
+* **Commercial License**: Required for commercial products.
+
+For the purposes of this open-source project, we use the VST3 SDK under the terms of the **GPLv3**. Due to the "copyleft" nature of the GPLv3, any distributed VST3 plugin (including the portions of this project's code linked with the SDK) **must also be licensed under GPLv3**.
+
+Therefore, any distributed VST3 binaries, along with their corresponding source code, are subject to the terms of the GPLv3. You can find the full text of the GPLv3 [here](https://www.gnu.org/licenses/gpl-3.0.en.html).
+
+**Crucial Note for Commercial Distribution of VST3 Plugins (including those based on this project):**
+If you intend to commercially release a third-party plugin based on this project (or any VST3 plugin derived from the Steinberg VST3 SDK), you **must obtain a separate commercial license from Steinberg**. This commercial license typically has no runtime fees or royalties, but it is necessary for proprietary commercial distribution.
+
+For detailed information on VST3 licensing, please refer to the official Steinberg VST 3 Licensing page:
+[https://steinbergmedia.github.io/vst3_dev_portal/pages/VST+3+Licensing/Index.html](https://steinbergmedia.github.io/vst3_dev_portal/pages/VST+3+Licensing/Index.html)
+
+* VST3 is a registered trademark of Steinberg Media Technologies GmbH.
+
 ---
 
 ## Compiling CtrlrX
@@ -152,6 +173,10 @@ The first thing is to be sure to check the path to the VST2 SDK (only available 
 * VST is a registered trademark of Steinberg Media Technologies GmbH.
 
 ### VST3 Support
+
+To compile the VST3 version of this plugin, ensure your **JUCE installation is correctly set up to include the VST3 SDK**, as it's typically bundled with JUCE.
+
+* VST3 is a registered trademark of Steinberg Media Technologies GmbH.
 
 #### UPDATE v5.6.32+
 
