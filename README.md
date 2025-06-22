@@ -7,9 +7,13 @@
 * [About CtrlrX](#about-ctrlrx)
 * [Donations](#donations)
 * [Licensing](#licensing)
+  * [JUCE Framework Licensing](#juce-framework-licensing)
   * [AAX Plugin-Specific Licensing & Avid SDK Terms](#aax-plugin-specific-licensing--avid-sdk-terms)
   * [Crucial Note for Commercial Distribution of AAX Plugins](#crucial-note-for-commercial-distribution-of-aax-plugins-including-those-based-on-this-project)
+  * [AudioUnit (AU/AUv3) Plugin-Specific Licensing & Apple SDK Terms](#audiounit-auauv3-plugin-specific-licensing--apple-sdk-terms)
+  * [Crucial Note for Commercial Distribution & App Store Submission of AU & AUv3 Plugins (including those based on this project](#crucial-note-for-commercial-distribution--app-store-submission-of-au--auv3-plugins-including-those-based-on-this-project)
   * [VST3 Plugin-Specific Licensing & Steinberg SDK Terms](#vst3-plugin-specific-licensing--steinberg-sdk-terms)
+  * [Crucial Note for Commercial Distribution of VST3 Plugins](#crucial-note-for-commercial-distribution-of-VST3-plugins-including-those-based-on-this-project)
 * [Compiling CtrlrX](#compiling-ctrlrx)
   * [Windows](#windows)
   * [macOS](#macos)
@@ -73,6 +77,26 @@ Based on this explicit permission, the core code of this plugin (CtrlrX) is lice
 
 ---
 
+### JUCE Framework Licensing
+
+CtrlrX is built upon the [JUCE](https://juce.com/) C++ framework for audio applications. JUCE itself operates under a **dual-licensing model**:
+
+* **GNU General Public License v3 (GPLv3)**: Available for open-source projects.
+* **Commercial Licenses**: Required for proprietary commercial products.
+
+Given that CtrlrX is an open-source project, it is generally built and used with JUCE under the terms of the **GPLv3**. This means that if you link CtrlrX with JUCE under its GPLv3 license, the resulting combined work (i.e., CtrlrX) becomes subject to the GPLv3's "copyleft" provisions. Consequently, any distribution of CtrlrX binaries linked with GPLv3-licensed JUCE, along with their corresponding source code, must comply with the GPLv3.
+
+**Crucial Note for Commercial Distribution:**
+If you plan to commercially distribute any product (including a derivative of CtrlrX) that uses the JUCE framework, you will typically need to obtain an appropriate **commercial license from JUCE**. Using JUCE under a commercial license allows you to distribute your proprietary products without being bound by the GPLv3's copyleft requirements for your own code.
+
+For detailed and up-to-date information on JUCE's licensing, please visit the official JUCE website:
+* [https://juce.com/licensing/](https://juce.com/licensing/)
+* [https://juce.com/juce-legal/] (https://juce.com/juce-legal/)
+
+* JUCE is a registered trademark of Raw Material Software Limited acquired by Pace Anti-Piracy Inc.
+
+---
+
 ### AAX Plugin-Specific Licensing & Avid SDK Terms
 
 This plugin is designed to be compiled as an AAX plugin for Pro Tools. To do so, it utilizes the Avid AAX SDK (version 2.8.1 or newer).
@@ -88,6 +112,8 @@ Therefore, any distributed AAX binaries, along with their corresponding source c
 * The [Avid AAX SDK License Agreement](https://developer.avid.com/aax)
 * The [Avid Privacy Policy](https://www.avid.com/legal/privacy-policy-statement)
 
+* AAX is a registered trademark of Avid Technologies, Inc.
+
 ---
 
 ### Crucial Note for Commercial Distribution of AAX Plugins (including those based on this project)
@@ -95,6 +121,27 @@ Therefore, any distributed AAX binaries, along with their corresponding source c
 While this project is open-source under GPLv3, the Avid AAX SDK itself offers a dual-licensing model. **If you intend to commercially release a third-party plugin based on this project (or any AAX plugin derived from the Avid AAX SDK), you typically need to obtain a separate commercial license from Avid for the AAX SDK and comply with their specific commercial terms, which often include requirements for AAX plugin code signing via PACE Anti-Piracy tools.**
 
 For information on commercial AAX development and licensing, please contact Avid directly at `audiosdk@avid.com` or visit the [Avid Developer Website](https://developer.avid.com/aax).
+
+---
+
+### AudioUnit (AU/AUv3) Plugin-Specific Licensing & Apple SDK Terms
+
+This plugin can be compiled as an AudioUnit (AU) and AudioUnit v3 (AUv3) plugin for macOS and iOS respectively. Development for these formats utilizes Apple's proprietary macOS/iOS SDKs and Xcode development tools.
+
+Unlike VST3 or AAX, there isn't a separate, redistributable "AudioUnit SDK" with a distinct open-source license. Instead, the use of AudioUnit APIs and the distribution of AU/AUv3 plugins are governed by the **Apple Developer Program License Agreement (ADPPA)** and the terms associated with the macOS and iOS Software Development Kits (SDKs).
+
+For the purposes of this open-source project, the compilation and use of AudioUnit frameworks fall under the general terms of Apple's developer agreements. If this project's core code is licensed under GPLv3 (due to linking with GPLv3-licensed JUCE or other SDKs), then the distributed AU/AUv3 binaries, along with their corresponding source code, are subject to the terms of the GPLv3.
+
+* Audio Unit and AUv3 are trademarks of Apple Inc., registered in the U.S. and other countries.
+
+### Crucial Note for Commercial Distribution & App Store Submission of AU & AUv3 Plugins (including those based on this project)
+If you intend to commercially distribute an AU or AUv3 plugin derived from this project, or submit it to the Mac App Store or iOS App Store, you **must be an enrolled member of the Apple Developer Program** and comply with all terms and conditions of the **Apple Developer Program License Agreement**. This includes requirements for code signing, notarization (for macOS), and adherence to App Store review guidelines.
+
+For detailed information on Apple's developer agreements and guidelines, please refer to the official Apple Developer website:
+[https://developer.apple.com/support/terms/](https://developer.apple.com/support/terms/)
+[https://developer.apple.com/audio-units/](https://developer.apple.com/audio-units/)
+
+---
 
 ### VST3 Plugin-Specific Licensing & Steinberg SDK Terms
 
@@ -108,13 +155,16 @@ For the purposes of this open-source project, we use the VST3 SDK under the term
 
 Therefore, any distributed VST3 binaries, along with their corresponding source code, are subject to the terms of the GPLv3. You can find the full text of the GPLv3 [here](https://www.gnu.org/licenses/gpl-3.0.en.html).
 
-**Crucial Note for Commercial Distribution of VST3 Plugins (including those based on this project):**
+* VST3 is a registered trademark of Steinberg Media Technologies GmbH.
+
+---
+
+### Crucial Note for Commercial Distribution of VST3 Plugins (including those based on this project)
+
 If you intend to commercially release a third-party plugin based on this project (or any VST3 plugin derived from the Steinberg VST3 SDK), you **must obtain a separate commercial license from Steinberg**. This commercial license typically has no runtime fees or royalties, but it is necessary for proprietary commercial distribution.
 
 For detailed information on VST3 licensing, please refer to the official Steinberg VST 3 Licensing page:
 [https://steinbergmedia.github.io/vst3_dev_portal/pages/VST+3+Licensing/Index.html](https://steinbergmedia.github.io/vst3_dev_portal/pages/VST+3+Licensing/Index.html)
-
-* VST3 is a registered trademark of Steinberg Media Technologies GmbH.
 
 ---
 
@@ -231,13 +281,17 @@ This project is built and tested with **JUCE 6.0.8**. To compile the AAX version
 * **Pro Tools Developer Version:** To test unsigned AAX plugins, you will likely need a special "Pro Tools Developer" version of Pro Tools, available through the [Avid Developer Program](https://developer.avid.com/aax).
 * **PACE Codesigning:** For any distributed AAX plugin (commercial or free), you will generally need to go through the AVID authorization process via PACE codesigning tools. This is a requirement for plugins to load in standard (non-developer) Pro Tools versions. This process is managed by Avid and PACE.
 
-* AAX is a registered trademark of Avid Technologies, Inc.
-
 ### AU Support
-Tutorial coming soon.
+
+To compile the AU & AUv3 versions of this plugin, ensure your **JUCE installation is correctly set up to include the AU SDK**, as it's typically bundled with JUCE.
+
+Tuturial coming soon.
 
 ### AUv3 Support
-Tutorial coming soon.
+
+To compile the VST3 version of this plugin, ensure your **JUCE installation is correctly set up to include the AUv3 SDK**, as it's typically bundled with JUCE.
+
+Tuturial coming soon.
 
 ---
 
