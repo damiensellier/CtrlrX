@@ -95,7 +95,7 @@ If you plan to commercially distribute any product (including a derivative of Ct
 
 For detailed and up-to-date information on JUCE's licensing, please visit the official JUCE website:
 * [https://juce.com/licensing/](https://juce.com/licensing/)
-* [https://juce.com/juce-legal/] (https://juce.com/juce-legal/)
+* [https://juce.com/juce-legal/](https://juce.com/juce-legal/)
 
 * JUCE is a registered trademark of Raw Material Software Limited acquired by Pace Anti-Piracy Inc.
 
