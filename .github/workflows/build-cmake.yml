@@ -44,6 +44,10 @@ jobs:
             name: macos-13
             c_compiler: clang
             cpp_compiler: clang++
+          - os: macos-latest
+            name: macos-13
+            c_compiler: clang
+            cpp_compiler: clang++
 
     runs-on: ${{ matrix.os }}
 
@@ -105,9 +109,10 @@ jobs:
 
     - name: Convert .jucer to CMake
       shell: bash
-      run: FRUT/FRUT/bin/Jucer2CMake reprojucer CtrlrX*.jucer FRUT/FRUT/cmake/Reprojucer.cmake
+      run: FRUT/FRUT/bin/Jucer2CMake reprojucer "CtrlrX 5.6.34 [Without AAX & VST].jucer" FRUT/FRUT/cmake/Reprojucer.cmake
 
     - name: Configure CtrlrX
+      shell: bash
       # the extra file copy is probably due to an issue in the .jucer project
       run: |
         cp Source/Misc/include/MingW/inttypes.h Source/Misc/include/
@@ -115,6 +120,7 @@ jobs:
         cmake -B build/ -DCMAKE_BUILD_TYPE=Release
         
     - name: Build CtrlrX
+      shell: bash
       run: |
         cmake --build build/
   
@@ -123,7 +129,6 @@ jobs:
       shell: bash
       run: |
         ls -lh build/
-        popd
           
     - name: Upload artifact
       uses: actions/upload-artifact@v4
