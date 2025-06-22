@@ -1,0 +1,137 @@
+name: Build with CMake
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    strategy:
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      fail-fast: false
+
+      # Set up a matrix to run several configurations.
+      # TODO: add MacOS (intel -> macos-13, arm64 -> macos-14, macos-15, macos-latest)
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
+          - os: ubuntu-latest
+            name: ubuntu-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+          - os: macos-13
+            name: macos-13
+            c_compiler: clang
+            cpp_compiler: clang++
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Checkout FRUT
+      uses: actions/checkout@v4
+      with:
+        repository: McMartin/FRUT
+        path: './FRUT'
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        echo "OS: $RUNNER_OS"
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get update
+          sudo apt install -y binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          # to not clutter the build step logs:
+          ./Scripts/post-commit unpack_boost
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          brew install boost ninja osxutils
+        fi
+
+    - name: Add msbuild to PATH
+      if: runner.os == 'Windows'
+      uses: microsoft/setup-msbuild@v2
+      with:
+        msbuild-architecture: x64
+
+    - name: Use latest Xcode on system (macOS)
+      if: runner.os == 'macOS'
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+    
+    - name: Set reusable strings
+      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+    # We opt to repeatedly generate the CMakeFiles.txt from the .jucer project
+    # to keep the .jucer project the 'source of truth', for now...
+    - name: Build FRUT
+      shell: bash
+      run: |
+        mkdir ./FRUT/build
+        pushd ./FRUT/build
+        cmake .. -DCMAKE_INSTALL_PREFIX="../" -DJUCE_ROOT="../../JUCE"
+        cmake --build . --target install
+        popd
+
+    - name: Convert .jucer to CMake
+      shell: bash
+      run: FRUT/FRUT/bin/Jucer2CMake reprojucer CtrlrX*.jucer FRUT/FRUT/cmake/Reprojucer.cmake
+
+    - name: Configure CtrlrX
+      # the extra file copy is probably due to an issue in the .jucer project
+      run: |
+        cp Source/Misc/include/MingW/inttypes.h Source/Misc/include/
+        mkdir build/
+        cmake -B build/ -DCMAKE_BUILD_TYPE=Release
+        
+    - name: Build CtrlrX
+      run: |
+        cmake --build build/
+  
+    - name: Show Installer Directory
+      id: version
+      shell: bash
+      run: |
+        ls -lh build/
+        popd
+          
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CtrlrX-${{ matrix.name }}
+        path: build/CtrlrX*
+
+    # Enable tmate debugging of manually-triggered workflows if the input option was provided
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
