@@ -192,11 +192,14 @@ A summary will be added here in the future. Links to PDF build guides by @bijlev
 
 For Linux users, it is recommended to use CMake for compiling CtrlrX binaries. This requires certain development dependencies to be installed on your system.
 
-**Required Dependencies (for Debian/Ubuntu-based systems):**
+**Required Development Dependencies (for Debian/Ubuntu-based systems):**
 
-* `libiberty`
-* `binutils` (`binutils-dev`)
-* `SFRAME` (`libsframe1`)
+To ensure a successful build, install the following packages:
+
+* **Core Build Tools:** `build-essential`, `cmake`, `pkg-config`
+* **System & Utility Libraries:** `libiberty-dev`, `binutils-dev`, `libudev-dev`, `libasound2-dev`, `libtiff-dev`, `libcurl4-gnutls-dev`, `libboost-dev`
+* **Graphics & X11 Development:** `libxi-dev`, `libx11-dev`, `libxrandr-dev`, `libxinerama-dev`, `libxcursor-dev`, `libfreetype-dev`, `libgl1-mesa-dev`, `libglapi-mesa`, `xorg-dev`
+* **Specific Libraries:** `libsframe1`
 
 To install the necessary packages, open a terminal and run the appropriate `sudo apt install` command with these dependencies. Please consult your distribution's documentation for the exact command and package names if you encounter issues.
 
@@ -212,6 +215,10 @@ sudo apt install -y \
     libasound2-dev \
     libtiff-dev \
     libcurl4-gnutls-dev \
+    libgl1-mesa-dev \
+    libglapi-mesa \
+    libboost-dev \
+    xorg-dev \
     libiberty-dev \
     libxrandr-dev \
     libxinerama-dev \
@@ -220,7 +227,8 @@ sudo apt install -y \
     pkg-config
 ```
 
-**Note:** For other Linux distributions (e.g., Fedora, Arch Linux), the package names and installation commands may differ. Please consult your distribution's documentation for the equivalent packages.
+**Note 1: Boost Library:** Boost is already included with CtrlrX. You need to unzip the file located at `/Source/Misc/boost/boost.zip`. Ensure that its contents are extracted into the `/Source/Misc/boost/` directory, resulting in a structure like `/Source/Misc/boost/boost/_boost_content_` (where `_boost_content_` represents the actual Boost library files and subfolders).
+**Note 2:** For other Linux distributions (e.g., Fedora, Arch Linux), the package names and installation commands may differ. Please consult your distribution's documentation for the equivalent packages.
 
 ---
 
@@ -268,7 +276,10 @@ This project is built and tested with **JUCE 6.0.8**. To compile the AAX version
     * **Download the AAX SDK:** Once registered, navigate to the SDK download section and download "AAX SDK 2.8.1" (or the latest GPLv3-licensed version available for use with JUCE 6.0.8).
     * **Extract the SDK:** Extract the downloaded SDK archive to a stable, known location on your system (e.g., `C:\SDKs\AvidAAXSDK_2.8.1\` on Windows or `~/SDKs/AvidAAXSDK_2.8.1/` on macOS/Linux).
 
-2.  **Configure your build environment:**
+2.  **Build the AAX Library:**
+    * Before building CtrlrX, you must compile the core AAX Library project included within the SDK. Navigate to the `Libs/AAXLibrary` directory within your extracted AAX SDK and build the project using your chosen IDE (e.g., Visual Studio on Windows, Xcode on macOS). This step generates the necessary static library (`.lib` or `.a`) that CtrlrX will link against.
+
+3.  **Configure your build environment:**
     * **If using JUCE's Projucer (recommended for JUCE 6.0.8):**
         * Open the Projucer application (from your JUCE 6.0.8 clone).
         * Go to **"Settings"** (gear icon or File > Global Paths).
@@ -278,7 +289,7 @@ This project is built and tested with **JUCE 6.0.8**. To compile the AAX version
         * Your `CMakeLists.txt` will need to be configured to locate both your JUCE 6.0.8 root and the AAX SDK root.
         * You'll typically define variables (e.g., `JUCE_ROOT`, `AAX_SDK_ROOT`) and use `find_path` or explicit `set` commands, then pass `AAX_SDK_ROOT` to `juce_add_plugin` via the `AAX_SDK_PATH` argument. (Detailed CMake setup for JUCE 6.0.8 with external SDKs can be complex; a dedicated CMake guide might be needed for this if it's your primary build method).
 
-3.  **Build the binary:** Follow your project's general build instructions (e.g., via your IDE after Projucer generation, or directly with CMake) to compile the AAX target.
+4.  **Build the CtrlrX AAX binary:** Follow your project's general build instructions (e.g., via your IDE after Projucer generation, or directly with CMake) to compile the AAX target.
     * [Your specific build command/steps for AAX, e.g., for Projucer: "Open the .jucer project in Projucer, select the AAX target, and click 'Save and Open in IDE'. Then build in your IDE." or for CMake: `cmake --build . --config Release --target CtrlrX_AAX`]
 
 **Additional Notes for Development and Distribution:**
