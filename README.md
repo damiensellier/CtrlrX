@@ -88,8 +88,6 @@ Given that CtrlrX is an open-source project, it is generally built and used with
 
 * JUCE is a registered trademark of Raw Material Software Limited acquired by Pace Anti-Piracy Inc.
 
----
-
 ### Crucial Note for Commercial Distribution of JUCE based softwares (including those based on this project)
 
 If you plan to commercially distribute any product (including a derivative of CtrlrX) that uses the JUCE framework, you will typically need to obtain an appropriate **commercial license from JUCE**. Using JUCE under a commercial license allows you to distribute your proprietary products without being bound by the GPLv3's copyleft requirements for your own code.
@@ -117,8 +115,6 @@ Therefore, any distributed AAX binaries, along with their corresponding source c
 
 * AAX is a registered trademark of Avid Technologies, Inc.
 
----
-
 ### Crucial Note for Commercial Distribution of AAX Plugins (including those based on this project)
 
 While this project is open-source under GPLv3, the Avid AAX SDK itself offers a dual-licensing model. **If you intend to commercially release a third-party plugin based on this project (or any AAX plugin derived from the Avid AAX SDK), you typically need to obtain a separate commercial license from Avid for the AAX SDK and comply with their specific commercial terms, which often include requirements for AAX plugin code signing via PACE Anti-Piracy tools.**
@@ -136,8 +132,6 @@ Unlike VST3 or AAX, there isn't a separate, redistributable "AudioUnit SDK" with
 For the purposes of this open-source project, the compilation and use of AudioUnit frameworks fall under the general terms of Apple's developer agreements. If this project's core code is licensed under GPLv3 (due to linking with GPLv3-licensed JUCE or other SDKs), then the distributed AU/AUv3 binaries, along with their corresponding source code, are subject to the terms of the GPLv3.
 
 * Audio Unit and AUv3 are trademarks of Apple Inc., registered in the U.S. and other countries.
-
----
 
 ### Crucial Note for Commercial Distribution & App Store Submission of AU & AUv3 Plugins (including those based on this project)
 If you intend to commercially distribute an AU or AUv3 plugin derived from this project, or submit it to the Mac App Store or iOS App Store, you **must be an enrolled member of the Apple Developer Program** and comply with all terms and conditions of the **Apple Developer Program License Agreement**. This includes requirements for code signing, notarization (for macOS), and adherence to App Store review guidelines.
@@ -171,8 +165,6 @@ For the purposes of this open-source project, we use the VST3 SDK under the term
 Therefore, any distributed VST3 binaries, along with their corresponding source code, are subject to the terms of the GPLv3. You can find the full text of the GPLv3 [here](https://www.gnu.org/licenses/gpl-3.0.en.html).
 
 * VST3 is a registered trademark of Steinberg Media Technologies GmbH.
-
----
 
 ### Crucial Note for Commercial Distribution of VST3 Plugins (including those based on this project)
 
