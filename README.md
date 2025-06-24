@@ -349,6 +349,7 @@ Tuturial coming soon.
 * **ADDED** LuaBind Parse XML support to `XmlDocument` class. `LCore.cpp`
 * **UPDATED** README.md Licensing terms, compilation instructions and layout improved. `README.md`
 * **FIXED** Subsequent modulators with the same CC index as the first one not reacting. `CtrlrManagerInstance.cpp`, `CtrlrMidiInputComparatorSingle.cpp`, `CtrlrMidiInputComparatorMulti.cpp`
+* **UPDATED** MIDI Plugin Options default settings set to 'Input from plugin host" & "Input from host to comparator". `CtrlrPanel.cpp`
 
 #### Version 5.6.33 | 2025.05.28
 
