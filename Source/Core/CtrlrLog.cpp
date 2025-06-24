@@ -33,11 +33,9 @@ void CtrlrLog::setLogToFile (const bool _logToFile)
 
     if (logToFile)
     {
-        // Logger::writeToLog ("CtrlrLog::setLogToFile: " + File::getSpecialLocation(File::currentApplicationFile).withFileExtension(".log").getFullPathName());
-        
         // Define the log file path to the user's Desktop
-        // It will be named "CtrlrPluginLog.log" directly on your Desktop
-        File logFile = File::getSpecialLocation(File::userDesktopDirectory).getChildFile("CtrlrPluginLog.log");
+        // It will be named "CtrlrX_DBG.log" directly on your Desktop
+        File logFile = File::getSpecialLocation(File::userDesktopDirectory).getChildFile("CtrlrX_DBG.log");
         
         // This line logs the correct path you INTEND to use.
         Logger::writeToLog ("CtrlrLog::setLogToFile: " + logFile.getFullPathName());
