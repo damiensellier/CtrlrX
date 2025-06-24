@@ -19,7 +19,13 @@ void CtrlrManager::setEmbeddedDefaults()
 
 	ctrlrProperties.reset(new CtrlrProperties (*this));
 
-	setProperty (Ids::ctrlrLogToFile, false);
+    #if JUCE_DEBUG // Added v5.6.34. Will show the debug log.
+    // If we are in a Debug build, force logging ON
+    setProperty (Ids::ctrlrLogToFile, true);
+    #else
+    // If we are in any other build (like Release), force logging OFF by default.
+    setProperty (Ids::ctrlrLogToFile, false);
+    #endif
     setProperty (Ids::ctrlrWarningInBootstrapState, false); // Added v5.6.32
 	setProperty (Ids::ctrlrLuaDebug, false);
 	setProperty (Ids::ctrlrVersionSeparator, "_");
