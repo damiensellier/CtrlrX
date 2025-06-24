@@ -121,3 +121,4 @@ Source/Misc/boost/
 # Other project-specific ignores
 Panels/                   # Ignore the Panels directory and its contents
 # /Panels                 # If 'Panels' can also exist as a file in root and needs ignoring, use this
+Source/Misc/boost/boost.zip
