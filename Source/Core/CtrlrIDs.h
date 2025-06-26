@@ -505,6 +505,8 @@ namespace Ids
     DECLARE_ID (uiMidiKeyboardBaseOctaveKeyPress);
     DECLARE_ID (uiMidiKeyboardOctaveFroMiddleC);
     DECLARE_ID (uiMidiKeyboardMapToNoteNumber);
+    DECLARE_ID (uiMidiKeyboardOctaveKeyDown); // Added v5.6.34
+    DECLARE_ID (uiMidiKeyboardOctaveKeyUp); // Added v5.6.34
     
     DECLARE_ID (uiTabsNumberOfTabs);
     DECLARE_ID (uiTabsOrientation);

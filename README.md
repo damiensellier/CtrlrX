@@ -350,6 +350,8 @@ Tuturial coming soon.
 * **UPDATED** README.md Licensing terms, compilation instructions and layout improved. `README.md`
 * **FIXED** Subsequent modulators with the same CC index as the first one not reacting. `CtrlrManagerInstance.cpp`, `CtrlrMidiInputComparatorSingle.cpp`, `CtrlrMidiInputComparatorMulti.cpp`
 * **UPDATED** MIDI Plugin Options default settings set to 'Input from plugin host" & "Input from host to comparator". `CtrlrPanel.cpp`
+* **UPDATED** MIDI Keyboard component, Octave DOWN/UP added with key assignment "x" & "z" by default. Top line colour on focus. `CtrlrMidiKeyboard.cpp`, `CtrlrMidiKeyboard.h`, `CtrlrIDs.xml`, `CtrlrIDs.h` 
+* **UPDATED** focusGained(), focusLost() to CtrlrComponent. `CtrlrComponent.cpp` & `.h`
 
 #### Version 5.6.33 | 2025.05.28
 
