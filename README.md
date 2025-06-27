@@ -33,9 +33,9 @@
 
 ## About CtrlrX
 
-[CtlrX](https://github.com/damiensellier/CtrlrX) by [Damien Sellier](https://github.com/DamienSellier/) is an alternative fork of [Ctrlr](https://github.com/your-forked-repo-link-to-ctrlr-if-available) by [Roman Kubiak](https://github.com/RomanKubiak) under BSD|GPL license. 
+[CtrlrX](https://github.com/damiensellier/CtrlrX) by [Damien Sellier](https://github.com/DamienSellier/) is an alternative fork of [Ctrlr](https://github.com/RomanKubiak/ctrlr) by [Roman Kubiak](https://github.com/RomanKubiak) under BSD|GPL license. The 'X' in CtrlrX represents a commitment to delivering **extra** features, **extended** functionalities, and a **collaborative** space for its evolution.
 
-This project is **ONLY** aimed at delivering updates, a wiki, documentation, tutorials, or anything that the community cannot share on the original Ctrlr GitHub due to credential restrictions. Let's keep the original Ctrlr GitHub alive and continue with what we were all doing there. But for anything that deserves special credentials unavailable there, let's do it here on CtrlrX.
+This project is **ONLY** aimed at delivering updates, a wiki, documentation, tutorials, or anything that the community cannot share on the original [Ctrlr](https://github.com/RomanKubiak/ctrlr) GitHub due to credential restrictions. Let's keep the original [Ctrlr](https://github.com/RomanKubiak/ctrlr) GitHub alive and continue with what we were all doing [there](https://github.com/RomanKubiak/ctrlr). But for anything that deserves special credentials unavailable on [Ctrlr](https://github.com/RomanKubiak/ctrlr), let's do it on [CtrlrX](https://github.com/damiensellier/CtrlrX).
 
 ### About the Original Ctrlr
 
@@ -51,7 +51,7 @@ Ctrlr allows you to control any MIDI-enabled hardware: synthesizers, drum machin
 
 ## Donations
 
-Development and maintenance of CtrlrX are supported by the community. If you find this project useful and would like to support Damien Sellier, the main person behind CtrlrX, any donations are greatly appreciated.
+Development and maintenance of [CtrlrX](https://github.com/damiensellier/CtrlrX) are supported by the community. If you find this project useful and would like to support [Damien Sellier](https://github.com/DamienSellier/), the main person behind [CtrlrX](https://github.com/damiensellier/CtrlrX), any donations are greatly appreciated.
 
 You can donate via PayPal using this link: **[paypal.me/damiensellier/10](https://paypal.me/damiensellier/10)**
 
@@ -59,7 +59,7 @@ You can donate via PayPal using this link: **[paypal.me/damiensellier/10](https:
 
 ## Licensing
 
-The CtrlrX project is a fork of [Ctrlr](https://github.com/your-forked-repo-link-to-ctrlr-if-available) by Roman Kubiak. The original creator has generously granted permission for derivative works (forks) to choose their own licensing terms.
+The [CtrlrX](https://github.com/damiensellier/CtrlrX) project by [Damien Sellier](https://github.com/DamienSellier/) is a fork of [Ctrlr](https://github.com/RomanKubiak/ctrlr) by [Roman Kubiak](https://github.com/RomanKubiak). The original creator has generously granted permission for derivative works (forks) to choose their own licensing terms.
 
 Specifically, Roman Kubiak stated the following regarding the Ctrlr license:
 
@@ -73,7 +73,7 @@ Specifically, Roman Kubiak stated the following regarding the Ctrlr license:
 >
 > [Source](https://web.archive.org/web/20240213071445/https://ctrlr.org/forums/topic/ctrlr-licence/#post-37755) (2015-02-11 11:58)
 
-Based on this explicit permission, the core code of this plugin (CtrlrX) is licensed under the **[BSD-3-Clause License](LICENSE.BSD-3.md)** (or **[GPL-2.0-or-later License](LICENSE.GPL-2.0.md)** - *choose and keep only the relevant one for your core project*).
+Based on this explicit permission, the core code of this plugin (CtrlrX) is licensed under the **[BSD-3-Clause License](LICENSE.BSD-3.md)** or **[GPL-2.0-or-later License](LICENSE.GPL-2.0.md)** - *choose and keep only the relevant one for your core project*.
 
 ---
 
@@ -87,8 +87,6 @@ CtrlrX is built upon the [JUCE](https://juce.com/) C++ framework for audio appli
 Given that CtrlrX is an open-source project, it is generally built and used with JUCE under the terms of the **GPLv3**. This means that if you link CtrlrX with JUCE under its GPLv3 license, the resulting combined work (i.e., CtrlrX) becomes subject to the GPLv3's "copyleft" provisions. Consequently, any distribution of CtrlrX binaries linked with GPLv3-licensed JUCE, along with their corresponding source code, must comply with the GPLv3.
 
 * JUCE is a registered trademark of Raw Material Software Limited acquired by Pace Anti-Piracy Inc.
-
----
 
 ### Crucial Note for Commercial Distribution of JUCE based softwares (including those based on this project)
 
@@ -117,8 +115,6 @@ Therefore, any distributed AAX binaries, along with their corresponding source c
 
 * AAX is a registered trademark of Avid Technologies, Inc.
 
----
-
 ### Crucial Note for Commercial Distribution of AAX Plugins (including those based on this project)
 
 While this project is open-source under GPLv3, the Avid AAX SDK itself offers a dual-licensing model. **If you intend to commercially release a third-party plugin based on this project (or any AAX plugin derived from the Avid AAX SDK), you typically need to obtain a separate commercial license from Avid for the AAX SDK and comply with their specific commercial terms, which often include requirements for AAX plugin code signing via PACE Anti-Piracy tools.**
@@ -137,14 +133,22 @@ For the purposes of this open-source project, the compilation and use of AudioUn
 
 * Audio Unit and AUv3 are trademarks of Apple Inc., registered in the U.S. and other countries.
 
----
-
 ### Crucial Note for Commercial Distribution & App Store Submission of AU & AUv3 Plugins (including those based on this project)
 If you intend to commercially distribute an AU or AUv3 plugin derived from this project, or submit it to the Mac App Store or iOS App Store, you **must be an enrolled member of the Apple Developer Program** and comply with all terms and conditions of the **Apple Developer Program License Agreement**. This includes requirements for code signing, notarization (for macOS), and adherence to App Store review guidelines.
 
 For detailed information on Apple's developer agreements and guidelines, please refer to the official Apple Developer website:
 [https://developer.apple.com/support/terms/](https://developer.apple.com/support/terms/)
 [https://developer.apple.com/audio-units/](https://developer.apple.com/audio-units/)
+
+---
+
+### VST2 Plugin-Specific Licensing & Steinberg SDK Terms
+
+The VST2 API and SDK were officially discontinued by Steinberg in January 2022. You can find more details about this decision on Steinberg's help center: [VST 2 Discontinued](https://helpcenter.steinberg.de/hc/en-us/articles/4409561018258-VST-2-Discontinued).
+
+Due to this discontinuation, we do not officially distribute a VST2.4 version of CtrlrX. However, if you are an existing licensee of the VST2 SDK from Steinberg, you may still be able to build a VST2 version of CtrlrX for your personal use or under the terms of your specific VST2 SDK license agreement.
+
+* VST is a registered trademark of Steinberg Media Technologies GmbH.
 
 ---
 
@@ -161,8 +165,6 @@ For the purposes of this open-source project, we use the VST3 SDK under the term
 Therefore, any distributed VST3 binaries, along with their corresponding source code, are subject to the terms of the GPLv3. You can find the full text of the GPLv3 [here](https://www.gnu.org/licenses/gpl-3.0.en.html).
 
 * VST3 is a registered trademark of Steinberg Media Technologies GmbH.
-
----
 
 ### Crucial Note for Commercial Distribution of VST3 Plugins (including those based on this project)
 
@@ -192,11 +194,14 @@ A summary will be added here in the future. Links to PDF build guides by @bijlev
 
 For Linux users, it is recommended to use CMake for compiling CtrlrX binaries. This requires certain development dependencies to be installed on your system.
 
-**Required Dependencies (for Debian/Ubuntu-based systems):**
+**Required Development Dependencies (for Debian/Ubuntu-based systems):**
 
-* `libiberty`
-* `binutils` (`binutils-dev`)
-* `SFRAME` (`libsframe1`)
+To ensure a successful build, install the following packages:
+
+* **Core Build Tools:** `build-essential`, `cmake`, `pkg-config`
+* **System & Utility Libraries:** `libiberty-dev`, `binutils-dev`, `libudev-dev`, `libasound2-dev`, `libtiff-dev`, `libcurl4-gnutls-dev`, `libboost-dev`
+* **Graphics & X11 Development:** `libxi-dev`, `libx11-dev`, `libxrandr-dev`, `libxinerama-dev`, `libxcursor-dev`, `libfreetype-dev`, `libgl1-mesa-dev`, `libglapi-mesa`, `xorg-dev`
+* **Specific Libraries:** `libsframe1`
 
 To install the necessary packages, open a terminal and run the appropriate `sudo apt install` command with these dependencies. Please consult your distribution's documentation for the exact command and package names if you encounter issues.
 
@@ -212,6 +217,10 @@ sudo apt install -y \
     libasound2-dev \
     libtiff-dev \
     libcurl4-gnutls-dev \
+    libgl1-mesa-dev \
+    libglapi-mesa \
+    libboost-dev \
+    xorg-dev \
     libiberty-dev \
     libxrandr-dev \
     libxinerama-dev \
@@ -220,7 +229,8 @@ sudo apt install -y \
     pkg-config
 ```
 
-**Note:** For other Linux distributions (e.g., Fedora, Arch Linux), the package names and installation commands may differ. Please consult your distribution's documentation for the equivalent packages.
+**Note 1: Boost Library:** Boost is already included with CtrlrX. You need to unzip the file located at `/Source/Misc/boost/boost.zip`. Ensure that its contents are extracted into the `/Source/Misc/boost/` directory, resulting in a structure like `/Source/Misc/boost/boost/_boost_content_` (where `_boost_content_` represents the actual Boost library files and subfolders).
+**Note 2:** For other Linux distributions (e.g., Fedora, Arch Linux), the package names and installation commands may differ. Please consult your distribution's documentation for the equivalent packages.
 
 ---
 
@@ -228,13 +238,31 @@ sudo apt install -y \
 
 This section covers how to export various plugin formats from CtrlrX.
 
-### VST2 Support
+### VST2 Support & Build Instructions
 
-Since Steinberg has discontinued the VST2 API, we no longer distribute a VST2 version. However, if you are a licensee to the VST2 SDK, you can still build it.
+**Important Note: VST2 Discontinuation and SDK Availability**
 
-The first thing is to be sure to check the path to the VST2 SDK (only available from Steinberg's VST3 directory SDK) in Projucer before calling any script builds.
+**We strongly recommend that users transition to building the VST3 version of CtrlrX instead of VST2, as VST3 is the current and actively supported standard.**
 
-* VST is a registered trademark of Steinberg Media Technologies GmbH.
+Steinberg officially discontinued the VST2 API and SDK in **January 2022**. As a result, the VST2 SDK is no longer publicly available for download or new licensing. This means that for most new users, building a VST2.4 plugin directly from this project will not be possible without prior access to the SDK. For more information, please refer to Steinberg's official announcement: [VST 2 Discontinued](https://helpcenter.steinberg.de/hc/en-us/articles/4409561018258-VST-2-Discontinued).
+
+However, if you are an **existing licensee** of the VST2 SDK (meaning you had access to it prior to its discontinuation), you can still compile a VST2 version of CtrlrX. Your ability to build and distribute this VST2.4 version of the plugin will be governed solely by the terms of your specific VST2 SDK license agreement with Steinberg.
+
+**To build the VST2 version of this plugin (for existing licensees):**
+
+1.  **Ensure VST2 SDK Availability:**
+    Make sure you have your VST2 SDK files (specifically the `vst2.x` folder containing headers like `aeffect.h`) accessible on your system. This SDK is **not included** with JUCE and must be sourced from your prior access.
+
+2.  **Configure JUCE Projucer Global Paths:**
+    * Open the JUCE Projucer application (compatible with your JUCE 6.0.8 version).
+    * Navigate to **"File" > "Global Paths..."** (or sometimes just "Settings" via the gear icon).
+    * In the Global Paths window, locate the entry specifically for **"VST (Legacy) SDK"** or "VST2 SDK".
+    * Set this path to the root directory where your VST2 SDK is located (e.g., the folder containing the `pluginterfaces` directory and other VST2 SDK components). This path is critical for JUCE to find the necessary VST2 headers and libraries.
+    * Open your CtrlrX `.jucer` project file in Projucer, go to the "Exporters" section, and ensure the VST2 format is enabled for your target platform.
+
+3.  **Build the CtrlrX VST2 binary:**
+    Follow your project's general build instructions (e.g., via your IDE after Projucer generation, or directly with CMake) to compile the VST2 target.
+
 
 ### VST3 Support
 
@@ -255,8 +283,6 @@ To export properly identified VST3 plugins, it is then required to build a diffe
 However, this alternative version of CTRLR VST3 will have the desired panel/plugin identifiers predefined in the Projucer settings (Plugin Name, Manufacturer Name, Plugin ID, Manufacturer ID, etc.).
 This intermediate VST3 plugin will then be able to export a final VST3 version of the panel with the proper identifiers.
 
-* VST3 is a registered trademark of Steinberg Media Technologies GmbH.
-
 ### AAX Support & Build Instructions
 
 This project is built and tested with **JUCE 6.0.8**. To compile the AAX version of this plugin, you will also need to obtain the **Avid AAX SDK (version 2.8.1 or newer)** separately.
@@ -268,7 +294,10 @@ This project is built and tested with **JUCE 6.0.8**. To compile the AAX version
     * **Download the AAX SDK:** Once registered, navigate to the SDK download section and download "AAX SDK 2.8.1" (or the latest GPLv3-licensed version available for use with JUCE 6.0.8).
     * **Extract the SDK:** Extract the downloaded SDK archive to a stable, known location on your system (e.g., `C:\SDKs\AvidAAXSDK_2.8.1\` on Windows or `~/SDKs/AvidAAXSDK_2.8.1/` on macOS/Linux).
 
-2.  **Configure your build environment:**
+2.  **Build the AAX Library:**
+    * Before building CtrlrX, you must compile the core AAX Library project included within the SDK. Navigate to the `Libs/AAXLibrary` directory within your extracted AAX SDK and build the project using your chosen IDE (e.g., Visual Studio on Windows, Xcode on macOS). This step generates the necessary static library (`.lib` or `.a`) that CtrlrX will link against.
+
+3.  **Configure your build environment:**
     * **If using JUCE's Projucer (recommended for JUCE 6.0.8):**
         * Open the Projucer application (from your JUCE 6.0.8 clone).
         * Go to **"Settings"** (gear icon or File > Global Paths).
@@ -278,12 +307,13 @@ This project is built and tested with **JUCE 6.0.8**. To compile the AAX version
         * Your `CMakeLists.txt` will need to be configured to locate both your JUCE 6.0.8 root and the AAX SDK root.
         * You'll typically define variables (e.g., `JUCE_ROOT`, `AAX_SDK_ROOT`) and use `find_path` or explicit `set` commands, then pass `AAX_SDK_ROOT` to `juce_add_plugin` via the `AAX_SDK_PATH` argument. (Detailed CMake setup for JUCE 6.0.8 with external SDKs can be complex; a dedicated CMake guide might be needed for this if it's your primary build method).
 
-3.  **Build the binary:** Follow your project's general build instructions (e.g., via your IDE after Projucer generation, or directly with CMake) to compile the AAX target.
+4.  **Build the CtrlrX AAX binary:** Follow your project's general build instructions (e.g., via your IDE after Projucer generation, or directly with CMake) to compile the AAX target.
     * [Your specific build command/steps for AAX, e.g., for Projucer: "Open the .jucer project in Projucer, select the AAX target, and click 'Save and Open in IDE'. Then build in your IDE." or for CMake: `cmake --build . --config Release --target CtrlrX_AAX`]
 
 **Additional Notes for Development and Distribution:**
 
 * **Pro Tools Developer Version:** To test unsigned AAX plugins, you will likely need a special "Pro Tools Developer" version of Pro Tools, available through the [Avid Developer Program](https://developer.avid.com/aax).
+
 * **PACE Codesigning:** For any distributed AAX plugin (commercial or free), you will generally need to go through the AVID authorization process via PACE codesigning tools. This is a requirement for plugins to load in standard (non-developer) Pro Tools versions. This process is managed by Avid and PACE.
 
 ### AU Support
@@ -310,13 +340,18 @@ Tuturial coming soon.
 
 ## Changelog
 
-#### Version 5.6.34 | 2025.06.16
+#### Version 5.6.34 | 2025.06.23
 
 * **NEW** ProTools AAX plugin support (requires codesigning via PACE)
 * **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
 * **UPDATED** LuaBind function `addChild()` to `valueTree` class. `LCore.cpp`
 * **ADDED** LuaBind function `jmap()`, `mapToLog10()`, `mapFromLog10()`, `isWithin()` to GlobalFunctions. `LCore.cpp`
 * **ADDED** LuaBind Parse XML support to `XmlDocument` class. `LCore.cpp`
+* **UPDATED** README.md Licensing terms, compilation instructions and layout improved. `README.md`
+* **FIXED** Subsequent modulators with the same CC index as the first one not reacting. `CtrlrManagerInstance.cpp`, `CtrlrMidiInputComparatorSingle.cpp`, `CtrlrMidiInputComparatorMulti.cpp`
+* **UPDATED** MIDI Plugin Options default settings set to 'Input from plugin host" & "Input from host to comparator". `CtrlrPanel.cpp`
+* **UPDATED** MIDI Keyboard component, Octave DOWN/UP added with key assignment "x" & "z" by default. Top line colour on focus. `CtrlrMidiKeyboard.cpp`, `CtrlrMidiKeyboard.h`, `CtrlrIDs.xml`, `CtrlrIDs.h` 
+* **UPDATED** focusGained(), focusLost() to CtrlrComponent. `CtrlrComponent.cpp` & `.h`
 
 #### Version 5.6.33 | 2025.05.28
 
@@ -433,7 +468,8 @@ Tuturial coming soon.
 
 ## Credits
 
-* Thanks to [Roman Kubiak](https://github.com/RomanKubiak) for developing Ctrlr.
+* Thanks to [Damien Sellier](https://github.com/DamienSellier) for developing and maintaining [CtrlrX](https://github.com/damiensellier/CtrlrX).
+* Thanks to [Roman Kubiak](https://github.com/RomanKubiak) for developing [Ctrlr](https://github.com/RomanKubiak/ctrlr).
 * Links to contributors coming soon.
 
 ---

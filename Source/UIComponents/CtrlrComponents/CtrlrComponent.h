@@ -98,6 +98,8 @@ class CtrlrComponent : public Component,
         virtual void mouseDrag (const MouseEvent &e);
         virtual void mouseEnter (const MouseEvent &e);
         virtual void mouseExit (const MouseEvent &e);
+        void focusGained (FocusChangeType cause) override; // Added v5.6.34
+        void focusLost (FocusChangeType cause) override; // Added v5.6.34
         void setGroupped (const bool addToGroup);
         const String getComponentTab();
         void setComponentTab (const String &newTab);

@@ -25,7 +25,8 @@ CtrlrProcessor::CtrlrProcessor() :
                                         #endif
 
                                     overridesTree (Ids::ctrlrOverrides),
-                                    ctrlrManager (nullptr)
+                                    ctrlrManager (nullptr),
+                                    ctrlrLog (nullptr) // Added v5.6.34. Could be useful
 {
 	_DBG("CtrlrProcessor::ctor");
 
@@ -72,11 +73,35 @@ CtrlrProcessor::CtrlrProcessor() :
 	}
 }
 
-CtrlrProcessor::~CtrlrProcessor()
+CtrlrProcessor::~CtrlrProcessor() // Updated v5.6.34. Prevents AAX from crashing when deleting the plugin from the instrument track insert slot.
 {
-#ifdef JUCE_MAC // Updated v5.5.31. was JUCE_OSX
-	MessageManager::getInstance()->runDispatchLoopUntil((int)overridesTree.getProperty(Ids::ctrlrShutdownDelay)); // Updated v5.6.31. Not sure if it's useful anyway
-#endif
+    // ***** CRITICAL AAX-SPECIFIC WORKAROUND *****
+    // This entire block is excluded for AAX builds because:
+    // 1. The MessageManager::runDispatchLoopUntil() call causes crashes on AAX plugin removal.
+    //    (Confirmed even when property exists and has a default value).
+    // 2. Explicitly deleting ctrlrLog (if it were done here) caused crashes on AAX plugin startup scan.
+    // The safest approach for AAX is to do minimal work for these components in the destructor.
+    #ifndef JucePlugin_Build_AAX
+        // For all plugin formats *EXCEPT* AAX:
+        // Perform explicit deletion for the raw pointer (ctrlrLog).
+        // ScopedPointer (ctrlrManager) will handle its own deletion automatically.
+        if (ctrlrLog != nullptr)
+        {
+            delete ctrlrLog;
+            ctrlrLog = nullptr;
+        }
+
+        #ifdef JUCE_MAC
+            // This line was causing crashes on AAX removal, so it's excluded for AAX by the #ifndef above.
+            // It remains here for other macOS builds if it's considered necessary for them. Mainly for panels with timer process handled in the background and delayed saveState() process.
+            MessageManager::getInstance()->runDispatchLoopUntil((int)overridesTree.getProperty(Ids::ctrlrShutdownDelay));
+        #endif
+    #else
+        // For JUCE_AAX builds:
+        // We ensure raw pointers are nullified without deletion to avoid crashes during scan/removal.
+        // ScopedPointer will still automatically delete its content (ctrlrManager) when the CtrlrProcessor object is destroyed.
+        ctrlrLog = nullptr;
+    #endif
 }
 
 

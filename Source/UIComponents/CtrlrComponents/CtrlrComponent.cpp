@@ -238,6 +238,22 @@ void CtrlrComponent::mouseExit (const MouseEvent &e)
     }
 }
 
+void CtrlrComponent::focusGained (FocusChangeType cause) // Added v5.6.34
+{
+    _DBG("CtrlrComponent focusGained! Name: " + getName() + ", Cause: " + String(cause));
+    Component::focusGained(cause); // IMPORTANT: Call the base class method!
+    // Add any CtrlrComponent specific focus logic here if needed
+    repaint(); // Generally a good idea to repaint on focus change for visual feedback
+}
+
+void CtrlrComponent::focusLost (FocusChangeType cause) // Added v5.6.34
+{
+    _DBG("CtrlrComponent focusLost! Name: " + getName() + ", Cause: " + String(cause));
+    Component::focusLost(cause); // IMPORTANT: Call the base class method!
+    // Add any CtrlrComponent specific focus lost logic here if needed
+    repaint(); // Generally a good idea to repaint on focus change for visual feedback
+}
+
 int CtrlrComponent::snapDim(int dim)
 {
     if (snapDimSize <= 0)
