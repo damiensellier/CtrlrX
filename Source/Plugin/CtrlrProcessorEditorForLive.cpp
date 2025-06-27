@@ -5,11 +5,13 @@
 
 #include "CtrlrManager/CtrlrManager.h"
 #include "CtrlrProcessorEditorForLive.h"
+#include "CtrlrMacros.h"
+#include "CtrlrLog.h"
 
 CtrlrEditorWrapper::CtrlrEditorWrapper(CtrlrProcessorEditorForLive &_liveEditorOwner, CtrlrProcessor *ownerFilter, CtrlrManager &ctrlrManager) 
 	: DocumentWindow("Ctrlr", Colours::lightgrey, 0, true), liveEditorOwner(_liveEditorOwner)
 {
-	setTitleBarHeight(1);
+	setTitleBarHeight(1); // Updated v5.6.32. Was (1)
     editor = new CtrlrEditor(ownerFilter, ctrlrManager);
     addAndMakeVisible(editor); // Added v5.6.31. Force wrapper visibility
     setContentOwned (editor, true);
@@ -28,8 +30,10 @@ void CtrlrEditorWrapper::resized()
 }
 
 CtrlrProcessorEditorForLive::CtrlrProcessorEditorForLive(CtrlrProcessor *_filterOwner, CtrlrManager &_owner)
-	: owner(_owner), filterOwner(_filterOwner), AudioProcessorEditor((AudioProcessor *)_filterOwner),
-		wrapper(*this, filterOwner, owner)
+    : owner(_owner),
+      filterOwner(_filterOwner),
+      AudioProcessorEditor((AudioProcessor *)_filterOwner), // Initialize base class AudioProcessorEditor
+      wrapper(*this, filterOwner, owner) // Initialize the DocumentWindow wrapper
 {
 	wrapper.setVisible (true);
     addAndMakeVisible(wrapper); // Added v5.6.31. Force wrapper visibility
@@ -41,10 +45,11 @@ CtrlrProcessorEditorForLive::~CtrlrProcessorEditorForLive()
 {
 }
 
-void CtrlrProcessorEditorForLive::paint(Graphics &g)
+void CtrlrProcessorEditorForLive::paint(Graphics &g) // Updated v5.6.34
 {
-	ColourGradient cg(Colours::grey, 0.0f, 0.0f, Colours::darkgrey,0.0f, getHeight(),  false);
-	g.setFillType (cg);
+    ValueTree ed = owner.getManagerTree();
+    Colour vpBkgColour = VAR2COLOUR(ed.getProperty(Ids::uiPanelViewPortBackgroundColour));
+    g.setColour(vpBkgColour);
 	g.fillAll();
 }
 
@@ -70,5 +75,5 @@ void CtrlrProcessorEditorForLive::timerCallback()
 
 void CtrlrProcessorEditorForLive::wrapperResized()
 {
-	setSize(wrapper.getWidth(), 16);
+	setSize(wrapper.getWidth(), 16); // NOTE v5.6.34. This is weird because Height will always reset to 16px when resized.
 }
