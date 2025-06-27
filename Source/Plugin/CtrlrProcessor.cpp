@@ -512,11 +512,11 @@ bool CtrlrProcessor::useWrapper()
 		return (false);
 	}
 
-	if (((SystemStats::getOperatingSystemType() & SystemStats::Windows) != 0) && host.isAbletonLive())
+	if (((SystemStats::getOperatingSystemType() & SystemStats::Windows) != 0) && host.isAbletonLive()) // For Win & Ableton only
 	{
 		if (hasProperty(Ids::ctrlrUseEditorWrapper))
 		{
-			return ((bool)getProperty(Ids::ctrlrUseEditorWrapper));
+			return ((bool)getProperty(Ids::ctrlrUseEditorWrapper)); // Reset to true for exported instances at top level tree
 		}
 		else
 		{

@@ -35,7 +35,12 @@ CtrlrProcessorEditorForLive::CtrlrProcessorEditorForLive(CtrlrProcessor *_filter
       AudioProcessorEditor((AudioProcessor *)_filterOwner), // Initialize base class AudioProcessorEditor
       wrapper(*this, filterOwner, owner) // Initialize the DocumentWindow wrapper
 {
-	wrapper.setVisible (true);
+    // Init log file for debug
+    File debugLogForLive = File::getSpecialLocation(File::userDesktopDirectory).getChildFile("CtrlrX_vst3_live_debug_log.txt");
+    PluginLoggerVst3ForLive logger(debugLogForLive);
+    logger.log("Debug Log for Live initiated");
+    
+    wrapper.setVisible (true);
     addAndMakeVisible(wrapper); // Added v5.6.31. Force wrapper visibility
 	setSize (wrapper.getWidth(), 16);
 	startTimer (50);
