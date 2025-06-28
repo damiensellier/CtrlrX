@@ -11,7 +11,7 @@
 CtrlrEditorWrapper::CtrlrEditorWrapper(CtrlrProcessorEditorForLive &_liveEditorOwner, CtrlrProcessor *ownerFilter, CtrlrManager &ctrlrManager) 
 	: DocumentWindow("Ctrlr", Colours::lightgrey, 0, true), liveEditorOwner(_liveEditorOwner)
 {
-	setTitleBarHeight(1); // Updated v5.6.32. Was (1)
+	setTitleBarHeight(1);
     editor = new CtrlrEditor(ownerFilter, ctrlrManager);
     addAndMakeVisible(editor); // Added v5.6.31. Force wrapper visibility
     setContentOwned (editor, true);
@@ -36,9 +36,9 @@ CtrlrProcessorEditorForLive::CtrlrProcessorEditorForLive(CtrlrProcessor *_filter
       wrapper(*this, filterOwner, owner) // Initialize the DocumentWindow wrapper
 {
     // Init log file for debug
-    File debugLogForLive = File::getSpecialLocation(File::userDesktopDirectory).getChildFile("CtrlrX_vst3_live_debug_log.txt");
-    PluginLoggerVst3ForLive logger(debugLogForLive);
-    logger.log("Debug Log for Live initiated");
+    //File debugLogForLive = File::getSpecialLocation(File::userDesktopDirectory).getChildFile("CtrlrX_vst3_live_debug_log.txt");
+    //PluginLoggerVst3ForLive logger(debugLogForLive);
+    //logger.log("Debug Log for Live initiated");
     
     wrapper.setVisible (true);
     addAndMakeVisible(wrapper); // Added v5.6.31. Force wrapper visibility
