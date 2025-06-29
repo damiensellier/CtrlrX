@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="JUCE Modules\juce_audio_plugin_client\VST">
@@ -16,13 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="C:\JUCE\modules\juce_audio_plugin_client\VST\juce_VST_Wrapper.cpp">
+    <ClCompile Include="..\..\JUCE\modules\juce_audio_plugin_client\VST\juce_VST_Wrapper.cpp">
       <Filter>JUCE Modules\juce_audio_plugin_client\VST</Filter>
     </ClCompile>
-    <ClCompile Include="C:\JUCE\modules\juce_audio_plugin_client\VST\juce_VST_Wrapper.mm">
-      <Filter>JUCE Modules\juce_audio_plugin_client\VST</Filter>
-    </ClCompile>
-    <ClCompile Include="C:\JUCE\modules\juce_audio_plugin_client\juce_audio_plugin_client_VST2.cpp">
+    <ClCompile Include="..\..\JUCE\modules\juce_audio_plugin_client\juce_audio_plugin_client_VST2.cpp">
       <Filter>JUCE Modules\juce_audio_plugin_client</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_audio_plugin_client_VST2.cpp">
@@ -30,7 +26,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\JUCE\modules\juce_audio_plugin_client\VST\juce_VSTCallbackHandler.h">
+    <ClInclude Include="..\..\JUCE\modules\juce_audio_plugin_client\VST\juce_VSTCallbackHandler.h">
       <Filter>JUCE Modules\juce_audio_plugin_client\VST</Filter>
     </ClInclude>
   </ItemGroup>
