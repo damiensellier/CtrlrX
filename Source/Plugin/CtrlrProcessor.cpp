@@ -504,36 +504,13 @@ void CtrlrProcessor::activePanelChanged()
 	sendChangeMessage();
 }
 
-
-//bool CtrlrProcessor::useWrapper()
-//{
-//	if (JUCEApplication::isStandaloneApp())
-//	{
-//		return (false);
-//	}
-//
-//	if (((SystemStats::getOperatingSystemType() & SystemStats::Windows) != 0) && host.isAbletonLive()) // For Win & Ableton only
-//	{
-//		if (hasProperty(Ids::ctrlrUseEditorWrapper))
-//		{
-//			return ((bool)getProperty(Ids::ctrlrUseEditorWrapper)); // Reset to true for exported instances at top level tree
-//		}
-//		else
-//		{
-//			return (true);
-//		}
-//	}
-//	return (false);
-//}
-
 bool CtrlrProcessor::useWrapper() // Updated v5.6.34. JUCE 6.0.8 has option "plugin requires keyboard focus" and the keyboard focus is handled better with VST3 than VST2 so Live Wrapper seems useless nowadays.
 {
     File debugLog = File::getSpecialLocation(File::currentApplicationFile);
-    File me = File::getSpecialLocation(File::currentExecutableFile);
-    String fileExtension = me.getFileExtension();
+    String fileExt = debugLog.getFileExtension();
     PluginLoggerVst3 logger(debugLog); // Create logger instance
     
-    logger.log("CtrlrX source fileExtension is :" + fileExtension);
+    logger.log("CtrlrX source fileExtension is :" + fileExt);
     
     if (JUCEApplication::isStandaloneApp())
     {
@@ -545,13 +522,13 @@ bool CtrlrProcessor::useWrapper() // Updated v5.6.34. JUCE 6.0.8 has option "plu
     {
         logger.log("useWrapper(): Running on Windows in Ableton Live.");
         
-        if (fileExtension==".vst3") // Check if the currently loaded plugin format is VST3
+        if (fileExt ==".vst3") // Check if the currently loaded plugin format is VST3
         {
             logger.log("useWrapper(): Detected VST3 on Windows Live. Forcing native editor (no wrapper) for testing.");
             return (false); // Force native VST3 editor on Windows for testing
         }
         
-        else if (fileExtension==".dll") // Check if the currently loaded plugin format is VST (VST2)
+        else if (fileExt ==".dll") // Check if the currently loaded plugin format is VST (VST2)
         {
             // If it's a VST2 plugin, the original developer's logic suggests using the wrapper. We'll keep this behavior for VST2.
             logger.log("useWrapper(): Detected VST2 on Windows Live. Using wrapper as per original developer's notes.");
