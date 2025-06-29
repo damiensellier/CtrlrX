@@ -743,7 +743,7 @@
   <id name="ctrlrWarningInBootstrapState"     text="Run modulator valueChange LUA callback in Bootstrap state" type="Bool" />
   <id name="ctrlrLuaDebug"                    text="Enable LUA debugging" type="Bool" />
   <id name="ctrlrShutdownDelay"               text="Plugin shutdown delay" type="Numeric" min="0" max="10000" int="1" />
-  <id name="ctrlrUseEditorWrapper"            text="Use the Editor Wrapper for VST plugins" type="Bool"/>
+  <id name="ctrlrUseEditorWrapper"            text="Wrap the VST2.4 plugin on Ableton Live for Windows" type="Bool"/>
   <id name="ctrlrVersionSeparator"            text="Version field separator" type="Text"/>
   <id name="ctrlrVersionCompressed"           text="Save versioned panels compressed" type="Bool"/>
   <id name="ctrlrVstFile"                     text="VST File" type="FileProperty" />
