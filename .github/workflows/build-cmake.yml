@@ -113,7 +113,9 @@ jobs:
       run: |
         FRUT/FRUT/bin/Jucer2CMake reprojucer "CtrlrX 5.6.34 [Without AAX & VST].jucer" FRUT/FRUT/cmake/Reprojucer.cmake
         sed "s/Visual Studio 2019/Visual Studio 2022/g"
+        echo "Sed: $?"
         perl -i~ -0777 -pe 's/\s*PREBUILD_SHELL_SCRIPT \[=\[.*\]=\]//igs' CMakeLists.txt  | grep 'PREBUILD_SHELL\|]=]'
+        echo "Perl: $?"
 
     - name: Configure CtrlrX
       shell: bash
