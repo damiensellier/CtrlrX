@@ -532,14 +532,16 @@ bool CtrlrProcessor::useWrapper() // Updated v5.6.34. JUCE 6.0.8 has option "plu
             // If it's a VST2 plugin, the original developer's logic suggests using the wrapper. We'll keep this behavior for VST2.
             // logger.log("useWrapper(): Detected VST2 on Windows Live. Using wrapper as per original developer's notes.");
             
-            if (hasProperty(Ids::ctrlrUseEditorWrapper))
-            {
-                return ((bool)getProperty(Ids::ctrlrUseEditorWrapper));
-            }
-            else
-            {
-                return (true); // Default to true for VST2 on Windows Live
-            }
+            // if (hasProperty(Ids::ctrlrUseEditorWrapper))
+            // {
+            //     return ((bool)getProperty(Ids::ctrlrUseEditorWrapper));
+            // }
+            // else
+            // {
+            //     return (true); // Default to true for VST2 on Windows Live
+            // }
+            
+            return (true); // Hard coded default to true for VST2 on Windows Live. Condition based on property ctrlrUseEditorWrapper bypassed.
         }
     }
     // Keep the macOS logic as it was, the wrapper is useless on macOS.

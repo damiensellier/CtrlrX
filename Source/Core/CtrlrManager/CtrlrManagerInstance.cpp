@@ -42,7 +42,7 @@ void CtrlrManager::setEmbeddedDefaults()
     setProperty (Ids::ctrlrMenuBarHeight, 24); // Added v5.6.31
     setProperty (Ids::ctrlrTabBarDepth, 24); // Added v5.6.31
     setProperty (Ids::ctrlrPropertyLineheightBaseValue, 36); // Added v5.6.33.
-    setProperty (Ids::ctrlrUseEditorWrapper, (bool)ctrlrPlayerInstanceTree.hasProperty(Ids::ctrlrUseEditorWrapper) ? (bool)ctrlrPlayerInstanceTree.getProperty(Ids::ctrlrUseEditorWrapper) : true);
+    // setProperty (Ids::ctrlrUseEditorWrapper, (bool)ctrlrPlayerInstanceTree.hasProperty(Ids::ctrlrUseEditorWrapper) ? (bool)ctrlrPlayerInstanceTree.getProperty(Ids::ctrlrUseEditorWrapper) : true); // Removed v5.6.34. Conditions hard coded for the wrapper with Ableton Live on Windows
     setProperty (Ids::uiLuaConsoleInputRemoveAfterRun, true);
      
     // Added v5.6.31

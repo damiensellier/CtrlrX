@@ -206,7 +206,7 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
 //    setProperty (Ids::ctrlrMenuBarHighlightColour, Colour(HIGHLIGHT_COLOUR).toString());
 //    setProperty (Ids::ctrlrMenuBarFont, owner.getFontManager().getStringFromFont (Font (18.0f)));
 
-    setProperty (Ids::ctrlrUseEditorWrapper, false);
+    // setProperty (Ids::ctrlrUseEditorWrapper, false); // Removed v5.6.34. Conditions hard coded for the wrapper with Ableton Live on Windows
     
     owner.addChangeListener (this);
     midiMessageCollector.reset (SAMPLERATE);
