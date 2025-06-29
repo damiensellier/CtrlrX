@@ -508,9 +508,8 @@ bool CtrlrProcessor::useWrapper() // Updated v5.6.34. JUCE 6.0.8 has option "plu
 {
     File debugLog = File::getSpecialLocation(File::currentApplicationFile);
     String fileExt = debugLog.getFileExtension();
-    PluginLoggerVst3 logger(debugLog); // Create logger instance
-    
-    logger.log("CtrlrX source fileExtension is :" + fileExt);
+    // PluginLoggerVst3 logger(debugLog); // Create logger instance
+    // logger.log("CtrlrX source fileExtension is :" + fileExt);
     
     if (JUCEApplication::isStandaloneApp())
     {
@@ -520,18 +519,18 @@ bool CtrlrProcessor::useWrapper() // Updated v5.6.34. JUCE 6.0.8 has option "plu
     // Logic for Windows + Ableton Live
     if (((SystemStats::getOperatingSystemType() & SystemStats::Windows) != 0) && host.isAbletonLive())
     {
-        logger.log("useWrapper(): Running on Windows in Ableton Live.");
+        // logger.log("useWrapper(): Running on Windows in Ableton Live.");
         
         if (fileExt ==".vst3") // Check if the currently loaded plugin format is VST3
         {
-            logger.log("useWrapper(): Detected VST3 on Windows Live. Forcing native editor (no wrapper) for testing.");
+            // logger.log("useWrapper(): Detected VST3 on Windows Live. Forcing native editor (no wrapper) for testing.");
             return (false); // Force native VST3 editor on Windows for testing
         }
         
         else if (fileExt ==".dll") // Check if the currently loaded plugin format is VST (VST2)
         {
             // If it's a VST2 plugin, the original developer's logic suggests using the wrapper. We'll keep this behavior for VST2.
-            logger.log("useWrapper(): Detected VST2 on Windows Live. Using wrapper as per original developer's notes.");
+            // logger.log("useWrapper(): Detected VST2 on Windows Live. Using wrapper as per original developer's notes.");
             
             if (hasProperty(Ids::ctrlrUseEditorWrapper))
             {
@@ -550,7 +549,7 @@ bool CtrlrProcessor::useWrapper() // Updated v5.6.34. JUCE 6.0.8 has option "plu
     }
     
     // Default to false for all other cases (other DAWs, other OSes, or unhandled plugin types)
-    logger.log("useWrapper(): Not Ableton Live on Windows, or unhandled plugin type. Returning false (no wrapper).");
+    // logger.log("useWrapper(): Not Ableton Live on Windows, or unhandled plugin type. Returning false (no wrapper).");
     return (false);
 }
 
