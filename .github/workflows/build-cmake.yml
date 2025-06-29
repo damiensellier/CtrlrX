@@ -112,8 +112,8 @@ jobs:
       # with some hacks...
       run: |
         FRUT/FRUT/bin/Jucer2CMake reprojucer "CtrlrX 5.6.34 [Without AAX & VST].jucer" FRUT/FRUT/cmake/Reprojucer.cmake
-        sed -i "s/Visual Studio 2019/Visual Studio 2022/g" CMakeLists.txt
-        sed -i '/PREBUILD_SHELL_SCRIPT \[=\[/,/\]=\]/d' CMakeLists.txt
+        sed -Ei "s/Visual Studio 2019/Visual Studio 2022/g" -- CMakeLists.txt
+        sed -Ei '/PREBUILD_SHELL_SCRIPT \[=\[/,/\]=\]/d' -- CMakeLists.txt
 
     - name: Configure CtrlrX
       shell: bash
