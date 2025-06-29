@@ -114,3 +114,36 @@ jobs:
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
       if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
+  release:
+    # Only run this for tags
+    if: contains(github.ref_type, 'tag')
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Get Artifacts
+        uses: actions/download-artifact@v4
+      
+      - name: Compose release notes
+        # Extract the first sub section after '## Changelog' until the next subsection
+        run: |
+          echo '![alt text](/Source/Resources/Icons/CtrlrX-README-250x315.png?raw=true "CtrlrX")' > release_notes.txt
+          echo -e "\n# CtrlrX - release notes" >> release_notes.txt
+          sed '0,/^## Changelog/d; 0,/^##/d; /##/,$d' README.md >> release_notes.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # We could also generate release notes automatically using the option 'generate_release_notes: true'
+          # But it requires special care when creating tags. 
+          # See the action docs and https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+          body_path: release_notes.txt
+          prerelease: true
+          # download-artifact puts these files in their own dirs...
+          # Using globs sidesteps having to pass the version around
+          files: |
+            */*.exe
+            */*.zip
+            */*.dmg
+            */*.sh
