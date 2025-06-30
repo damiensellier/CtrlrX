@@ -1084,17 +1084,6 @@ void LZipFile::wrapForLua(lua_State* L) // Updated v5.6.34. Thanks to @dnaldoog
 	];
 }
 
-
-//void LInputStream::wrapForLua (lua_State *L)
-//{
-//	using namespace luabind;
-//
-//	module(L)
-//    [
-//		class_<InputStream>("InputStream")
-//	];
-//}
-
 void LInputStream::wrapForLua(lua_State* L)
 {
 	using namespace luabind;
@@ -1103,7 +1092,6 @@ void LInputStream::wrapForLua(lua_State* L)
 			class_<InputStream>("InputStream")
 				.def("readEntireStreamAsString", &InputStream::readEntireStreamAsString)
 				.def("readIntoMemoryBlock", (size_t(InputStream::*)(MemoryBlock&, ssize_t)) & InputStream::readIntoMemoryBlock)
-				// You might also want these useful methods:
 				.def("getTotalLength", &InputStream::getTotalLength)
 				.def("getPosition", &InputStream::getPosition)
 				.def("setPosition", &InputStream::setPosition)
