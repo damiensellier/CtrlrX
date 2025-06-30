@@ -75,6 +75,8 @@ jobs:
           ./Scripts/post-commit unpack_boost
         elif [ "$RUNNER_OS" == "macOS" ]; then
           brew install boost ninja osxutils
+          # somehow cmake doesn't pick up on /usr/local/include/boost/ ... maybe have to set it in the .jucer project
+          ./Scripts/post-commit unpack_boost
         fi
 
     - name: Add msbuild to PATH
@@ -112,8 +114,9 @@ jobs:
       # with some hacks...
       run: |
         FRUT/FRUT/bin/Jucer2CMake reprojucer "CtrlrX 5.6.34 [Without AAX & VST].jucer" FRUT/FRUT/cmake/Reprojucer.cmake
-        sed -Ei "s/Visual Studio 2019/Visual Studio 2022/g" -- CMakeLists.txt
-        sed -Ei '/PREBUILD_SHELL_SCRIPT \[=\[/,/\]=\]/d' -- CMakeLists.txt
+        sed -Ei~ "s/Visual Studio 2019/Visual Studio 2022/g" -- CMakeLists.txt
+        sed -Ei~ '/PREBUILD_SHELL_SCRIPT \[=\[/,/\]=\]/d' -- CMakeLists.txt
+        sed -Ei~ '/EXTRA_LINKER_FLAGS/,/"800"/d' CMakeLists.txt
 
     - name: Configure CtrlrX
       shell: bash
@@ -126,7 +129,7 @@ jobs:
     - name: Build CtrlrX
       shell: bash
       run: |
-        cmake --build build/
+        cmake --build build/ --parallel
   
     - name: Show Installer Directory
       id: version
@@ -138,7 +141,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: CtrlrX-${{ matrix.name }}
-        path: build/CtrlrX*
+        path: |
+          build/CtrlrX*
+          CMakeLists.txt
 
     # Enable tmate debugging of manually-triggered workflows if the input option was provided
     - name: Setup tmate session
