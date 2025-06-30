@@ -353,6 +353,8 @@ Tuturial coming soon.
 * **UPDATED** MIDI Keyboard component, Octave DOWN/UP added with key assignment "x" & "z" by default. Top line colour on focus. `CtrlrMidiKeyboard.cpp`, `CtrlrMidiKeyboard.h`, `CtrlrIDs.xml`, `CtrlrIDs.h` 
 * **UPDATED** focusGained(), focusLost() to CtrlrComponent. `CtrlrComponent.cpp` & `.h`
 * **UPDATED** Plugin Wrapper is used by CtrlrX only on WIN with Ableton Live as VST2. The "ctrlrUseEditorWrapper" property is deprecated. `CtrlrProcessor.cpp` & `.h`, `CtrlrManager.cpp`, `CtrlrManagerInstance.cpp`, `CtrlrPanel.cpp`
+* **UPDATED** LuaBind InputStream class. `LCore.cpp`
+
 
 #### Version 5.6.33 | 2025.05.28
 

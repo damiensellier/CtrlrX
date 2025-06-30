@@ -1085,12 +1085,18 @@ void LZipFile::wrapForLua(lua_State* L) // Updated v5.6.34. Thanks to @dnaldoog
 }
 
 
-void LInputStream::wrapForLua (lua_State *L)
+void LInputStream::wrapForLua (lua_State *L) // Updated v5.6.34. Thanks to @dnaldoog. https://github.com/damiensellier/CtrlrX/pull/116
 {
 	using namespace luabind;
 
 	module(L)
-    [
-		class_<InputStream>("InputStream")
-	];
+        [
+            class_<InputStream>("InputStream")
+                .def("readEntireStreamAsString", &InputStream::readEntireStreamAsString)
+                .def("readIntoMemoryBlock", (size_t(InputStream::*)(MemoryBlock&, ssize_t)) & InputStream::readIntoMemoryBlock)
+                .def("getTotalLength", &InputStream::getTotalLength)
+                .def("getPosition", &InputStream::getPosition)
+                .def("setPosition", &InputStream::setPosition)
+                .def("isExhausted", &InputStream::isExhausted)
+        ];
 }
