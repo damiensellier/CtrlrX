@@ -57,12 +57,6 @@ jobs:
       with:
         submodules: recursive
     
-    - name: Checkout FRUT
-      uses: actions/checkout@v4
-      with:
-        repository: McMartin/FRUT
-        path: './FRUT'
-
     - name: Install dependencies
       shell: bash
       run: |
@@ -98,9 +92,31 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
+    - name: Cache FRUT
+      id: cache-frut
+      uses: actions/cache@v4
+      env:
+        cache-name: cache-FRUT-dependency
+      with:
+        path: ./FRUT
+        # The key hashes the README, so if that gets updated we update the FRUT dependency (can be improved)
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('README.md') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+
+    - name: Checkout FRUT
+      if: ${{ steps.cache-frut.outputs.cache-hit != 'true' }}
+      uses: actions/checkout@v4
+      with:
+        repository: McMartin/FRUT
+        path: './FRUT'
+
     # We opt to repeatedly generate the CMakeFiles.txt from the .jucer project
     # to keep the .jucer project the 'source of truth', for now...
     - name: Build FRUT
+      if: ${{ steps.cache-frut.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
         mkdir ./FRUT/build
@@ -114,8 +130,8 @@ jobs:
       # with some hacks...
       run: |
         FRUT/FRUT/bin/Jucer2CMake reprojucer "CtrlrX 5.6.34 [Without AAX & VST].jucer" FRUT/FRUT/cmake/Reprojucer.cmake
-        sed -Ei~ "s/Visual Studio 2019/Visual Studio 2022/g" -- CMakeLists.txt
-        sed -Ei~ '/PREBUILD_SHELL_SCRIPT \[=\[/,/\]=\]/d' -- CMakeLists.txt
+        sed -Ei~ "s/Visual Studio 2019/Visual Studio 2022/g" CMakeLists.txt
+        sed -Ei~ '/PREBUILD_SHELL_SCRIPT \[=\[/,/\]=\]/d' CMakeLists.txt
         sed -Ei~ '/EXTRA_LINKER_FLAGS/,/"800"/d' CMakeLists.txt
 
     - name: Configure CtrlrX
@@ -129,7 +145,7 @@ jobs:
     - name: Build CtrlrX
       shell: bash
       run: |
-        cmake --build build/ --parallel
+        cmake --build build/
   
     - name: Show Installer Directory
       id: version
