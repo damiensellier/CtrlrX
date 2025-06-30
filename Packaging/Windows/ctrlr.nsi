@@ -1,18 +1,18 @@
-!define MUI_PRODUCT "Ctrlr MIDI Editor"
+!define MUI_PRODUCT "CtrlrX MIDI Editor"
 !define MUI_FILE "savefile"
-!define MUI_BRANDINGTEXT "Ctrlr v5.0"
+!define MUI_BRANDINGTEXT "CtrlrX v5.6"
 # REFS
-!define REG_UNINSTALL "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ctrlr"
-!define START_LINK_DIR "$STARTMENU\Programs\Ctrlr"
-!define START_LINK_RUN "$STARTMENU\Programs\Ctrlr\Ctrlr.lnk"
-!define START_LINK_UNINSTALLER "$STARTMENU\Programs\OnTopReplica\Uninstall Ctrlr.lnk"
-!define UNINSTALLER_NAME "Ctrlr-Uninstall.exe"
+!define REG_UNINSTALL "Software\Microsoft\Windows\CurrentVersion\Uninstall\CtrlrX"
+!define START_LINK_DIR "$STARTMENU\Programs\CtrlrX"
+!define START_LINK_RUN "$STARTMENU\Programs\CtrlrX\CtrlrX.lnk"
+!define START_LINK_UNINSTALLER "$STARTMENU\Programs\OnTopReplica\Uninstall CtrlrX.lnk"
+!define UNINSTALLER_NAME "CtrlrX-Uninstall.exe"
 !define WEBSITE_LINK "http://ctrlr.org"
 
 CRCCheck On
 SetCompressor /SOLID lzma
-Name "Ctrlr MIDI Editor"
-OutFile "Ctrlr.exe"
+Name "CtrlrX MIDI Editor"
+OutFile "CtrlrX.exe"
 RequestExecutionLevel admin
 
 !include MUI2.nsh
@@ -59,16 +59,16 @@ RequestExecutionLevel admin
 ##===========================================================================
  
 LangString NoSectionsSelected ${LANG_ENGLSH} "You haven't selected any sections!"
-LangString MUI_DIRECTORYPAGE_TEXT_TOP_A ${LANG_ENGLSH} "Setup will install Ctrlr Standalone files in the following folder..."
-LangString MUI_DIRECTORYPAGE_TEXT_TOP_B ${LANG_ENGLSH} "Setup will install Ctrlr VST Files in the following folder..."
+LangString MUI_DIRECTORYPAGE_TEXT_TOP_A ${LANG_ENGLSH} "Setup will install CtrlrX Standalone files in the following folder..."
+LangString MUI_DIRECTORYPAGE_TEXT_TOP_B ${LANG_ENGLSH} "Setup will install CtrlrX VST Files in the following folder..."
  
 # CALLBACKS
 Function RegisterApplication
     ;Register uninstaller into Add/Remove panel (for local user only)
-    WriteRegStr HKCU "${REG_UNINSTALL}" "DisplayName" "Ctrlr"
-    WriteRegStr HKCU "${REG_UNINSTALL}" "DisplayIcon" "$\"$INSTDIR\Ctrlr.exe$\""
+    WriteRegStr HKCU "${REG_UNINSTALL}" "DisplayName" "CtrlrX"
+    WriteRegStr HKCU "${REG_UNINSTALL}" "DisplayIcon" "$\"$INSTDIR\CtrlrX.exe$\""
     WriteRegStr HKCU "${REG_UNINSTALL}" "Publisher" "Instigator"
-    WriteRegStr HKCU "${REG_UNINSTALL}" "DisplayVersion" "5.1.2"
+    WriteRegStr HKCU "${REG_UNINSTALL}" "DisplayVersion" "5.6.33"
     WriteRegDWord HKCU "${REG_UNINSTALL}" "EstimatedSize" 20480 ;KB
     WriteRegStr HKCU "${REG_UNINSTALL}" "HelpLink" "${WEBSITE_LINK}"
     WriteRegStr HKCU "${REG_UNINSTALL}" "URLInfoAbout" "${WEBSITE_LINK}"
@@ -77,12 +77,12 @@ Function RegisterApplication
     WriteRegDWord HKCU "${REG_UNINSTALL}" "NoModify" 1
     WriteRegDWord HKCU "${REG_UNINSTALL}" "NoRepair" 1
     WriteRegStr HKCU "${REG_UNINSTALL}" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
-    WriteRegStr HKCU "${REG_UNINSTALL}" "Comments" "Uninstalls Ctrlr."
+    WriteRegStr HKCU "${REG_UNINSTALL}" "Comments" "Uninstalls CtrlrX."
     
     ;Links
     SetShellVarContext current
     CreateDirectory "${START_LINK_DIR}"
-    CreateShortCut "${START_LINK_RUN}" "$INSTDIR\Ctrlr-Win32.exe"
+    CreateShortCut "${START_LINK_RUN}" "$INSTDIR\CtrlrX-x64.exe"
     CreateShortCut "${START_LINK_UNINSTALLER}" "$INSTDIR\Uninstall.exe"
 FunctionEnd
 
@@ -102,16 +102,9 @@ FunctionEnd
 ## Sections Group 1
 SectionGroup /e "Standalone" PROG1
 
-	Section "32bit binary" SEC1
-		SetOutPath 	"$INSTDIR"
-		File			"..\..\Builds\VisualStudio2019\Win32\Release_Win32\Standalone Plugin\Ctrlr-Win32.exe"
-		WriteUninstaller	"$INSTDIR\Uninstall.exe"
-		Call RegisterApplication
-	SectionEnd
-	
 	Section "64bit binary" SEC2
 		SetOutPath 	"$INSTDIR"
-		File			"..\..\Builds\VisualStudio2019\x64\Release\Standalone Plugin\Ctrlr-x64.exe"
+		File			"..\..\Builds\VisualStudio2019\x64\Release\Standalone Plugin\CtrlrX-x64.exe"
 		WriteUninstaller	"$INSTDIR\Uninstall.exe"
 		Call RegisterApplication
 	SectionEnd
@@ -125,38 +118,26 @@ SectionGroup /e "Standalone" PROG1
   
 	Section "Desktop shortcut" SEC4
 		${If} ${RunningX64}
-			CreateShortCut 	"$DESKTOP\Ctrlr.lnk" 				"$INSTDIR\Ctrlr-x64.exe" ""
-		${Else}
-			CreateShortCut 	"$DESKTOP\Ctrlr.lnk" 				"$INSTDIR\Ctrlr-Win32.exe" ""
+			CreateShortCut 	"$DESKTOP\CtrlrX.lnk" 				"$INSTDIR\CtrlrX-x64.exe" ""
 		${EndIf}
 	SectionEnd
 		
 SectionGroupEnd
  
 SectionGroup /e "VST" PROG2
-
-	Section "Executables Win32" SEC5
-		SetOutPath 	"$INSTDIR"
-		File			"..\..\Builds\VisualStudio2019\Win32\Release_Win32\VST\Ctrlr-Win32.dll"
-	SectionEnd
 	
 	Section "Executables x64" SEC6
 		SetOutPath 	"$INSTDIR"
-		File			"..\..\Builds\VisualStudio2019\x64\Release\VST\Ctrlr-x64.dll"
+		File			"..\..\Builds\VisualStudio2019\x64\Release\VST\CtrlrX-x64.dll"
 	SectionEnd
 	
 SectionGroupEnd
 
 SectionGroup /e "VST3" PROG3
 
-	Section "Executables Win32" SEC7
-		SetOutPath 	"$INSTDIR"
-		File			"..\..\Builds\VisualStudio2019\Win32\Release_Win32\VST3\Ctrlr-Win32.vst3"
-	SectionEnd
-	
 	Section "Executables x64" SEC8
 		SetOutPath 	"$INSTDIR"
-		File			"..\..\Builds\VisualStudio2019\x64\Release\VST3\Ctrlr-x64.vst3"
+		File			"..\..\Builds\VisualStudio2019\x64\Release\VST3\CtrlrX-x64.vst3"
 	SectionEnd
 	
 SectionGroupEnd
@@ -173,7 +154,7 @@ SectionEnd
 ## Settings
 ##===========================================================================
  
-!define PROG1_InstDir    	"$PROGRAMFILES\Ctrlr"
+!define PROG1_InstDir    	"$PROGRAMFILES\CtrlrX"
 !define PROG1_StartIndex 	${PROG1}
 !define PROG1_EndIndex   	${SEC4}
  
