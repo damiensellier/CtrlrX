@@ -340,9 +340,9 @@ Tuturial coming soon.
 
 ## Changelog
 
-#### Version 5.6.34 | 2025.06.29
+#### Version 5.6.34 | 2025.07.02
 
-* **NEW** ProTools AAX plugin support (requires codesigning via PACE)
+* **NEW** ProTools AAX plugin support (requires AAX SDK 2.8+ and codesigning via PACE)
 * **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
 * **UPDATED** LuaBind function `addChild()` to `valueTree` class. `LCore.cpp`
 * **ADDED** LuaBind function `jmap()`, `mapToLog10()`, `mapFromLog10()`, `isWithin()` to GlobalFunctions. `LCore.cpp`
@@ -354,6 +354,8 @@ Tuturial coming soon.
 * **UPDATED** focusGained(), focusLost() to CtrlrComponent. `CtrlrComponent.cpp` & `.h`
 * **UPDATED** Plugin Wrapper is used by CtrlrX only on WIN with Ableton Live as VST2. The "ctrlrUseEditorWrapper" property is deprecated. `CtrlrProcessor.cpp` & `.h`, `CtrlrManager.cpp`, `CtrlrManagerInstance.cpp`, `CtrlrPanel.cpp`
 * **UPDATED** LuaBind InputStream class. `LCore.cpp`
+* **UPDATED** Boost library v1.8.8 `Source/Misc/boost/`
+* **ADDED** Visual Studio 2022 configuration `CtrlrX.jucer`
 
 
 #### Version 5.6.33 | 2025.05.28

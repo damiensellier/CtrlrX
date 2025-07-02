@@ -115,7 +115,7 @@ tags                      # Ctags output
 # Boost library (ignore everything except boost.zip)
 Source/Misc/boost/
 !Source/Misc/boost/boost.zip
-
+!Source/Misc/boost/boost-version-info.txt
 .DS_Store
 
 # Other project-specific ignores

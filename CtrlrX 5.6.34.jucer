@@ -1069,10 +1069,10 @@
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1"
+    <XCODE_MAC targetFolder="Builds/MacOSX" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 BOOST_BIND_GLOBAL_PLACEHOLDERS=1"
                enableGNUExtensions="0" extraCompilerFlags="-w" extraLinkerFlags="-Xlinker -headerpad -Xlinker 800"
-               vstLegacyFolder="../../../SDKs/VST_SDK/vst2sdk" smallIcon="eqFQC1"
-               bigIcon="eqFQC1" prebuildCommand="#!/bin/bash&#10;timestamp=$(date +&quot;%Y-%m-%d %H:%M:%S&quot;)&#10;headerFile=&quot;../../Source/Core/CtrlrRevision.h&quot;&#10;# Use sed to replace or append the BUILD_TIMESTAMP definition&#10;if grep -q &quot;BUILD_TIMESTAMP&quot; &quot;$headerFile&quot;; then&#10;    sed -i &quot;&quot; &quot;s/#define BUILD_TIMESTAMP.*/#define BUILD_TIMESTAMP \&quot;${timestamp}\&quot;/&quot; &quot;$headerFile&quot;&#10;else&#10;    echo &quot;#define BUILD_TIMESTAMP \&quot;${timestamp}\&quot;&quot; &gt;&gt; &quot;$headerFile&quot;&#10;fi"
+               vstLegacyFolder="Source/Misc/vst2sdk" smallIcon="eqFQC1" bigIcon="eqFQC1"
+               prebuildCommand="#!/bin/bash&#10;timestamp=$(date +&quot;%Y-%m-%d %H:%M:%S&quot;)&#10;headerFile=&quot;../../Source/Core/CtrlrRevision.h&quot;&#10;# Use sed to replace or append the BUILD_TIMESTAMP definition&#10;if grep -q &quot;BUILD_TIMESTAMP&quot; &quot;$headerFile&quot;; then&#10;    sed -i &quot;&quot; &quot;s/#define BUILD_TIMESTAMP.*/#define BUILD_TIMESTAMP \&quot;${timestamp}\&quot;/&quot; &quot;$headerFile&quot;&#10;else&#10;    echo &quot;#define BUILD_TIMESTAMP \&quot;${timestamp}\&quot;&quot; &gt;&gt; &quot;$headerFile&quot;&#10;fi"
                xcodeValidArchs="arm64,x86_64">
       <CONFIGURATIONS>
         <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="CtrlrX"
@@ -1100,7 +1100,7 @@
     </XCODE_MAC>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile" enableGNUExtensions="1" externalLibraries="udev&#10;:libbfd.a&#10;iberty&#10;z&#10;X11&#10;sframe&#10;zstd"
                 vstLegacyFolder="Source/Misc/vst2sdk" extraCompilerFlags="-w"
-                smallIcon="eqFQC1" bigIcon="eqFQC1" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1">
+                smallIcon="eqFQC1" bigIcon="eqFQC1" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 BOOST_BIND_GLOBAL_PLACEHOLDERS=1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="CtrlrX-Debug"
                        headerPath="../../Source&#10;../../Source/Misc&#10;../../Source/Misc/include&#10;../../Source/Misc/lua/include&#10;../../Source/Misc/luabind&#10;../../Source/Misc/libusb/include&#10;../../Source/Misc/boost&#10;../../Source/MIDI&#10;../../Source/Core&#10;../../Source/Native&#10;../../Source/Plugin&#10;../../Source/UIComponents&#10;../../Source/Lua"
@@ -1124,7 +1124,7 @@
         <MODULEPATH id="juce_cryptography" path="JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
-    <VS2019 targetFolder="Builds/VisualStudio2019" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1"
+    <VS2019 targetFolder="Builds/VisualStudio2019" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 BOOST_BIND_GLOBAL_PLACEHOLDERS=1"
             vst3Folder="Source/Misc/vst3sdk" vstLegacyFolder="Source/Misc/vst2sdk"
             extraCompilerFlags="/bigobj /Fpstadfx.h" smallIcon="eqFQC1" bigIcon="eqFQC1">
       <CONFIGURATIONS>
@@ -1151,12 +1151,12 @@
         <MODULEPATH id="juce_cryptography" path="JUCE/modules"/>
       </MODULEPATHS>
     </VS2019>
-    <CODEBLOCKS_LINUX targetFolder="Builds/CodeBlocksLinux" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1"
+    <CODEBLOCKS_LINUX targetFolder="Builds/CodeBlocksLinux" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 BOOST_BIND_GLOBAL_PLACEHOLDERS=1"
                       vstLegacyFolder="Source/Misc/vst2sdk" extraCompilerFlags="-w"
                       externalLibraries="z&#10;udev&#10;bfd">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" headerPath="../../Source&#10;../../Source/Misc&#10;../../Source/Misc/include&#10;../../Source/Misc/lua/include&#10;../../Source/Misc/luabind&#10;../../Source/Misc/libusb/include&#10;../../Source/Misc/boost&#10;../../Source/MIDI&#10;../../Source/Core&#10;../../Source/Native&#10;../../Source/Plugin&#10;../../Source/UIComponents&#10;../../Source/Lua&#10;../../JUCE/modules"/>
-        <CONFIGURATION isDebug="0" name="Release"/>
+        <CONFIGURATION isDebug="0" name="Release" headerPath="../../Source&#10;../../Source/Misc&#10;../../Source/Misc/include&#10;../../Source/Misc/lua/include&#10;../../Source/Misc/luabind&#10;../../Source/Misc/libusb/include&#10;../../Source/Misc/boost&#10;../../Source/MIDI&#10;../../Source/Core&#10;../../Source/Native&#10;../../Source/Plugin&#10;../../Source/UIComponents&#10;../../Source/Lua&#10;../../JUCE/modules"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_gui_extra" path="../../juce"/>
@@ -1174,6 +1174,33 @@
         <MODULEPATH id="juce_cryptography" path="JUCE/modules"/>
       </MODULEPATHS>
     </CODEBLOCKS_LINUX>
+    <VS2022 targetFolder="Builds/VisualStudio2022" vstLegacyFolder="Source/Misc/vst2sdk"
+            extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 BOOST_BIND_GLOBAL_PLACEHOLDERS=1"
+            extraCompilerFlags="/bigobj /Fpstadfx.h" smallIcon="eqFQC1" bigIcon="eqFQC1">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../Source&#10;../../Source/Misc&#10;../../Source/Misc/include&#10;../../Source/Misc/lua/include&#10;../../Source/Misc/luabind&#10;../../Source/Misc/boost&#10;../../Source/MIDI&#10;../../Source/Core&#10;../../Source/Native&#10;../../Source/Plugin&#10;../../Source/UIComponents&#10;../../Source/Lua"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="CtrlrX-x64" headerPath="../../Source&#10;../../Source/Misc&#10;../../Source/Misc/include&#10;../../Source/Misc/lua/include&#10;../../Source/Misc/luabind&#10;../../Source/Misc/boost&#10;../../Source/MIDI&#10;../../Source/Core&#10;../../Source/Native&#10;../../Source/Plugin&#10;../../Source/UIComponents&#10;../../Source/Lua"/>
+        <CONFIGURATION isDebug="1" name="Debug_Win32" headerPath="../../Source&#10;../../Source/Misc&#10;../../Source/Misc/include&#10;../../Source/Misc/lua/include&#10;../../Source/Misc/luabind&#10;../../Source/Misc/boost&#10;../../Source/MIDI&#10;../../Source/Core&#10;../../Source/Native&#10;../../Source/Plugin&#10;../../Source/UIComponents&#10;../../Source/Lua"
+                       winArchitecture="Win32"/>
+        <CONFIGURATION isDebug="0" name="Release_Win32" targetName="CtrlrX-Win32" headerPath="../../Source&#10;../../Source/Misc&#10;../../Source/Misc/include&#10;../../Source/Misc/lua/include&#10;../../Source/Misc/luabind&#10;../../Source/Misc/boost&#10;../../Source/MIDI&#10;../../Source/Core&#10;../../Source/Native&#10;../../Source/Plugin&#10;../../Source/UIComponents&#10;../../Source/Lua"
+                       winArchitecture="Win32"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_gui_extra"/>
+        <MODULEPATH id="juce_gui_basics"/>
+        <MODULEPATH id="juce_graphics"/>
+        <MODULEPATH id="juce_events"/>
+        <MODULEPATH id="juce_data_structures"/>
+        <MODULEPATH id="juce_cryptography"/>
+        <MODULEPATH id="juce_core"/>
+        <MODULEPATH id="juce_audio_utils"/>
+        <MODULEPATH id="juce_audio_processors"/>
+        <MODULEPATH id="juce_audio_plugin_client"/>
+        <MODULEPATH id="juce_audio_formats"/>
+        <MODULEPATH id="juce_audio_devices"/>
+        <MODULEPATH id="juce_audio_basics"/>
+      </MODULEPATHS>
+    </VS2022>
   </EXPORTFORMATS>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
