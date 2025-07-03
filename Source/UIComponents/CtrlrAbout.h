@@ -63,6 +63,7 @@ private:
     ScopedPointer<Label> ctrlrName;
     ScopedPointer<Label> ctrlrxVersionLabel;
     ScopedPointer<Label> ctrlrxReleaseDateLabel;
+    ScopedPointer<Label> ctrlrxLibsVersionLabel;
     ScopedPointer<Label> label;
     ScopedPointer<Label> label2;
     ScopedPointer<Label> labelDonate;

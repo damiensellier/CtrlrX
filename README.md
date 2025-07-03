@@ -354,9 +354,9 @@ Tuturial coming soon.
 * **UPDATED** focusGained(), focusLost() to CtrlrComponent. `CtrlrComponent.cpp` & `.h`
 * **UPDATED** Plugin Wrapper is used by CtrlrX only on WIN with Ableton Live as VST2. The "ctrlrUseEditorWrapper" property is deprecated. `CtrlrProcessor.cpp` & `.h`, `CtrlrManager.cpp`, `CtrlrManagerInstance.cpp`, `CtrlrPanel.cpp`
 * **UPDATED** LuaBind InputStream class. `LCore.cpp`
-* **UPDATED** Boost library v1.8.8 `Source/Misc/boost/`
-* **ADDED** Visual Studio 2022 configuration `CtrlrX.jucer`
-
+* **UPDATED** Boost library v1.8.8. `Source/Misc/boost/`
+* **ADDED** Visual Studio 2022 configuration. `CtrlrX.jucer`
+* **ADDED** JUCE, Boost, LuaBind version infos in the About window. `CtrlrAbout.cpp` & `.h`
 
 #### Version 5.6.33 | 2025.05.28
 
