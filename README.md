@@ -357,6 +357,7 @@ Tuturial coming soon.
 * **UPDATED** Boost library v1.8.8. `Source/Misc/boost/`
 * **ADDED** Visual Studio 2022 configuration. `CtrlrX.jucer`
 * **ADDED** JUCE, Boost, LuaBind version infos in the About window. `CtrlrAbout.cpp` & `.h`
+* **REMOVED** VST2.4 SDK due to licensing compliance. `/Source/Misc/vst2sdk/`
 
 #### Version 5.6.33 | 2025.05.28
 
