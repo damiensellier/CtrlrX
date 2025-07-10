@@ -180,6 +180,9 @@
   <id name="panelShowDialogs"				text="Show dialogs during panel lifetime" type="Bool" />
   <id name="panelMessageTime"               text="How long messages should appear on screen (ms)"  type="Numeric" min="0" max="100000" />
   <id name="panelLastSaveDir"               text="Directory last used for panel save" type="Text" />
+  <id name="panelExportPublicKey"           text="Registration Public key" type="Text" />
+  <id name="panelExportPrivateKey"          text="Registration Private key" type="Text" />
+  <id name="panelExportServerAuthURL"       text="Registration server url" type="Text" />
 
   <!-- Generic component properties -->
   <id name="componentRectangle"                   text="Component position and size" type="Text"/>

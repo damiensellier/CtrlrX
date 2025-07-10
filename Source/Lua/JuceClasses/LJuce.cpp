@@ -70,4 +70,8 @@ void CtrlrLuaManager::wrapJuceClasses(lua_State *L)
 	LKeyPress::wrapForLua(L);
 	LThread::wrapForLua(L);
 	LThreadWithProgressWindow::wrapForLua(L);
+    LRSAKey::wrapForLua(L); // Added v5.6.34
+    LMachineIDUtilities::wrapForLua(L); // Added v5.6.34
+    LOnlineUnlockStatus::wrapForLua(L); // Added v5.6.34
+    LOnlineUnlockStatusCheck::wrapForLua(L); // Added v5.6.34
 }

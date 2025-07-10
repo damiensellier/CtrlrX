@@ -449,6 +449,10 @@
           <FILE id="dTPXim" name="LLabel.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LLabel.h"/>
           <FILE id="p84zvF" name="LLine.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LLine.h"/>
           <FILE id="g0oTkU" name="LLookAndFeel.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LLookAndFeel.h"/>
+          <FILE id="qZth24" name="LMachineIDUtilities.cpp" compile="1" resource="0"
+                file="Source/Lua/JuceClasses/LMachineIDUtilities.cpp"/>
+          <FILE id="WA880r" name="LMachineIDUtilities.h" compile="0" resource="0"
+                file="Source/Lua/JuceClasses/LMachineIDUtilities.h"/>
           <FILE id="lXsyGr" name="LMemory.cpp" compile="1" resource="0" file="Source/Lua/JuceClasses/LMemory.cpp"/>
           <FILE id="SibJcE" name="LMemoryBlock.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LMemoryBlock.h"/>
           <FILE id="oHulcn" name="LMemoryInputStream.h" compile="0" resource="0"
@@ -462,6 +466,14 @@
           <FILE id="U2dUjC" name="LMouseEvent.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LMouseEvent.h"/>
           <FILE id="tMdmgQ" name="LMouseInputSource.h" compile="0" resource="0"
                 file="Source/Lua/JuceClasses/LMouseInputSource.h"/>
+          <FILE id="kLvpZL" name="LOnlineUnlockStatus.cpp" compile="1" resource="0"
+                file="Source/Lua/JuceClasses/LOnlineUnlockStatus.cpp"/>
+          <FILE id="Tsm0kx" name="LOnlineUnlockStatus.h" compile="0" resource="0"
+                file="Source/Lua/JuceClasses/LOnlineUnlockStatus.h"/>
+          <FILE id="tEKL2U" name="LOnlineUnlockStatusCheck.cpp" compile="1" resource="0"
+                file="Source/Lua/JuceClasses/LOnlineUnlockStatusCheck.cpp"/>
+          <FILE id="bAt3NK" name="LOnlineUnlockStatusCheck.h" compile="0" resource="0"
+                file="Source/Lua/JuceClasses/LOnlineUnlockStatusCheck.h"/>
           <FILE id="TcCoRB" name="LPath.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LPath.h"/>
           <FILE id="Uj0e4s" name="LPoint.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LPoint.h"/>
           <FILE id="P4G1qS" name="LPopupMenu.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LPopupMenu.h"/>
@@ -471,6 +483,8 @@
           <FILE id="UhOL1p" name="LRelativeCoordinate.h" compile="0" resource="0"
                 file="Source/Lua/JuceClasses/LRelativeCoordinate.h"/>
           <FILE id="b0nSsZ" name="LResult.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LResult.h"/>
+          <FILE id="lYY6qO" name="LRSAKey.cpp" compile="1" resource="0" file="Source/Lua/JuceClasses/LRSAKey.cpp"/>
+          <FILE id="PVVZkf" name="LRSAKey.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LRSAKey.h"/>
           <FILE id="R7yz2D" name="LSlider.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LSlider.h"/>
           <FILE id="X47Oxl" name="LSparseSet.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LSparseSet.h"/>
           <FILE id="lf5Hgm" name="LString.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LString.h"/>
@@ -1094,6 +1108,7 @@
         <MODULEPATH id="juce_audio_devices" path="JUCE/modules"/>
         <MODULEPATH id="juce_audio_basics" path="JUCE/modules"/>
         <MODULEPATH id="juce_cryptography" path="JUCE/modules"/>
+        <MODULEPATH id="juce_product_unlocking" path="JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
     <VS2019 targetFolder="Builds/VisualStudio2019" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 BOOST_BIND_GLOBAL_PLACEHOLDERS=1"
@@ -1121,6 +1136,7 @@
         <MODULEPATH id="juce_audio_devices"/>
         <MODULEPATH id="juce_audio_basics"/>
         <MODULEPATH id="juce_cryptography" path="JUCE/modules"/>
+        <MODULEPATH id="juce_product_unlocking" path="JUCE/modules"/>
       </MODULEPATHS>
     </VS2019>
     <VS2022 targetFolder="Builds/VisualStudio2022" vstLegacyFolder="Source/Misc/vst2sdk"
@@ -1148,6 +1164,7 @@
         <MODULEPATH id="juce_audio_formats"/>
         <MODULEPATH id="juce_audio_devices"/>
         <MODULEPATH id="juce_audio_basics"/>
+        <MODULEPATH id="juce_product_unlocking" path="JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
     <CODEBLOCKS_LINUX targetFolder="Builds/CodeBlocksLinux" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 BOOST_BIND_GLOBAL_PLACEHOLDERS=1"
@@ -1171,6 +1188,7 @@
         <MODULEPATH id="juce_audio_devices" path="../../juce"/>
         <MODULEPATH id="juce_audio_basics" path="../../juce"/>
         <MODULEPATH id="juce_cryptography" path="JUCE/modules"/>
+        <MODULEPATH id="juce_product_unlocking" path="JUCE/modules"/>
       </MODULEPATHS>
     </CODEBLOCKS_LINUX>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile" enableGNUExtensions="1" externalLibraries="udev&#10;:libbfd.a&#10;iberty&#10;z&#10;X11&#10;sframe&#10;zstd"
@@ -1197,6 +1215,7 @@
         <MODULEPATH id="juce_audio_devices" path="JUCE/modules"/>
         <MODULEPATH id="juce_audio_basics" path="JUCE/modules"/>
         <MODULEPATH id="juce_cryptography" path="JUCE/modules"/>
+        <MODULEPATH id="juce_product_unlocking" path="JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
   </EXPORTFORMATS>
@@ -1215,6 +1234,8 @@
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_product_unlocking" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="0"/>
   </MODULES>
   <JUCEOPTIONS JUCE_QUICKTIME="disabled" JUCE_WEB_BROWSER="0" JUCE_ENABLE_LIVE_CONSTANT_EDITOR="0"
                JUCE_VST3_CAN_REPLACE_VST2="0"/>

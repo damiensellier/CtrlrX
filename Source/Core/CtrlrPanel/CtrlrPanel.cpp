@@ -114,6 +114,22 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
     }
     setProperty (Ids::panelPlugType, "Instrument|Synth"); // Added v5.6.32
 
+    // Create temporary RSAKey objects
+    juce::RSAKey tempPublicKey, tempPrivateKey;
+
+    // Generate the key pair
+    juce::RSAKey::createKeyPair (tempPublicKey, tempPrivateKey, 2048); // 2048-bit key size
+
+    // Convert the RSAKey objects to String and set them as properties
+    // This is for DEVELOPMENT/TESTING ONLY!
+    // These values should NOT be automatically generated or stored in the final end-user plugin.
+    setProperty (Ids::panelExportPublicKey, tempPublicKey.toString());
+    setProperty (Ids::panelExportPrivateKey, tempPrivateKey.toString());
+
+    // Set the server URL property
+    // This could also be a development server URL that changes for release
+    setProperty (Ids::panelExportServerAuthURL, "http://localhost:8000/auth/authenticate"); // Example local dev server URL
+    
     setProperty (Ids::panelMidiSnapshotAfterLoad, false);
     setProperty (Ids::panelMidiSnapshotAfterProgramChange, false);
     setProperty (Ids::panelMidiSnapshotDelay, 10);

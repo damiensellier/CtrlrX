@@ -237,6 +237,9 @@ namespace Ids
     DECLARE_ID (panelCertificateWinSelectPath); // Added v5.6.32
     DECLARE_ID (panelCertificateWinPath); // Added v5.6.32
     DECLARE_ID (panelCertificateWinPassCode); // Added v5.6.32
+    DECLARE_ID (panelExportPublicKey); // Added v5.6.34
+    DECLARE_ID (panelExportPrivateKey); // Added v5.6.34
+    DECLARE_ID (panelExportServerAuthURL); // Added v5.6.34
     
     DECLARE_ID (panelModulatorListColumns);
     DECLARE_ID (panelModulatorListCsvDelimiter);
