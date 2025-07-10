@@ -50,17 +50,27 @@ juce::RSAKey LOnlineUnlockStatusCheck::getPublicKey()
 // !!! IMPORTANT: saveState() now actually stores the state to our member variable
 void LOnlineUnlockStatusCheck::saveState (const juce::String& newState)
 {
-    _DBG ("LOnlineUnlockStatusCheck: saveState called with: " + newState); // Console log
+    juce::File debugLogPath = juce::File::getSpecialLocation(juce::File::currentApplicationFile);
+    PluginLoggerVst3 logger(debugLogPath);
+    
+    _DBG ("LOnlineUnlockStatusCheck: saveState called with: " + newState);
+    logger.log(juce::String("LOnlineUnlockStatusCheck: saveState called with: ") + newState);
+    
     persistentUnlockState = newState;
-    // In a real app, you would save persistentUnlockState to disk here (e.g., using PropertiesFile)
-    // For now, it's just in memory.
+    // In a real application, you would save persistentUnlockState to disk here
+    // using juce::PropertiesFile or similar persistent storage.
 }
 
 // !!! IMPORTANT: getState() now returns the state from our member variable
 juce::String LOnlineUnlockStatusCheck::getState()
 {
-    _DBG ("LOnlineUnlockStatusCheck: getState called. Returning: " + persistentUnlockState); // Console log
-    // In a real app, you would load persistentUnlockState from disk here
+    juce::File debugLogPath = juce::File::getSpecialLocation(juce::File::currentApplicationFile);
+    PluginLoggerVst3 logger(debugLogPath);
+    
+    _DBG ("LOnlineUnlockStatusCheck: getState called. Returning: " + persistentUnlockState);
+    logger.log(juce::String("LOnlineUnlockStatusCheck: getState called. Returning: ") + persistentUnlockState);
+    
+    // In a real application, you would load persistentUnlockState from disk here if it's not already loaded.
     return persistentUnlockState;
 }
 
@@ -170,6 +180,25 @@ juce::String LOnlineUnlockStatusCheck::readReplyFromWebserver (const juce::Strin
     return reply; // IMPORTANT: Return the entire 'reply' string.
 }
 
+// isUnlocked() definition - NOT an override, but a new const version
+bool LOnlineUnlockStatusCheck::isUnlocked() const
+{
+    juce::File debugLogPath = juce::File::getSpecialLocation(juce::File::currentApplicationFile);
+    PluginLoggerVst3 logger(debugLogPath);
+
+    _DBG("LOnlineUnlockStatusCheck: LOnlineUnlockStatusCheck::isUnlocked() (your const version) called.");
+    logger.log("LOnlineUnlockStatusCheck: LOnlineUnlockStatusCheck::isUnlocked() (your const version) called.");
+
+    // IMPORTANT: Call the base class's non-const isUnlocked().
+    // The base class's isUnlocked() will then call *your* overridden getState() and getPublicKey().
+    bool unlocked = static_cast<juce::OnlineUnlockStatus*>(const_cast<LOnlineUnlockStatusCheck*>(this))->isUnlocked();
+    
+    _DBG(juce::String("LOnlineUnlockStatusCheck: isUnlocked() base OnlineUnlockStatus::isUnlocked() returning: ") + (unlocked ? "true" : "false"));
+    logger.log(juce::String("LOnlineUnlockStatusCheck: isUnlocked() base OnlineUnlockStatus::isUnlocked() returning: ") + (unlocked ? "true" : "false"));
+
+    return unlocked;
+}
+
 // Definition for isPluginUnlocked() method
 bool LOnlineUnlockStatusCheck::isPluginUnlocked() const
 {
@@ -193,7 +222,7 @@ void LOnlineUnlockStatusCheck::wrapForLua (lua_State *L)
             .def("getServerAuthenticationURL", &LOnlineUnlockStatusCheck::getServerAuthenticationURL)
             .def("readReplyFromWebserver", (juce::String (LOnlineUnlockStatusCheck::*)(const juce::String&, const juce::String&)) &LOnlineUnlockStatusCheck::readReplyFromWebserver)
             .def("isPluginUnlocked", &LOnlineUnlockStatusCheck::isPluginUnlocked)
-            .def("isUnlocked", &LOnlineUnlockStatusCheck::isUnlocked) // Ensure this is bound for direct checking
+            .def("isUnlocked", &LOnlineUnlockStatusCheck::isUnlocked) // This binds YOUR LOnlineUnlockStatusCheck::isUnlocked() const
             .def("setUserEmail", &LOnlineUnlockStatusCheck::setUserEmail)
             .def("attemptWebserverUnlock", &LOnlineUnlockStatusCheck::attemptWebserverUnlock)
 

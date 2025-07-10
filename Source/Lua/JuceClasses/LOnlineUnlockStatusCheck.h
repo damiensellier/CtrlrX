@@ -35,8 +35,11 @@ public:
     
     // IMPORTANT: These are now properly implemented to save/retrieve internal state
     void saveState (const juce::String& newState) override;
+    
+    // getState() in JUCE OnlineUnlockStatus is NOT virtual and NOT const.
+    // So, we cannot use 'override', but we can make our version const for local calls.
     juce::String getState() override;
-
+    
     juce::String getWebsiteName() override;
     juce::URL getServerAuthenticationURL() override;
     
@@ -47,6 +50,10 @@ public:
     //==============================================================================
     // Custom methods and members for LOnlineUnlockStatusCheck
 
+    // isUnlocked() in JUCE OnlineUnlockStatus is NOT virtual and NOT const.
+    // So, we cannot use 'override', but we can make our version const for local calls.
+    bool isUnlocked() const;
+    
     // A convenience method to expose the base isUnlocked() through a different name if needed for Lua
     bool isPluginUnlocked() const;
 
