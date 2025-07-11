@@ -4,17 +4,57 @@
 #include "CtrlrMacros.h" // For _DBG macro
 #include "CtrlrLog.h" // For _DBG output
 
-// Make sure you have these includes for XmlElement if not already in stdafx.h
+// Make sure you have these includes for XmlElement, File, Streams if not already in stdafx.h
 #include <juce_core/juce_core.h>
 #include <juce_data_structures/juce_data_structures.h>
+#include <juce_gui_basics/juce_gui_basics.h> // Potentially for Alerts, etc. (good to have for UI related tasks)
+
+// --- CORRECTED HELPER FUNCTION AGAIN (Third Time's the Charm!): Get the consistent application name from the executable ---
+// This ensures the directory and file names are always based on the actual executable.
+static juce::String getConsistentAppName()
+{
+    // Get the full file name (e.g., "MyPlugin.vst3", "MyApplication.exe", "MyExecutable")
+    juce::String executableFileName = juce::File::getSpecialLocation(juce::File::currentExecutableFile).getFileName();
+    
+    // Use upToLastOccurrenceOf with a StringRef for the dot, and explicitly specify all three arguments.
+    // Argument 1: StringRef for the separator (".")
+    // Argument 2: includeSubString (false, we don't want to include the dot itself)
+    // Argument 3: ignoreCase (false, case doesn't matter for a dot)
+    juce::String nameWithoutExtension = executableFileName.upToLastOccurrenceOf(juce::StringRef("."), false, false);
+
+    // If the filename has no dot (e.g., "MyExecutable"), upToLastOccurrenceOf returns the original string.
+    // If it's an empty string, it returns an empty string.
+    // We want to make sure we don't return an empty string if the executable name was valid but had no extension.
+    if (nameWithoutExtension.isEmpty() && !executableFileName.isEmpty())
+    {
+        // This handles cases like a filename with no extension (e.g., "MyBinary"),
+        // or a hidden file like ".bashrc" where upToLastOccurrenceOf might return empty if it treats the leading dot as the "last" dot.
+        // For our purpose of getting an app name, the full name is better than empty if no extension is found.
+        return executableFileName.trim();
+    }
+    
+    return nameWithoutExtension.trim();
+}
 
 // Helper to get a consistent directory path for application data.
-// We'll still create this, even if the key itself is in-memory for now.
 static juce::File getApplicationDataDirectory(const juce::String& appName)
 {
     return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-                        .getChildFile(appName);
+                                         .getChildFile(appName);
 }
+
+// Get the path for the registration key file
+static juce::File getRegistrationKeyFile(const juce::String& appName)
+{
+    // Ensure the application's data directory exists first
+    juce::File appDataDir = getApplicationDataDirectory(appName);
+    if (! appDataDir.isDirectory())
+        appDataDir.createDirectory(); // Create the directory if it doesn't exist
+
+    // Return the path to the specific key file within that directory, using appName for the filename
+    return appDataDir.getChildFile(appName + ".key");
+}
+
 
 // Logger init
 juce::File debugLogPath = juce::File::getSpecialLocation(juce::File::currentApplicationFile);
@@ -22,11 +62,14 @@ PluginLoggerVst3 logger(debugLogPath);
 
 // Constructor Definition
 LOnlineUnlockStatusCheck::LOnlineUnlockStatusCheck(const juce::String& productID,
-                                                   const juce::String& appName,
+                                                   const juce::String& appNameFromLua, // Renamed to clarify origin
                                                    const juce::URL& serverURL,
                                                    const juce::RSAKey& publicKey)
     : myProductID(productID),
-      myAppName(appName),
+      // --- IMPORTANT CHANGE HERE: Use getConsistentAppName() for myAppName ---
+      // This overrides the appName passed from Lua for internal file paths, ensuring consistency.
+      myAppName(getConsistentAppName()),
+      // --- END IMPORTANT CHANGE ---
       myServerURL(serverURL),
       myPublicKey(publicKey),
       persistentUnlockState("") // Initialize our new member
@@ -36,13 +79,11 @@ LOnlineUnlockStatusCheck::LOnlineUnlockStatusCheck(const juce::String& productID
     parsedInformativeMessage = "";
     parsedUrlToLaunch = "";
     
-    // Ensure the application data directory exists
-    getApplicationDataDirectory(appName).createDirectory();
+    // Ensure the application data directory exists using the consistent app name
+    getApplicationDataDirectory(myAppName).createDirectory();
     
     // Call base class load, which will call our getState()
-    // If you plan to truly persist the key to disk later,
-    // this `load()` call here is where you'd read the saved key from file.
-    // For now, it will return an empty string, and base class will be 'unlocked' state.
+    // This will now attempt to load the key from the file on construction.
     load();
 }
 
@@ -64,36 +105,70 @@ juce::RSAKey LOnlineUnlockStatusCheck::getPublicKey()
     return myPublicKey;
 }
 
-// saveState now just stores to the persistentUnlockState member
+// --- saveState to write to file ---
 void LOnlineUnlockStatusCheck::saveState (const juce::String& newState)
 {
-    _DBG ("LOnlineUnlockStatusCheck: saveState called. Storing in memory: " + newState);
-    logger.log(juce::String("LOnlineUnlockStatusCheck: saveState called. Storing in memory: ") + newState);
+    _DBG ("LOnlineUnlockStatusCheck: saveState called. Storing: " + newState);
+    logger.log(juce::String("LOnlineUnlockStatusCheck: saveState called. Storing: ") + newState);
         
-    persistentUnlockState = newState;
-    
-    // --- IMPORTANT: This is where you would add file persistence later ---
-    // If you want to save the key to disk after it's successfully validated by JUCE:
-    // juce::File keyFile = getApplicationDataDirectory(myAppName).getChildFile("unlock_key.txt");
-    // juce::FileOutputStream os(keyFile);
-    // if (os.openedOk()) os.writeString(newState);
-    // --------------------------------------------------------------------
+    persistentUnlockState = newState; // Keep in memory too for immediate use
+
+    // --- Write the new state to the dedicated .key file using myAppName ---
+    juce::File keyFile = getRegistrationKeyFile(myAppName);
+    juce::FileOutputStream outputStream (keyFile);
+
+    if (outputStream.openedOk())
+    {
+        if (outputStream.writeString(newState))
+        {
+            _DBG("Successfully saved registration key to: " + keyFile.getFullPathName());
+            logger.log("Successfully saved registration key to: " + keyFile.getFullPathName());
+        }
+        else
+        {
+            _DBG("Error writing registration key to file: " + keyFile.getFullPathName());
+            logger.log("Error writing registration key to file: " + keyFile.getFullPathName());
+        }
+    }
+    else
+    {
+        _DBG("Error opening registration key file for writing: " + keyFile.getFullPathName());
+        logger.log("Error opening registration key file for writing: " + keyFile.getFullPathName());
+    }
 }
 
-// !!! IMPORTANT: getState() now returns the state from our member variable
+// --- getState to read from file ---
 juce::String LOnlineUnlockStatusCheck::getState()
 {
-    // --- IMPORTANT: This is where you would add file loading later ---
-    // If you want to load the key from disk when the plugin starts:
-    // juce::File keyFile = getApplicationDataDirectory(myAppName).getChildFile("unlock_key.txt");
-    // if (keyFile.existsAsFile() && persistentUnlockState.isEmpty())
-    // {
-    //     persistentUnlockState = keyFile.loadFileAsString();
-    // }
-    // --------------------------------------------------------------------
+    // If the key is not already loaded into memory, try to load it from the file.
+    if (persistentUnlockState.isEmpty())
+    {
+        // --- Load from the dedicated .key file using myAppName ---
+        juce::File keyFile = getRegistrationKeyFile(myAppName);
+        if (keyFile.existsAsFile())
+        {
+            juce::FileInputStream inputStream (keyFile);
+            if (inputStream.openedOk())
+            {
+                persistentUnlockState = inputStream.readEntireStreamAsString().trim(); // Read and trim whitespace
+                _DBG("LOnlineUnlockStatusCheck: Loaded registration key from file: " + keyFile.getFullPathName());
+                logger.log("LOnlineUnlockStatusCheck: Loaded registration key from file: " + keyFile.getFullPathName());
+            }
+            else
+            {
+                _DBG("Error opening registration key file for reading: " + keyFile.getFullPathName());
+                logger.log("Error opening registration key file for reading: " + keyFile.getFullPathName());
+            }
+        }
+        else
+        {
+            _DBG("Registration key file does not exist: " + keyFile.getFullPathName());
+            logger.log("Registration key file does not exist: " + keyFile.getFullPathName());
+        }
+    }
 
-    _DBG ("LOnlineUnlockStatusCheck: getState called. Returning from memory: " + persistentUnlockState);
-    logger.log(juce::String("LOnlineUnlockStatusCheck: getState called. Returning from memory: ") + persistentUnlockState);
+    _DBG ("LOnlineUnlockStatusCheck: getState called. Returning: " + persistentUnlockState);
+    logger.log(juce::String("LOnlineUnlockStatusCheck: getState called. Returning: ") + persistentUnlockState);
         
     return persistentUnlockState;
 }
@@ -119,6 +194,7 @@ juce::StringArray LOnlineUnlockStatusCheck::getLocalMachineIDs()
 
 juce::String LOnlineUnlockStatusCheck::readReplyFromWebserver (const juce::String& email, const juce::String& password)
 {
+    // Re-initialize logger? Consider making it a member or global static if it's logging to a fixed file.
     juce::File debugLog = juce::File::getSpecialLocation(juce::File::currentApplicationFile);
     PluginLoggerVst3 logger(debugLog);
 
@@ -152,48 +228,50 @@ juce::String LOnlineUnlockStatusCheck::readReplyFromWebserver (const juce::Strin
     if (xml != nullptr && xml->getTagName() == "OnlineUnlockStatus")
     {
         parsedSuccess = xml->getBoolAttribute("success", false);
-        logger.log(juce::String("LOnlineUnlockStatusCheck: Custom parsed success: ") + (parsedSuccess ? "true" : "false")); // Console log
-        _DBG(juce::String("LOnlineUnlockStatusCheck: Custom parsed success: ") + (parsedSuccess ? "true" : "false")); // Console log
+        logger.log(juce::String("LOnlineUnlockStatusCheck: Custom parsed success: ") + (parsedSuccess ? "true" : "false"));
+        _DBG(juce::String("LOnlineUnlockStatusCheck: Custom parsed success: ") + (parsedSuccess ? "true" : "false"));
 
         if (juce::XmlElement* messageElement = xml->getChildByName("message"))
         {
             parsedInformativeMessage = messageElement->getAllSubText();
-            logger.log(juce::String("LOnlineUnlockStatusCheck: Custom parsed informative message: ") + parsedInformativeMessage); // Console log
-            _DBG(juce::String("LOnlineUnlockStatusCheck: Custom parsed informative message: ") + parsedInformativeMessage); // Console log
+            logger.log(juce::String("LOnlineUnlockStatusCheck: Custom parsed informative message: ") + parsedInformativeMessage);
+            _DBG(juce::String("LOnlineUnlockStatusCheck: Custom parsed informative message: ") + parsedInformativeMessage);
         }
         else
         {
             parsedInformativeMessage = "";
-            logger.log("LOnlineUnlockStatusCheck: Custom parsed informative message: (empty)"); // Console log
-            _DBG("LOnlineUnlockStatusCheck: Custom parsed informative message: (empty)"); // Console log
+            logger.log("LOnlineUnlockStatusCheck: Custom parsed informative message: (empty)");
+            _DBG("LOnlineUnlockStatusCheck: Custom parsed informative message: (empty)");
         }
         
         if (juce::XmlElement* urlElement = xml->getChildByName("url"))
         {
             parsedUrlToLaunch = urlElement->getAllSubText();
             logger.log(juce::String("LOnlineUnlockStatusCheck: Custom parsed URL to launch: ") + parsedUrlToLaunch);
-            _DBG(juce::String("LOnlineUnlockStatusCheck: Custom parsed URL to launch: ") + parsedUrlToLaunch); // Console log
+            _DBG(juce::String("LOnlineUnlockStatusCheck: Custom parsed URL to launch: ") + parsedUrlToLaunch);
         }
         else
         {
             parsedUrlToLaunch = "";
-            logger.log("LOnlineUnlockStatusCheck: Custom parsed URL to launch: (empty)"); // Console log
-            _DBG("LOnlineUnlockStatusCheck: Custom parsed URL to launch: (empty)"); // Console log
+            logger.log("LOnlineUnlockStatusCheck: Custom parsed URL to launch: (empty)");
+            _DBG("LOnlineUnlockStatusCheck: Custom parsed URL to launch: (empty)");
         }
 
-        // Log the key for debugging, but DO NOT return it directly.
+        // Log the key for debugging, but DO NOT return it directly here.
+        // The base class's processReplyFromServer will extract it if success=true
+        // and pass it to saveState().
         if (juce::XmlElement* keyElement = xml->getChildByName("key"))
         {
-            logger.log(juce::String("LOnlineUnlockStatusCheck: Custom parsed key (for debug): ") + keyElement->getAllSubText()); // Console log
-            _DBG(juce::String("LOnlineUnlockStatusCheck: Custom parsed key (for debug): ") + keyElement->getAllSubText()); // Console log
+            logger.log(juce::String("LOnlineUnlockStatusCheck: Custom parsed key (for debug): ") + keyElement->getAllSubText());
+            _DBG(juce::String("LOnlineUnlockStatusCheck: Custom parsed key (for debug): ") + keyElement->getAllSubText());
         } else {
-            logger.log("LOnlineUnlockStatusCheck: Custom parsing: No <key> element found!"); // Console log
-            _DBG("LOnlineUnlockStatusCheck: Custom parsing: No <key> element found!"); // Console log
+            logger.log("LOnlineUnlockStatusCheck: Custom parsing: No <key> element found!");
+            _DBG("LOnlineUnlockStatusCheck: Custom parsing: No <key> element found!");
         }
 
         parsedErrorMessage = "";
-        logger.log("LOnlineUnlockStatusCheck: Custom parsed error message: (empty)"); // Console log
-        _DBG("LOnlineUnlockStatusCheck: Custom parsed error message: (empty)"); // Console log
+        logger.log("LOnlineUnlockStatusCheck: Custom parsed error message: (empty)");
+        _DBG("LOnlineUnlockStatusCheck: Custom parsed error message: (empty)");
 
     } else {
         parsedSuccess = false;
@@ -204,8 +282,8 @@ juce::String LOnlineUnlockStatusCheck::readReplyFromWebserver (const juce::Strin
         _DBG("LOnlineUnlockStatusCheck: Custom parsing failed or root tag mismatch: " + reply);
     }
 
-    logger.log(juce::String("LOnlineUnlockStatusCheck: Returning full raw reply for base class processing: ") + reply); // File log
-    _DBG(juce::String("LOnlineUnlockStatusCheck: Returning this string to base class: ") + reply); // Console log
+    logger.log(juce::String("LOnlineUnlockStatusCheck: Returning full raw reply for base class processing: ") + reply);
+    _DBG(juce::String("LOnlineUnlockStatusCheck: Returning this string to base class: ") + reply);
     return reply; // IMPORTANT: Return the entire 'reply' string.
 }
 
