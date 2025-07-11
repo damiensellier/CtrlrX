@@ -43,19 +43,18 @@ public:
     juce::String getWebsiteName() override;
     juce::URL getServerAuthenticationURL() override;
     
-    // This method fetches the reply from the web server.
-    // It should return the raw XML string received from the server.
+    // readReplyFromWebserver returns the full XML to base class for its processing
     juce::String readReplyFromWebserver (const juce::String& email, const juce::String& password) override;
+
+    juce::StringArray getLocalMachineIDs() override; // Essential for concrete class
 
     //==============================================================================
     // Custom methods and members for LOnlineUnlockStatusCheck
-
-    // isUnlocked() in JUCE OnlineUnlockStatus is NOT virtual and NOT const.
-    // So, we cannot use 'override', but we can make our version const for local calls.
+    // isUnlocked() directly calls the base class's non-virtual isUnlocked().
+    // It will return true ONLY if the key saved via saveState is cryptographically valid.
     bool isUnlocked() const;
-    
-    // A convenience method to expose the base isUnlocked() through a different name if needed for Lua
-    bool isPluginUnlocked() const;
+    bool isPluginUnlocked() const; // Convenience method
+
 
     // Public getters for the parsed data from the webserver reply (for custom UI/Lua display)
     bool getParsedSuccess() const                        { return parsedSuccess; }

@@ -2,11 +2,23 @@
 #include "stdafx_luabind.h" // Your precompiled headers for Luabind (which includes JuceHeader.h and all luabind headers)
 #include "LOnlineUnlockStatusCheck.h" // Header for this custom class
 #include "CtrlrMacros.h" // For _DBG macro
-#include "CtrlrLog.h" // For PluginLoggerVst3
+#include "CtrlrLog.h" // For _DBG output
 
 // Make sure you have these includes for XmlElement if not already in stdafx.h
 #include <juce_core/juce_core.h>
 #include <juce_data_structures/juce_data_structures.h>
+
+// Helper to get a consistent directory path for application data.
+// We'll still create this, even if the key itself is in-memory for now.
+static juce::File getApplicationDataDirectory(const juce::String& appName)
+{
+    return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                        .getChildFile(appName);
+}
+
+// Logger init
+juce::File debugLogPath = juce::File::getSpecialLocation(juce::File::currentApplicationFile);
+PluginLoggerVst3 logger(debugLogPath);
 
 // Constructor Definition
 LOnlineUnlockStatusCheck::LOnlineUnlockStatusCheck(const juce::String& productID,
@@ -24,8 +36,13 @@ LOnlineUnlockStatusCheck::LOnlineUnlockStatusCheck(const juce::String& productID
     parsedInformativeMessage = "";
     parsedUrlToLaunch = "";
     
-    // IMPORTANT: Call load() here so the base class can initialize its internal state
-    // from whatever was previously saved.
+    // Ensure the application data directory exists
+    getApplicationDataDirectory(appName).createDirectory();
+    
+    // Call base class load, which will call our getState()
+    // If you plan to truly persist the key to disk later,
+    // this `load()` call here is where you'd read the saved key from file.
+    // For now, it will return an empty string, and base class will be 'unlocked' state.
     load();
 }
 
@@ -47,30 +64,37 @@ juce::RSAKey LOnlineUnlockStatusCheck::getPublicKey()
     return myPublicKey;
 }
 
-// !!! IMPORTANT: saveState() now actually stores the state to our member variable
+// saveState now just stores to the persistentUnlockState member
 void LOnlineUnlockStatusCheck::saveState (const juce::String& newState)
 {
-    juce::File debugLogPath = juce::File::getSpecialLocation(juce::File::currentApplicationFile);
-    PluginLoggerVst3 logger(debugLogPath);
-    
-    _DBG ("LOnlineUnlockStatusCheck: saveState called with: " + newState);
-    logger.log(juce::String("LOnlineUnlockStatusCheck: saveState called with: ") + newState);
-    
+    _DBG ("LOnlineUnlockStatusCheck: saveState called. Storing in memory: " + newState);
+    logger.log(juce::String("LOnlineUnlockStatusCheck: saveState called. Storing in memory: ") + newState);
+        
     persistentUnlockState = newState;
-    // In a real application, you would save persistentUnlockState to disk here
-    // using juce::PropertiesFile or similar persistent storage.
+    
+    // --- IMPORTANT: This is where you would add file persistence later ---
+    // If you want to save the key to disk after it's successfully validated by JUCE:
+    // juce::File keyFile = getApplicationDataDirectory(myAppName).getChildFile("unlock_key.txt");
+    // juce::FileOutputStream os(keyFile);
+    // if (os.openedOk()) os.writeString(newState);
+    // --------------------------------------------------------------------
 }
 
 // !!! IMPORTANT: getState() now returns the state from our member variable
 juce::String LOnlineUnlockStatusCheck::getState()
 {
-    juce::File debugLogPath = juce::File::getSpecialLocation(juce::File::currentApplicationFile);
-    PluginLoggerVst3 logger(debugLogPath);
-    
-    _DBG ("LOnlineUnlockStatusCheck: getState called. Returning: " + persistentUnlockState);
-    logger.log(juce::String("LOnlineUnlockStatusCheck: getState called. Returning: ") + persistentUnlockState);
-    
-    // In a real application, you would load persistentUnlockState from disk here if it's not already loaded.
+    // --- IMPORTANT: This is where you would add file loading later ---
+    // If you want to load the key from disk when the plugin starts:
+    // juce::File keyFile = getApplicationDataDirectory(myAppName).getChildFile("unlock_key.txt");
+    // if (keyFile.existsAsFile() && persistentUnlockState.isEmpty())
+    // {
+    //     persistentUnlockState = keyFile.loadFileAsString();
+    // }
+    // --------------------------------------------------------------------
+
+    _DBG ("LOnlineUnlockStatusCheck: getState called. Returning from memory: " + persistentUnlockState);
+    logger.log(juce::String("LOnlineUnlockStatusCheck: getState called. Returning from memory: ") + persistentUnlockState);
+        
     return persistentUnlockState;
 }
 
@@ -86,16 +110,23 @@ juce::URL LOnlineUnlockStatusCheck::getServerAuthenticationURL()
     return myServerURL;
 }
 
-// MODIFIED: This function should return the raw XML reply for the base class to parse.
+juce::StringArray LOnlineUnlockStatusCheck::getLocalMachineIDs()
+{
+    logger.log("LOnlineUnlockStatusCheck::getLocalMachineIDs() called. Returning default JUCE machine IDs.");
+    _DBG("LOnlineUnlockStatusCheck::getLocalMachineIDs() called. Returning default JUCE machine IDs.");
+    return juce::OnlineUnlockStatus::MachineIDUtilities::getLocalMachineIDs();
+}
+
 juce::String LOnlineUnlockStatusCheck::readReplyFromWebserver (const juce::String& email, const juce::String& password)
 {
     juce::File debugLog = juce::File::getSpecialLocation(juce::File::currentApplicationFile);
     PluginLoggerVst3 logger(debugLog);
 
     juce::URL serverUrl = getServerAuthenticationURL();
-
     serverUrl = serverUrl.withParameter ("email", email);
     serverUrl = serverUrl.withParameter ("password", password);
+    // Optionally add machine IDs to the URL for server-side binding
+    serverUrl = serverUrl.withParameter ("machineids", juce::OnlineUnlockStatus::MachineIDUtilities::getLocalMachineIDs().joinIntoString(","));
 
     logger.log(juce::String("LOnlineUnlockStatusCheck: Attempting web request to: ") + serverUrl.toString(true)); // File log
     _DBG(juce::String("LOnlineUnlockStatusCheck: Attempting web request to server: " + serverUrl.toString(true))); // Console log
@@ -107,9 +138,10 @@ juce::String LOnlineUnlockStatusCheck::readReplyFromWebserver (const juce::Strin
 
     if (reply.isEmpty())
     {
-        logger.log("LOnlineUnlockStatusCheck: Empty reply from webserver."); // File log
-        _DBG("LOnlineUnlockStatusCheck: Empty reply from webserver."); // Console log
-        _DBG("LOnlineUnlockStatusCheck: Returning EMPTY string to base class due to empty reply."); // Console log
+        logger.log("LOnlineUnlockStatusCheck: Empty reply from webserver.");
+        _DBG("LOnlineUnlockStatusCheck: Empty reply from webserver.");
+        parsedSuccess = false;
+        parsedErrorMessage = "Empty reply from webserver.";
         return "";
     }
 
@@ -120,39 +152,47 @@ juce::String LOnlineUnlockStatusCheck::readReplyFromWebserver (const juce::Strin
     if (xml != nullptr && xml->getTagName() == "OnlineUnlockStatus")
     {
         parsedSuccess = xml->getBoolAttribute("success", false);
+        logger.log(juce::String("LOnlineUnlockStatusCheck: Custom parsed success: ") + (parsedSuccess ? "true" : "false")); // Console log
         _DBG(juce::String("LOnlineUnlockStatusCheck: Custom parsed success: ") + (parsedSuccess ? "true" : "false")); // Console log
 
         if (juce::XmlElement* messageElement = xml->getChildByName("message"))
         {
             parsedInformativeMessage = messageElement->getAllSubText();
+            logger.log(juce::String("LOnlineUnlockStatusCheck: Custom parsed informative message: ") + parsedInformativeMessage); // Console log
             _DBG(juce::String("LOnlineUnlockStatusCheck: Custom parsed informative message: ") + parsedInformativeMessage); // Console log
         }
         else
         {
             parsedInformativeMessage = "";
+            logger.log("LOnlineUnlockStatusCheck: Custom parsed informative message: (empty)"); // Console log
             _DBG("LOnlineUnlockStatusCheck: Custom parsed informative message: (empty)"); // Console log
         }
         
         if (juce::XmlElement* urlElement = xml->getChildByName("url"))
         {
             parsedUrlToLaunch = urlElement->getAllSubText();
+            logger.log(juce::String("LOnlineUnlockStatusCheck: Custom parsed URL to launch: ") + parsedUrlToLaunch);
             _DBG(juce::String("LOnlineUnlockStatusCheck: Custom parsed URL to launch: ") + parsedUrlToLaunch); // Console log
         }
         else
         {
             parsedUrlToLaunch = "";
+            logger.log("LOnlineUnlockStatusCheck: Custom parsed URL to launch: (empty)"); // Console log
             _DBG("LOnlineUnlockStatusCheck: Custom parsed URL to launch: (empty)"); // Console log
         }
 
         // Log the key for debugging, but DO NOT return it directly.
         if (juce::XmlElement* keyElement = xml->getChildByName("key"))
         {
+            logger.log(juce::String("LOnlineUnlockStatusCheck: Custom parsed key (for debug): ") + keyElement->getAllSubText()); // Console log
             _DBG(juce::String("LOnlineUnlockStatusCheck: Custom parsed key (for debug): ") + keyElement->getAllSubText()); // Console log
         } else {
+            logger.log("LOnlineUnlockStatusCheck: Custom parsing: No <key> element found!"); // Console log
             _DBG("LOnlineUnlockStatusCheck: Custom parsing: No <key> element found!"); // Console log
         }
 
         parsedErrorMessage = "";
+        logger.log("LOnlineUnlockStatusCheck: Custom parsed error message: (empty)"); // Console log
         _DBG("LOnlineUnlockStatusCheck: Custom parsed error message: (empty)"); // Console log
 
     } else {
@@ -160,37 +200,24 @@ juce::String LOnlineUnlockStatusCheck::readReplyFromWebserver (const juce::Strin
         parsedErrorMessage = "Failed to parse XML or invalid root tag. Raw reply: " + reply;
         parsedInformativeMessage = "";
         parsedUrlToLaunch = "";
-        _DBG("LOnlineUnlockStatusCheck: Custom parsing failed or root tag mismatch: " + reply); // Console log
-        _DBG("LOnlineUnlockStatusCheck: Returning EMPTY string to base class due to custom XML parsing failure."); // Console log
-        return ""; // Return empty string to base if our custom parsing fails too
+        logger.log("LOnlineUnlockStatusCheck: Custom parsing failed or root tag mismatch: " + reply);
+        _DBG("LOnlineUnlockStatusCheck: Custom parsing failed or root tag mismatch: " + reply);
     }
-    // --- End of your custom parsing ---
-
-    // DEBUG HACK: Temporarily call saveState() to bypass base class's internal key validation
-    // and see if isUnlocked() can then return true. REMOVE THIS LATER IN PRODUCTION.
-    if (parsedSuccess) // Only if our custom parsing confirmed success
-    {
-        saveState("DEBUG_HACK_VALID_KEY_STRING"); // Force a state to be saved
-        _DBG("LOnlineUnlockStatusCheck: DEBUG HACK: Manually called saveState to force unlock state."); // Console log
-    }
-    // END DEBUG HACK
 
     logger.log(juce::String("LOnlineUnlockStatusCheck: Returning full raw reply for base class processing: ") + reply); // File log
     _DBG(juce::String("LOnlineUnlockStatusCheck: Returning this string to base class: ") + reply); // Console log
     return reply; // IMPORTANT: Return the entire 'reply' string.
 }
 
-// isUnlocked() definition - NOT an override, but a new const version
+// isUnlocked() now directly calls the base class's non-virtual isUnlocked()
+// This will return true ONLY if the key received from the server and saved via saveState
+// is cryptographically validated by myPublicKey.
 bool LOnlineUnlockStatusCheck::isUnlocked() const
 {
-    juce::File debugLogPath = juce::File::getSpecialLocation(juce::File::currentApplicationFile);
-    PluginLoggerVst3 logger(debugLogPath);
+    _DBG("LOnlineUnlockStatusCheck: LOnlineUnlockStatusCheck::isUnlocked() called. Calling base class for real validation.");
+    logger.log("LOnlineUnlockStatusCheck: LOnlineUnlockStatusCheck::isUnlocked() called. Calling base class for real validation.");
 
-    _DBG("LOnlineUnlockStatusCheck: LOnlineUnlockStatusCheck::isUnlocked() (your const version) called.");
-    logger.log("LOnlineUnlockStatusCheck: LOnlineUnlockStatusCheck::isUnlocked() (your const version) called.");
-
-    // IMPORTANT: Call the base class's non-const isUnlocked().
-    // The base class's isUnlocked() will then call *your* overridden getState() and getPublicKey().
+    // This is the core JUCE validation. It calls getState() and getPublicKey().
     bool unlocked = static_cast<juce::OnlineUnlockStatus*>(const_cast<LOnlineUnlockStatusCheck*>(this))->isUnlocked();
     
     _DBG(juce::String("LOnlineUnlockStatusCheck: isUnlocked() base OnlineUnlockStatus::isUnlocked() returning: ") + (unlocked ? "true" : "false"));

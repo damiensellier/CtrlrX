@@ -114,21 +114,33 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
     }
     setProperty (Ids::panelPlugType, "Instrument|Synth"); // Added v5.6.32
 
-    // Create temporary RSAKey objects
-    juce::RSAKey tempPublicKey, tempPrivateKey;
+    // --- BEGIN RSA KEY GENERATION & PROPERTY STORAGE (DEVELOPMENT-TIME ONLY) ---
+    // WARNING: Storing private key in plugin properties is a SECURITY RISK for final distribution.
+    // It MUST be removed from the distributed plugin.
+    // Public key should ideally be embedded as a const string in the final plugin, not a runtime property.
 
-    // Generate the key pair
-    juce::RSAKey::createKeyPair (tempPublicKey, tempPrivateKey, 2048); // 2048-bit key size
+    juce::RSAKey tempPublicKey;
+    juce::RSAKey tempPrivateKey;
+    
+    // Generate a 2048-bit key pair.
+    // We remove the incorrect 6th argument for the public exponent.
+    // JUCE's createKeyPair will use its default public exponent (typically 3 or 65537).
+    juce::RSAKey::createKeyPair (tempPublicKey, tempPrivateKey, 2048); // Corrected: 5 arguments as per API
 
-    // Convert the RSAKey objects to String and set them as properties
-    // This is for DEVELOPMENT/TESTING ONLY!
-    // These values should NOT be automatically generated or stored in the final end-user plugin.
+    // Store the public key string (modulus,exponent) in a property.
+    // This is the key your plugin will use to verify the server's signature.
     setProperty (Ids::panelExportPublicKey, tempPublicKey.toString());
+    _DBG("Generated Public Key stored in property (for plugin verification): " + tempPublicKey.toString());
+
+    // Store the private key string (modulus,exponent) in a property.
+    // *** YOU WILL MANUALLY COPY THIS STRING INTO YOUR PHP SCRIPT ***
+    // This property MUST be removed from your plugin before final distribution!
     setProperty (Ids::panelExportPrivateKey, tempPrivateKey.toString());
+    _DBG("Generated Private Key stored in property (COPY THIS FOR PHP): " + tempPrivateKey.toString());
 
     // Set the server URL property
     // This could also be a development server URL that changes for release
-    setProperty (Ids::panelExportServerAuthURL, "http://localhost:8000/auth/authenticate"); // Example local dev server URL
+    setProperty (Ids::panelExportServerAuthURL, "https://localhost:8000/auth/authenticate"); // Example local dev server URL
     
     setProperty (Ids::panelMidiSnapshotAfterLoad, false);
     setProperty (Ids::panelMidiSnapshotAfterProgramChange, false);
