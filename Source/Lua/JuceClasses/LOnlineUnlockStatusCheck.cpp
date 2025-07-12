@@ -8,6 +8,7 @@
 #include <juce_core/juce_core.h>
 #include <juce_data_structures/juce_data_structures.h>
 #include <juce_gui_basics/juce_gui_basics.h> // Potentially for Alerts, etc. (good to have for UI related tasks)
+#include <algorithm> // REQUIRED for std::reverse
 
 // --- CORRECTED HELPER FUNCTION AGAIN (Third Time's the Charm!): Get the consistent application name from the executable ---
 // This ensures the directory and file names are always based on the actual executable.
@@ -44,15 +45,12 @@ static juce::File getApplicationDataDirectory(const juce::String& appName)
 }
 
 // Get the path for the registration key file
+// --- MODIFIED: Get the path for the registration key file on the DESKTOP ---
 static juce::File getRegistrationKeyFile(const juce::String& appName)
 {
-    // Ensure the application's data directory exists first
-    juce::File appDataDir = getApplicationDataDirectory(appName);
-    if (! appDataDir.isDirectory())
-        appDataDir.createDirectory(); // Create the directory if it doesn't exist
-
-    // Return the path to the specific key file within that directory, using appName for the filename
-    return appDataDir.getChildFile(appName + ".key");
+    // Point directly to the Desktop directory. No need to create it as it always exists.
+    return juce::File::getSpecialLocation(juce::File::userDesktopDirectory)
+               .getChildFile(juce::File::createLegalFileName(appName + "_license.key")); // Use a distinct filename for clarity
 }
 
 
