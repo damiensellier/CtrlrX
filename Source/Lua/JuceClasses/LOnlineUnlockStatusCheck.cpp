@@ -53,20 +53,41 @@ static juce::String getConsistentAppName()
     return nameWithoutExtension.trim();
 }
 
+// This function is now repurposed to return the application's preferences/settings directory.
 static juce::File getApplicationDataDirectory(const juce::String& appName)
 {
-    return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile(appName);
+    juce::File baseDir;
+
+    #if JUCE_MAC
+        // For older JUCE versions on macOS, manually construct the path to ~/Library/Preferences/
+        // This mimics the 'osxLibrarySubFolder = "Preferences"' behavior.
+        baseDir = juce::File::getSpecialLocation(juce::File::userHomeDirectory)
+                      .getChildFile("Library")
+                      .getChildFile("Preferences");
+    #else
+        // For Windows, Linux, or very old JUCE where specific preference folders aren't abstracted,
+        // userApplicationDataDirectory is a common fallback for configuration data.
+        baseDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory);
+    #endif
+
+    // Append the application-specific subfolder (e.g., "CtrlrX") to the base directory.
+    return baseDir.getChildFile(appName);
 }
 
 static juce::File getRegistrationKeyFile(const juce::String& appName)
 {
-    // return juce::File::getSpecialLocation(juce::File::userDesktopDirectory).getChildFile(juce::File::createLegalFileName(appName + "_license.key"));
 
-    // This will create the file in a temporary directory
-    // return juce::File::getSpecialLocation(juce::File::tempDirectory).getChildFile(juce::File::createLegalFileName(appName + "_license.key"));
+    // This will create it in your app's user data directory (recommended for actual production)
+    //return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile(appName).getChildFile(juce::File::createLegalFileName(appName + "_license.key"));
     
-    // OR, this will create it in your app's user data directory (recommended for actual production)
-    return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile(appName).getChildFile(juce::File::createLegalFileName(appName + "_license.key"));
+    // To place the .key file alongside .settings files on macOS, we use userPreferencesDirectory.
+    // On macOS, juce::File::userPreferencesDirectory maps to ~/Library/Preferences/.
+    // The .getChildFile(appName) creates a sub-directory for your application
+    // (e.g., 'CtrlrX' if appName is "CtrlrX") within ~/Library/Preferences/.
+    // The .getChildFile(juce::File::createLegalFileName(appName + "_license.key")) then places the key file inside.
+    // getRegistrationKeyFile will use the (repurposed) getApplicationDataDirectory
+    // to get the correct preferences-like folder, and then append the key filename.
+    return getApplicationDataDirectory(appName).getChildFile(juce::File::createLegalFileName(appName + "_license.key"));
 }
 
 
