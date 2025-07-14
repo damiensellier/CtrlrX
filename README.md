@@ -340,7 +340,7 @@ Tuturial coming soon.
 
 ## Changelog
 
-#### Version 5.6.34 | 2025.07.02
+#### Version 5.6.34 | 2025.07.14
 
 * **NEW** ProTools AAX plugin support (requires AAX SDK 2.8+ and codesigning via PACE)
 * **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
@@ -358,6 +358,7 @@ Tuturial coming soon.
 * **ADDED** Visual Studio 2022 configuration. `CtrlrX.jucer`
 * **ADDED** JUCE, Boost, LuaBind version infos in the About window. `CtrlrAbout.cpp` & `.h`
 * **REMOVED** VST2.4 SDK due to licensing compliance. `/Source/Misc/vst2sdk/`
+* **NEW** Support for online plugin authorization (Requires PHP & SQL Server with keygen and authentication scripts and exec). `CtrlrX.jucer`, `LCore.cpp`, `LMachineIDUtilities.cpp` & `.h`, `LOnlineUnlockStatus.cpp` & `.h`, `LOnlineUnlockStatusCheck.cpp`& `.h`, `LRSAKey.cpp` & `.h`
 
 #### Version 5.6.33 | 2025.05.28
 
