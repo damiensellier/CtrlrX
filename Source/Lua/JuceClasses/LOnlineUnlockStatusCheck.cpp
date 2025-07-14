@@ -54,19 +54,24 @@ static juce::String getConsistentAppName()
 }
 
 // This function is now repurposed to return the application's preferences/settings directory.
+// Helper functions (MODIFIED to use a passed appName where appropriate)
+// getConsistentAppName() is no longer needed if appName is passed from Lua directly.
+// If it's used elsewhere, keep it. For the context of LOnlineUnlockStatusCheck, it's replaced.
+
+// This function is now repurposed to return the application's preferences/settings directory.
+// It should take the appName as an argument, or if it's a member function, use myAppName.
+// For static helper, taking appName as arg is correct.
 static juce::File getApplicationDataDirectory(const juce::String& appName)
 {
     juce::File baseDir;
 
     #if JUCE_MAC
-        // For older JUCE versions on macOS, manually construct the path to ~/Library/Preferences/
-        // This mimics the 'osxLibrarySubFolder = "Preferences"' behavior.
+        // For macOS, use ~/Library/Preferences/
         baseDir = juce::File::getSpecialLocation(juce::File::userHomeDirectory)
                       .getChildFile("Library")
                       .getChildFile("Preferences");
     #else
-        // For Windows, Linux, or very old JUCE where specific preference folders aren't abstracted,
-        // userApplicationDataDirectory is a common fallback for configuration data.
+        // For Windows, Linux, etc., use userApplicationDataDirectory
         baseDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory);
     #endif
 
@@ -76,17 +81,8 @@ static juce::File getApplicationDataDirectory(const juce::String& appName)
 
 static juce::File getRegistrationKeyFile(const juce::String& appName)
 {
-
-    // This will create it in your app's user data directory (recommended for actual production)
-    //return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile(appName).getChildFile(juce::File::createLegalFileName(appName + "_license.key"));
-    
-    // To place the .key file alongside .settings files on macOS, we use userPreferencesDirectory.
-    // On macOS, juce::File::userPreferencesDirectory maps to ~/Library/Preferences/.
-    // The .getChildFile(appName) creates a sub-directory for your application
-    // (e.g., 'CtrlrX' if appName is "CtrlrX") within ~/Library/Preferences/.
-    // The .getChildFile(juce::File::createLegalFileName(appName + "_license.key")) then places the key file inside.
-    // getRegistrationKeyFile will use the (repurposed) getApplicationDataDirectory
-    // to get the correct preferences-like folder, and then append the key filename.
+    // Uses the getApplicationDataDirectory to get the correct preferences-like folder,
+    // and then appends the key filename.
     return getApplicationDataDirectory(appName).getChildFile(juce::File::createLegalFileName(appName + "_license.key"));
 }
 
@@ -125,17 +121,13 @@ private:
 
 // LOnlineUnlockStatusCheck Class Implementation
 LOnlineUnlockStatusCheck::LOnlineUnlockStatusCheck(const juce::String& productID,
-                                                   const juce::String& appNameFromLua,
+                                                   const juce::String& appNameFromLua, // <--- New parameter name
                                                    const juce::URL& serverURL,
                                                    const juce::RSAKey& publicKey)
-    // >>> CORRECTED: Use the default base constructor as per the API you provided <<<
-    : juce::OnlineUnlockStatus(), // This is the ONLY public constructor in the API you shared.
-      
-      juce::Timer(), // Initialize juce::Timer (UNCHANGED)
-      
-      // Initialize your own member variables (UNCHANGED)
+    : juce::OnlineUnlockStatus(),
+      juce::Timer(),
       myProductID(productID),
-      myAppName(getConsistentAppName()),
+      myAppName(appNameFromLua), // <--- DIRECTLY USE appNameFromLua here
       myServerURL(serverURL),
       myPublicKey(publicKey),
       persistentUnlockState("") // This will be populated by your getState() override

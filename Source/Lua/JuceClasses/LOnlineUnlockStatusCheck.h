@@ -33,10 +33,10 @@ class LOnlineUnlockStatusCheck : public juce::OnlineUnlockStatus,
 {
 public:
     // Constructor
-    LOnlineUnlockStatusCheck (const juce::String& productID,
-                              const juce::String& appName,
-                              const juce::URL& serverURL,
-                              const juce::RSAKey& publicKey);
+    LOnlineUnlockStatusCheck(const juce::String& productID,
+                             const juce::String& appNameFromLua, // <--- This parameter is new/changed
+                             const juce::URL& serverURL,
+                             const juce::RSAKey& publicKey);
 
     // Destructor (defaulted as there are no raw pointers to manage, properly overrides virtual base)
     ~LOnlineUnlockStatusCheck() override;
