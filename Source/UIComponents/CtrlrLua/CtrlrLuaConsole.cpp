@@ -1,0 +1,360 @@
+#include "stdafx.h"
+/*
+  ==============================================================================
+
+  This is an automatically generated file created by the Jucer!
+
+  Creation date:  3 Apr 2012 10:45:28pm
+
+  Be careful when adding custom code to these files, as only the code within
+  the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
+  and re-saved.
+
+  Jucer version: 1.12
+
+  ------------------------------------------------------------------------------
+
+  The Jucer is part of the JUCE library - "Jules' Utility Class Extensions"
+  Copyright 2004-6 by Raw Material Software ltd.
+
+  ==============================================================================
+*/
+
+//[Headers] You can add your own extra header files here...
+#include "CtrlrLuaManager.h"
+#include "CtrlrManager/CtrlrManager.h"
+#include "CtrlrPanel/CtrlrPanel.h"
+//[/Headers]
+
+#include "CtrlrLuaConsole.h"
+
+
+//[MiscUserDefs] You can add your own user definitions and misc code here...
+const StringArray joinFileArray (const Array<File> ar)
+{
+	StringArray s;
+
+	for (int i=0; i<ar.size(); i++)
+	{
+		s.add (ar[i].getFullPathName());
+	}
+	return (s);
+}
+//[/MiscUserDefs]
+
+//==============================================================================
+CtrlrLuaConsole::CtrlrLuaConsole (CtrlrPanel &_owner)
+    : owner(_owner),
+      luaConsoleOutput (0),
+      luaConsoleInput (0),
+      resizer (0)
+{
+    addAndMakeVisible (luaConsoleOutput = new CodeEditorComponent (outputDocument, 0));
+    luaConsoleOutput->setName (L"luaConsoleOutput");
+    luaConsoleOutput->setScrollbarThickness(owner.getOwner().getProperty(Ids::ctrlrScrollbarThickness));
+
+    addAndMakeVisible (luaConsoleInput = new CodeEditorComponent (inputDocument, 0));
+    luaConsoleInput->setName (L"luaConsoleInput");
+    luaConsoleInput->setScrollbarThickness(owner.getOwner().getProperty(Ids::ctrlrScrollbarThickness));
+
+    addAndMakeVisible (resizer = new StretchableLayoutResizerBar (&layoutManager, 1, false));
+
+
+    //[UserPreSize]
+	layoutManager.setItemLayout (0, -0.001, -1.0, -0.69);
+ 	layoutManager.setItemLayout (1, -0.001, -0.01, -0.01);
+ 	layoutManager.setItemLayout (2, -0.001, -1.0, -0.30);
+
+	luaConsoleInput->setFont (Font(owner.getCtrlrManagerOwner().getFontManager().getDefaultMonoFontName(), 15, Font::plain));
+	luaConsoleOutput->setFont (Font(owner.getCtrlrManagerOwner().getFontManager().getDefaultMonoFontName(), 15, Font::plain));
+    luaConsoleInput->setColour (CodeEditorComponent::backgroundColourId, Colour(0xffffffff)); // findColour(CodeEditorComponent::backgroundColourId)); // was Colour(0xffffffff));
+	luaConsoleOutput->setColour (CodeEditorComponent::backgroundColourId, Colour(0xffffffff)); // findColour(CodeEditorComponent::backgroundColourId)); // was Colour(0xffffffff));
+    luaConsoleInput->setColour (CodeEditorComponent::highlightColourId, findColour(CodeEditorComponent::highlightColourId));
+    luaConsoleOutput->setColour (CodeEditorComponent::highlightColourId, findColour(CodeEditorComponent::highlightColourId));
+    luaConsoleInput->setColour (CodeEditorComponent::defaultTextColourId, Colour(0xff000000)); // findColour(CodeEditorComponent::defaultTextColourId));
+    luaConsoleOutput->setColour (CodeEditorComponent::defaultTextColourId, Colour(0xff000000)); // findColour(CodeEditorComponent::defaultTextColourId));
+    luaConsoleInput->setColour (CodeEditorComponent::lineNumberBackgroundId, findColour(CodeEditorComponent::lineNumberBackgroundId));
+    luaConsoleOutput->setColour (CodeEditorComponent::lineNumberBackgroundId, findColour(CodeEditorComponent::lineNumberBackgroundId));
+    luaConsoleInput->setColour (CodeEditorComponent::lineNumberTextId, findColour(CodeEditorComponent::defaultTextColourId));
+    luaConsoleOutput->setColour (CodeEditorComponent::lineNumberTextId, findColour(CodeEditorComponent::defaultTextColourId));
+
+	luaConsoleInput->addKeyListener (this);
+	owner.getCtrlrManagerOwner().getCtrlrLog().addListener (this);
+	nextUpKeyPressWillbeFirst = true;
+	lastCommandNumInHistory = -1;
+	lastMoveDirection = NONE;
+	currentInputString = "";
+
+	//luaConsoleOutput->setWantsKeyboardFocus(false);
+	//luaConsoleInput->grabKeyboardFocus();
+    //[/UserPreSize]
+
+    setSize (600, 400);
+
+
+    //[Constructor] You can add your own custom stuff here..
+	snips.addTokens (owner.getProperty(Ids::uiLuaConsoleSnips).toString(), "$", "\'\"");
+    //[/Constructor]
+}
+
+CtrlrLuaConsole::~CtrlrLuaConsole()
+{
+    //[Destructor_pre]. You can add your own custom destruction code here..
+	owner.getCtrlrManagerOwner().getCtrlrLog().removeListener (this);
+    //[/Destructor_pre]
+
+    deleteAndZero (luaConsoleOutput);
+    deleteAndZero (luaConsoleInput);
+    deleteAndZero (resizer);
+
+
+    //[Destructor]. You can add your own custom destruction code here..
+    //[/Destructor]
+}
+
+//==============================================================================
+void CtrlrLuaConsole::paint (Graphics& g)
+{
+    //[UserPrePaint] Add your own custom painting code here..
+    //[/UserPrePaint]
+
+    //[UserPaint] Add your own custom painting code here..
+    //[/UserPaint]
+}
+
+void CtrlrLuaConsole::resized()
+{
+    luaConsoleOutput->setBounds (0, 0, getWidth() - 0, proportionOfHeight (0.6900f));
+    luaConsoleInput->setBounds (0, proportionOfHeight (0.7000f), getWidth() - 0, proportionOfHeight (0.3000f));
+    resizer->setBounds (0, proportionOfHeight (0.6900f), getWidth() - 0, proportionOfHeight (0.0100f));
+    //[UserResized] Add your own custom resize handling here..
+	Component* comps[] = { luaConsoleOutput, resizer, luaConsoleInput  };
+ 	layoutManager.layOutComponents (comps, 3, 0, 0, getWidth(), getHeight(), true, true);
+    //[/UserResized]
+}
+
+bool CtrlrLuaConsole::keyPressed (const KeyPress& key)
+{
+    //[UserCode_keyPressed] -- Add your code here...
+    return false;  // Return true if your handler uses this key event, or false to allow it to be passed-on.
+    //[/UserCode_keyPressed]
+}
+
+
+
+//[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
+bool CtrlrLuaConsole::keyPressed (const KeyPress& key, Component* originatingComponent)
+{
+	if (key.getKeyCode() == 13 && originatingComponent == luaConsoleInput && !key.getModifiers().isCtrlDown())
+	{
+		runCode(inputDocument.getAllContent());
+
+		if ((bool)owner.getProperty(Ids::uiLuaConsoleInputRemoveAfterRun))
+		{
+			inputDocument.replaceAllContent("");
+		}
+		return (true);
+	}
+	else if (key.getKeyCode() == 13 && originatingComponent == luaConsoleInput && key.getModifiers().isCtrlDown())
+	{
+		luaConsoleInput->insertTextAtCaret ("\n");
+		return (true);
+	}
+	else if (key.getKeyCode() == KeyPress::upKey && key.getModifiers().isCtrlDown() && originatingComponent == luaConsoleInput )
+	{
+		if(inputHistory.size())
+		{
+			// Prev command
+			if (nextUpKeyPressWillbeFirst) {
+				currentInputString = inputDocument.getAllContent();
+				nextUpKeyPressWillbeFirst = false;
+			}
+
+			luaConsoleInput->loadContent(inputHistory[lastCommandNumInHistory]);  /* Put text at pointer into console */
+			lastCommandNumInHistory = ( ((lastCommandNumInHistory - 1) < 0) ? 0 : (lastCommandNumInHistory - 1) );
+			lastMoveDirection = UP;
+		}
+		return (true);
+	}
+	else if (key.getKeyCode() == KeyPress::downKey && key.getModifiers().isCtrlDown() && originatingComponent == luaConsoleInput)
+	{
+		if(inputHistory.size())
+		{
+			// next command
+			if (lastCommandNumInHistory == (inputHistory.size() - 1)) // at last command only
+			{
+				if (!currentInputString.isEmpty()) {
+					luaConsoleInput->loadContent(currentInputString);
+					nextUpKeyPressWillbeFirst = true;              // if user changes this restored text we need to capture it at up key again
+				}
+				return true;
+			}
+			lastCommandNumInHistory += 1;
+			luaConsoleInput->loadContent(inputHistory[lastCommandNumInHistory]);  /* Put text at pointer into console */
+			lastMoveDirection = DOWN;
+		}
+		return (true);
+	}
+	return (false);
+}
+
+void CtrlrLuaConsole::runCode(const String &code)
+{
+	luaConsoleOutput->moveCaretToEnd(false);
+	luaConsoleOutput->insertTextAtCaret ("\n");
+	luaConsoleOutput->insertTextAtCaret (">>> " + code + "\n");
+	// add running code into history
+	if (code.isNotEmpty()){
+		inputHistory.addIfNotAlreadyThere(code);
+		nextUpKeyPressWillbeFirst = true;
+		lastCommandNumInHistory = inputHistory.size() - 1;
+		lastMoveDirection = NONE;
+		currentInputString = "";
+	}
+	owner.getCtrlrLuaManager().runCode(code);
+	// luaConsoleInput->clear();
+}
+
+void CtrlrLuaConsole::messageLogged (CtrlrLog::CtrlrLogMessage message)
+{
+	if (message.level == CtrlrLog::Lua)
+	{
+		// luaConsoleOutput->setCaretPosition (luaConsoleOutput->getText().length());
+		luaConsoleOutput->insertTextAtCaret (message.message + "\n");
+	}
+	if (message.level == CtrlrLog::LuaError)
+	{
+		// luaConsoleOutput->setCaretPosition (luaConsoleOutput->getText().length());
+		luaConsoleOutput->insertTextAtCaret (message.message + "\n");
+	}
+}
+
+const PopupMenu CtrlrLuaConsole::getSnipsMenu(const int mask)
+{
+	PopupMenu m;
+
+	for (int i=0; i<snips.size(); i++)
+	{
+		m.addItem (mask+i, snips[i]);
+	}
+
+	return (m);
+}
+
+void CtrlrLuaConsole::snipsItemClicked(Button *b)
+{
+	PopupMenu m;
+	m.addItem (1, "Add input to snips");
+	m.addSubMenu ("Run snip", getSnipsMenu(1024));
+	m.addSubMenu ("Remove snip", getSnipsMenu(4096));
+	m.addItem (2, "Toggle input removal after run", true, (bool)owner.getProperty(Ids::uiLuaConsoleInputRemoveAfterRun));
+	const int ret = m.showAt(b);
+
+	if (ret == 1)
+	{
+		snips.add (inputDocument.getAllContent());
+	}
+	if (ret >= 1024 && ret < 4096)
+	{
+		runCode (snips[ret-1024]);
+	}
+	if (ret >= 4096)
+	{
+		snips.remove (ret-4096);
+	}
+	if (ret == 2)
+	{
+		owner.setProperty (Ids::uiLuaConsoleInputRemoveAfterRun, !owner.getProperty(Ids::uiLuaConsoleInputRemoveAfterRun));
+	}
+	owner.setProperty (Ids::uiLuaConsoleSnips, snips.joinIntoString("$"));
+}
+
+StringArray CtrlrLuaConsole::getMenuBarNames()
+{
+	const char* const names[] = { "File", "View", nullptr };
+	return StringArray (names);
+}
+
+PopupMenu CtrlrLuaConsole::getMenuForIndex(int topLevelMenuIndex, const String &menuName)
+{
+	PopupMenu menu;
+	if (topLevelMenuIndex == 0)
+	{
+		menu.addItem (2, "Add input to snips");
+		menu.addSubMenu ("Run snip", getSnipsMenu(1024));
+		menu.addSubMenu ("Remove snip", getSnipsMenu(4096));
+		// menu.addSeparator(); Updated v5.6.31
+		// menu.addItem (1, "Close", false); // Updated v5.6.31
+	}
+	else if(topLevelMenuIndex == 1)
+	{
+		menu.addItem (3, "Toggle input removal after run", true, (bool)owner.getProperty(Ids::uiLuaConsoleInputRemoveAfterRun));
+	}
+
+	return (menu);
+}
+
+void CtrlrLuaConsole::menuItemSelected(int menuItemID, int topLevelMenuIndex)
+{
+	if (topLevelMenuIndex == 0 && menuItemID==1)
+	{
+        // close handle
+        // owner.getWindowManager().toggle (CtrlrPanelWindowManager::LuaConsole, false); // Crashes
+	}
+	if (menuItemID == 2)
+	{
+		snips.add (inputDocument.getAllContent());
+	}
+	if (menuItemID >= 1024 && menuItemID < 4096)
+	{
+		runCode (snips[menuItemID-1024]);
+	}
+	if (menuItemID >= 4096)
+	{
+		snips.remove (menuItemID-4096);
+	}
+	if (menuItemID == 3)
+	{
+		owner.setProperty (Ids::uiLuaConsoleInputRemoveAfterRun, !owner.getProperty(Ids::uiLuaConsoleInputRemoveAfterRun));
+	}
+	owner.setProperty (Ids::uiLuaConsoleSnips, snips.joinIntoString("$"));
+}
+
+void CtrlrLuaConsole::focusGained(FocusChangeType cause)
+{
+	luaConsoleInput->grabKeyboardFocus();
+}
+//[/MiscUserCode]
+
+
+//==============================================================================
+#if 0
+/*  -- Jucer information section --
+
+    This is where the Jucer puts all of its metadata, so don't change anything in here!
+
+BEGIN_JUCER_METADATA
+
+<JUCER_COMPONENT documentType="Component" className="CtrlrLuaConsole" componentName=""
+                 parentClasses="public CtrlrChildWindowContent, public CtrlrLog::Listener, public KeyListener"
+                 constructorParams="CtrlrPanel &amp;_owner" variableInitialisers="owner(_owner)"
+                 snapPixels="8" snapActive="1" snapShown="1" overlayOpacity="0.330000013"
+                 fixedSize="1" initialWidth="600" initialHeight="400">
+  <METHODS>
+    <METHOD name="keyPressed (const KeyPress&amp; key)"/>
+  </METHODS>
+  <BACKGROUND backgroundColour="0"/>
+  <GENERICCOMPONENT name="luaConsoleOutput" id="cf0696d15c4f91e3" memberName="luaConsoleOutput"
+                    virtualName="" explicitFocusOrder="0" pos="0 0 0M 69%" class="CodeEditorComponent"
+                    params="outputDocument, 0"/>
+  <GENERICCOMPONENT name="luaConsoleInput" id="9630267470906dc" memberName="luaConsoleInput"
+                    virtualName="" explicitFocusOrder="0" pos="0 70% 0M 30%" class="CodeEditorComponent"
+                    params="inputDocument, 0"/>
+  <GENERICCOMPONENT name="" id="f4fe604fd1cb0e52" memberName="resizer" virtualName=""
+                    explicitFocusOrder="0" pos="0 69% 0M 1%" class="StretchableLayoutResizerBar"
+                    params="&amp;layoutManager, 1, false"/>
+</JUCER_COMPONENT>
+
+END_JUCER_METADATA
+*/
+#endif
