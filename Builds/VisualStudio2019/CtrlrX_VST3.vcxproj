@@ -74,12 +74,12 @@
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(LibraryPath);$(SolutionDir)$(Platform)\$(Configuration)\Shared Code</LibraryPath>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Platform)\$(Configuration)\VST3\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\VST3\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CtrlrX-x64</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CtrlrX</TargetName>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(LibraryPath);$(SolutionDir)$(Platform)\$(Configuration)\Shared Code</LibraryPath>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug_Win32|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\VST3\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug_Win32|Win32'">$(Platform)\$(Configuration)\VST3\</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_Win32|Win32'">CtrlrX</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_Win32|Win32'">CtrlrX-Win32</TargetName>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug_Win32|Win32'">true</GenerateManifest>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug_Win32|Win32'">$(LibraryPath);$(SolutionDir)$(Platform)\$(Configuration)\Shared Code</LibraryPath>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_Win32|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\VST3\</OutDir>
@@ -99,8 +99,8 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>C:\JUCE\modules\juce_audio_processors\format_types\VST3_SDK;..\..\Source\Misc\vst2sdk;..\..\JuceLibraryCode;C:\SDKs\AAX;C:\SDKs\AAX\Interfaces;C:\SDKs\AAX\Interfaces\ACF;C:\JUCE\modules;..\..\JUCE\modules;../../Source;../../Source/Misc;../../Source/Misc/include;../../Source/Misc/lua/include;../../Source/Misc/luabind;../../Source/Misc/boost;../../Source/MIDI;../../Source/Core;../../Source/Native;../../Source/Plugin;../../Source/UIComponents;../../Source/Lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;DEBUG;_DEBUG;JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1;JUCER_VS2019_78A5026=1;JUCE_APP_VERSION=5.6.34;JUCE_APP_VERSION_HEX=0x50622;JucePlugin_Build_VST=0;JucePlugin_Build_VST3=1;JucePlugin_Build_AU=0;JucePlugin_Build_AUv3=0;JucePlugin_Build_RTAS=0;JucePlugin_Build_AAX=0;JucePlugin_Build_Standalone=0;JucePlugin_Build_Unity=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\zan64\Documents\CtrlrX\JUCE\modules\juce_audio_processors\format_types\VST3_SDK;..\..\Source\Misc\vst2sdk;..\..\JuceLibraryCode;C:\Users\zan64\Documents\CtrlrX\JUCE\modules;..\..\JUCE\modules;../../Source;../../Source/Misc;../../Source/Misc/include;../../Source/Misc/lua/include;../../Source/Misc/luabind;../../Source/Misc/boost;../../Source/MIDI;../../Source/Core;../../Source/Native;../../Source/Plugin;../../Source/UIComponents;../../Source/Lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;DEBUG;_DEBUG;JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1;BOOST_BIND_GLOBAL_PLACEHOLDERS=1;JUCER_VS2019_78A5026=1;JUCE_APP_VERSION=5.6.34;JUCE_APP_VERSION_HEX=0x50622;JucePlugin_Build_VST=0;JucePlugin_Build_VST3=1;JucePlugin_Build_AU=0;JucePlugin_Build_AUv3=0;JucePlugin_Build_RTAS=0;JucePlugin_Build_AAX=0;JucePlugin_Build_Standalone=0;JucePlugin_Build_Unity=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -144,14 +144,14 @@
     </Midl>
     <ClCompile>
       <Optimization>Full</Optimization>
-      <AdditionalIncludeDirectories>C:\JUCE\modules\juce_audio_processors\format_types\VST3_SDK;..\..\Source\Misc\vst2sdk;..\..\JuceLibraryCode;C:\SDKs\AAX;C:\SDKs\AAX\Interfaces;C:\SDKs\AAX\Interfaces\ACF;C:\JUCE\modules;..\..\JUCE\modules;../../Source;../../Source/Misc;../../Source/Misc/include;../../Source/Misc/lua/include;../../Source/Misc/luabind;../../Source/Misc/boost;../../Source/MIDI;../../Source/Core;../../Source/Native;../../Source/Plugin;../../Source/UIComponents;../../Source/Lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;NDEBUG;JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1;JUCER_VS2019_78A5026=1;JUCE_APP_VERSION=5.6.34;JUCE_APP_VERSION_HEX=0x50622;JucePlugin_Build_VST=0;JucePlugin_Build_VST3=1;JucePlugin_Build_AU=0;JucePlugin_Build_AUv3=0;JucePlugin_Build_RTAS=0;JucePlugin_Build_AAX=0;JucePlugin_Build_Standalone=0;JucePlugin_Build_Unity=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\zan64\Documents\CtrlrX\JUCE\modules\juce_audio_processors\format_types\VST3_SDK;..\..\Source\Misc\vst2sdk;..\..\JuceLibraryCode;C:\Users\zan64\Documents\CtrlrX\JUCE\modules;..\..\JUCE\modules;../../Source;../../Source/Misc;../../Source/Misc/include;../../Source/Misc/lua/include;../../Source/Misc/luabind;../../Source/Misc/boost;../../Source/MIDI;../../Source/Core;../../Source/Native;../../Source/Plugin;../../Source/UIComponents;../../Source/Lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;NDEBUG;JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1;BOOST_BIND_GLOBAL_PLACEHOLDERS=1;JUCER_VS2019_78A5026=1;JUCE_APP_VERSION=5.6.34;JUCE_APP_VERSION_HEX=0x50622;JucePlugin_Build_VST=0;JucePlugin_Build_VST3=1;JucePlugin_Build_AU=0;JucePlugin_Build_AUv3=0;JucePlugin_Build_RTAS=0;JucePlugin_Build_AAX=0;JucePlugin_Build_Standalone=0;JucePlugin_Build_Unity=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <AssemblerListingLocation>$(IntDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\</ObjectFileName>
-      <ProgramDataBaseFileName>$(IntDir)\CtrlrX-x64.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)\CtrlrX.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -162,24 +162,24 @@
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
-      <OutputFile>$(OutDir)\CtrlrX-x64.vst3</OutputFile>
+      <OutputFile>$(OutDir)\CtrlrX.vst3</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(IntDir)\CtrlrX-x64.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(IntDir)\CtrlrX.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <LargeAddressAware>true</LargeAddressAware>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>CtrlrX-x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CtrlrX.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>$(IntDir)\CtrlrX-x64.bsc</OutputFile>
+      <OutputFile>$(IntDir)\CtrlrX.bsc</OutputFile>
     </Bscmake>
     <Lib>
-      <AdditionalDependencies>CtrlrX-x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CtrlrX.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Win32|Win32'">
@@ -193,14 +193,14 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>C:\JUCE\modules\juce_audio_processors\format_types\VST3_SDK;..\..\Source\Misc\vst2sdk;..\..\JuceLibraryCode;C:\SDKs\AAX;C:\SDKs\AAX\Interfaces;C:\SDKs\AAX\Interfaces\ACF;C:\JUCE\modules;..\..\JUCE\modules;../../Source;../../Source/Misc;../../Source/Misc/include;../../Source/Misc/lua/include;../../Source/Misc/luabind;../../Source/Misc/boost;../../Source/MIDI;../../Source/Core;../../Source/Native;../../Source/Plugin;../../Source/UIComponents;../../Source/Lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;DEBUG;_DEBUG;JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1;JUCER_VS2019_78A5026=1;JUCE_APP_VERSION=5.6.34;JUCE_APP_VERSION_HEX=0x50622;JucePlugin_Build_VST=0;JucePlugin_Build_VST3=1;JucePlugin_Build_AU=0;JucePlugin_Build_AUv3=0;JucePlugin_Build_RTAS=0;JucePlugin_Build_AAX=0;JucePlugin_Build_Standalone=0;JucePlugin_Build_Unity=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\zan64\Documents\CtrlrX\JUCE\modules\juce_audio_processors\format_types\VST3_SDK;..\..\Source\Misc\vst2sdk;..\..\JuceLibraryCode;C:\Users\zan64\Documents\CtrlrX\JUCE\modules;..\..\JUCE\modules;../../Source;../../Source/Misc;../../Source/Misc/include;../../Source/Misc/lua/include;../../Source/Misc/luabind;../../Source/Misc/boost;../../Source/MIDI;../../Source/Core;../../Source/Native;../../Source/Plugin;../../Source/UIComponents;../../Source/Lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;DEBUG;_DEBUG;JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1;BOOST_BIND_GLOBAL_PLACEHOLDERS=1;JUCER_VS2019_78A5026=1;JUCE_APP_VERSION=5.6.34;JUCE_APP_VERSION_HEX=0x50622;JucePlugin_Build_VST=0;JucePlugin_Build_VST3=1;JucePlugin_Build_AU=0;JucePlugin_Build_AUv3=0;JucePlugin_Build_RTAS=0;JucePlugin_Build_AAX=0;JucePlugin_Build_Standalone=0;JucePlugin_Build_Unity=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <AssemblerListingLocation>$(IntDir)\</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)\</ObjectFileName>
-      <ProgramDataBaseFileName>$(IntDir)\CtrlrX.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)\CtrlrX-Win32.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -211,22 +211,22 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
-      <OutputFile>$(OutDir)\CtrlrX.vst3</OutputFile>
+      <OutputFile>$(OutDir)\CtrlrX-Win32.vst3</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>libcmt.lib; msvcrt.lib;;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(IntDir)\CtrlrX.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(IntDir)\CtrlrX-Win32.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <LargeAddressAware>true</LargeAddressAware>
-      <AdditionalDependencies>CtrlrX.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CtrlrX-Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>$(IntDir)\CtrlrX.bsc</OutputFile>
+      <OutputFile>$(IntDir)\CtrlrX-Win32.bsc</OutputFile>
     </Bscmake>
     <Lib>
-      <AdditionalDependencies>CtrlrX.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CtrlrX-Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Win32|Win32'">
@@ -239,8 +239,8 @@
     </Midl>
     <ClCompile>
       <Optimization>Full</Optimization>
-      <AdditionalIncludeDirectories>C:\JUCE\modules\juce_audio_processors\format_types\VST3_SDK;..\..\Source\Misc\vst2sdk;..\..\JuceLibraryCode;C:\SDKs\AAX;C:\SDKs\AAX\Interfaces;C:\SDKs\AAX\Interfaces\ACF;C:\JUCE\modules;..\..\JUCE\modules;../../Source;../../Source/Misc;../../Source/Misc/include;../../Source/Misc/lua/include;../../Source/Misc/luabind;../../Source/Misc/boost;../../Source/MIDI;../../Source/Core;../../Source/Native;../../Source/Plugin;../../Source/UIComponents;../../Source/Lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;NDEBUG;JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1;JUCER_VS2019_78A5026=1;JUCE_APP_VERSION=5.6.34;JUCE_APP_VERSION_HEX=0x50622;JucePlugin_Build_VST=0;JucePlugin_Build_VST3=1;JucePlugin_Build_AU=0;JucePlugin_Build_AUv3=0;JucePlugin_Build_RTAS=0;JucePlugin_Build_AAX=0;JucePlugin_Build_Standalone=0;JucePlugin_Build_Unity=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\zan64\Documents\CtrlrX\JUCE\modules\juce_audio_processors\format_types\VST3_SDK;..\..\Source\Misc\vst2sdk;..\..\JuceLibraryCode;C:\Users\zan64\Documents\CtrlrX\JUCE\modules;..\..\JUCE\modules;../../Source;../../Source/Misc;../../Source/Misc/include;../../Source/Misc/lua/include;../../Source/Misc/luabind;../../Source/Misc/boost;../../Source/MIDI;../../Source/Core;../../Source/Native;../../Source/Plugin;../../Source/UIComponents;../../Source/Lua;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;NDEBUG;JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1;BOOST_BIND_GLOBAL_PLACEHOLDERS=1;JUCER_VS2019_78A5026=1;JUCE_APP_VERSION=5.6.34;JUCE_APP_VERSION_HEX=0x50622;JucePlugin_Build_VST=0;JucePlugin_Build_VST3=1;JucePlugin_Build_AU=0;JucePlugin_Build_AUv3=0;JucePlugin_Build_RTAS=0;JucePlugin_Build_AAX=0;JucePlugin_Build_Standalone=0;JucePlugin_Build_Unity=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -279,10 +279,10 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="C:\JUCE\modules\juce_audio_plugin_client\VST3\juce_VST3_Wrapper.cpp">
+    <ClCompile Include="..\..\JUCE\modules\juce_audio_plugin_client\VST3\juce_VST3_Wrapper.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="C:\JUCE\modules\juce_audio_plugin_client\juce_audio_plugin_client_VST3.cpp">
+    <ClCompile Include="..\..\JUCE\modules\juce_audio_plugin_client\juce_audio_plugin_client_VST3.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_audio_plugin_client_VST3.cpp"/>

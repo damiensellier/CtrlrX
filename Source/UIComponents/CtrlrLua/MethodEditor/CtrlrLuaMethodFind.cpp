@@ -397,6 +397,28 @@ void CtrlrLuaMethodFind::findInAll()
 					reportFoundMatch (doc, names[i], results[j]);
 				}
 			}
+			else // Added 5.6.34 by goodweather. Search in not yet opened methods
+			{
+				/* Open method */
+				owner.createNewTab(m);
+				owner.setCurrentTab(m);
+
+				/* Perform search and report result */
+				CodeDocument& doc = m->getCodeEditor()->getCodeDocument();
+
+				Array<Range<int> > results = searchForMatchesInDocument(doc);
+
+				for (int j = 0; j < results.size(); j++)
+				{
+					reportFoundMatch(doc, names[i], results[j]);
+				}
+
+				/* If no result then close method; if any result then keep method open */
+				if (results.size() == 0)
+				{
+					owner.closeCurrentTab();
+				}
+			}
 		}
 	}
 

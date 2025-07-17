@@ -19,6 +19,7 @@
           <Add option="-DDEBUG=&quot;1&quot;"/>
           <Add option="-D_DEBUG=&quot;1&quot;"/>
           <Add option="-DJUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=&quot;1&quot;"/>
+          <Add option="-DBOOST_BIND_GLOBAL_PLACEHOLDERS=&quot;1&quot;"/>
           <Add option="-DJUCER_CODEBLOCKS_LINUX_191E0897=&quot;1&quot;"/>
           <Add option="-DJUCE_APP_VERSION=&quot;5.6.34&quot;"/>
           <Add option="-DJUCE_APP_VERSION_HEX=&quot;0x50622&quot;"/>
@@ -83,6 +84,7 @@
           <Add option="-DDEBUG=&quot;1&quot;"/>
           <Add option="-D_DEBUG=&quot;1&quot;"/>
           <Add option="-DJUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=&quot;1&quot;"/>
+          <Add option="-DBOOST_BIND_GLOBAL_PLACEHOLDERS=&quot;1&quot;"/>
           <Add option="-DJUCER_CODEBLOCKS_LINUX_191E0897=&quot;1&quot;"/>
           <Add option="-DJUCE_APP_VERSION=&quot;5.6.34&quot;"/>
           <Add option="-DJUCE_APP_VERSION_HEX=&quot;0x50622&quot;"/>
@@ -149,6 +151,7 @@
           <Add option="-DDEBUG=&quot;1&quot;"/>
           <Add option="-D_DEBUG=&quot;1&quot;"/>
           <Add option="-DJUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=&quot;1&quot;"/>
+          <Add option="-DBOOST_BIND_GLOBAL_PLACEHOLDERS=&quot;1&quot;"/>
           <Add option="-DJUCER_CODEBLOCKS_LINUX_191E0897=&quot;1&quot;"/>
           <Add option="-DJUCE_APP_VERSION=&quot;5.6.34&quot;"/>
           <Add option="-DJUCE_APP_VERSION_HEX=&quot;0x50622&quot;"/>
@@ -212,6 +215,7 @@
           <Add option="-DLINUX=&quot;1&quot;"/>
           <Add option="-DNDEBUG=&quot;1&quot;"/>
           <Add option="-DJUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=&quot;1&quot;"/>
+          <Add option="-DBOOST_BIND_GLOBAL_PLACEHOLDERS=&quot;1&quot;"/>
           <Add option="-DJUCER_CODEBLOCKS_LINUX_191E0897=&quot;1&quot;"/>
           <Add option="-DJUCE_APP_VERSION=&quot;5.6.34&quot;"/>
           <Add option="-DJUCE_APP_VERSION_HEX=&quot;0x50622&quot;"/>
@@ -238,6 +242,20 @@
           <Add directory="../../JuceLibraryCode"/>
           <Add directory="../../../../juce"/>
           <Add directory="../../JUCE/modules"/>
+          <Add directory="../../Source"/>
+          <Add directory="../../Source/Misc"/>
+          <Add directory="../../Source/Misc/include"/>
+          <Add directory="../../Source/Misc/lua/include"/>
+          <Add directory="../../Source/Misc/luabind"/>
+          <Add directory="../../Source/Misc/libusb/include"/>
+          <Add directory="../../Source/Misc/boost"/>
+          <Add directory="../../Source/MIDI"/>
+          <Add directory="../../Source/Core"/>
+          <Add directory="../../Source/Native"/>
+          <Add directory="../../Source/Plugin"/>
+          <Add directory="../../Source/UIComponents"/>
+          <Add directory="../../Source/Lua"/>
+          <Add directory="../../JUCE/modules"/>
           <Add directory="/usr/include/freetype2"/>
         </Compiler>
         <Linker>
@@ -261,6 +279,7 @@
           <Add option="-DLINUX=&quot;1&quot;"/>
           <Add option="-DNDEBUG=&quot;1&quot;"/>
           <Add option="-DJUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=&quot;1&quot;"/>
+          <Add option="-DBOOST_BIND_GLOBAL_PLACEHOLDERS=&quot;1&quot;"/>
           <Add option="-DJUCER_CODEBLOCKS_LINUX_191E0897=&quot;1&quot;"/>
           <Add option="-DJUCE_APP_VERSION=&quot;5.6.34&quot;"/>
           <Add option="-DJUCE_APP_VERSION_HEX=&quot;0x50622&quot;"/>
@@ -285,6 +304,20 @@
           <Add directory="../../Source/Misc/vst2sdk"/>
           <Add directory="../../JuceLibraryCode"/>
           <Add directory="../../../../juce"/>
+          <Add directory="../../JUCE/modules"/>
+          <Add directory="../../Source"/>
+          <Add directory="../../Source/Misc"/>
+          <Add directory="../../Source/Misc/include"/>
+          <Add directory="../../Source/Misc/lua/include"/>
+          <Add directory="../../Source/Misc/luabind"/>
+          <Add directory="../../Source/Misc/libusb/include"/>
+          <Add directory="../../Source/Misc/boost"/>
+          <Add directory="../../Source/MIDI"/>
+          <Add directory="../../Source/Core"/>
+          <Add directory="../../Source/Native"/>
+          <Add directory="../../Source/Plugin"/>
+          <Add directory="../../Source/UIComponents"/>
+          <Add directory="../../Source/Lua"/>
           <Add directory="../../JUCE/modules"/>
           <Add directory="/usr/include/freetype2"/>
         </Compiler>
@@ -312,6 +345,7 @@
           <Add option="-DLINUX=&quot;1&quot;"/>
           <Add option="-DNDEBUG=&quot;1&quot;"/>
           <Add option="-DJUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=&quot;1&quot;"/>
+          <Add option="-DBOOST_BIND_GLOBAL_PLACEHOLDERS=&quot;1&quot;"/>
           <Add option="-DJUCER_CODEBLOCKS_LINUX_191E0897=&quot;1&quot;"/>
           <Add option="-DJUCE_APP_VERSION=&quot;5.6.34&quot;"/>
           <Add option="-DJUCE_APP_VERSION_HEX=&quot;0x50622&quot;"/>
@@ -336,6 +370,20 @@
           <Add directory="../../Source/Misc/vst2sdk"/>
           <Add directory="../../JuceLibraryCode"/>
           <Add directory="../../../../juce"/>
+          <Add directory="../../JUCE/modules"/>
+          <Add directory="../../Source"/>
+          <Add directory="../../Source/Misc"/>
+          <Add directory="../../Source/Misc/include"/>
+          <Add directory="../../Source/Misc/lua/include"/>
+          <Add directory="../../Source/Misc/luabind"/>
+          <Add directory="../../Source/Misc/libusb/include"/>
+          <Add directory="../../Source/Misc/boost"/>
+          <Add directory="../../Source/MIDI"/>
+          <Add directory="../../Source/Core"/>
+          <Add directory="../../Source/Native"/>
+          <Add directory="../../Source/Plugin"/>
+          <Add directory="../../Source/UIComponents"/>
+          <Add directory="../../Source/Lua"/>
           <Add directory="../../JUCE/modules"/>
           <Add directory="/usr/include/freetype2"/>
         </Compiler>
