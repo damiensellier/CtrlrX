@@ -1120,7 +1120,8 @@ String GenericCodeEditorComponent::getSearchString()
 bool GenericCodeEditorComponent::isCaseSensitiveSearch()
 {
 	if (findPanel != nullptr)
-		bSensitive = findPanel->caseButton.getToggleState();
+		bSensitive = !findPanel->caseButton.getToggleState();
+	// this needed to be reversed for Match Case toggle J.G
 	return bSensitive;
 }
 
