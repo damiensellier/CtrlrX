@@ -1,0 +1,392 @@
+#!/bin/bash
+OSNAME=""
+DATE=`date`
+UBUNTU_PACKAGES="g++ libxrandr-dev libxinerama-dev libxcursor-dev \
+libasound2-dev binutils-dev \
+libfreetype6-dev xorg-dev \
+libgl1-mesa-dev libglapi-mesa \
+libxrandr-dev libudev-dev libgl1-mesa-dev libiberty-dev"
+
+CTRLR_ROOT=""
+PACKAGE=""
+BUILD_LOG_WIN32=""
+BUILD_LOG_WIN64=""
+OUTPUT="ctrlr@ctrlr.org://var/www/ctrlr/nightly/"
+VERSION=""
+ARGS=$1
+
+echo "CTRLR pre-commit HOOK"
+
+function check_pkgs_ubuntu() {
+	IFS=" "
+	for p in $UBUNTU_PACKAGES; do
+		echo -ne "\t[$p:"
+		dpkg-query -W $p 2> /dev/null 1> /dev/null
+		if [ $? -ne 0 ]; then
+			if [ "$ARGS" == "-f" ]; then
+				echo -ne "failed,forced]\n"
+			else
+				echo -ne "failed]\n"
+				exit 1
+			fi
+		else
+			echo -ne "ok]\n"
+		fi
+	done
+}
+
+function detect_os {
+	UNAME=`uname 2>/dev/null`
+	
+	if [ "$OS" == "Windows_NT" ]; then
+		OSNAME="WINDOWS"
+		if [ -d /cygdrive ]; then
+			CTRLR_ROOT="/cygdrive/c/devel/ctrlr"
+		else
+			CTRLR_ROOT="/c/devel/ctrlr"
+		fi
+		VERSION=`c:/devel/ctrlr/Scripts/git-revision.sh`
+		PACKAGE=$CTRLR_ROOT/Packaging/Windows/Ctrlr-$VERSION.exe
+		BUILD_LOG_WIN32=$CTRLR_ROOT/Builds/Ctrlr-$VERSION.win32.build.log
+		BUILD_LOG_WIN64=$CTRLR_ROOT/Builds/Ctrlr-$VERSION.win64.build.log
+		CTRLR_KEY="$CTRLR_ROOT/Packaging/ctrlr.key"
+		if [ -d /cygdrive ]; then
+			MSBUILD="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/MSBuild.exe"
+			NSIS="/cygdrive/c/Program\ Files\ \(x86\)/NSIS/makensis.exe"
+		else
+			MSBUILD="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/MSBuild.exe"
+			NSIS="/c/Program\ Files\ \(x86\)/NSIS/makensis.exe"
+		fi
+		return
+	fi
+		
+	if [ "$UNAME" == "Linux" ]; then
+		DISTRO=`lsb_release -i 2> /dev/null | cut -f2`
+		OSNAME="LINUX"
+		ARCH=`uname -m`
+		CTRLR_ROOT="$(dirname $(readlink -f $0))/../"
+		VERSION=`$CTRLR_ROOT/Scripts/git-revision.sh`
+		PACKAGE=$CTRLR_ROOT/Packaging/Linux/Ctrlr-$ARCH-$VERSION.sh
+		BUILD_LOG=$CTRLR_ROOT/Builds/Ctrlr-$ARCH-$VERSION.linux.build.log
+		CTRLR_KEY="$CTRLR_ROOT/Packaging/ctrlr.key"
+		
+		if [ "$DISTRO" == "Ubuntu" ]; then
+			echo "CTRLR: distro detected as $DISTRO, check packages"
+			check_pkgs_ubuntu
+		fi
+		return
+	fi
+	
+	if [ "$UNAME" == "Darwin" ]; then
+		OSNAME="OSX"
+		CTRLR_ROOT="$HOME/devel/ctrlr"
+		VERSION=`$CTRLR_ROOT/Scripts/git-revision.sh`
+		PACKAGE=$CTRLR_ROOT/Packaging/Mac/Ctrlr-$VERSION.dmg
+		BUILD_LOG=$CTRLR_ROOT/Builds/Ctrlr-$VERSION.mac.build.log
+		return
+	fi
+}
+
+function build_now {
+	if [ "$OSNAME" == "WINDOWS" ]; then		
+		build_now_windows
+	elif [ "$OSNAME" == "LINUX" ]; then
+		build_now_linux
+	elif [ "$OSNAME" == "OSX" ]; then
+		build_now_osx
+	fi
+}
+
+function windows_create_installer {
+	echo "CTRLR: create installer"
+	echo $CTRLR_ROOT, $NSIS
+	cd $CTRLR_ROOT
+	eval $NSIS Packaging/Windows/ctrlr.nsi
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: failed to create installer package"
+		exit 1
+	fi
+	
+	echo "CTRLR: rename $CTRLR_ROOT/Packaging/Windows/Ctrlr.exe -> $PACKAGE"
+	mv $CTRLR_ROOT/Packaging/Windows/Ctrlr.exe $PACKAGE
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: failed to rename installer package"
+		exit 1
+	fi
+}
+
+function windows_copy_to_website {
+	scp -v $PACKAGE $BUILD_LOG_WIN32 $BUILD_LOG_WIN64 $OUTPUT
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: failed to transfer package files to remote site"
+		exit 1
+	fi
+}
+
+function windows_msbuild {	
+	if [ -e "$MSBUILD" ]; then
+		echo "CTRLR: $MSBUILD found"
+
+		cd $CTRLR_ROOT/Builds/VisualStudio2019
+		
+		echo "CTRLR: Build Win32"
+		"$MSBUILD" Ctrlr.sln /target:Rebuild /fileloggerparameters:logfile=Ctrlr-$VERSION.win32.build.log /property:Configuration=Release_Win32 /property:VisualStudioVersion=15.0 
+		
+		if [ $? -ne 0 ]; then
+			echo "CTRLR: Win32 build failed"
+			exit 1
+		fi
+		echo "CTRLR: Build x64"
+		
+		"$MSBUILD" Ctrlr.sln /target:Rebuild /fileloggerparameters:logfile=Ctrlr-$VERSION.win64.build.log /property:Configuration=Release /property:VisualStudioVersion=15.0 /property:Platform=x64
+		if [ $? -ne 0 ]; then
+			echo "CTRLR: x64 build failed"
+			exit 1
+		fi
+	else
+		echo "CTRLR: $MSBUILD does not exist"
+		exit 1
+	fi
+}
+
+function build_now_windows {
+	
+	REVISION_H="c:/devel/ctrlr/Source/Core/CtrlrRevision.h"
+	TEMPLATE_H="c:/devel/ctrlr/Source/Core/CtrlrRevision.template"
+
+	echo -n > $BUILD_LOG_WIN32
+	echo -n > $BUILD_LOG_WIN64	
+	echo "Version: $VERSION"
+	echo "CtrlrRevision.template: $TEMPLATE_H"
+	echo "CtrlrRevision.h: $REVISION_H"
+	echo "Date: $DATE"
+	echo
+	sed -e "s/%REVISION%/$VERSION/g" -e "s/%REVISION_DATE%/$DATE/g" $TEMPLATE_H > $REVISION_H
+	
+	windows_msbuild
+	windows_create_installer	
+	windows_copy_to_website
+}
+
+function build_now_osx {
+	echo "CTRLR: build_now_osx"
+	echo "----------------------------------------"
+	REVISION_H="$CTRLR_ROOT/Source/Core/CtrlrRevision.h"
+	TEMPLATE_H="$CTRLR_ROOT/Source/Core/CtrlrRevision.template"
+	echo -e "\tVersion: $VERSION"
+	echo -e "\tCtrlrRevision.template: $TEMPLATE_H"
+	echo -e "\tCtrlrRevision.h: $REVISION_H"
+	echo -e "\tDate: $DATE"
+	echo "----------------------------------------"
+	sed -e "s/%REVISION%/$VERSION/g" -e "s/%REVISION_DATE%/$DATE/g" $TEMPLATE_H > $REVISION_H
+	TEMPLATE_DMG_SOURCE="$CTRLR_ROOT/Packaging/Mac/Ctrlr_template.dmg.bz2"
+	TEMPLATE_DMG_TEMP="$CTRLR_ROOT/Packaging/Mac/Ctrlr_template.dmg"
+	TEMPLATE_DMG_MOUNT="/Volumes/Ctrlr"
+	TEMPLATE_FILE_LIST="$CTRLR_ROOT/Bin/Ctrlr.app $CTRLR_ROOT/Bin/Ctrlr.vst $CTRLR_ROOT/Bin/Ctrlr.component $CTRLR_ROOT/Panels $CTRLR_ROOT/Doc"
+	
+	echo "[CTRLR]: Empty build log $BUILD_LOG"
+	echo -n > $BUILD_LOG
+	
+	echo "[CTRLR]: Build Standalone"
+	cd $CTRLR_ROOT/Builds/MacOSX
+	xcodebuild -configuration Release_Nightly | tee -ia $BUILD_LOG
+	
+	if [ $? -ne 0 ]; then
+		echo "[CTRLR]: Build failed"
+		exit 1
+	fi
+
+	echo "[CTRLR]: Build VST"
+	cd $CTRLR_ROOT/Builds/MacOSX
+	xcodebuild -configuration Release_Nightly | tee -ia $BUILD_LOG
+	
+	if [ $? -ne 0 ]; then
+		echo "[CTRLR]: Build failed"
+		exit 1
+	fi
+	
+	echo "[CTRLR]: Build AU Wrapper"
+	cd $CTRLR_ROOT/Builds/MacOSX
+	xcodebuild -configuration Release_Nightly | tee -ia $BUILD_LOG
+	
+	if [ $? -ne 0 ]; then
+		echo "[CTRLR]: Build failed"
+		exit 1
+	fi
+	
+	echo "[CTRLR]: Build AU"
+	cd $CTRLR_ROOT/Builds/MacOSX
+	xcodebuild -configuration Release_Nightly | tee -ia $BUILD_LOG
+	
+	if [ $? -ne 0 ]; then
+		echo "[CTRLR]: Build failed"
+		exit 1
+	fi
+	
+	cd $CTRLR_ROOT
+	
+	if [ -e $TEMPLATE_DMG_TEMP ]; then
+		echo "CTRLR: Umount $TEMPLATE_DMG_MOUNT"
+		umount $TEMPLATE_DMG_MOUNT 2>/dev/null
+		echo "CTRLR: $TEMPLATE_DMG_TEMP exists, remove it"
+		rm -f $TEMPLATE_DMG_TEMP
+	fi
+	
+	echo "CTRLR: unpack $TEMPLATE_DMG_SOURCE > $TEMPLATE_DMG_TEMP"
+	bzip2 -c -d $TEMPLATE_DMG_SOURCE > $TEMPLATE_DMG_TEMP
+	
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: bzip2 -c -d $TEMPLATE_DMG_SOURCE > $TEMPLATE_DMG_TEMP [failed]"
+		exit 1
+	fi
+	
+	echo "CTRLR: resize $TEMPLATE_DMG_TEMP"
+	hdiutil resize -size 300m $TEMPLATE_DMG_TEMP
+	
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: hdiutil resize -size 300m $TEMPLATE_DMG_TEMP [failed]"
+		exit 1
+	fi
+	
+	echo "CTRLR: Mount $TEMPLATE_DMG_TEMP"
+	TEMPLATE_DMG_DEVICE=`hdiutil attach -readwrite -noverify -noautoopen $TEMPLATE_DMG_TEMP | tail -n 1 | grep "/dev/disk" | awk '{print $1}'`
+	echo "CTRLR: mounted on device $TEMPLATE_DMG_DEVICE"
+	
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: hdiutil attach -readwrite -noverify -noautoopen $TEMPLATE_DMG_TEMP [failed]"
+		exit 1
+	fi
+
+	for file in $TEMPLATE_FILE_LIST; do
+		echo -ne "CTRLR: cp -r $file $TEMPLATE_DMG_MOUNT "
+		cp -r $file $TEMPLATE_DMG_MOUNT/
+		if [ $? -ne 0 ]; then
+			echo "[failed]"
+			exit 1
+		else
+			echo " [ok] "
+		fi
+	done
+	echo
+	
+	echo "CTRLR: Unmount $TEMPLATE_DMG_DEVICE"
+	umount $TEMPLATE_DMG_DEVICE
+	
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: umount $TEMPLATE_DMG_DEVICE [failed]"
+		exit 1
+	fi
+	
+	echo "CTRLR: kill any processes that might be using $TEMPLATE_DMG_TEMP"
+	PID=`lsof $TEMPLATE_DMG_TEMP | tail -n 1 | awk '{print $2}'`
+	if [ $PID != "" ]; then
+		kill -9 $PID
+		echo "CTRLR: killed $PID"
+	fi
+	
+	echo "CTRLR: compact $TEMPLATE_DMG_TEMP to $PACKAGE"
+	rm -f $PACKAGE	
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: can't delete $PACKAGE"
+		exit 1
+	fi
+	
+	hdiutil convert $TEMPLATE_DMG_TEMP -format UDBZ -o $PACKAGE
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: hdiutil convert $TEMPLATE_DMG_TEMP -format UDBZ -o $PACKAGE [failed]"
+		exit 1
+	fi
+	
+	echo "[CTRLR]: Remove template"
+	rm -f $TEMPLATE_DMG_TEMP
+	
+	echo "[CTRLR]: Copy to release server"
+	scp -v -i $CTRLR_KEY $PACKAGE $BUILD_LOG $OUTPUT
+}
+
+function build_now_linux {
+	echo "CTRLR: build_now_linux"
+	echo "CTRLR: CTRLR_ROOT $CTRLR_ROOT"
+	REVISION_H="$CTRLR_ROOT/Source/Core/CtrlrRevision.h"
+	TEMPLATE_H="$CTRLR_ROOT/Source/Core/CtrlrRevision.template"
+	echo "----------------------------------------"
+	echo -e "\tVersion: $VERSION"
+	echo -e "\tCtrlrRevision.template: $TEMPLATE_H"
+	echo -e "\tCtrlrRevision.h: $REVISION_H"
+	echo -e "\tDate: $DATE"
+	echo "----------------------------------------"
+	sed -e "s/%REVISION%/$VERSION/g" -e "s/%REVISION_DATE%/$DATE/g" $TEMPLATE_H > $REVISION_H
+	
+	echo "CTRLR: Delete binaries"
+	rm -f $CTRLR_ROOT/Bin/libCtrlr-*.so
+	rm -f $CTRLR_ROOT/Bin/Ctrlr-*
+	
+	echo "CTRLR: check if boost is unpacked"
+	if [ ! -d $CTRLR_ROOT/Source/Misc/boost ]; then
+		echo "CTRLR: need to unpack boost.zip"
+		cd $CTRLR_ROOT/Boost
+		if [ -e boost.zip ]; then
+			unzip boost.zip
+		else
+			echo "CTRLR: boost.zip file does not exist, exiting now"
+			exit 1
+		fi
+	else
+		echo "CTRLR: boot directory exists"
+	fi
+	
+	echo "CTRLR: Build Standalone"
+	echo -n > $BUILD_LOG
+	
+	cd $CTRLR_ROOT/Builds/LinuxMakefile
+	if [ "$ARGS" == "clean" ]; then
+		echo "CTRLR: clean before build"
+		rm -rf ./build
+	fi
+	
+	./build.sh | tee -ia $BUILD_LOG
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: build for Standalone failed"
+		exit 1
+	fi
+	
+	cd $CTRLR_ROOT/Builds/LinuxMakefile
+	if [ "$ARGS" == "clean" ]; then
+		echo "CTRLR: clean before build"
+		rm -rf ./build
+	fi
+	./build.sh | tee -ia $BUILD_LOG
+	
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: build for VST dailed"
+		exit 1
+	fi
+	
+	echo "CTRLR: Clean old package files"
+	rm -rf $CTRLR_ROOT/Packaging/Linux/Ctrlr
+	
+	echo "CTRLR: copy files for package"
+	mkdir -p $CTRLR_ROOT/Packaging/Linux/Ctrlr
+	
+	cp $CTRLR_ROOT/Builds/LinuxMakefile/build/Ctrlr $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	cp $CTRLR_ROOT/Builds/LinuxMakefile/build/Ctrlr.so $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	cp -r $CTRLR_ROOT/Builds/LinuxMakefile/build/Ctrlr.vst3 $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	
+	cp -r $CTRLR_ROOT/Panels $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	cp -r $CTRLR_ROOT/Doc $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	
+	echo "CTRLR: strip binaries"
+	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/Ctrlr
+	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/Ctrlr.so
+	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/Ctrlr.vst3/Contents/x86_64-linux/Ctrlr.so
+	echo "CTRLR: create self extracting package"
+	
+	$CTRLR_ROOT/Packaging/Linux/makeself.sh --bzip2 --notemp $CTRLR_ROOT/Packaging/Linux/Ctrlr $PACKAGE Ctrlr-$VERSION
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: Creating self extractring package failed"
+		exit 1
+	fi	
+}
+
+detect_os
+build_now
