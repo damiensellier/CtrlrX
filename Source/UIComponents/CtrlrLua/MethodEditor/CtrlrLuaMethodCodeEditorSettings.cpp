@@ -43,7 +43,8 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
       bgColour (0), // Added v5.6.31
       lineNumbersBgColour(0), // Added v5.6.31
       lineNumbersColour(0), // Added v5.6.31
-      fontTest (0)
+      fontTest (0),
+      resetButton (0) // added JG
 {
     addAndMakeVisible(label0 = new Label("new label", TRANS("Font:"))); // Added v.5.6.31
     label0->setFont(Font(14.00f)); // Added v.5.6.31
@@ -98,6 +99,9 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
 
     addAndMakeVisible (fontTest = new CodeEditorComponent (codeDocument, &luaTokeniser));
 
+    addAndMakeVisible(resetButton = new TextButton("RESET")); // Added JG
+    resetButton->addListener(this); 
+    resetButton->setColour(TextButton::buttonColourId, Colours::cornflowerblue);
 
     //[UserPreSize]
     codeFont = owner.getOwner().getCtrlrManagerOwner().getFontManager().getFontFromString(owner.getComponentTree().getProperty(Ids::luaMethodEditorFont, owner.getOwner().getCtrlrManagerOwner().getFontManager().getStringFromFont (Font(owner.getOwner().getCtrlrManagerOwner().getFontManager().getDefaultMonoFontName(), 14.0f, Font::plain))));
@@ -120,7 +124,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     codeDocument.replaceAllContent ("-- This is a comment\nfunction myFunction(argument)\n\tcall(\"string\")\nend");
     //[/UserPreSize]
 
-    setSize (334, 360);
+    setSize (334, 390);
 
 
     //[Constructor] You can add your own custom stuff here..
@@ -145,6 +149,7 @@ CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
     deleteAndZero (label3);
     deleteAndZero (lineNumbersColour);
     deleteAndZero (fontTest);
+    deleteAndZero (resetButton);
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -182,8 +187,10 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     lineNumbersBgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 32, sampleWidth, 24);
     label3->setBounds(marginLeft - 4, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 2 * 32, sampleWidth, 24);
     lineNumbersColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 3 * 24 + 2 * 32, sampleWidth, 24);
+    resetButton->setBounds(marginLeft+sampleWidth/2-(sampleWidth / 4+marginLeft/2), marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40, sampleWidth / 2, 24);
     //[/UserResized]
 }
+
 
 void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
 {
@@ -201,7 +208,32 @@ void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged (ComboBox* comboBoxThatHa
     //[/UsercomboBoxChanged_Post]
 }
 
-void CtrlrLuaMethodCodeEditorSettings::buttonClicked (Button* buttonThatWasClicked)
+//void CtrlrLuaMethodCodeEditorSettings::buttonClicked (Button* buttonThatWasClicked)
+//{
+//    //[UserbuttonClicked_Pre]
+//    //[/UserbuttonClicked_Pre]
+//
+//    if (buttonThatWasClicked == fontBold)
+//    {
+//        //[UserButtonCode_fontBold] -- add your button handler code here..
+//        //[/UserButtonCode_fontBold]
+//    }
+//    else if (buttonThatWasClicked == fontUnderline)
+//    {
+//        //[UserButtonCode_fontUnderline] -- add your button handler code here..
+//        //[/UserButtonCode_fontUnderline]
+//    }
+//    else if (buttonThatWasClicked == fontItalic)
+//    {
+//        //[UserButtonCode_fontItalic] -- add your button handler code here..
+//        //[/UserButtonCode_fontItalic]
+//    }
+//
+//    //[UserbuttonClicked_Post]
+//    changeListenerCallback(nullptr);
+//    //[/UserbuttonClicked_Post]
+//}
+void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicked)
 {
     //[UserbuttonClicked_Pre]
     //[/UserbuttonClicked_Pre]
@@ -221,12 +253,25 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked (Button* buttonThatWasClick
         //[UserButtonCode_fontItalic] -- add your button handler code here..
         //[/UserButtonCode_fontItalic]
     }
+    else if (buttonThatWasClicked == resetButton) // Add this
+    {
+		DBG("Reset button clicked");
+        // Move your reset code here from resetButtonClicked
+        //fontTypeface->setSelectedId(1, dontSendNotification);
+        fontTypeface->setText("Courier New", dontSendNotification); // or whatever default font you want
+        fontBold->setToggleState(false, dontSendNotification);
+        fontUnderline->setToggleState(false, dontSendNotification);
+        fontItalic->setToggleState(false, dontSendNotification);
+        fontSize->setValue(14.0f, dontSendNotification);
+        bgColour->setColour(Colours::white);
+        lineNumbersBgColour->setColour(Colour(0xffc5ddf1));
+        lineNumbersColour->setColour(Colours::black);
+    }
 
     //[UserbuttonClicked_Post]
     changeListenerCallback(nullptr);
     //[/UserbuttonClicked_Post]
 }
-
 void CtrlrLuaMethodCodeEditorSettings::sliderValueChanged (Slider* sliderThatWasMoved)
 {
     //[UsersliderValueChanged_Pre]
