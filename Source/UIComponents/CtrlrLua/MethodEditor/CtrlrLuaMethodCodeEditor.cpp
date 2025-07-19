@@ -103,10 +103,33 @@ bool CtrlrLuaMethodCodeEditor::keyStateChanged (bool isKeyDown, Component *origi
 	return (false);
 }
 
-bool CtrlrLuaMethodCodeEditor::keyPressed (const KeyPress &key, Component *originatingComponent)
+bool CtrlrLuaMethodCodeEditor::keyPressed(const KeyPress& key, Component* originatingComponent)
 {
-    if (key.getModifiers().isCommandDown() )
+	if (key.getModifiers().isCommandDown())
 	{
+		if (key.getKeyCode() == 68) // CTRL + D
+		{
+			duplicateCurrentLine();
+			return true;
+		}
+		if (key.getKeyCode() == 81) // CTRL + Q
+		{
+			toggleLongLineComment();
+			return true;
+		}
+		//// Check for CTRL + SHIFT + / first (more specific condition)
+		//if (key.getModifiers().isShiftDown() && (key.getKeyCode() == 191 || key.getKeyCode() == 47))
+		//{
+		//	toggleLongLineComment();
+		//	return true;
+		//}
+
+		// Then check for CTRL + / (but NOT with Shift)
+		if (!key.getModifiers().isShiftDown() && (key.getKeyCode() == 191 || key.getKeyCode() == 47))
+		{
+			toggleLineComment();
+			return true;
+		}
 		if(key.getKeyCode() == 9)
 		{
 			owner.keyPressed (key, originatingComponent);
@@ -1156,3 +1179,223 @@ void GenericCodeEditorComponent::markedLinesChanged(int lineNumber, bool isNowSe
 {
     getDebugger().setBreakpoint (lineNumber, owner.getMethod() ? owner.getMethod()->getName() : "ctrlr", isNowSelected);
 }
+/***************************************************************************************/
+
+	void CtrlrLuaMethodCodeEditor::duplicateCurrentLine()
+	{
+		if (!editorComponent)
+			return;
+
+		CodeDocument::Position caretPos = editorComponent->getCaretPos();
+		int lineNumber = caretPos.getLineNumber();
+
+		// Get the current line content
+		String currentLine = document.getLine(lineNumber);
+
+		// Move to end of current line
+		CodeDocument::Position endOfLine(document, lineNumber, currentLine.length());
+
+		// Insert newline and duplicate the line
+		document.newTransaction();
+		document.insertText(endOfLine.getPosition(), "\n" + currentLine);
+
+		// Move caret to the same position on the new line
+		int newLineNumber = lineNumber + 1;
+		CodeDocument::Position newCaretPos(document, newLineNumber, caretPos.getIndexInLine());
+		editorComponent->moveCaretTo(newCaretPos, false);
+
+		documentChanged(false, false);
+	}
+
+
+	void CtrlrLuaMethodCodeEditor::toggleLineComment()
+	{
+		if (!editorComponent)
+			return;
+
+		Range<int> selection = editorComponent->getHighlightedRegion();
+		CodeDocument::Position startPos(document, selection.getStart());
+		CodeDocument::Position endPos(document, selection.getEnd());
+
+		int startLine = startPos.getLineNumber();
+		int endLine = endPos.getLineNumber();
+
+		// If selection ends at start of line, don't include that line
+		if (endPos.getIndexInLine() == 0 && endLine > startLine)
+			endLine--;
+
+		document.newTransaction();
+
+		// Check if all lines are commented (to decide whether to comment or uncomment)
+		bool allLinesCommented = true;
+		for (int lineNum = startLine; lineNum <= endLine; lineNum++)
+		{
+			String line = document.getLine(lineNum);
+			String trimmed = line.trimStart();
+			if (trimmed.isNotEmpty() && !trimmed.startsWith("--"))
+			{
+				allLinesCommented = false;
+				break;
+			}
+		}
+
+		// Store the original caret position
+		CodeDocument::Position originalCaret = editorComponent->getCaretPos();
+		int caretOffset = 0;
+
+		if (allLinesCommented)
+		{
+			// Uncomment lines
+			for (int lineNum = startLine; lineNum <= endLine; lineNum++)
+			{
+				String line = document.getLine(lineNum);
+
+				// Find the first occurrence of "--" and remove it
+				int commentPos = line.indexOf("--");
+				if (commentPos >= 0)
+				{
+					CodeDocument::Position lineStart(document, lineNum, 0);
+					CodeDocument::Position commentStart(document, lineNum, commentPos);
+					CodeDocument::Position commentEnd(document, lineNum, commentPos + 2);
+
+					// Remove the "--"
+					document.deleteSection(commentStart.getPosition(), commentEnd.getPosition());
+
+					// Adjust caret position if it's on this line and after the comment
+					if (lineNum == originalCaret.getLineNumber() && originalCaret.getIndexInLine() > commentPos)
+					{
+						caretOffset = -2; // "--" was removed
+					}
+				}
+			}
+		}
+		else
+		{
+			// Comment lines
+			for (int lineNum = startLine; lineNum <= endLine; lineNum++)
+			{
+				String line = document.getLine(lineNum);
+				String trimmed = line.trimStart();
+
+				// Skip empty lines
+				if (trimmed.isEmpty())
+					continue;
+
+				// Find first non-whitespace character
+				int firstNonSpace = line.indexOfAnyOf(" \t", 0, false);
+				if (firstNonSpace < 0)
+					firstNonSpace = 0;
+				else
+					firstNonSpace = line.length() - line.trimStart().length();
+
+				CodeDocument::Position insertPos(document, lineNum, firstNonSpace);
+				document.insertText(insertPos.getPosition(), "--");
+
+				// Adjust caret position if it's on this line and at/after the insertion point
+				if (lineNum == originalCaret.getLineNumber() && originalCaret.getIndexInLine() >= firstNonSpace)
+				{
+					caretOffset = 2; // "--" was added
+				}
+			}
+		}
+
+		// Restore caret position with adjustment
+		if (caretOffset != 0)
+		{
+			int newCaretIndex = jmax(0, originalCaret.getIndexInLine() + caretOffset);
+			CodeDocument::Position newCaret(document, originalCaret.getLineNumber(), newCaretIndex);
+			editorComponent->moveCaretTo(newCaret, false);
+		}
+		else
+		{
+			editorComponent->moveCaretTo(originalCaret, false);
+		}
+
+		documentChanged(false, false);
+	}
+
+	void CtrlrLuaMethodCodeEditor::toggleLongLineComment()
+	{
+		if (!editorComponent)
+			return;
+
+		Range<int> selection = editorComponent->getHighlightedRegion();
+		CodeDocument::Position startPos(document, selection.getStart());
+		CodeDocument::Position endPos(document, selection.getEnd());
+
+		// If no selection, select the current line
+		if (selection.isEmpty())
+		{
+			int currentLine = startPos.getLineNumber();
+			startPos = CodeDocument::Position(document, currentLine, 0);
+			endPos = CodeDocument::Position(document, currentLine + 1, 0);
+			selection = Range<int>(startPos.getPosition(), endPos.getPosition());
+		}
+
+		document.newTransaction();
+
+		// Get the selected text
+		String selectedText = document.getTextBetween(startPos, endPos);
+
+		// Check if the selection is already block commented
+		String trimmedStart = selectedText.trimStart();
+		String trimmedEnd = selectedText.trimEnd();
+
+		bool isBlockCommented = trimmedStart.startsWith("--[[") && trimmedEnd.endsWith("--]]");
+
+		// Store the original caret position
+		CodeDocument::Position originalCaret = editorComponent->getCaretPos();
+
+		if (isBlockCommented)
+		{
+			// Uncomment: Remove --[[ from start and --]] from end
+			String uncommentedText = selectedText;
+
+			// Remove --[[ from the beginning
+			int startCommentPos = uncommentedText.indexOf("--[[");
+			if (startCommentPos >= 0)
+			{
+				uncommentedText = uncommentedText.substring(0, startCommentPos) +
+					uncommentedText.substring(startCommentPos + 4);
+			}
+
+			// Remove --]] from the end
+			int endCommentPos = uncommentedText.lastIndexOf("--]]");
+			if (endCommentPos >= 0)
+			{
+				uncommentedText = uncommentedText.substring(0, endCommentPos) +
+					uncommentedText.substring(endCommentPos + 4);
+			}
+
+			// Replace the selected text
+			document.replaceSection(startPos.getPosition(), endPos.getPosition(), uncommentedText);
+
+			// Adjust caret position (moved back by the length of removed comment markers)
+			int caretAdjustment = -8; // Length of "--[[" + "--]]"
+			if (originalCaret.getPosition() > startPos.getPosition())
+			{
+				int newCaretPos = jmax(startPos.getPosition(), originalCaret.getPosition() + caretAdjustment);
+				CodeDocument::Position newCaret(document, newCaretPos);
+				editorComponent->moveCaretTo(newCaret, false);
+			}
+		}
+		else
+		{
+			// Comment: Add --[[ at start and --]] at end
+			String commentedText = "--[[\n" + selectedText + "\n--]]";
+
+			// Replace the selected text
+			document.replaceSection(startPos.getPosition(), endPos.getPosition(), commentedText);
+
+			// Adjust caret position (moved forward by the length of added comment markers)
+			int caretAdjustment = 6; // Length of "--[[\n" 
+			if (originalCaret.getPosition() >= startPos.getPosition())
+			{
+				int newCaretPos = originalCaret.getPosition() + caretAdjustment;
+				CodeDocument::Position newCaret(document, newCaretPos);
+				editorComponent->moveCaretTo(newCaret, false);
+			}
+		}
+
+		documentChanged(false, false);
+	}
