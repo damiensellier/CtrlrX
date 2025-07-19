@@ -117,14 +117,6 @@ bool CtrlrLuaMethodCodeEditor::keyPressed(const KeyPress& key, Component* origin
 			toggleLongLineComment();
 			return true;
 		}
-		//// Check for CTRL + SHIFT + / first (more specific condition)
-		//if (key.getModifiers().isShiftDown() && (key.getKeyCode() == 191 || key.getKeyCode() == 47))
-		//{
-		//	toggleLongLineComment();
-		//	return true;
-		//}
-
-		// Then check for CTRL + / (but NOT with Shift)
 		if (!key.getModifiers().isShiftDown() && (key.getKeyCode() == 191 || key.getKeyCode() == 47))
 		{
 			toggleLineComment();

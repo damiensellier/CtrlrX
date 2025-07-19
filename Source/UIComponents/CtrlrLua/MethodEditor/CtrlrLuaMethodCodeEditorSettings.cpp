@@ -208,31 +208,6 @@ void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged (ComboBox* comboBoxThatHa
     //[/UsercomboBoxChanged_Post]
 }
 
-//void CtrlrLuaMethodCodeEditorSettings::buttonClicked (Button* buttonThatWasClicked)
-//{
-//    //[UserbuttonClicked_Pre]
-//    //[/UserbuttonClicked_Pre]
-//
-//    if (buttonThatWasClicked == fontBold)
-//    {
-//        //[UserButtonCode_fontBold] -- add your button handler code here..
-//        //[/UserButtonCode_fontBold]
-//    }
-//    else if (buttonThatWasClicked == fontUnderline)
-//    {
-//        //[UserButtonCode_fontUnderline] -- add your button handler code here..
-//        //[/UserButtonCode_fontUnderline]
-//    }
-//    else if (buttonThatWasClicked == fontItalic)
-//    {
-//        //[UserButtonCode_fontItalic] -- add your button handler code here..
-//        //[/UserButtonCode_fontItalic]
-//    }
-//
-//    //[UserbuttonClicked_Post]
-//    changeListenerCallback(nullptr);
-//    //[/UserbuttonClicked_Post]
-//}
 void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicked)
 {
     //[UserbuttonClicked_Pre]

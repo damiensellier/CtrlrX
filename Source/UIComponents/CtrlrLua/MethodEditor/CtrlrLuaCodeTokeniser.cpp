@@ -21,7 +21,7 @@ CodeEditorComponent::ColourScheme CtrlrLuaCodeTokeniser::getDefaultColourScheme(
     const Type types[] =
     {
         { "Error",              0xffcc0000 },
-        { "Comment",            0xff006680 }, // This changes the colour of commented code
+        { "Comment",            0xff008000 }, // This changes the colour of commented code
         { "Keyword",            0xff0000cc },
         { "Operator",           0xff225500 },
         { "Identifier",         0xff000000 },
