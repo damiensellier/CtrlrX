@@ -88,6 +88,7 @@ private:
     ToggleButton* fontBold;
     ToggleButton* fontUnderline;
     ToggleButton* fontItalic;
+    ToggleButton* openSearchTabs;
     TextButton* resetButton; // added JG
     Slider* fontSize;
     Label* label1; // Added v5.6.31

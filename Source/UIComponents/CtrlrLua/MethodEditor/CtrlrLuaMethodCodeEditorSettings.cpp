@@ -44,7 +44,8 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
       lineNumbersBgColour(0), // Added v5.6.31
       lineNumbersColour(0), // Added v5.6.31
       fontTest (0),
-      resetButton (0) // added JG
+      resetButton (0), // added JG
+      openSearchTabs (0) // added JG
 {
     addAndMakeVisible(label0 = new Label("new label", TRANS("Font:"))); // Added v.5.6.31
     label0->setFont(Font(14.00f)); // Added v.5.6.31
@@ -99,6 +100,10 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
 
     addAndMakeVisible (fontTest = new CodeEditorComponent (codeDocument, &luaTokeniser));
 
+    addAndMakeVisible(openSearchTabs= new ToggleButton(""));
+    openSearchTabs->setButtonText(L"Open closed tabs after match");
+    openSearchTabs->addListener(this);
+
     addAndMakeVisible(resetButton = new TextButton("RESET")); // Added JG
     resetButton->addListener(this); 
     resetButton->setColour(TextButton::buttonColourId, Colours::cornflowerblue);
@@ -124,7 +129,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     codeDocument.replaceAllContent ("-- This is a comment\nfunction myFunction(argument)\n\tcall(\"string\")\nend");
     //[/UserPreSize]
 
-    setSize (334, 390);
+    setSize (334, 450);
 
 
     //[Constructor] You can add your own custom stuff here..
@@ -149,6 +154,7 @@ CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
     deleteAndZero (label3);
     deleteAndZero (lineNumbersColour);
     deleteAndZero (fontTest);
+    deleteAndZero (openSearchTabs);
     deleteAndZero (resetButton);
 
 
@@ -187,7 +193,8 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     lineNumbersBgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 32, sampleWidth, 24);
     label3->setBounds(marginLeft - 4, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 2 * 32, sampleWidth, 24);
     lineNumbersColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 3 * 24 + 2 * 32, sampleWidth, 24);
-    resetButton->setBounds(marginLeft+sampleWidth/2-(sampleWidth / 4+marginLeft/2), marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40, sampleWidth / 2, 24);
+    openSearchTabs->setBounds(marginLeft + 0, marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40, 64, 24);
+    resetButton->setBounds(marginLeft+sampleWidth/2-(sampleWidth / 4+marginLeft/2), marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 80, sampleWidth / 2, 24);
     //[/UserResized]
 }
 
@@ -213,10 +220,15 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
     //[UserbuttonClicked_Pre]
     //[/UserbuttonClicked_Pre]
 
-    if (buttonThatWasClicked == fontBold)
+if (buttonThatWasClicked == fontBold)
     {
         //[UserButtonCode_fontBold] -- add your button handler code here..
         //[/UserButtonCode_fontBold]
+    }
+    else if (buttonThatWasClicked == openSearchTabs)
+    {
+    //DBG("openSearchTabs" << openSearchTabs->getToggleState());
+    DBG("change search options");
     }
     else if (buttonThatWasClicked == fontUnderline)
     {

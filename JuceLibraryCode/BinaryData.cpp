@@ -11399,7 +11399,7 @@ const char* github_line_svg = (const char*) temp_binary_data_17;
 
 //================== paypal_colour.svg ==================
 static const unsigned char temp_binary_data_18[] =
-"<?xml version=\"1.0\" encoding=\"utf-8\"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->\r\n"
+"<?xml version=\"1.0\" encoding=\"utf-8\"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->\n"
 "<svg width=\"800px\" height=\"800px\" viewBox=\"0 0 48 48\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\r\n"
 "<circle cx=\"24\" cy=\"24\" r=\"20\" fill=\"#0070BA\"/>\r\n"
 "<path d=\"M32.3305 18.0977C32.3082 18.24 32.2828 18.3856 32.2542 18.5351C31.2704 23.5861 27.9046 25.331 23.606 25.331H21.4173C20.8916 25.331 20.4486 25.7127 20.3667 26.2313L19.2461 33.3381L18.9288 35.3527C18.8755 35.693 19.1379 36 19.4815 36H23.3634C"
@@ -19611,7 +19611,7 @@ const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)
         case 0xe2e98fdc:  numBytes = 28212; return FONT_WarenhausStandard_ttf;
         case 0x398f8e4e:  numBytes = 17176; return FONT_ZX81_ttf;
         case 0xdbb04875:  numBytes = 1633; return github_line_svg;
-        case 0x3ec9163d:  numBytes = 2053; return paypal_colour_svg;
+        case 0x3ec9163d:  numBytes = 2052; return paypal_colour_svg;
         case 0xd42e3e46:  numBytes = 1518; return paypal_bw_svg;
         case 0xfa73e34d:  numBytes = 1926; return github_colour_svg;
         case 0xaaea1356:  numBytes = 1926; return github_bw_svg;
