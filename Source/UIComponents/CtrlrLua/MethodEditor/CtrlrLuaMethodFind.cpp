@@ -372,64 +372,11 @@ void CtrlrLuaMethodFind::findInOpened()
 	owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0,true);
 }
 
-//void CtrlrLuaMethodFind::findInAll()
-//{
-//	owner.getMethodEditArea()->insertOutput("\n\nSearching for: \""+findInput->getText()+"\" in all methods (double click line to jump)\n", Colours::darkblue);
-//	StringArray names;
-//
-//	for (int i=0; i<owner.getMethodManager().getNumMethods(); i++)
-//	{
-//		CtrlrLuaMethod *m = owner.getMethodManager().getMethodByIndex (i);
-//
-//		if (m)
-//		{
-//			names.add (m->getName());
-//
-//			if (m->getCodeEditor())
-//			{
-//				/* it has an editor so it's open */
-//				CodeDocument &doc		= m->getCodeEditor()->getCodeDocument();
-//
-//				Array<Range<int> > results = searchForMatchesInDocument (doc);
-//
-//				for (int j=0; j<results.size(); j++)
-//				{
-//					reportFoundMatch (doc, names[i], results[j]);
-//				}
-//			}
-//			else // Added 5.6.34 by goodweather. Search in not yet opened methods
-//			{
-//				/* Open method */
-//				owner.createNewTab(m);
-//				owner.setCurrentTab(m);
-//
-//				/* Perform search and report result */
-//				CodeDocument& doc = m->getCodeEditor()->getCodeDocument();
-//
-//				Array<Range<int> > results = searchForMatchesInDocument(doc);
-//
-//				for (int j = 0; j < results.size(); j++)
-//				{
-//					reportFoundMatch(doc, names[i], results[j]);
-//				}
-//
-//				// If no result then close method; if any result then keep method open
-//				// I don't think this has any effect
-//				//	if (results.size() == 0)
-//			//	//{
-//			//		owner.closeCurrentTab();
-//				//} 
-//			}
-//		}
-//	}
-//
-//	owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0,true);
-//}
 void CtrlrLuaMethodFind::findInAll()
 {
 	owner.getMethodEditArea()->insertOutput("\n\nSearching for: \"" + findInput->getText() + "\" in all methods (double click line to jump)\n", Colours::darkblue);
 	StringArray names;
-	const bool shouldOpenTabs = owner.getOpenSearchTabsEnabled();
+	const bool shouldOpenTabs = owner.getOpenSearchTabsEnabled(); // gets toggle state in Edit->Preferences
 	for (int i = 0; i < owner.getMethodManager().getNumMethods(); i++)
 	{
 		CtrlrLuaMethod* m = owner.getMethodManager().getMethodByIndex(i);

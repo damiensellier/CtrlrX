@@ -460,7 +460,7 @@ void CtrlrLuaMethodCodeEditor::findInAll(const String& search)
 	StringArray names;
 
 	// Get the toggle state from the owner
-	const bool shouldOpenTabs = owner.getOpenSearchTabsEnabled();
+	const bool shouldOpenTabs = owner.getOpenSearchTabsEnabled(); // gets toggle state in Edit->Preferences
 
 	for (int i = 0; i < owner.getMethodManager().getNumMethods(); i++)
 	{
@@ -498,17 +498,11 @@ void CtrlrLuaMethodCodeEditor::findInAll(const String& search)
 				{
 					reportFoundMatch(doc, names[i], results[j]);
 				}
-
-				/* If no result then close method; if any result then keep method open */
-				/*Dnaldoog disable this because I think it's better for ser to open file at bottom list,
-				especially if the search results in dozens of hits therefore opening dozens of windows*/
-				//if (results.size() == 0)
-				//{
 				if (!shouldOpenTabs) // Only open if the toggle button is enabled
 				{
 					owner.closeCurrentTab();
 				}
-				//}
+			
 			}
 		}
 	}
