@@ -104,17 +104,9 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     openSearchTabs->setButtonText(L"Open closed tabs after match");
     openSearchTabs->addListener(this);
 
-    // --- ADD THIS BLOCK HERE ---
-// Load the saved state from the ValueTree
     bool savedOpenSearchTabsState = owner.getComponentTree().getProperty(Ids::openSearchTabsState, false); // 'false' is the default if not found
-
-    // Apply the loaded state to the ToggleButton
     openSearchTabs->setToggleState(savedOpenSearchTabsState, dontSendNotification);
-
-    // Also, ensure the owner's internal state is synchronized with the loaded preference.
-    // This is important because the owner might be checking its own state before a button click happens.
     owner.setOpenSearchTabsEnabled(savedOpenSearchTabsState);
-    // --- END OF ADDED BLOCK ---
 
     addAndMakeVisible(resetButton = new TextButton("RESET")); // Added JG
     resetButton->addListener(this); 
