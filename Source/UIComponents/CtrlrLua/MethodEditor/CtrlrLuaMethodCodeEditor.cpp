@@ -446,8 +446,7 @@ bool isValidSearchString(const String& search)
     
     return true;
 }
-
-void CtrlrLuaMethodCodeEditor::findInAll(const String &search)
+void CtrlrLuaMethodCodeEditor::findInAll(const String& search)
 {
 	// Validate search string first
 	if (!isValidSearchString(search))
@@ -457,31 +456,35 @@ void CtrlrLuaMethodCodeEditor::findInAll(const String &search)
 			Colours::red);
 		return;
 	}
-	owner.getMethodEditArea()->insertOutput("\n\nSearching for: \""+search+"\" in all methods (double click line to jump)\n", Colours::darkblue);
+	owner.getMethodEditArea()->insertOutput("\n\nSearching for: \"" + search + "\" in all methods (double click line to jump)\n", Colours::darkblue);
 	StringArray names;
 
-	for (int i=0; i<owner.getMethodManager().getNumMethods(); i++)
+	// Get the toggle state from the owner
+	const bool shouldOpenTabs = owner.getOpenSearchTabsEnabled();
+
+	for (int i = 0; i < owner.getMethodManager().getNumMethods(); i++)
 	{
-		CtrlrLuaMethod *m = owner.getMethodManager().getMethodByIndex (i);
+		CtrlrLuaMethod* m = owner.getMethodManager().getMethodByIndex(i);
 
 		if (m)
 		{
-			names.add (m->getName());
+			names.add(m->getName());
 
 			if (m->getCodeEditor())
 			{
 				/* it has an editor so it's open */
-				CodeDocument &doc		= m->getCodeEditor()->getCodeDocument();
+				CodeDocument& doc = m->getCodeEditor()->getCodeDocument();
 
-				Array<Range<int> > results = searchForMatchesInDocument (doc, search);
+				Array<Range<int> > results = searchForMatchesInDocument(doc, search);
 
-				for (int j=0; j<results.size(); j++)
+				for (int j = 0; j < results.size(); j++)
 				{
-					reportFoundMatch (doc, names[i], results[j]);
+					reportFoundMatch(doc, names[i], results[j]);
 				}
 			}
 			else // Added 5.6.34 by goodweather. Search in not yet opened methods
 			{
+
 				/* Open method */
 				owner.createNewTab(m);
 				owner.setCurrentTab(m);
@@ -497,18 +500,83 @@ void CtrlrLuaMethodCodeEditor::findInAll(const String &search)
 				}
 
 				/* If no result then close method; if any result then keep method open */
-				/*Dnaldoog disable this because I think it's better for ser to open file at bottom list, 
+				/*Dnaldoog disable this because I think it's better for ser to open file at bottom list,
 				especially if the search results in dozens of hits therefore opening dozens of windows*/
 				//if (results.size() == 0)
 				//{
+				if (!shouldOpenTabs) // Only open if the toggle button is enabled
+				{
 					owner.closeCurrentTab();
+				}
 				//}
 			}
 		}
 	}
 
-	owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0,true);
+	owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0, true);
 }
+//void CtrlrLuaMethodCodeEditor::findInAll(const String &search)
+//{
+//	// Validate search string first
+//	if (!isValidSearchString(search))
+//	{
+//		owner.getMethodEditArea()->insertOutput("\n\nInvalid search term: \"" + search +
+//			"\". Please enter a meaningful search term (at least 3 characters, not just whitespace or common single characters).\n",
+//			Colours::red);
+//		return;
+//	}
+//	owner.getMethodEditArea()->insertOutput("\n\nSearching for: \""+search+"\" in all methods (double click line to jump)\n", Colours::darkblue);
+//	StringArray names;
+//
+//	for (int i=0; i<owner.getMethodManager().getNumMethods(); i++)
+//	{
+//		CtrlrLuaMethod *m = owner.getMethodManager().getMethodByIndex (i);
+//
+//		if (m)
+//		{
+//			names.add (m->getName());
+//
+//			if (m->getCodeEditor())
+//			{
+//				/* it has an editor so it's open */
+//				CodeDocument &doc		= m->getCodeEditor()->getCodeDocument();
+//
+//				Array<Range<int> > results = searchForMatchesInDocument (doc, search);
+//
+//				for (int j=0; j<results.size(); j++)
+//				{
+//					reportFoundMatch (doc, names[i], results[j]);
+//				}
+//			}
+//			else // Added 5.6.34 by goodweather. Search in not yet opened methods
+//			{
+//				/* Open method */
+//				owner.createNewTab(m);
+//				owner.setCurrentTab(m);
+//
+//				/* Perform search and report result */
+//				CodeDocument& doc = m->getCodeEditor()->getCodeDocument();
+//
+//				Array<Range<int> > results = searchForMatchesInDocument(doc, search);
+//
+//				for (int j = 0; j < results.size(); j++)
+//				{
+//					reportFoundMatch(doc, names[i], results[j]);
+//				}
+//
+//				/* If no result then close method; if any result then keep method open */
+//				/*Dnaldoog disable this because I think it's better for ser to open file at bottom list, 
+//				especially if the search results in dozens of hits therefore opening dozens of windows*/
+//				//if (results.size() == 0)
+//				//{
+//					owner.closeCurrentTab();
+//				//}
+//			}
+//		}
+//	}
+//
+//	owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0,true);
+//}
 
 const Array<Range<int> > CtrlrLuaMethodCodeEditor::searchForMatchesInDocument(CodeDocument &doc, const String &search)
 {

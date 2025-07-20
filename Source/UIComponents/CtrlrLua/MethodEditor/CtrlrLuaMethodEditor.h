@@ -117,13 +117,15 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
 		void setJsonDebuggerOutput(const String &jsonData);
 		int waitForCommand();
 		const String getCurrentDebuggerCommand(const bool clearTheReturnedCommand=true);
-
+		void setOpenSearchTabsEnabled(bool shouldOpen); // used for toggling search closed files
+		bool getOpenSearchTabsEnabled() const; // getter
 		JUCE_LEAK_DETECTOR(CtrlrLuaMethodEditor)
 
 		bool caseCansitive, findDialogActive;
 		String lookInString, searchInString, currentSearchString;
 
-	private:
+private:
+		bool openSearchTabsEnabledState = false; // Add this private member variable
 		WeakReference<CtrlrLuaMethodEditor>::Master masterReference;
 		friend class WeakReference<CtrlrLuaMethodEditor>;
 		File lastBrowsedSourceDir;

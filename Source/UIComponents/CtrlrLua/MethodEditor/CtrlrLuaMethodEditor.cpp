@@ -1279,3 +1279,13 @@ int CtrlrLuaMethodEditor::waitForCommand()
 {
 	return (getParentComponent()->runModalLoop());
 }
+
+void CtrlrLuaMethodEditor::setOpenSearchTabsEnabled(bool shouldOpen)
+{
+	openSearchTabsEnabledState = shouldOpen;
+}
+
+bool CtrlrLuaMethodEditor::getOpenSearchTabsEnabled() const
+{
+	return openSearchTabsEnabledState;
+}

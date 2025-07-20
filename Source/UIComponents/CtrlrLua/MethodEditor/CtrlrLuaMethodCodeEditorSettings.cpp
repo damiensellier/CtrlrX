@@ -193,7 +193,7 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     lineNumbersBgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 32, sampleWidth, 24);
     label3->setBounds(marginLeft - 4, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 2 * 32, sampleWidth, 24);
     lineNumbersColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 3 * 24 + 2 * 32, sampleWidth, 24);
-    openSearchTabs->setBounds(marginLeft + 0, marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40, 64, 24);
+    openSearchTabs->setBounds(marginLeft + 0, marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40,sampleWidth, 24);
     resetButton->setBounds(marginLeft+sampleWidth/2-(sampleWidth / 4+marginLeft/2), marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 80, sampleWidth / 2, 24);
     //[/UserResized]
 }
@@ -227,8 +227,9 @@ if (buttonThatWasClicked == fontBold)
     }
     else if (buttonThatWasClicked == openSearchTabs)
     {
-    //DBG("openSearchTabs" << openSearchTabs->getToggleState());
-    DBG("change search options");
+   // DBG("openSearchTabs state changed to: " << openSearchTabs->getToggleState());
+    // Update the state in the owner (CtrlrLuaMethodEditor)
+    owner.setOpenSearchTabsEnabled(openSearchTabs->getToggleState());
     }
     else if (buttonThatWasClicked == fontUnderline)
     {
