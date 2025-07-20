@@ -497,7 +497,7 @@ void CtrlrLuaMethodCodeEditor::findInAll(const String &search)
 				}
 
 				/* If no result then close method; if any result then keep method open */
-				/*Dnaldoog disable this because I think it's better for ser to open file at bottom list, 
+				/*Dnaldoog disabled this because I think it's better for ser to open file at bottom list, 
 				especially if the search results in dozens of hits therefore opening dozens of windows*/
 				//if (results.size() == 0)
 				//{

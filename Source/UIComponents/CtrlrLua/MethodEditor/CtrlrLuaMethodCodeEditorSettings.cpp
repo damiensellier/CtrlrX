@@ -44,7 +44,8 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
       lineNumbersBgColour(0), // Added v5.6.31
       lineNumbersColour(0), // Added v5.6.31
       fontTest (0),
-      resetButton (0) // added JG
+      resetButton (0), // added JG
+      keepFilesOpen (0) // added JG
 {
     addAndMakeVisible(label0 = new Label("new label", TRANS("Font:"))); // Added v.5.6.31
     label0->setFont(Font(14.00f)); // Added v.5.6.31
@@ -69,6 +70,11 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     addAndMakeVisible (fontItalic = new ToggleButton (""));
     fontItalic->setButtonText (L"Italic");
     fontItalic->addListener (this);
+
+    addAndMakeVisible(keepFilesOpen = new ToggleButton("")); // Added JG
+	keepFilesOpen->setButtonText("Keep Methods open after search"); // Added JG
+    keepFilesOpen->addListener(this);
+
 
     addAndMakeVisible (fontSize = new Slider (""));
     fontSize->setRange (0, 128, 1);
@@ -99,6 +105,10 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
 
     addAndMakeVisible (fontTest = new CodeEditorComponent (codeDocument, &luaTokeniser));
 
+
+
+
+
     addAndMakeVisible(resetButton = new TextButton("RESET")); // Added JG
     resetButton->addListener(this); 
     resetButton->setColour(TextButton::buttonColourId, Colours::cornflowerblue);
@@ -124,7 +134,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     codeDocument.replaceAllContent ("-- This is a comment\nfunction myFunction(argument)\n\tcall(\"string\")\nend");
     //[/UserPreSize]
 
-    setSize (334, 390);
+    setSize (334, 450);
 
 
     //[Constructor] You can add your own custom stuff here..
@@ -150,6 +160,7 @@ CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
     deleteAndZero (lineNumbersColour);
     deleteAndZero (fontTest);
     deleteAndZero (resetButton);
+    deleteAndZero (keepFilesOpen);
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -180,6 +191,7 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     fontUnderline->setBounds(marginLeft + 128, marginTop + sampleHeight + 24 + 40, 88, 24);
     fontItalic->setBounds(marginLeft + 64, marginTop + sampleHeight + 24 + 40, 64, 24);
     fontSize->setBounds(marginLeft + 224, marginTop + sampleHeight + 24 + 40, 78, 24);
+    keepFilesOpen->setBounds(marginLeft + 224+64, marginTop + sampleHeight + 24 + 40, 78, 24);
     //[UserResized] Add your own custom resize handling here..
     label1->setBounds(marginLeft - 4, marginTop + sampleHeight + 24 + 72, sampleWidth, 24);
     bgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 24, sampleWidth, 24);
@@ -187,7 +199,9 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     lineNumbersBgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 32, sampleWidth, 24);
     label3->setBounds(marginLeft - 4, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 2 * 32, sampleWidth, 24);
     lineNumbersColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 3 * 24 + 2 * 32, sampleWidth, 24);
-    resetButton->setBounds(marginLeft+sampleWidth/2-(sampleWidth / 4+marginLeft/2), marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40, sampleWidth / 2, 24);
+    keepFilesOpen->setBounds(marginLeft, marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40, sampleWidth, 24);
+    resetButton->setBounds(marginLeft+sampleWidth/2-(sampleWidth / 4+marginLeft/2), marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 80, sampleWidth / 2, 24);
+ 
     //[/UserResized]
 }
 
@@ -208,6 +222,11 @@ void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged (ComboBox* comboBoxThatHa
     //[/UsercomboBoxChanged_Post]
 }
 
+//bool CtrlrLuaMethodCodeEditorSettings::getKeepFilesOpenState() const
+//{
+//    return keepFilesOpen->getToggleState();
+//}
+
 void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicked)
 {
     //[UserbuttonClicked_Pre]
@@ -227,6 +246,10 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
     {
         //[UserButtonCode_fontItalic] -- add your button handler code here..
         //[/UserButtonCode_fontItalic]
+    }
+    else if (buttonThatWasClicked == keepFilesOpen)
+    {
+		DBG("Keep files open after search: " << (keepFilesOpen->getToggleState() ? "true" : "false"));
     }
     else if (buttonThatWasClicked == resetButton) // Add this
     {
