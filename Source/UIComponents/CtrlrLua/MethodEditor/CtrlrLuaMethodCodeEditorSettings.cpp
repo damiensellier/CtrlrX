@@ -72,7 +72,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     fontItalic->addListener (this);
 
     addAndMakeVisible(keepFilesOpen = new ToggleButton("")); // Added JG
-	keepFilesOpen->setButtonText("Keep Methods open after search"); // Added JG
+	keepFilesOpen->setButtonText("Open closed file when text found"); // Added JG
     keepFilesOpen->addListener(this);
 
 
