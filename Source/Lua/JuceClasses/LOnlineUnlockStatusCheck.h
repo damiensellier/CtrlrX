@@ -16,16 +16,28 @@ class LRSAKey;
 
 
 // PluginLoggerVst3 Declaration
-class PluginLoggerVst3 {
+class PluginLoggerVst3
+{
 public:
+    // Original constructor (optional, can keep for backward compatibility)
     PluginLoggerVst3(const juce::File& pluginExecutableFile);
+
+    // Constructor with an initial enable/disable flag
+    PluginLoggerVst3(const juce::File& pluginExecutableFile, bool initiallyEnabled);
+
+    // Optional: Method to change status at runtime (if you want Lua to control it)
+    void setEnabled(bool enable);
+
     void log(const juce::String& message);
     void logResult(const juce::Result& result);
+
 private:
     juce::File logFile;
+    bool isEnabled; // Member to control logging
 };
-extern PluginLoggerVst3 logger;
 
+// This line remains unchanged to declare the global logger instance
+extern PluginLoggerVst3 logger;
 
 // LOnlineUnlockStatusCheck inherits from juce::OnlineUnlockStatus and juce::Timer
 class LOnlineUnlockStatusCheck : public juce::OnlineUnlockStatus,

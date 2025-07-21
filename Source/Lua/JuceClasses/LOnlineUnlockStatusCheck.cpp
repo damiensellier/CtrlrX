@@ -14,13 +14,27 @@
 
 // PluginLoggerVst3 Implementation (unchanged, just showing context)
 PluginLoggerVst3::PluginLoggerVst3(const juce::File& pluginExecutableFile)
+    : logFile(pluginExecutableFile), isEnabled(true) // Default to enabled if this constructor is used
 {
-    logFile = juce::File::getSpecialLocation(juce::File::userDesktopDirectory)
-                 .getChildFile("CtrlrX_debug_log.txt");
+}
+
+// NEW: Constructor that takes an initial enable state
+PluginLoggerVst3::PluginLoggerVst3(const juce::File& pluginExecutableFile, bool initiallyEnabled)
+    : logFile(pluginExecutableFile), isEnabled(initiallyEnabled)
+{
+}
+
+// Optional: Method to change status at runtime
+void PluginLoggerVst3::setEnabled(bool enable)
+{
+    isEnabled = enable;
 }
 
 void PluginLoggerVst3::log(const juce::String& message)
 {
+    if (!isEnabled) // Check if logging is enabled
+        return; // Do nothing if disabled
+
     std::ofstream outfile(logFile.getFullPathName().toStdString(), std::ios_base::app);
     if (outfile.is_open()) {
         outfile << juce::Time::getCurrentTime().toString(true, true, true, true).toStdString() << ": " << message.toStdString() << std::endl;
@@ -32,16 +46,22 @@ void PluginLoggerVst3::log(const juce::String& message)
 
 void PluginLoggerVst3::logResult(const juce::Result& result)
 {
+    if (!isEnabled) // Check if logging is enabled
+        return; // Do nothing if disabled
+
     if (result.wasOk()) {
         log("Result: OK");
     } else {
         log("Result: FAIL - " + result.getErrorMessage());
     }
 }
+
+// Global logger instance definition
 juce::File desktopLogPath = juce::File::getSpecialLocation(juce::File::userDesktopDirectory)
                              .getChildFile("CtrlrX_debug_log.txt");
 
-PluginLoggerVst3 logger(desktopLogPath);
+// Initialize the global logger instance as DISABLED by default
+PluginLoggerVst3 logger(desktopLogPath, false); // <-- CHANGE THIS TO true to enable LOG file to desktop
 
 
 // Helper functions (unchanged)
