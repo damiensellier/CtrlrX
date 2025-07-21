@@ -340,7 +340,7 @@ Tuturial coming soon.
 
 ## Changelog
 
-#### Version 5.6.34 | 2025.07.14
+#### Version 5.6.34 | 2025.07.21
 
 * **NEW** ProTools AAX plugin support (requires AAX SDK 2.8+ and codesigning via PACE)
 * **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
