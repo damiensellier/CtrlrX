@@ -37,7 +37,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     : owner(_owner),
       fontTypeface (0),
       fontBold (0),
-      fontUnderline (0),
+     // fontUnderline (0),
       fontItalic (0),
       fontSize (0),
       bgColour (0), // Added v5.6.31
@@ -63,9 +63,10 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     fontBold->setButtonText (L"Bold");
     fontBold->addListener (this);
 
-    addAndMakeVisible (fontUnderline = new ToggleButton (""));
+   /* addAndMakeVisible (fontUnderline = new ToggleButton (""));
     fontUnderline->setButtonText (L"Underline");
     fontUnderline->addListener (this);
+    */
 
     addAndMakeVisible (fontItalic = new ToggleButton (""));
     fontItalic->setButtonText (L"Italic");
@@ -125,7 +126,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     lineNumbersColour->setColour(VAR2COLOUR(owner.getComponentTree().getProperty(Ids::luaMethodEditorLineNumbersColour, Colours::black.toString())));
 
     fontSize->setValue (codeFont.getHeight(), dontSendNotification);
-    fontUnderline->setToggleState (codeFont.isUnderlined(), dontSendNotification);
+    //fontUnderline->setToggleState (codeFont.isUnderlined(), dontSendNotification);
     fontBold->setToggleState (codeFont.isBold(), dontSendNotification);
     fontItalic->setToggleState (codeFont.isItalic(), dontSendNotification);
     owner.getOwner().getCtrlrManagerOwner().getFontManager().fillCombo (*fontTypeface);
@@ -148,7 +149,7 @@ CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
     deleteAndZero (label0);
     deleteAndZero (fontTypeface);
     deleteAndZero (fontBold);
-    deleteAndZero (fontUnderline);
+    //deleteAndZero (fontUnderline);
     deleteAndZero (fontItalic);
     deleteAndZero (fontSize);
     deleteAndZero (label1);
@@ -187,7 +188,7 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     label0->setBounds(marginLeft - 4, marginTop+ sampleHeight +8, sampleWidth, 24);
     fontTypeface->setBounds(marginLeft, marginTop + sampleHeight + 24 + 8, sampleWidth, 24);
     fontBold->setBounds(marginLeft, marginTop + sampleHeight + 24 + 40, 56, 24);
-    fontUnderline->setBounds(marginLeft + 128, marginTop + sampleHeight + 24 + 40, 88, 24);
+    //fontUnderline->setBounds(marginLeft + 128, marginTop + sampleHeight + 24 + 40, 88, 24);
     fontItalic->setBounds(marginLeft + 64, marginTop + sampleHeight + 24 + 40, 64, 24);
     fontSize->setBounds(marginLeft + 224, marginTop + sampleHeight + 24 + 40, 78, 24);
     //[UserResized] Add your own custom resize handling here..
@@ -254,7 +255,8 @@ if (buttonThatWasClicked == fontBold)
         //fontTypeface->setSelectedId(1, dontSendNotification);
         fontTypeface->setText("Courier New", dontSendNotification); // or whatever default font you want
         fontBold->setToggleState(false, dontSendNotification);
-        fontUnderline->setToggleState(false, dontSendNotification);
+       // fontUnderline->setToggleState(false, dontSendNotification);
+        fontItalic->setToggleState(false, dontSendNotification);
         openSearchTabs->setToggleState(false, dontSendNotification);
         fontSize->setValue(14.0f, dontSendNotification);
         bgColour->setColour(Colours::white);
@@ -306,7 +308,7 @@ const Font CtrlrLuaMethodCodeEditorSettings::getFont()
     font.setHeight (fontSize->getValue());
     font.setBold (fontBold->getToggleState());
     font.setItalic (fontItalic->getToggleState());
-    font.setUnderline (fontUnderline->getToggleState());
+   // font.setUnderline (fontUnderline->getToggleState());
     return (font);
 }
 
