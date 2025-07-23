@@ -757,12 +757,19 @@ public:
 		searchInComboBox.setSelectedItemIndex(0, dontSendNotification);
 		searchInComboBox.addListener(this);
 		searchInComboBox.setEnabled(false);
-		addAndMakeVisible(searchInComboBox);
+		//addAndMakeVisible(searchInComboBox);
 
-		addAndMakeVisible (caseButton);
-		caseButton.setColour (ToggleButton::textColourId, Colours::white);
-		caseButton.setToggleState (false, dontSendNotification);
-		caseButton.addListener (this);
+		//addAndMakeVisible (caseButton);
+		//caseButton.setColour (ToggleButton::textColourId, Colours::white);
+		//caseButton.setToggleState (false, dontSendNotification);
+		//caseButton.addListener (this);
+		addAndMakeVisible(caseButton);
+		caseButton.setColour(juce::ToggleButton::textColourId, juce::Colours::yellow);
+		caseButton.setColour(juce::ToggleButton::tickColourId, juce::Colours::yellow);
+		caseButton.setColour(juce::ToggleButton::tickDisabledColourId, juce::Colours::yellow);
+		caseButton.setToggleState(false, dontSendNotification);
+		caseButton.addListener(this);
+
 
 		lookInComboBox.setEditableText (false);
 		lookInComboBox.setJustificationType (Justification::centredLeft);
@@ -861,9 +868,11 @@ public:
 			replaceAllButton->setBounds(replaceButton->getRight(), y, 20, 24);
 			y += 30;
 		}
-		caseButton.setBounds (0, y, 75, 22);
-		searchInComboBox.setBounds(caseButton.getRight(), y, 70, 24);
-		lookInComboBox.setBounds(searchInComboBox.getRight() + 5, y, 70, 24);
+		//caseButton.setBounds (0, y, 75, 22);
+		//searchInComboBox.setBounds(caseButton.getRight(), y, 70, 24);
+		//lookInComboBox.setBounds(searchInComboBox.getRight() + 5, y, 70, 24);
+		caseButton.setBounds(5, y, 75, 22);
+		lookInComboBox.setBounds(searchInComboBox.getRight() + 75, y, 90, 24);
 		findPrev.setBounds (lookInComboBox.getRight(), y, 15, 24);
 		findNext.setBounds (findPrev.getRight(), y, 15, 24);
 	}

@@ -1085,7 +1085,11 @@ PopupMenu CtrlrLuaMethodEditor::getMenuForIndex(int topLevelMenuIndex, const Str
 		menu.addSectionHeader("Key Commands");
 		menu.addItem(10,"Single line comment: Ctrl+/");
 		menu.addItem(11, "Multi line comment: Ctrl+Q");
-		menu.addItem(12, "Duplicate Line: Ctrl+D");
+		menu.addItem(12, "Duplicate line: Ctrl+D");
+		menu.addItem(13, "Go to line: Ctrl+G");
+		menu.addSeparator();
+		menu.addItem(14, "Find: Ctrl+F");
+		menu.addItem(15, "Find & replace: Ctrl+H");
 
 	}
 	return (menu);
