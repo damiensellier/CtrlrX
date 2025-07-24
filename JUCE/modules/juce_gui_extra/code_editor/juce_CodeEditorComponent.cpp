@@ -1519,14 +1519,39 @@ int CodeEditorComponent::columnToIndex (int lineNum, int column) const noexcept
 }
 
 //==============================================================================
-void CodeEditorComponent::setFont (const Font& newFont)
+//void CodeEditorComponent::setFont (const Font& newFont)
+//{
+//    font = newFont;
+//    charWidth = font.getStringWidthFloat ("0");
+//    lineHeight = roundToInt (font.getHeight());
+//    resized();
+//}
+void CodeEditorComponent::setFont(const Font& newFont)
 {
     font = newFont;
-    charWidth = font.getStringWidthFloat ("0");
-    lineHeight = roundToInt (font.getHeight());
+
+    // Calculate charWidth and lineHeight
+    float calculatedCharWidth = font.getStringWidthFloat("0");
+    int calculatedLineHeight = roundToInt(font.getHeight());
+
+    // --- CRITICAL FIXES BELOW ---
+
+    // Ensure charWidth is never zero or negative
+    if (calculatedCharWidth <= 0.0f)
+        charWidth = 1.0f; // Set a minimum reasonable value, e.g., 1 pixel
+    else
+        charWidth = calculatedCharWidth;
+
+    // Ensure lineHeight is never zero or negative
+    if (calculatedLineHeight <= 0)
+        lineHeight = 1; // Set a minimum reasonable value, e.g., 1 pixel
+    else
+        lineHeight = calculatedLineHeight;
+
+    // --- END CRITICAL FIXES ---
+
     resized();
 }
-
 void CodeEditorComponent::ColourScheme::set (const String& name, Colour colour)
 {
     for (auto& tt : types)
