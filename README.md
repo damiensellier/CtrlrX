@@ -359,6 +359,7 @@ Tuturial coming soon.
 * **ADDED** JUCE, Boost, LuaBind version infos in the About window. `CtrlrAbout.cpp` & `.h`
 * **REMOVED** VST2.4 SDK due to licensing compliance. `/Source/Misc/vst2sdk/`
 * **NEW** Support for online plugin authorization (Requires PHP & SQL Server with keygen and authentication scripts and exec). `CtrlrX.jucer`, `LCore.cpp`, `LMachineIDUtilities.cpp` & `.h`, `LOnlineUnlockStatus.cpp` & `.h`, `LOnlineUnlockStatusCheck.cpp`& `.h`, `LRSAKey.cpp` & `.h`
+* **UPDATED** askForTextInputWindow fallback for cancel button value to -1. `CtrlrLuaUtils.cpp`
 
 #### Version 5.6.33 | 2025.05.28
 
