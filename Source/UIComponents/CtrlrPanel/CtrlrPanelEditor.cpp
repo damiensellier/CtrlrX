@@ -181,25 +181,25 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
         setProperty(Ids::uiPanelLookAndFeel, "V4");
         
         // Requires passing the colourScheme to the property uiPanelLookAndFeel from ctrlrColourScheme
-		// Updated v5.6.34. For a generic method schemeName Property--> schemeName. Get the current colour scheme name from the property
-		juce::String schemeName = ed.getProperty (Ids::ctrlrColourScheme).toString();
-		
-		// Determine the LookAndFeel description string
-		juce::String lookAndFeelDesc;
-		
-		if (schemeName.startsWith ("V4 "))
-		{
-			// If it already has "V4 ", use it as is
-			lookAndFeelDesc = schemeName;
-		}
-		else
-		{
-			// Otherwise, prepend "V4 " (e.g., "Light" becomes "V4 Light")
-			lookAndFeelDesc = "V4 " + schemeName;
-		}
-		
-		// Set the uiPanelLookAndFeel property with the determined string
-		setProperty (Ids::uiPanelLookAndFeel, lookAndFeelDesc);
+        // Updated v5.6.34. For a generic method schemeName Property--> schemeName. Get the current colour scheme name from the property
+        juce::String schemeName = ed.getProperty (Ids::ctrlrColourScheme).toString();
+        
+        // Determine the LookAndFeel description string
+        juce::String lookAndFeelDesc;
+        
+        if (schemeName.startsWith ("V4 "))
+        {
+            // If it already has "V4 ", use it as is
+            lookAndFeelDesc = schemeName;
+        }
+        else
+        {
+            // Otherwise, prepend "V4 " (e.g., "Light" becomes "V4 Light")
+            lookAndFeelDesc = "V4 " + schemeName;
+        }
+        
+        // Set the uiPanelLookAndFeel property with the determined string
+        setProperty (Ids::uiPanelLookAndFeel, lookAndFeelDesc);
     }
     
     //setProperty(Ids::uiPanelLegacyMode, false);
