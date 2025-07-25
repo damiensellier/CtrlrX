@@ -59,6 +59,7 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
 		void setPositionLabelText (const String &text);
 
 		void addNewMethod(ValueTree parentGroup=ValueTree());
+        void renameMethod(ValueTree currentMethod = ValueTree()); // Added 5.6.34. Thanks to @dobo365
 		void addNewClass(ValueTree parentGroup=ValueTree());
 		void addMethodFromFile(ValueTree parentGroup=ValueTree());
 
