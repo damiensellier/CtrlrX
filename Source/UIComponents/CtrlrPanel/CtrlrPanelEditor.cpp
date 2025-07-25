@@ -181,10 +181,6 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
         setProperty(Ids::uiPanelLookAndFeel, "V4");
         
         // Requires passing the colourScheme to the property uiPanelLookAndFeel from ctrlrColourScheme
-		setProperty(Ids::uiPanelLegacyMode, false);
-        setProperty(Ids::uiPanelLookAndFeel, "V4");
-        
-        // Requires passing the colourScheme to the property uiPanelLookAndFeel from ctrlrColourScheme
 		// Updated v5.6.34. For a generic method schemeName Property--> schemeName. Get the current colour scheme name from the property
 		juce::String schemeName = ed.getProperty (Ids::ctrlrColourScheme).toString();
 		
@@ -204,7 +200,6 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
 		
 		// Set the uiPanelLookAndFeel property with the determined string
 		setProperty (Ids::uiPanelLookAndFeel, lookAndFeelDesc);
-        // ADD YOUR CUSTOM LookAndFeel colourScheme HERE -->
     }
     
     //setProperty(Ids::uiPanelLegacyMode, false);
