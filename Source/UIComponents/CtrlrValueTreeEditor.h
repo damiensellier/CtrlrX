@@ -53,7 +53,7 @@ class CtrlrValueTreeEditorItem : public TreeViewItem, public ValueTree::Listener
 		void itemClicked (const MouseEvent &e);
 		void itemDoubleClicked (const MouseEvent &e);
 		void keyPressed (const KeyPress &key);
-		const bool canHandleDragAndDrop();
+		// const bool canHandleDragAndDrop();  // Removed 5.6.34. Thanks to @dobo365
 		ValueTree &getTree() { return (treeToEdit); }
 		void valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChanged, const Identifier &property);
 		void valueTreeChildrenChanged (ValueTree &treeWhoseChildHasChanged){}
