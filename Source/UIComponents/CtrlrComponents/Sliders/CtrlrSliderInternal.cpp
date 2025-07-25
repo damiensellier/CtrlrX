@@ -6,7 +6,7 @@
 
 CtrlrSliderInternal::CtrlrSliderInternal(CtrlrComponent &_owner) : owner(_owner)
 {
-	Slider::setName (owner.getName());
+    Slider::setName (owner.getName());
 }
 
 CtrlrSliderInternal::~CtrlrSliderInternal()
@@ -74,13 +74,13 @@ double CtrlrSliderInternal::getValueFromText (const String& text) // Added v5.6.
 
 void CtrlrSliderInternal::mouseWheelMove (const MouseEvent &e, const MouseWheelDetails& wheel)
 {
-	if (!isEnabled())
-		return;
+    if (!isEnabled())
+        return;
 
-	if (wheel.deltaY < 0)
-		setValue ( snapValue (getValue() - (double)owner.getProperty(::Ids::uiSliderMouseWheelInterval), Slider::absoluteDrag) );
-	else
-		setValue ( snapValue (getValue() + (double)owner.getProperty(::Ids::uiSliderMouseWheelInterval), Slider::absoluteDrag) );
+    if (wheel.deltaY < 0)
+        setValue ( snapValue (getValue() - (double)owner.getProperty(::Ids::uiSliderMouseWheelInterval), Slider::absoluteDrag) );
+    else
+        setValue ( snapValue (getValue() + (double)owner.getProperty(::Ids::uiSliderMouseWheelInterval), Slider::absoluteDrag) );
 }
 
 
@@ -106,8 +106,8 @@ void CtrlrSliderLookAndFeel_V2::drawLinearSliderBackground (Graphics& g, int x, 
                                            gradCol2, 0.0f, iy + ih, false));
 
         indent.addRoundedRectangle (x - sliderRadius * 0.5f, iy,
-                                    width + sliderRadius, ih,
-                                    ownerTree.getProperty(Ids::uiSliderTrackCornerSize));
+                                     width + sliderRadius, ih,
+                                     ownerTree.getProperty(Ids::uiSliderTrackCornerSize));
         g.fillPath (indent);
     }
     else
@@ -119,8 +119,8 @@ void CtrlrSliderLookAndFeel_V2::drawLinearSliderBackground (Graphics& g, int x, 
                                            gradCol2, ix + iw, 0.0f, false));
 
         indent.addRoundedRectangle (ix, y - sliderRadius * 0.5f,
-                                    iw, height + sliderRadius,
-                                    ownerTree.getProperty(Ids::uiSliderTrackCornerSize));
+                                     iw, height + sliderRadius,
+                                     ownerTree.getProperty(Ids::uiSliderTrackCornerSize));
         g.fillPath (indent);
     }
 
@@ -133,9 +133,9 @@ void CtrlrSliderLookAndFeel_V2::drawLinearSliderThumb (Graphics& g, int x, int y
     const float sliderRadius = (float) (getSliderThumbRadius (slider) - 2);
 
     Colour knobColour (createBaseColour (slider.findColour (Slider::thumbColourId),
-                                                             slider.hasKeyboardFocus (false) && slider.isEnabled(),
-                                                             slider.isMouseOverOrDragging() && slider.isEnabled(),
-                                                             slider.isMouseButtonDown() && slider.isEnabled()));
+                                         slider.hasKeyboardFocus (false) && slider.isEnabled(),
+                                         slider.isMouseOverOrDragging() && slider.isEnabled(),
+                                         slider.isMouseButtonDown() && slider.isEnabled()));
 
     const float outlineThickness = slider.isEnabled() ? 0.8f : 0.3f;
 
@@ -154,17 +154,17 @@ void CtrlrSliderLookAndFeel_V2::drawLinearSliderThumb (Graphics& g, int x, int y
             ky = y + height * 0.5f;
         }
 
-		drawGlassLozenge (g,
+        drawGlassLozenge (g,
                          kx - ((bool)ownerTree.getProperty(Ids::uiSliderThumbWidth) ? (int)ownerTree.getProperty(Ids::uiSliderThumbWidth) : sliderRadius),
                          ky - ((bool)ownerTree.getProperty(Ids::uiSliderThumbHeight) ? (int)ownerTree.getProperty(Ids::uiSliderThumbHeight) : sliderRadius),
                          ((bool)ownerTree.getProperty(Ids::uiSliderThumbWidth) ? (int)ownerTree.getProperty(Ids::uiSliderThumbWidth) : sliderRadius) * 2.0f,
-						 ((bool)ownerTree.getProperty(Ids::uiSliderThumbHeight) ? (int)ownerTree.getProperty(Ids::uiSliderThumbHeight) : sliderRadius) * 2.0f,
+                         ((bool)ownerTree.getProperty(Ids::uiSliderThumbHeight) ? (int)ownerTree.getProperty(Ids::uiSliderThumbHeight) : sliderRadius) * 2.0f,
                          knobColour, outlineThickness,
-						 ownerTree.getProperty(Ids::uiSliderThumbCornerSize),
-						 ownerTree.getProperty(Ids::uiSliderThumbFlatOnLeft),
-						 ownerTree.getProperty(Ids::uiSliderThumbFlatOnRight),
-						 ownerTree.getProperty(Ids::uiSliderThumbFlatOnTop),
-						 ownerTree.getProperty(Ids::uiSliderThumbFlatOnBottom));
+                         ownerTree.getProperty(Ids::uiSliderThumbCornerSize),
+                         ownerTree.getProperty(Ids::uiSliderThumbFlatOnLeft),
+                         ownerTree.getProperty(Ids::uiSliderThumbFlatOnRight),
+                         ownerTree.getProperty(Ids::uiSliderThumbFlatOnTop),
+                         ownerTree.getProperty(Ids::uiSliderThumbFlatOnBottom));
     }
     else
     {
@@ -211,31 +211,31 @@ void CtrlrSliderLookAndFeel_V2::drawLinearSliderThumb (Graphics& g, int x, int y
 
 int CtrlrSliderLookAndFeel_V2::getSliderPopupPlacement(Slider &slider)
 {
-	/* TO FIX
-	CtrlrLookAndFeel *lf = owner.getOwner().getOwnerPanel().getCtrlrManagerOwner().getCtrlrLookAndFeel();
-	if (lf)
-	{
+    /* TO FIX
+    CtrlrLookAndFeel *lf = owner.getOwner().getOwnerPanel().getCtrlrManagerOwner().getCtrlrLookAndFeel();
+    if (lf)
+    {
         return (lf->getSliderPopupPlacement(slider));
-	}
-	*/
-	return (0);
+    }
+    */
+    return (0);
 }
 
 Font CtrlrSliderLookAndFeel_V2::getSliderPopupFont(Slider &slider)
 {
-	/* TO FIX
-	CtrlrLookAndFeel *lf = owner.getOwner().getOwnerPanel().getCtrlrManagerOwner().getCtrlrLookAndFeel();
-	if (lf)
-	{
+    /* TO FIX
+    CtrlrLookAndFeel *lf = owner.getOwner().getOwnerPanel().getCtrlrManagerOwner().getCtrlrLookAndFeel();
+    if (lf)
+    {
         return (lf->getSliderPopupFont(slider));
-	}
-	*/
-	return (Font());
+    }
+    */
+    return (Font());
 }
 
 Colour CtrlrSliderLookAndFeel_V2::findColour (int colourId) const noexcept
 {
-	return (LookAndFeel::findColour (colourId));
+    return (LookAndFeel::findColour (colourId));
 }
 
 
@@ -259,8 +259,8 @@ void CtrlrSliderLookAndFeel_V3::drawLinearSliderBackground (Graphics& g, int x, 
                                            gradCol2, 0.0f, iy + ih, false));
 
         indent.addRoundedRectangle (x - sliderRadius * 0.5f, iy,
-                                    width + sliderRadius, ih,
-                                    ownerTree.getProperty(Ids::uiSliderTrackCornerSize));
+                                     width + sliderRadius, ih,
+                                     ownerTree.getProperty(Ids::uiSliderTrackCornerSize));
         g.fillPath (indent);
     }
     else
@@ -272,8 +272,8 @@ void CtrlrSliderLookAndFeel_V3::drawLinearSliderBackground (Graphics& g, int x, 
                                            gradCol2, ix + iw, 0.0f, false));
 
         indent.addRoundedRectangle (ix, y - sliderRadius * 0.5f,
-                                    iw, height + sliderRadius,
-                                    ownerTree.getProperty(Ids::uiSliderTrackCornerSize));
+                                     iw, height + sliderRadius,
+                                     ownerTree.getProperty(Ids::uiSliderTrackCornerSize));
         g.fillPath (indent);
     }
 
@@ -283,14 +283,14 @@ void CtrlrSliderLookAndFeel_V3::drawLinearSliderBackground (Graphics& g, int x, 
 
 void CtrlrSliderLookAndFeel_V3::drawLinearSliderThumb (Graphics& g, int x, int y, int width, int height, float sliderPos, float minSliderPos, float maxSliderPos, const Slider::SliderStyle style, Slider& slider)
 {
-    const float sliderRadius = (float) (getSliderThumbRadius (slider) - 2);
-
+    // Removed unused variables to prevent Visual Studio warnings
     Colour knobColour (createBaseColour (slider.findColour (Slider::thumbColourId),
-                                                             slider.hasKeyboardFocus (false) && slider.isEnabled(),
-                                                             slider.isMouseOverOrDragging() && slider.isEnabled(),
-                                                             slider.isMouseButtonDown() && slider.isEnabled()));
+                                         slider.hasKeyboardFocus (false) && slider.isEnabled(),
+                                         slider.isMouseOverOrDragging() && slider.isEnabled(),
+                                         slider.isMouseButtonDown() && slider.isEnabled()));
 
-    const float outlineThickness = slider.isEnabled() ? 0.8f : 0.3f;
+    // Removed: const float sliderRadius = (float) (getSliderThumbRadius (slider) - 2);
+    // Removed: const float outlineThickness = slider.isEnabled() ? 0.8f : 0.3f;
 
     if (style == Slider::LinearHorizontal || style == Slider::LinearVertical)
     {
@@ -307,6 +307,7 @@ void CtrlrSliderLookAndFeel_V3::drawLinearSliderThumb (Graphics& g, int x, int y
             ky = y + height * 0.5f;
         }
     }
+    // No custom thumb drawing logic intended here, so no other code added.
 }
 
 int CtrlrSliderLookAndFeel_V3::getSliderPopupPlacement(Slider &slider)
@@ -359,8 +360,8 @@ void CtrlrSliderLookAndFeel_V4::drawLinearSliderBackground (Graphics& g, int x, 
                                            gradCol2, 0.0f, iy + ih, false));
 
         indent.addRoundedRectangle (x - sliderRadius * 0.5f, iy,
-                                    width + sliderRadius, ih,
-                                    ownerTree.getProperty(Ids::uiSliderTrackCornerSize));
+                                     width + sliderRadius, ih,
+                                     ownerTree.getProperty(Ids::uiSliderTrackCornerSize));
         g.fillPath (indent);
     }
     else // Vertical Linear Slider
@@ -372,8 +373,8 @@ void CtrlrSliderLookAndFeel_V4::drawLinearSliderBackground (Graphics& g, int x, 
                                            gradCol2, ix + iw, 0.0f, false));
 
         indent.addRoundedRectangle (ix, y - sliderRadius * 0.5f,
-                                    iw, height + sliderRadius,
-                                    ownerTree.getProperty(Ids::uiSliderTrackCornerSize));
+                                     iw, height + sliderRadius,
+                                     ownerTree.getProperty(Ids::uiSliderTrackCornerSize));
         g.fillPath (indent);
     }
 
@@ -383,14 +384,14 @@ void CtrlrSliderLookAndFeel_V4::drawLinearSliderBackground (Graphics& g, int x, 
 
 void CtrlrSliderLookAndFeel_V4::drawLinearSliderThumb (Graphics& g, int x, int y, int width, int height, float sliderPos, float minSliderPos, float maxSliderPos, const Slider::SliderStyle style, Slider& slider)
 {
-    const float sliderRadius = (float) (getSliderThumbRadius (slider) - 2);
-
+    // Removed unused variables to prevent Visual Studio warnings
     Colour knobColour (createBaseColour (slider.findColour (Slider::thumbColourId),
-                                                             slider.hasKeyboardFocus (false) && slider.isEnabled(),
-                                                             slider.isMouseOverOrDragging() && slider.isEnabled(),
-                                                             slider.isMouseButtonDown() && slider.isEnabled()));
+                                         slider.hasKeyboardFocus (false) && slider.isEnabled(),
+                                         slider.isMouseOverOrDragging() && slider.isEnabled(),
+                                         slider.isMouseButtonDown() && slider.isEnabled()));
 
-    const float outlineThickness = slider.isEnabled() ? 0.8f : 0.3f;
+    // Removed: const float sliderRadius = (float) (getSliderThumbRadius (slider) - 2);
+    // Removed: const float outlineThickness = slider.isEnabled() ? 0.8f : 0.3f;
 
     if (style == Slider::LinearHorizontal || style == Slider::LinearVertical)
     {
@@ -407,7 +408,7 @@ void CtrlrSliderLookAndFeel_V4::drawLinearSliderThumb (Graphics& g, int x, int y
             ky = y + height * 0.5f;
         }
     }
-
+    // No custom thumb drawing logic intended here, so no other code added.
 }
 
 int CtrlrSliderLookAndFeel_V4::getSliderPopupPlacement(Slider &slider)
