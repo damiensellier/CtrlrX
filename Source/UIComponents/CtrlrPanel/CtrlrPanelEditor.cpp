@@ -641,49 +641,21 @@ void CtrlrPanelEditor::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasC
     }
 }
 
-juce::LookAndFeel *CtrlrPanelEditor::getLookAndFeelFromDescription(const juce::String &lookAndFeelDesc)
+juce::LookAndFeel *CtrlrPanelEditor::getLookAndFeelFromDescription(const juce::String &lookAndFeelDesc) // Added v5.6.34
 {
-    // JUCE's built-in schemes still use LookAndFeel_V4::
-    if (lookAndFeelDesc == "V4" || lookAndFeelDesc == "V4 Light")
-        return new juce::LookAndFeel_V4(juce::LookAndFeel_V4::getLightColourScheme());
-    if (lookAndFeelDesc == "V4 Grey")
-        return new juce::LookAndFeel_V4(juce::LookAndFeel_V4::getGreyColourScheme());
-    if (lookAndFeelDesc == "V4 Dark")
-        return new juce::LookAndFeel_V4(juce::LookAndFeel_V4::getDarkColourScheme());
-    if (lookAndFeelDesc == "V4 Midnight")
-        return new juce::LookAndFeel_V4(juce::LookAndFeel_V4::getMidnightColourScheme());
-    
-    // Custom schemes using gui::_namespace_
-    if (lookAndFeelDesc == "V4 JetBlack")
-        return new juce::LookAndFeel_V4(gui::getJetBlackColourScheme());
-    if (lookAndFeelDesc == "V4 YamDX")
-        return new juce::LookAndFeel_V4(gui::getYamDxColourScheme());
-    if (lookAndFeelDesc == "V4 AkAPC")
-        return new juce::LookAndFeel_V4(gui::getAkApcColourScheme());
-    if (lookAndFeelDesc == "V4 AkMPC")
-        return new juce::LookAndFeel_V4(gui::getAkMpcColourScheme());
-    if (lookAndFeelDesc == "V4 LexiBlue")
-        return new juce::LookAndFeel_V4(gui::getLexiBlueColourScheme());
-    if (lookAndFeelDesc == "V4 KurzGreen")
-        return new juce::LookAndFeel_V4(gui::getKurzGreenColourScheme());
-    if (lookAndFeelDesc == "V4 KorGrey")
-        return new juce::LookAndFeel_V4(gui::getKorGreyColourScheme());
-    if (lookAndFeelDesc == "V4 KorGold")
-        return new juce::LookAndFeel_V4(gui::getKorGoldColourScheme());
-    if (lookAndFeelDesc == "V4 ArturOrange")
-        return new juce::LookAndFeel_V4(gui::getArturOrangeColourScheme());
-    if (lookAndFeelDesc == "V4 AiraGreen")
-        return new juce::LookAndFeel_V4(gui::getAiraGreenColourScheme());
+    // If "Default" has a special meaning for CtrlrPanelEditor, handle it here.
+    // Otherwise, you can just directly call the generic function.
+    if (lookAndFeelDesc == "Default")
+    {
+        return nullptr; // Or whatever "Default" means for this specific component
+                        // e.g., return new juce::LookAndFeel_V4();
+    }
 
-    // JUCE's older L&Fs still return directly
-    if (lookAndFeelDesc == "V3")
-        return new juce::LookAndFeel_V3();
-    if (lookAndFeelDesc == "V2")
-        return new juce::LookAndFeel_V2();
-    if (lookAndFeelDesc == "V1")
-        return new juce::LookAndFeel_V1();
-     
-    return (nullptr); // Or return a default L&F if you want a fallback
+    // Now, simply call your centralized function!
+    // The second argument `true` means if the `lookAndFeelDesc` doesn't match
+    // any known scheme, it will return a new LookAndFeel_V4 with the LightColourScheme.
+    // If you prefer it to return nullptr in unknown cases, change it to `false`.
+    return gui::createLookAndFeelFromDescription(lookAndFeelDesc, true);
 }
 
 const var &CtrlrPanelEditor::getProperty(const Identifier &name) const
