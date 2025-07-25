@@ -293,18 +293,18 @@ void CtrlrLuaMethodEditor::addNewMethod(ValueTree parentGroup)
 
 void CtrlrLuaMethodEditor::renameMethod(ValueTree currentMethod) // Added 5.6.34. Thanks to @dobo365
 {
-	AlertWindow w("Rename method", "", AlertWindow::QuestionIcon, this);
-	w.addTextEditor("name", currentMethod.getProperty(Ids::name).toString());
-	w.addButton("OK", 1, KeyPress(KeyPress::returnKey));
-	w.addButton("Cancel", 0, KeyPress(KeyPress::escapeKey));
-
-	if (w.runModalLoop())
-	{
-		currentMethod.setProperty(Ids::name, w.getTextEditorContents("name"), nullptr);
-		updateRootItem();
-	}
-
-	saveSettings(); // save settings
+    AlertWindow w("Rename method", "", AlertWindow::QuestionIcon, this);
+    w.addTextEditor("name", currentMethod.getProperty(Ids::name).toString());
+    w.addButton("OK", 1, KeyPress(KeyPress::returnKey));
+    w.addButton("Cancel", 0, KeyPress(KeyPress::escapeKey));
+    
+    if (w.runModalLoop())
+    {
+        currentMethod.setProperty(Ids::name, w.getTextEditorContents("name"), nullptr);
+        updateRootItem();
+    }
+    
+    saveSettings(); // save settings
 }
 
 void CtrlrLuaMethodEditor::addMethodFromFile(ValueTree parentGroup)
@@ -904,7 +904,7 @@ void CtrlrLuaMethodEditor::itemClicked (const MouseEvent &e, ValueTree &item)
 			}
 
 			m.addSeparator();
-            m.addItem (1,"Open method"); // Added 5.6.34. Thanks to @dobo365
+			m.addItem (1,"Open method"); // Added 5.6.34. Thanks to @dobo365
 			m.addItem (2,"Remove method");
 			m.addItem (3, "Rename method"); // Added 5.6.34. Thanks to @dobo365
 
