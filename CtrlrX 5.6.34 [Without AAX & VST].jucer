@@ -332,6 +332,8 @@
         <FILE id="Jg2HhC" name="CtrlrIDManager.h" compile="0" resource="0"
               file="Source/Core/CtrlrIDManager.h"/>
         <FILE id="QE0hSu" name="CtrlrIDs.h" compile="0" resource="0" file="Source/Core/CtrlrIDs.h"/>
+        <FILE id="CysuP6" name="CtrlrInlineUtilitiesGUI.cpp" compile="1" resource="0"
+              file="Source/Core/CtrlrInlineUtilitiesGUI.cpp"/>
         <FILE id="HgDGmT" name="CtrlrInlineUtilitiesGUI.h" compile="0" resource="0"
               file="Source/Core/CtrlrInlineUtilitiesGUI.h"/>
         <FILE id="KS7qmr" name="CtrlrLog.cpp" compile="1" resource="0" file="Source/Core/CtrlrLog.cpp"/>

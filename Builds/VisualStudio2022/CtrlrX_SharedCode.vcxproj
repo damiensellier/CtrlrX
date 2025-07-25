@@ -328,6 +328,7 @@
     <ClCompile Include="..\..\Source\Core\StandaloneWrapper\CtrlrStandaloneWindow.cpp"/>
     <ClCompile Include="..\..\Source\Core\CtrlrFontManager.cpp"/>
     <ClCompile Include="..\..\Source\Core\CtrlrIDManager.cpp"/>
+    <ClCompile Include="..\..\Source\Core\CtrlrInlineUtilitiesGUI.cpp"/>
     <ClCompile Include="..\..\Source\Core\CtrlrLog.cpp"/>
     <ClCompile Include="..\..\Source\Core\CtrlrProperties.cpp"/>
     <ClCompile Include="..\..\Source\Core\CtrlrSysexProcessor.cpp"/>

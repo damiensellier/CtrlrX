@@ -184,6 +184,7 @@ OBJECTS_SHARED_CODE := \
   $(JUCE_OBJDIR)/CtrlrStandaloneWindow_42dbf3b4.o \
   $(JUCE_OBJDIR)/CtrlrFontManager_edb07ae8.o \
   $(JUCE_OBJDIR)/CtrlrIDManager_40d647fc.o \
+  $(JUCE_OBJDIR)/CtrlrInlineUtilitiesGUI_6cacd44a.o \
   $(JUCE_OBJDIR)/CtrlrLog_cd89ebce.o \
   $(JUCE_OBJDIR)/CtrlrProperties_eb107cf3.o \
   $(JUCE_OBJDIR)/CtrlrSysexProcessor_bc5102f2.o \
@@ -712,6 +713,11 @@ $(JUCE_OBJDIR)/CtrlrFontManager_edb07ae8.o: ../../Source/Core/CtrlrFontManager.c
 $(JUCE_OBJDIR)/CtrlrIDManager_40d647fc.o: ../../Source/Core/CtrlrIDManager.cpp
 	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
 	@echo "Compiling CtrlrIDManager.cpp"
+	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_SHARED_CODE) $(JUCE_CFLAGS_SHARED_CODE) -o "$@" -c "$<"
+
+$(JUCE_OBJDIR)/CtrlrInlineUtilitiesGUI_6cacd44a.o: ../../Source/Core/CtrlrInlineUtilitiesGUI.cpp
+	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
+	@echo "Compiling CtrlrInlineUtilitiesGUI.cpp"
 	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_SHARED_CODE) $(JUCE_CFLAGS_SHARED_CODE) -o "$@" -c "$<"
 
 $(JUCE_OBJDIR)/CtrlrLog_cd89ebce.o: ../../Source/Core/CtrlrLog.cpp

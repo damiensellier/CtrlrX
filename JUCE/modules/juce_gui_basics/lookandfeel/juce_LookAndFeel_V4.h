@@ -104,16 +104,6 @@ public:
     static ColourScheme getMidnightColourScheme();
     static ColourScheme getGreyColourScheme();
     static ColourScheme getLightColourScheme();
-    static ColourScheme getJetBlackColourScheme(); // Added for CtrlrX v5.6.30
-    static ColourScheme getYamDxColourScheme(); // Added for CtrlrX v5.6.30
-    static ColourScheme getAkApcColourScheme(); // Added for CtrlrX v5.6.30
-    static ColourScheme getAkMpcColourScheme(); // Added for CtrlrX v5.6.30
-    static ColourScheme getLexiBlueColourScheme(); // Added for CtrlrX v5.6.30
-    static ColourScheme getKurzGreenColourScheme(); // Added for CtrlrX v5.6.30
-    static ColourScheme getKorGreyColourScheme(); // Added for CtrlrX v5.6.30
-    static ColourScheme getKorGoldColourScheme(); // Added for CtrlrX v5.6.30
-    static ColourScheme getArturOrangeColourScheme(); // Added for CtrlrX v5.6.30
-    static ColourScheme getAiraGreenColourScheme(); // Added for CtrlrX v5.6.30 
 
     //==============================================================================
     Button* createDocumentWindowButton (int) override;

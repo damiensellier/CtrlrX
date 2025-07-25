@@ -75,6 +75,7 @@
 		3643B1D8CE97C5E2ADF61487 /* CtrlrLuaMethodManagerCalls.cpp */ = {isa = PBXBuildFile; fileRef = D2322093D256369D02EBFA57; };
 		36B590AAA679A778657C42A8 /* usb.c */ = {isa = PBXBuildFile; fileRef = C94B9482DDBC07FB1B2AA293; };
 		37A3BC8FCFAA220A108852C7 /* strerror.c */ = {isa = PBXBuildFile; fileRef = B91E6C2B4E45307344899920; };
+		38183DC1A2B5C6D64887F00C /* CtrlrInlineUtilitiesGUI.cpp */ = {isa = PBXBuildFile; fileRef = 5D99537435348A095DE06FBA; };
 		3826C45BD5C2869B7FA62651 /* CtrlrSettings.cpp */ = {isa = PBXBuildFile; fileRef = 72C10694B0567CA32B18E554; };
 		3ADB13894099A492A438938C /* CtrlrNative.cpp */ = {isa = PBXBuildFile; fileRef = DF9F0C668A3F12B1B80F9DF2; };
 		3D83529A260C7766608E767F /* CtrlrMidiInputComparatorMulti.cpp */ = {isa = PBXBuildFile; fileRef = 209AD43FE196CBCC9722DFB7; };
@@ -512,6 +513,7 @@
 		5D1776D2FCC10C7E60362BA8 /* CtrlrLuaMethod.cpp */ /* CtrlrLuaMethod.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrLuaMethod.cpp; path = ../../Source/Lua/Methods/CtrlrLuaMethod.cpp; sourceTree = SOURCE_ROOT; };
 		5D70074AC95C11154B5F7755 /* CtrlrPanelProperties.h */ /* CtrlrPanelProperties.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CtrlrPanelProperties.h; path = ../../Source/UIComponents/CtrlrPanel/CtrlrPanelProperties.h; sourceTree = SOURCE_ROOT; };
 		5D770E6D4C51627BF1E98B7F /* CtrlrMIDIDeviceManager.h */ /* CtrlrMIDIDeviceManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CtrlrMIDIDeviceManager.h; path = ../../Source/MIDI/CtrlrMIDIDeviceManager.h; sourceTree = SOURCE_ROOT; };
+		5D99537435348A095DE06FBA /* CtrlrInlineUtilitiesGUI.cpp */ /* CtrlrInlineUtilitiesGUI.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrInlineUtilitiesGUI.cpp; path = ../../Source/Core/CtrlrInlineUtilitiesGUI.cpp; sourceTree = SOURCE_ROOT; };
 		5DD042154373640AB11D7C1B /* CtrlrLogViewer.h */ /* CtrlrLogViewer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CtrlrLogViewer.h; path = ../../Source/UIComponents/CtrlrLogViewer.h; sourceTree = SOURCE_ROOT; };
 		5E99E5215BC1612027A3CF20 /* CtrlrMidiInputComparatorSingle.h */ /* CtrlrMidiInputComparatorSingle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CtrlrMidiInputComparatorSingle.h; path = ../../Source/MIDI/CtrlrMidiInputComparatorSingle.h; sourceTree = SOURCE_ROOT; };
 		5EC876CA18AC5149A9819CAE /* LRSAKey.h */ /* LRSAKey.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = LRSAKey.h; path = ../../Source/Lua/JuceClasses/LRSAKey.h; sourceTree = SOURCE_ROOT; };
@@ -2077,6 +2079,7 @@
 				2A359073C42F087C7994BCB5,
 				64F3F4AE415803CE2A0DB07D,
 				46B2CCA273966E0C097201EF,
+				5D99537435348A095DE06FBA,
 				62B1F10067A092D10B7D5FAD,
 				C31EC20F95074DD445F5D3A7,
 				282802E3F3E3C4918492A935,
@@ -2709,6 +2712,7 @@
 				BA270228351CD249FFF67E0C,
 				C93902DB97F0EFB6EC8374A2,
 				E0C72DCF26A89DA9FEF3CA4F,
+				38183DC1A2B5C6D64887F00C,
 				56DD47CDF5C027F47EB2208C,
 				DA0A66F3F2DCE1AF18252D73,
 				0AD88609E20AC9A20188A4AC,

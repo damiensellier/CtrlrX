@@ -784,6 +784,9 @@
     <ClCompile Include="..\..\Source\Core\CtrlrIDManager.cpp">
       <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\Core\CtrlrInlineUtilitiesGUI.cpp">
+      <Filter>CtrlrX\Source\Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrLog.cpp">
       <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>

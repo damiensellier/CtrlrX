@@ -270,42 +270,10 @@ void CtrlrEditor::setMenuBarVisible(const bool shouldBeVisible)
 	resized();
 }
 
-void CtrlrEditor::setMenuBarLookAndFeel(const String &lookAndFeelDesc)
+void CtrlrEditor::setMenuBarLookAndFeel(const juce::String &lookAndFeelDesc) // Updated v5.6.34.
 {
-    if (lookAndFeelDesc == "V4" || lookAndFeelDesc == "V4 Light")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getLightColourScheme()));
-    else if (lookAndFeelDesc == "V4 Grey")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getGreyColourScheme()));
-    else if (lookAndFeelDesc == "V4 Dark")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getDarkColourScheme()));
-    else if (lookAndFeelDesc == "V4 Midnight")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getMidnightColourScheme()));
-    else if (lookAndFeelDesc == "V4 JetBlack")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getJetBlackColourScheme()));
-    else if (lookAndFeelDesc == "V4 YamDX")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getYamDxColourScheme()));
-    else if (lookAndFeelDesc == "V4 AkAPC")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getAkApcColourScheme()));
-    else if (lookAndFeelDesc == "V4 AkMPC")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getAkMpcColourScheme()));
-    else if (lookAndFeelDesc == "V4 LexiBlue")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getLexiBlueColourScheme()));
-    else if (lookAndFeelDesc == "V4 KurzGreen")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getKurzGreenColourScheme()));
-    else if (lookAndFeelDesc == "V4 KorGrey")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getKorGreyColourScheme()));
-    else if (lookAndFeelDesc == "V4 KorGold")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getKorGoldColourScheme()));
-    else if (lookAndFeelDesc == "V4 ArturOrange")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getArturOrangeColourScheme()));
-    else if (lookAndFeelDesc == "V4 AiraGreen")
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getAiraGreenColourScheme()));
-    else if (lookAndFeelDesc == "V3")
-        menuBar->setLookAndFeel(new LookAndFeel_V3());
-    else if (lookAndFeelDesc == "V2")
-        menuBar->setLookAndFeel(new LookAndFeel_V2());
-    else if (lookAndFeelDesc == "V1")
-        menuBar->setLookAndFeel(new LookAndFeel_V1());
-    else
-        menuBar->setLookAndFeel(new LookAndFeel_V4(LookAndFeel_V4::getLightColourScheme()));
+    // The previous LookAndFeel set on menuBar will be automatically deleted by JUCE
+    // when you call setLookAndFeel again.
+    menuBar->setLookAndFeel(gui::createLookAndFeelFromDescription(lookAndFeelDesc, true));
+    // The `true` argument ensures that if the description is unknown, it defaults to V4 Light.
 }
