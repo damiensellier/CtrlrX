@@ -74,6 +74,8 @@ juce::LookAndFeel_V4::ColourScheme getAiraGreenColourScheme()
              0xff666666, 0xffffffff, 0xffffffff,
              0xffffffff, 0xff00955a, 0xffffffff };
 }
+// ADD YOUR CUSTOM LookAndFeel colourScheme HERE -->
+
 
 // Your existing colourSchemeFromProperty function
 juce::LookAndFeel_V4::ColourScheme colourSchemeFromProperty(const juce::var &property)
@@ -107,6 +109,7 @@ juce::LookAndFeel_V4::ColourScheme colourSchemeFromProperty(const juce::var &pro
         return getArturOrangeColourScheme();
     if (property == "AiraGreen")
         return getAiraGreenColourScheme();
+    // ADD YOUR CUSTOM LookAndFeel colourScheme HERE -->
      
     return juce::LookAndFeel_V4::getLightColourScheme();
 }
@@ -144,6 +147,8 @@ juce::LookAndFeel* createLookAndFeelFromDescription(const juce::String& descript
             return new juce::LookAndFeel_V4(gui::getArturOrangeColourScheme());
         else if (description == "V4 AiraGreen")
             return new juce::LookAndFeel_V4(gui::getAiraGreenColourScheme());
+        // ADD YOUR CUSTOM LookAndFeel colourScheme HERE -->
+        
         // Handle older JUCE LookAndFeels
         else if (description == "V3")
             return new juce::LookAndFeel_V3();

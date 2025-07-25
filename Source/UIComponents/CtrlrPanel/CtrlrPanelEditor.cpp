@@ -181,62 +181,30 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
         setProperty(Ids::uiPanelLookAndFeel, "V4");
         
         // Requires passing the colourScheme to the property uiPanelLookAndFeel from ctrlrColourScheme
-        if (ed.getProperty(Ids::ctrlrColourScheme) == "Light")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 Light");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "Grey")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 Grey");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "Dark")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 Dark");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "Midnight")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 Midnight");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "V4 JetBlack")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 JetBlack");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "YamDX")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 YamDX");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "AkAPC")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 AkAPC");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "AkMPC")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 AkMPC");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "LexiBlue")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 LexiBlue");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "KurzGreen")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 KurzGreen");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "KorGrey")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 KorGrey");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "KorGold")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 KorGold");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "ArturOrange")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 ArturOrange");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "AiraGreen")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 AiraGreen");
-        }
+		setProperty(Ids::uiPanelLegacyMode, false);
+        setProperty(Ids::uiPanelLookAndFeel, "V4");
+        
+        // Requires passing the colourScheme to the property uiPanelLookAndFeel from ctrlrColourScheme
+		// Updated v5.6.34. For a generic method schemeName Property--> schemeName. Get the current colour scheme name from the property
+		juce::String schemeName = ed.getProperty (Ids::ctrlrColourScheme).toString();
+		
+		// Determine the LookAndFeel description string
+		juce::String lookAndFeelDesc;
+		
+		if (schemeName.startsWith ("V4 "))
+		{
+			// If it already has "V4 ", use it as is
+			lookAndFeelDesc = schemeName;
+		}
+		else
+		{
+			// Otherwise, prepend "V4 " (e.g., "Light" becomes "V4 Light")
+			lookAndFeelDesc = "V4 " + schemeName;
+		}
+		
+		// Set the uiPanelLookAndFeel property with the determined string
+		setProperty (Ids::uiPanelLookAndFeel, lookAndFeelDesc);
+        // ADD YOUR CUSTOM LookAndFeel colourScheme HERE -->
     }
     
     //setProperty(Ids::uiPanelLegacyMode, false);
