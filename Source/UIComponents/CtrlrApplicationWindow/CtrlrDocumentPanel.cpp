@@ -98,7 +98,7 @@ void CtrlrDocumentPanel::buttonClicked (Button *button)
 
         if (ed != nullptr)
         {
-            if (AlertWindow::showYesNoCancelBox (AlertWindow::QuestionIcon, "Close panel", "Are you sure you want to close this panel [" + ed->getName() + "]", "Yes", "No", "Cancel", this) == 1)
+            if (AlertWindow::showOkCancelBox (AlertWindow::QuestionIcon, "Close panel", "Are you sure you want to close this panel [" + ed->getName() + "]", "Close", "Cancel", this) == 1) // Updated v5.6.34. Thanks to @dobo365
             {
                 owner.removePanel(ed);
             }

@@ -340,7 +340,7 @@ Tuturial coming soon.
 
 ## Changelog
 
-#### Version 5.6.34 | 2025.07.21
+#### Version 5.6.34 | 2025.07.25
 
 * **NEW** ProTools AAX plugin support (requires AAX SDK 2.8+ and codesigning via PACE)
 * **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
@@ -361,6 +361,7 @@ Tuturial coming soon.
 * **NEW** Support for online plugin authorization (Requires PHP & SQL Server with keygen and authentication scripts and exec). `CtrlrX.jucer`, `LCore.cpp`, `LMachineIDUtilities.cpp` & `.h`, `LOnlineUnlockStatus.cpp` & `.h`, `LOnlineUnlockStatusCheck.cpp`& `.h`, `LRSAKey.cpp` & `.h`
 * **UPDATED** askForTextInputWindow fallback for cancel button value to -1. `CtrlrLuaUtils.cpp`
 * **UPDATED** LuaMethodEditor, "Open" and "Rename" method items added to the menu. `CtrlrLuaMethodEditor.cpp` & `.h`
+* **UPDATED** Close panel alert window buttons set to "Close" & "Cancel". `CtrlrDocumentPanel.cpp`
 
 #### Version 5.6.33 | 2025.05.28
 
