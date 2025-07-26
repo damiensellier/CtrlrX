@@ -33,7 +33,8 @@
 
 //==============================================================================
 CtrlrLuaMethodEditArea::CtrlrLuaMethodEditArea (CtrlrLuaMethodEditor &_owner)
-    : owner(_owner)
+    : owner(_owner),
+	sharedSearchTabsValue()
 {
     addAndMakeVisible (lowerTabs = new TabbedComponent (TabbedButtonBar::TabsAtBottom));
     lowerTabs->setCurrentTabIndex (-1);
@@ -54,7 +55,7 @@ CtrlrLuaMethodEditArea::CtrlrLuaMethodEditArea (CtrlrLuaMethodEditor &_owner)
 	output->setColour (TextEditor::outlineColourId, Colours::transparentBlack);
 	output->setColour (TextEditor::shadowColourId, Colours::transparentBlack);
 
-	find						= new CtrlrLuaMethodFind(owner);
+	find = new CtrlrLuaMethodFind(owner, sharedSearchTabsValue);
 	addAndMakeVisible (resizer	= new StretchableLayoutResizerBar (&layoutManager, 1, false));
     debuggerPrompt              = new CtrlrLuaMethodDebuggerPrompt(owner);
 	luaConsole                  = new CtrlrLuaConsole (owner.getOwner());

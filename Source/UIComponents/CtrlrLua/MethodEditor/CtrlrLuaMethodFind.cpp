@@ -32,8 +32,10 @@
 //[/MiscUserDefs]
 
 //==============================================================================
-CtrlrLuaMethodFind::CtrlrLuaMethodFind (CtrlrLuaMethodEditor &_owner)
-    : owner(_owner)
+CtrlrLuaMethodFind::CtrlrLuaMethodFind(CtrlrLuaMethodEditor& owner_, juce::Value& sharedSearchTabsValue_)
+	: Component("CtrlrLuaMethodFind"),
+	owner(owner_),
+	sharedSearchTabsValue(sharedSearchTabsValue_)
 {
     setName ("Search and Replace");
     addAndMakeVisible (findInput = new TextEditor (""));
@@ -108,6 +110,12 @@ CtrlrLuaMethodFind::CtrlrLuaMethodFind (CtrlrLuaMethodEditor &_owner)
     whereToFindCombo->addItem (TRANS("All"), 3);
     whereToFindCombo->addListener (this);
 
+	openSearchTabs = new juce::ToggleButton("Open all search files in new tabs");
+	openSearchTabs->setButtonText(L"Open all search files in new tabs");
+	openSearchTabs->addListener(this);
+
+	addAndMakeVisible(openSearchTabs);
+	openSearchTabs->getToggleStateValue().referTo(sharedSearchTabsValue);
 
     //[UserPreSize]
 	replaceInput->addListener (this);
@@ -130,6 +138,7 @@ CtrlrLuaMethodFind::~CtrlrLuaMethodFind()
     //[Destructor_pre]. You can add your own custom destruction code here..
     //[/Destructor_pre]
 
+    openSearchTabs = nullptr;
     findInput = nullptr;
     replaceInput = nullptr;
     findNext = nullptr;
@@ -155,6 +164,7 @@ void CtrlrLuaMethodFind::resized()
     replaceAllButton->setBounds ((proportionOfWidth (0.4505f) + proportionOfWidth (0.3302f)) + proportionOfWidth (0.0991f), 4, proportionOfWidth (0.0991f), 32);
     label->setBounds (4 + 0, 40, 64, 24);
     matchCase->setBounds (4 + 68, 40, 96, 24);
+    openSearchTabs->setBounds (4 + 68, 60, 120, 24);
     label2->setBounds (proportionOfWidth (0.4505f) + 121, 40, 64, 24);
     whereToFindCombo->setBounds (176, 40, 128, 24);
     //[UserResized] Add your own custom resize handling here..
@@ -183,6 +193,7 @@ void CtrlrLuaMethodFind::buttonClicked (Button* buttonThatWasClicked)
 		}
         //[/UserButtonCode_findNext]
     }
+	else if (buttonThatWasClicked == openSearchTabs) {}
     else if (buttonThatWasClicked == replaceNextButton)
     {
         //[UserButtonCode_replaceNextButton] -- add your button handler code here..
@@ -376,7 +387,7 @@ void CtrlrLuaMethodFind::findInAll()
 {
 	owner.getMethodEditArea()->insertOutput("\n\nSearching for: \"" + findInput->getText() + "\" in all methods (double click line to jump)\n", Colours::darkblue);
 	StringArray names;
-	const bool shouldOpenTabs = owner.getOpenSearchTabsEnabled(); // gets toggle state in Edit->Preferences
+	const bool shouldOpenTabs = openSearchTabs->getToggleState();
 	for (int i = 0; i < owner.getMethodManager().getNumMethods(); i++)
 	{
 		CtrlrLuaMethod* m = owner.getMethodManager().getMethodByIndex(i);

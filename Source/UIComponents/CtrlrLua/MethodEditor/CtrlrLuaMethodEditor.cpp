@@ -1159,7 +1159,7 @@ void CtrlrLuaMethodEditor::menuItemSelected(int menuItemID, int topLevelMenuInde
 	}
 	else if (menuItemID == 6 && topLevelMenuIndex == 1)
 	{
-		CtrlrLuaMethodCodeEditorSettings s(*this);
+		CtrlrLuaMethodCodeEditorSettings s(*this, getMethodEditArea()->getSharedSearchTabsValue());
 		CtrlrDialogWindow::showModalDialog ("Code editor preferences", &s, false, this); // Updated v5.6.31. settings to preferences
 
 		componentTree.setProperty (Ids::luaMethodEditorFont, owner.getCtrlrManagerOwner().getFontManager().getStringFromFont (s.getFont()), nullptr);

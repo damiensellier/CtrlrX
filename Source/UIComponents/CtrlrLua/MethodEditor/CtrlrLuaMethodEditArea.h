@@ -70,18 +70,20 @@ public:
 
     void paint (Graphics& g);
     void resized();
-
+	juce::Value& getSharedSearchTabsValue() { return sharedSearchTabsValue; }
 
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
 	CtrlrLuaMethodEditor &owner;
+	juce::Value sharedSearchTabsValue;
 	StretchableLayoutManager layoutManager;
 	StretchableLayoutResizerBar *resizer;
 	CtrlrTextEditor *output;
 	CtrlrLuaMethodFind *find;
 	CtrlrLuaMethodDebuggerPrompt *debuggerPrompt;
 	CtrlrLuaConsole *luaConsole;
+	juce::Value searchTabsValue; // This will be shared between toggles
     //[/UserVariables]
 
     //==============================================================================

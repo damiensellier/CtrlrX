@@ -63,7 +63,7 @@ namespace BinaryData
     const int            github_line_svgSize = 1633;
 
     extern const char*   paypal_colour_svg;
-    const int            paypal_colour_svgSize = 2052;
+    const int            paypal_colour_svgSize = 2053;
 
     extern const char*   paypal_bw_svg;
     const int            paypal_bw_svgSize = 1518;

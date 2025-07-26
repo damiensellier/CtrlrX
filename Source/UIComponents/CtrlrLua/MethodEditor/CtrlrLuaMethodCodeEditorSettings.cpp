@@ -33,8 +33,8 @@
 //[/MiscUserDefs]
 
 //==============================================================================
-CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMethodEditor &_owner)
-    : owner(_owner),
+CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMethodEditor &_owner, juce::Value& sharedSearchTabsValue_)
+    : owner(_owner), sharedSearchTabsValue(sharedSearchTabsValue_),
       fontTypeface (0),
       fontBold (0),
      // fontUnderline (0),
@@ -101,13 +101,9 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
 
     addAndMakeVisible (fontTest = new CodeEditorComponent (codeDocument, &luaTokeniser));
 
-    addAndMakeVisible(openSearchTabs= new ToggleButton(""));
+    addAndMakeVisible(openSearchTabs = new ToggleButton(""));
     openSearchTabs->setButtonText(L"Open closed tabs after match");
-    openSearchTabs->addListener(this);
-
-    bool savedOpenSearchTabsState = owner.getComponentTree().getProperty(Ids::openSearchTabsState, false); // 'false' is the default if not found
-    openSearchTabs->setToggleState(savedOpenSearchTabsState, dontSendNotification);
-    owner.setOpenSearchTabsEnabled(savedOpenSearchTabsState);
+    openSearchTabs->getToggleStateValue().referTo(sharedSearchTabsValue);
 
     addAndMakeVisible(resetButton = new TextButton("RESET")); // Added JG
     resetButton->addListener(this); 

@@ -50,7 +50,7 @@ class CtrlrLuaMethodCodeEditorSettings  : public Component,
 {
 public:
     //==============================================================================
-    CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMethodEditor &_owner);
+    CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMethodEditor &_owner, juce::Value& sharedSearchTabsValue_);
     ~CtrlrLuaMethodCodeEditorSettings();
 
     //==============================================================================
@@ -98,6 +98,7 @@ private:
     Label* label3; // Added v5.6.31
     CtrlrColourEditorComponent* lineNumbersColour; // Added v5.6.31
     CodeEditorComponent* fontTest;
+    juce::Value& sharedSearchTabsValue;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrLuaMethodCodeEditorSettings);
