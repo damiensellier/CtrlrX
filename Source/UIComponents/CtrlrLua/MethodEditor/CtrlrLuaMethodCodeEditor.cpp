@@ -456,10 +456,11 @@ void CtrlrLuaMethodCodeEditor::findInAll(const String& search)
 			Colours::red);
 		return;
 	}
+
 	owner.getMethodEditArea()->insertOutput("\n\nSearching for: \"" + search + "\" in all methods (double click line to jump)\n", Colours::darkblue);
 	StringArray names;
 
-	// Get the toggle state from the owner
+	// Get the toggle state from the owner ONCE at the beginning
 	const bool shouldOpenTabs = owner.getOpenSearchTabsEnabled(); // gets toggle state in Edit->Preferences
 
 	for (int i = 0; i < owner.getMethodManager().getNumMethods(); i++)
@@ -482,10 +483,9 @@ void CtrlrLuaMethodCodeEditor::findInAll(const String& search)
 					reportFoundMatch(doc, names[i], results[j]);
 				}
 			}
-			else // Added 5.6.34 by goodweather. Search in not yet opened methods
+			else // Method is not yet opened
 			{
-
-				/* Open method */
+				/* Open method temporarily to search */
 				owner.createNewTab(m);
 				owner.setCurrentTab(m);
 
@@ -498,17 +498,24 @@ void CtrlrLuaMethodCodeEditor::findInAll(const String& search)
 				{
 					reportFoundMatch(doc, names[i], results[j]);
 				}
-				if (!shouldOpenTabs) // Only open if the toggle button is enabled
+
+				// Decide whether to keep the tab open based on toggle state AND whether there were results
+				if (!shouldOpenTabs || results.size() == 0)
 				{
+					// Close the tab if:
+					// 1. The user doesn't want tabs opened automatically, OR
+					// 2. No search results were found (regardless of toggle state)
 					owner.closeCurrentTab();
 				}
-			
+				// If shouldOpenTabs is true AND results.size() > 0, keep the tab open
 			}
 		}
 	}
 
 	owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0, true);
 }
+
+
 //void CtrlrLuaMethodCodeEditor::findInAll(const String &search)
 //{
 //	// Validate search string first
