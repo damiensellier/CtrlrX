@@ -53,43 +53,92 @@ void CtrlrMidiInputComparatorMulti::addMatchTarget (CtrlrModulator *m)
 	}
 }
 
-void CtrlrMidiInputComparatorMulti::match (const MidiMessage &m)
+//void CtrlrMidiInputComparatorMulti::match (const MidiMessage &m)
+//{
+//	bool match = false;
+//	startTimer (200);
+//
+//	if (!basicMatch(m))
+//	{
+//		updateState(match);
+//		return;
+//	}
+//
+//	if (cacheMatch())
+//	{
+//		updateState(match);
+//		return;
+//	}
+//
+//	BigInteger bi = memoryToBits(messageContainer.getData());
+//	CtrlrMultiMidiMapIterator it;
+//
+//	for (it=map.begin(); it != map.end(); it++)
+//	{
+//		if (compareMemory ((*it).first.toMemoryBlock(), messageContainer.getData()))
+//		{
+//			match = true;
+//
+//			for (int i=0; i < (*it).second.targets.size(); i++)
+//			{
+//				(*it).second.targets[i]->getProcessor().setValueFromMIDI (messageContainer, source);
+//				owner.multiMidiReceived(messageContainer);
+//			}
+//
+//			updateCache (it);
+//			break;
+//		}
+//	}
+//	updateState(match);
+//}
+
+void CtrlrMidiInputComparatorMulti::match (const MidiMessage &m) // Updated v5.6.34. Ensures that even if the cache handles some targets, the main map is still checked, and it also processes all matching map entries, by removing the problematic return; and break; statements.
 {
-	bool match = false;
-	startTimer (200);
+    bool messageWasHandled = false;
+    startTimer (200);
 
-	if (!basicMatch(m))
-	{
-		updateState(match);
-		return;
-	}
+    if (!basicMatch(m))
+    {
+        updateState(messageWasHandled);
+        return;
+    }
 
-	if (cacheMatch())
-	{
-		updateState(match);
-		return;
-	}
+    // Attempt to match and dispatch using the cache first.
+    // cacheMatch() will return true if it dispatched anything.
+    if (cacheMatch())
+    {
+        messageWasHandled = true;
+        // Removed 'return;' here to ensure the main map lookup can still occur,
+        // even if the cache found and handled some targets.
+    }
 
-	BigInteger bi = memoryToBits(messageContainer.getData());
-	CtrlrMultiMidiMapIterator it;
+    BigInteger bi = memoryToBits(messageContainer.getData());
+    CtrlrMultiMidiMapIterator it;
 
-	for (it=map.begin(); it != map.end(); it++)
-	{
-		if (compareMemory ((*it).first.toMemoryBlock(), messageContainer.getData()))
-		{
-			match = true;
+    // Iterate through the main map entries to find and process all matches.
+    for (it = map.begin(); it != map.end(); it++)
+    {
+        if (compareMemory ((*it).first.toMemoryBlock(), messageContainer.getData()))
+        {
+            messageWasHandled = true; // A match was found in the map.
 
-			for (int i=0; i < (*it).second.targets.size(); i++)
-			{
-				(*it).second.targets[i]->getProcessor().setValueFromMIDI (messageContainer, source);
-				owner.multiMidiReceived(messageContainer);
-			}
+            // Process ALL targets associated with this specific map entry.
+            for (int i = 0; i < (*it).second.targets.size(); i++)
+            {
+                (*it).second.targets[i]->getProcessor().setValueFromMIDI (messageContainer, source);
+                owner.multiMidiReceived(messageContainer);
+            }
 
-			updateCache (it);
-			break;
-		}
-	}
-	updateState(match);
+            // Update the cache for this entry (e.g., move to front for LRU).
+            updateCache (it);
+
+            // Removed 'break;' here to ensure ALL matching map entries are processed,
+            // not just the first one.
+        }
+    }
+
+    // Final state update based on whether any modulator was handled by cache or map.
+    updateState(messageWasHandled);
 }
 
 bool CtrlrMidiInputComparatorMulti::basicMatch(const MidiMessage &m)
@@ -108,27 +157,49 @@ bool CtrlrMidiInputComparatorMulti::basicMatch(const MidiMessage &m)
 	return (true);
 }
 
-bool CtrlrMidiInputComparatorMulti::cacheMatch ()
+//bool CtrlrMidiInputComparatorMulti::cacheMatch ()
+//{
+//	bool match = false;
+//
+//	for (int i=0; i<cache.size(); i++)
+//	{
+//		if (compareMemory(cache[i].key.toMemoryBlock(), messageContainer.getData()))
+//		{
+//			match = true;
+//
+//			for (int j=0; j<cache[i].mapData.targets.size(); j++)
+//			{
+//				cache[i].mapData.targets[j]->getProcessor().setValueFromMIDI (messageContainer, source);
+//				owner.multiMidiReceived(messageContainer);
+//			}
+//
+//			break;
+//		}
+//	}
+//
+//	return (match);
+//}
+
+bool CtrlrMidiInputComparatorMulti::cacheMatch () // Updated v5.6.34. Prevent exiting the loop too early without iterating throught the next target modulators
 {
-	bool match = false;
+    bool dispatchedAnyFromCache = false;
 
-	for (int i=0; i<cache.size(); i++)
-	{
-		if (compareMemory(cache[i].key.toMemoryBlock(), messageContainer.getData()))
-		{
-			match = true;
-
-			for (int j=0; j<cache[i].mapData.targets.size(); j++)
-			{
-				cache[i].mapData.targets[j]->getProcessor().setValueFromMIDI (messageContainer, source);
-				owner.multiMidiReceived(messageContainer);
-			}
-
-			break;
-		}
-	}
-
-	return (match);
+    for (int i = 0; i < cache.size(); i++)
+    {
+        if (compareMemory(cache[i].key.toMemoryBlock(), messageContainer.getData()))
+        {
+            for (int j = 0; j < cache[i].mapData.targets.size(); j++)
+            {
+                cache[i].mapData.targets[j]->getProcessor().setValueFromMIDI (messageContainer, source);
+                owner.multiMidiReceived(messageContainer);
+                dispatchedAnyFromCache = true;
+            }
+            // Removed 'break;' here to ensure all matching cache entries are processed.
+            // If your multi-message patterns are truly unique per cache entry,
+            // this loop will naturally only hit one entry.
+        }
+    }
+    return dispatchedAnyFromCache;
 }
 
 void CtrlrMidiInputComparatorMulti::updateState(const bool match)

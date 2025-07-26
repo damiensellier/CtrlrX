@@ -37,7 +37,8 @@ namespace Ids
     DECLARE_ID (null);
     DECLARE_ID (timeout);
     DECLARE_ID (active);
-    
+    DECLARE_ID (openSearchTabsState); // added JG where to put?
+
     DECLARE_ID (modulatorValue);
     DECLARE_ID (modulatorIsStatic);
     DECLARE_ID (modulatorGlobalVariable);
@@ -505,6 +506,8 @@ namespace Ids
     DECLARE_ID (uiMidiKeyboardBaseOctaveKeyPress);
     DECLARE_ID (uiMidiKeyboardOctaveFroMiddleC);
     DECLARE_ID (uiMidiKeyboardMapToNoteNumber);
+    DECLARE_ID (uiMidiKeyboardOctaveKeyDown); // Added v5.6.34
+    DECLARE_ID (uiMidiKeyboardOctaveKeyUp); // Added v5.6.34
     
     DECLARE_ID (uiTabsNumberOfTabs);
     DECLARE_ID (uiTabsOrientation);

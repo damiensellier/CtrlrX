@@ -95,7 +95,7 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
         setProperty (Ids::panelExportResourceEncryption, 1); // Added v5.6.33. Helps with debugging crash at export on Apple Silicon
         setProperty (Ids::panelExportDelayBtwSteps, 1); // Added v5.6.33. Helps with debugging crash at export on Apple Silicon
         // For VST2 & VST3
-        if (fileExtension == ".vst3" || fileExtension == ".vst") {
+        if (fileExtension == ".vst3" || fileExtension == ".vst" || fileExtension == ".aaxplugin") { // Updated v5.6.34. AAX added
             setProperty (Ids::panelReplaceVst3PluginIds, 1); // Added v5.6.32
         }
         setProperty (Ids::panelExportCodesign, 1); // Added v5.6.33. Helps with debugging crash at export on Apple Silicon
@@ -118,27 +118,30 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
     setProperty (Ids::panelMidiSnapshotAfterProgramChange, false);
     setProperty (Ids::panelMidiSnapshotDelay, 10);
     setProperty (Ids::panelMidiSnapshotShowProgress, false);
-    setProperty (Ids::panelMidiInputChannelDevice, 1);
     setProperty (Ids::panelMidiInputDevice, COMBO_NONE_ITEM);
-    setProperty (Ids::panelMidiControllerChannelDevice, 1);
+    setProperty (Ids::panelMidiInputChannelDevice, 1);
     setProperty (Ids::panelMidiControllerDevice, COMBO_NONE_ITEM);
-    setProperty (Ids::panelMidiOutputChannelDevice, 1);
+    setProperty (Ids::panelMidiControllerChannelDevice, 1);
     setProperty (Ids::panelMidiOutputDevice, COMBO_NONE_ITEM);
+    setProperty (Ids::panelMidiOutputChannelDevice, 1);
 
-    setProperty (Ids::panelMidiInputFromHost, false);
-    setProperty (Ids::panelMidiInputChannelHost, 1);
-    setProperty (Ids::panelMidiOutputToHost, false);
-    setProperty (Ids::panelMidiOutputChannelHost, 1);
-
-    setProperty (Ids::panelMidiThruH2H, false);
-    setProperty (Ids::panelMidiThruH2HChannelize, false);
-    setProperty (Ids::panelMidiThruH2D, false);
-    setProperty (Ids::panelMidiThruH2DChannelize, false);
+    if(!JUCEApplication::isStandaloneApp()) // Added v5.6.34. Set CtrlrX to receive THE MIDI IN MESSAGES from the HOST MIDI IN on ALL Channels.
+    {
+        setProperty (Ids::panelMidiInputFromHost, true);
+        setProperty (Ids::panelMidiInputChannelHost, 0);
+        setProperty (Ids::panelMidiInputFromHostCompare, true);
+        setProperty (Ids::panelMidiOutputToHost, false);
+        setProperty (Ids::panelMidiOutputChannelHost, 1);
+        setProperty (Ids::panelMidiThruH2H, false);
+        setProperty (Ids::panelMidiThruH2HChannelize, false);
+        setProperty (Ids::panelMidiThruH2D, false);
+        setProperty (Ids::panelMidiThruH2DChannelize, false);
+        setProperty (Ids::panelMidiThruD2H, false);
+        setProperty (Ids::panelMidiThruD2HChannelize, false);
+    }
     setProperty (Ids::panelMidiThruD2D, false);
     setProperty (Ids::panelMidiThruD2DChannelize, false);
-    setProperty (Ids::panelMidiThruD2H, false);
-    setProperty (Ids::panelMidiThruD2HChannelize, false);
-    setProperty (Ids::panelMidiRealtimeIgnore, true);
+    setProperty (Ids::panelMidiRealtimeIgnore, false); // Updated v5.6.34. Was (true). Useless and does not make any sense to ignore MIDI IN Messages by default. Ref: void CtrlrPanelMIDIInputThread::handleMIDIFromDevice (const MidiMessage &message)
     setProperty (Ids::panelMidiInputThreadPriority, 7);
     setProperty (Ids::panelMidiProgram, 0);
     setProperty (Ids::panelMidiBankLsb, 0);
@@ -203,7 +206,7 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
 //    setProperty (Ids::ctrlrMenuBarHighlightColour, Colour(HIGHLIGHT_COLOUR).toString());
 //    setProperty (Ids::ctrlrMenuBarFont, owner.getFontManager().getStringFromFont (Font (18.0f)));
 
-    setProperty (Ids::ctrlrUseEditorWrapper, false);
+    // setProperty (Ids::ctrlrUseEditorWrapper, false); // Removed v5.6.34. Conditions hard coded for the wrapper with Ableton Live on Windows
     
     owner.addChangeListener (this);
     midiMessageCollector.reset (SAMPLERATE);

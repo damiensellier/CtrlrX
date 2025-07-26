@@ -42,6 +42,20 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     ctrlrxReleaseDateLabel->setColour (Label::textColourId, Colour(getLookAndFeel().findColour (Label::textColourId).withAlpha(0.8f)));
     ctrlrxReleaseDateLabel->setColour (Label::backgroundColourId, Colour(getLookAndFeel().findColour (Label::backgroundColourId)));
     
+    // CtrlrX libs version Label
+    String juceVersion = SystemStats::getJUCEVersion().fromLastOccurrenceOf("JUCE v", false, true);
+    String luaVersion = LUA_RELEASE;
+    String luabindVersion = _STR(LUABIND_VERSION / 1000) + "." + _STR(LUABIND_VERSION / 100 % 100) + "." + _STR(LUABIND_VERSION % 100);
+    String boostVersion = _STR(BOOST_VERSION / 100000) + "." + _STR((BOOST_VERSION / 100) % 1000) + "." + _STR(BOOST_VERSION % 100);
+    String buildDetails = "JUCE " + juceVersion + " | " + luaVersion + " | LuaBind " + luabindVersion + " | Boost " + boostVersion;
+    addAndMakeVisible (ctrlrxLibsVersionLabel = new Label ("Version",  buildDetails));
+    ctrlrxLibsVersionLabel->setFont (Font (12.00f, Font::plain));
+    ctrlrxLibsVersionLabel->setJustificationType (Justification::topLeft);
+    ctrlrxLibsVersionLabel->setEditable (false, false, false);
+    ctrlrxLibsVersionLabel->setMinimumHorizontalScale(1.0f);
+    ctrlrxLibsVersionLabel->setColour (Label::textColourId, Colour(getLookAndFeel().findColour (Label::textColourId).withAlpha(0.8f)));
+    ctrlrxLibsVersionLabel->setColour (Label::backgroundColourId, Colour(getLookAndFeel().findColour (Label::backgroundColourId)));
+    
     // Credits Label
     addAndMakeVisible (creditsLabel = new TextEditor (""));
     creditsLabel->setFont (Font (13.00f, Font::plain));
@@ -63,26 +77,26 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     
     
     
-    // CTRLRX LOGO SVG
+    // Github LOGO SVG
     addAndMakeVisible (githubLogo = gui::createDrawableButton("Github Logo", BIN2STR(github_colour_svg))); // Updated v5.6.31. It required to drag drop SVG file in the projucer in the icon folder to be embedded
     githubLogo->addListener (this);
     githubLogo->setTooltip (TRANS("Visit CtrlrX github page"));
     githubLogo->setMouseCursor(MouseCursor::PointingHandCursor);
     
-    // ctrlrx link
+    // Github link
     addAndMakeVisible (ctrlrxUrl = new HyperlinkButton ("Visit CtrlrX github page", URL ("https://github.com/damiensellier/CtrlrX")));
     ctrlrxUrl->setTooltip (TRANS("Visit CtrlrX github page"));
     ctrlrxUrl->setFont(14.00f, Font::plain);
     ctrlrxUrl->setJustificationType(Justification::topLeft);
     ctrlrxUrl->setColour (HyperlinkButton::textColourId, Colour(getLookAndFeel().findColour (PopupMenu::highlightedBackgroundColourId)));
     
-    // CTRLRX LOGO SVG
+    // PayPal LOGO SVG
     addAndMakeVisible (paypalLogo = gui::createDrawableButton("PayPal Logo", BIN2STR(paypal_colour_svg))); // Updated v5.6.31. It required to drag drop SVG file in the projucer in the icon folder to be embedded
     paypalLogo->addListener (this);
     paypalLogo->setTooltip (TRANS("Donate to the CtrlrX project"));
     paypalLogo->setMouseCursor(MouseCursor::PointingHandCursor);
     
-    // ctrlrx link
+    // PayPal link
     addAndMakeVisible (ctrlrxDonateUrl = new HyperlinkButton ("Donate to the CtrlrX project", URL ("https://paypal.me/damiensellier"))); // Updated v5.6.31b
     ctrlrxDonateUrl->setTooltip (TRANS("Donate to the CtrlrX project"));
     ctrlrxDonateUrl->setFont(14.00f, Font::plain);
@@ -111,13 +125,13 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     
     
 
-    // CTRLRX LOGO SVG
+    // JUCE & FRIENDS LOGO SVG
     addAndMakeVisible (vst3AuJuceLogo = gui::createDrawableButton("Copyright Logo", BIN2STR(vst3_au_juce_mini_logo_bg_rnd_svg))); // Updated v5.6.31. It required to drag drop SVG file in the projucer in the icon folder to be embedded
     vst3AuJuceLogo->addListener (this);
     vst3AuJuceLogo->setTooltip (TRANS("Visit ctrlr.org"));
     vst3AuJuceLogo->setMouseCursor(MouseCursor::PointingHandCursor);
     
-    // copyright Label
+    // JUCE & FRIENDS Label
     addAndMakeVisible (copyrightLabel = new TextEditor (""));
     copyrightLabel->setFont (Font (13.00f, Font::plain));
     copyrightLabel->setMultiLine (true, true);
@@ -341,10 +355,17 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
 
 CtrlrAbout::~CtrlrAbout()
 {
+    
+	if (ctrlrLogo)         ctrlrLogo->removeListener(this);
+	if (githubLogo)        githubLogo->removeListener(this);
+	if (paypalLogo)        paypalLogo->removeListener(this);
+	if (vst3AuJuceLogo)    vst3AuJuceLogo->removeListener(this);
+    
     ctrlrName = nullptr;
     ctrlrLogo = nullptr;
     vst3AuJuceLogo = nullptr;
     versionInfoLabel = nullptr;
+    ctrlrxLibsVersionLabel = nullptr;
     creditsLabel = nullptr;
     ctrlrxVersionLabel = nullptr;
     ctrlrxReleaseDateLabel = nullptr;
@@ -381,7 +402,7 @@ void CtrlrAbout::paint (Graphics& g)
     
     // Vertical line separator
     g.setColour(getLookAndFeel().findColour (Label::textColourId).withAlpha(0.5f));
-    g.drawVerticalLine(190, 270, 310); // vert separation @ 170
+    g.drawVerticalLine(190, 280, 320); // vert separation @ 170
 
 }
 
@@ -412,8 +433,12 @@ void CtrlrAbout::resized()
     heightPosition += ( ctrlrxVersionLabelheight );
     ctrlrxReleaseDateLabel->setBounds (ctrlrLogoSize + paddingSize*3, heightPosition, rightColumnWidth, ctrlrxReleaseDateLabelheight);
     
+    int ctrlrxLibsVersionLabelheight = 18;
+    heightPosition += ( ctrlrxReleaseDateLabelheight );
+    ctrlrxLibsVersionLabel->setBounds (ctrlrLogoSize + paddingSize*3, heightPosition, rightColumnWidth, ctrlrxLibsVersionLabelheight);
+    
     int creditsLabelheight = 32;
-    heightPosition += ( ctrlrxReleaseDateLabelheight + paddingSize );
+    heightPosition += ( ctrlrxLibsVersionLabelheight + paddingSize );
     creditsLabel->setBounds (ctrlrLogoSize + paddingSize*3 + 4, heightPosition, rightColumnWidth, creditsLabelheight);
         
     int ctrlrxUrlHeight = 18;
@@ -429,7 +454,7 @@ void CtrlrAbout::resized()
     
     // Centered
     int descriptionLabelheight = 48;
-    heightPosition = ( ctrlrLogoSize + paddingSize*3 );
+    heightPosition = ( ctrlrLogoSize + paddingSize*4 );
     descriptionLabel->setBounds (paddingSize, heightPosition, getWidth() - paddingSize*2, descriptionLabelheight);
     
     

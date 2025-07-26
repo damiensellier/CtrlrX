@@ -40,7 +40,9 @@
 */
 class CtrlrMidiKeyboard  : public CtrlrComponent,
                            public MidiKeyboardStateListener,
-						   public CtrlrPanel::Listener
+						   public CtrlrPanel::Listener,
+                           public KeyListener        // Added v5.6.34. Added for key press handling.
+                           // public FocusChangeListener // Added v5.6.34. Added for focus outline handling. Not working with JUCE 6.0.8
 {
 public:
     //==============================================================================
@@ -63,6 +65,15 @@ public:
 	void handleNoteOff (MidiKeyboardState* source, int midiChannel, int midiNoteNumber, float velocity);
 	void midiReceived(MidiMessage &message);
 	void customLookAndFeelChanged(LookAndFeelBase *customLookAndFeel = nullptr) {}
+    // KeyListener overrides
+    bool keyPressed (const KeyPress& key, Component* originatingComponent) override; // Added v5.6.34. For Octave UP/DOWN
+
+    // FocusChangeListener overrides
+    void focusGained (FocusChangeType cause) override;  // Added v5.6.34. For Octave UP/DOWN
+    void focusLost (FocusChangeType cause) override; // Added v5.6.34. For Octave UP/DOWN
+    void focusOfChildComponentChanged (FocusChangeType cause) override;
+    void mouseEnter (const MouseEvent& event) override;
+    void mouseExit  (const MouseEvent& event) override;
     //[/UserMethods]
 
     void paint (Graphics& g);
@@ -76,6 +87,8 @@ private:
     //[UserVariables]   -- You can add your own custom variables in this section.
 	MidiKeyboardState keyboardState;
 	CtrlrMidiMessage noteOn, noteOff;
+    int currentBaseOctave; // Added v5.6.34
+    bool isMouseHovering = false; // Added v5.6.34
     //[/UserVariables]
 
     //==============================================================================

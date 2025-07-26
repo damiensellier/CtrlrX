@@ -123,43 +123,64 @@ void CtrlrMidiInputComparatorSingle::addMatchTargetSysEx (CtrlrModulator *m)
 	}
 }
 
-void CtrlrMidiInputComparatorSingle::match (const MidiMessage &m)
+void CtrlrMidiInputComparatorSingle::match (const MidiMessage &m) // Updated v5.6.34. Comparator was only updating the first modulator if several have the same CC index.
 {
-	messageContainer			= m;
-	CtrlrMidiMessageType type	= midiMessageToType(m);
-	int channel					= m.getChannel();
-	int number					= getMidiNumberFromMidiMessage(m);
+    _DBG("SINGLE_COMPARATOR_DBG: Entered match(MidiMessage) for: " + m.getDescription());
 
-	if (cacheMatch(type, number, channel))
-	{
-		return;
-	}
+    messageContainer = m;
+    CtrlrMidiMessageType type = midiMessageToType(m);
+    int channel = m.getChannel();
+    int number = getMidiNumberFromMidiMessage(m);
 
-	if (type == SysEx)
-	{
-		matchSysEx(m);
-		return;
-	}
+    // --- Debugging cacheMatch call ---
+    _DBG("SINGLE_COMPARATOR_DBG: Calling cacheMatch for type=" + String(type) + ", number=" + String(number) + ", channel=" + String(channel));
+    if (cacheMatch(type, number, channel))
+    {
+        _DBG("SINGLE_COMPARATOR_DBG: Cache matched, returning early. No further map lookup will occur for this message.");
+        return; // THIS IS THE SUSPECTED EARLY EXIT POINT
+    }
+    _DBG("SINGLE_COMPARATOR_DBG: Cache did NOT match, proceeding to map lookup.");
 
-	CtrlrMidiMap &map = getMap(type);
+    if (type == SysEx)
+    {
+        matchSysEx(m);
+        return;
+    }
 
-	if (map.size() != 0)
-	{
-		CtrlrMidiMapIterator it = map.find (number);
+    CtrlrMidiMap &map = getMap(type);
 
-		if (it != map.end())
-		{
-			for (int i=0; i < (*it).second.targets.size(); i++)
-			{
-				if (m.getChannel() == (*it).second.targets[i]->getMidiMessage().getChannel())
-				{
-					(*it).second.targets[i]->getProcessor().setValueFromMIDI (messageContainer);
+    if (map.size() != 0)
+    {
+        CtrlrMidiMapIterator it = map.find (number);
 
-					updateCache (type, it);
-				}
-			}
-		}
-	}
+        if (it != map.end())
+        {
+            _DBG("SINGLE_COMPARATOR_DBG: Map found " + String((*it).second.targets.size()) + " targets for number " + String(number) + ".");
+            for (int i=0; i < (*it).second.targets.size(); i++)
+            {
+                _DBG("SINGLE_COMPARATOR_DBG: Checking target " + (*it).second.targets[i]->getName() + " (Mod Channel: " + String((*it).second.targets[i]->getMidiMessage().getChannel()) + " vs Msg Channel: " + String(m.getChannel()) + ")");
+                if (m.getChannel() == (*it).second.targets[i]->getMidiMessage().getChannel())
+                {
+                    _DBG("SINGLE_COMPARATOR_DBG: CHANNEL MATCH for (MAP) " + (*it).second.targets[i]->getName() + ". DISPATCHING.");
+                    (*it).second.targets[i]->getProcessor().setValueFromMIDI (messageContainer);
+                    updateCache (type, it); // updateCache might be moving the target to front, affecting future cacheMatch
+                }
+                else
+                {
+                    _DBG("SINGLE_COMPARATOR_DBG: Channel MISMATCH for (MAP) " + (*it).second.targets[i]->getName());
+                }
+            }
+        }
+        else
+        {
+            _DBG("SINGLE_COMPARATOR_DBG: No entry found in map for number " + String(number) + ".");
+        }
+    }
+    else
+    {
+        _DBG("SINGLE_COMPARATOR_DBG: Map is empty for type " + String(type) + ".");
+    }
+    _DBG("SINGLE_COMPARATOR_DBG: Exiting match(MidiMessage).");
 }
 
 void CtrlrMidiInputComparatorSingle::matchSysEx(const MidiMessage &m)
@@ -223,34 +244,55 @@ void CtrlrMidiInputComparatorSingle::updateCacheSysEx (CtrlrMultiMidiMapIterator
 	}
 }
 
-bool CtrlrMidiInputComparatorSingle::cacheMatch(CtrlrMidiMessageType type, const int number, const int channel)
+bool CtrlrMidiInputComparatorSingle::cacheMatch(CtrlrMidiMessageType type, const int number, const int channel)  // Updated v5.6.34. Comparator was only updating the first modulator if several have the same CC index.
 {
-	if (type == SysEx)
-	{
-		return (cacheMatchSysEx());
-	}
+    _DBG("CACHE_DBG: Entered cacheMatch for type=" + String(type) + ", number=" + String(number) + ", channel=" + String(channel));
 
-	Array<CtrlrCacheDataSingle>	&cache	= getCache(type);
+    if (type == SysEx)
+    {
+        bool sysExMatch = cacheMatchSysEx();
+        _DBG("CACHE_DBG: SysEx cache match result: " + String((int)sysExMatch)); // Using the confirmed working fix
+        return (sysExMatch);
+    }
 
-	for (int i=0; i<cache.size(); i++)
-	{
-		if (cache[i].key == number)
-		{
-			for (int j=0; j<cache[i].mapData.targets.size(); j++)
-			{
-				if (cache[i].mapData.targets[j]->getMidiMessage().getChannel() == channel)
+    Array<CtrlrCacheDataSingle> &cache = getCache(type);
+    _DBG("CACHE_DBG: Cache size for type " + String(type) + ": " + String(cache.size()));
+
+    bool foundAndDispatchedAny = false; // Flag to track if any modulator was dispatched from this cache entry
+
+    for (int i = 0; i < cache.size(); i++)
+    {
+        _DBG("CACHE_DBG: Checking cache entry [" + String(i) + "] - Key: " + String(cache[i].key) + " (Target Number: " + String(number) + ")");
+        if (cache[i].key == number)
+        {
+            _DBG("CACHE_DBG: Cache key MATCH for number " + String(number) + " at index " + String(i) + ". Targets in cache entry: " + String(cache[i].mapData.targets.size()));
+            for (int j = 0; j < cache[i].mapData.targets.size(); j++)
+            {
+                _DBG("CACHE_DBG: Checking cache target [" + String(j) + "] " + cache[i].mapData.targets[j]->getName() + " (Mod Channel: " + String(cache[i].mapData.targets[j]->getMidiMessage().getChannel()) + " vs Msg Channel: " + String(channel) + ")");
+                if (cache[i].mapData.targets[j]->getMidiMessage().getChannel() == channel)
                 {
+                    _DBG("CACHE_DBG: CHANNEL MATCH for cache target " + cache[i].mapData.targets[j]->getName() + ". DISPATCHING.");
                     cache[i].mapData.targets[j]->getProcessor().setValueFromMIDI (messageContainer);
-                    return (true);
+                    foundAndDispatchedAny = true; // Set flag if a dispatch occurred
+                    // IMPORTANT: DO NOT return true here. Continue the inner loop
+                    // to process all other modulators associated with this cache entry.
+                }
+                else
+                {
+                    _DBG("CACHE_DBG: Channel MISMATCH for cache target " + cache[i].mapData.targets[j]->getName());
                 }
             }
-            // Updated v5.6.32. Fix VS warning at line 239. Error C4702 "unreachable code". Mod by @dnaldoog
-            // Only return false for this specific key if we've checked all targets
-            // and none matched the channel
+            // After checking ALL targets within this specific cache entry for the matching key:
+            if (foundAndDispatchedAny) {
+                _DBG("CACHE_DBG: Processed all targets for cache key " + String(number) + ". Returning TRUE from cacheMatch.");
+                return true; // Now it's safe to return true, as all relevant modulators for this key have been processed.
+            }
         }
     }
+    _DBG("CACHE_DBG: No match found in cache. Returning FALSE.");
     return (false);
 }
+
 
 bool CtrlrMidiInputComparatorSingle::cacheMatchSysEx ()
 {

@@ -25,6 +25,12 @@ struct CtrlrLuaCodeTokeniserFunctions
 	 */
     static bool isReservedKeyword (String::CharPointerType token, const int tokenLength) noexcept
     {
+            // Check if it starts with double underscore (metamethod)
+            if (tokenLength >= 3 && token[0] == '_' && token[1] == '_')
+            {
+                return true; // Treat all __* identifiers as keywords
+            }
+
         static const char* const keywords2Char[] =
             { "if", "or", "in", "do", 0 };
 
@@ -32,19 +38,19 @@ struct CtrlrLuaCodeTokeniserFunctions
             { "and", "end", "for", "nil", "not", 0 };
 
         static const char* const keywords4Char[] =
-            { "then", "true", "else", 0 };
+            { "then", "true", "self", "else", 0 };
 
         static const char* const keywords5Char[] =
             {  "false", "local", "until", "while", "break", 0 };
 
         static const char* const keywords6Char[] =
-            { "repeat", "return", "elseif", 0};
+            { "repeat", "rawget", "rawset","unpack", "return", "elseif", 0};
 
         static const char* const keywords7Char[] =
             { 0 };
 
         static const char* const keywordsOther[] =
-            { "function", "@interface", "@end", "@synthesize", "@dynamic", "@public",
+            { "function", "setmetatable" ,"getmetatable" , "@interface", "@end", "@synthesize", "@dynamic", "@public",
               "@private", "@property", "@protected", "@class", 0 };
 
         const char* const* k;
@@ -433,22 +439,76 @@ struct CtrlrLuaCodeTokeniserFunctions
             skipIfNextCharMatches (source, '+', '=');
             break;
 
+   //     case '-':
+   //         source.skip();
+   //         result = parseNumber (source);
+
+			//if (source.peekNextChar() == '-')
+			//{
+			//	result = CtrlrLuaCodeTokeniser::tokenType_comment;
+   //             source.skipToEndOfLine();
+			//}
+   //         else if (result == CtrlrLuaCodeTokeniser::tokenType_error)
+   //         {
+   //             result = CtrlrLuaCodeTokeniser::tokenType_operator;
+   //             skipIfNextCharMatches (source, '-', '=');
+   //         }
+   //         break;
         case '-':
             source.skip();
-            result = parseNumber (source);
+            result = parseNumber(source);
 
-			if (source.peekNextChar() == '-')
-			{
-				result = CtrlrLuaCodeTokeniser::tokenType_comment;
-                source.skipToEndOfLine();
-			}
+            if (source.peekNextChar() == '-')
+            {
+                source.skip(); // Skip the second '-'
+
+                // Check if this is a long comment starting with --[[
+                if (source.peekNextChar() == '[')
+                {
+                    source.skip(); // Skip first '['
+                    if (source.peekNextChar() == '[')
+                    {
+                        source.skip(); // Skip second '['
+
+                        // Now find the end of the long comment
+                        while (!source.isEOF())
+                        {
+                            if (source.peekNextChar() == ']')
+                            {
+                                source.skip();
+                                if (!source.isEOF() && source.peekNextChar() == ']')
+                                {
+                                    source.skip(); // Skip second ']'
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                source.skip();
+                            }
+                        }
+                        result = CtrlrLuaCodeTokeniser::tokenType_comment;
+                    }
+                    else
+                    {
+                        // We skipped one '[' but it's not a long comment
+                        source.skipToEndOfLine();
+                        result = CtrlrLuaCodeTokeniser::tokenType_comment;
+                    }
+                }
+                else
+                {
+                    // Regular single-line comment
+                    source.skipToEndOfLine();
+                    result = CtrlrLuaCodeTokeniser::tokenType_comment;
+                }
+            }
             else if (result == CtrlrLuaCodeTokeniser::tokenType_error)
             {
                 result = CtrlrLuaCodeTokeniser::tokenType_operator;
-                skipIfNextCharMatches (source, '-', '=');
+                skipIfNextCharMatches(source, '-', '=');
             }
             break;
-
         case '*':
         case '%':
         case '=':

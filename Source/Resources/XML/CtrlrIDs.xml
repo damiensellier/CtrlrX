@@ -468,6 +468,8 @@
   <id name="uiMidiKeyboardBaseOctaveKeyPress"     text="Key press for middle octave"  type="Numeric"  min="0" max="10"  int="1" />
   <id name="uiMidiKeyboardOctaveFroMiddleC"       text="Octave number for middle C"    type="Numeric"  min="-10" max="10"  int="1" />
   <id name="uiMidiKeyboardMapToNoteNumber"        text="Map modulator value to note number instead of velocity" type="Bool" />
+  <id name="uiMidiKeyboardOctaveKeyDown"          text="Key for octave down"     type="Text"/>
+  <id name="uiMidiKeyboardOctaveKeyUp"            text="Key for octave up"       type="Text"/>
 
   <!-- Tabs -->
   <id name="uiTabsNumberOfTabs" text="Number of tabs" type="Numeric" min="1" max="64" int="1"/>
@@ -741,7 +743,7 @@
   <id name="ctrlrWarningInBootstrapState"     text="Run modulator valueChange LUA callback in Bootstrap state" type="Bool" />
   <id name="ctrlrLuaDebug"                    text="Enable LUA debugging" type="Bool" />
   <id name="ctrlrShutdownDelay"               text="Plugin shutdown delay" type="Numeric" min="0" max="10000" int="1" />
-  <id name="ctrlrUseEditorWrapper"            text="Use the Editor Wrapper for VST plugins" type="Bool"/>
+  <id name="ctrlrUseEditorWrapper"            text="Wrap the VST2.4 plugin on Ableton Live for Windows" type="Bool"/>
   <id name="ctrlrVersionSeparator"            text="Version field separator" type="Text"/>
   <id name="ctrlrVersionCompressed"           text="Save versioned panels compressed" type="Bool"/>
   <id name="ctrlrVstFile"                     text="VST File" type="FileProperty" />

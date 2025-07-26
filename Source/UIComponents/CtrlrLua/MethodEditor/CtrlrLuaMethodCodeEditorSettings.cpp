@@ -37,13 +37,15 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     : owner(_owner),
       fontTypeface (0),
       fontBold (0),
-      fontUnderline (0),
+     // fontUnderline (0),
       fontItalic (0),
       fontSize (0),
       bgColour (0), // Added v5.6.31
       lineNumbersBgColour(0), // Added v5.6.31
       lineNumbersColour(0), // Added v5.6.31
-      fontTest (0)
+      fontTest (0),
+      resetButton (0), // added JG
+      openSearchTabs (0) // added JG
 {
     addAndMakeVisible(label0 = new Label("new label", TRANS("Font:"))); // Added v.5.6.31
     label0->setFont(Font(14.00f)); // Added v.5.6.31
@@ -61,9 +63,10 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     fontBold->setButtonText (L"Bold");
     fontBold->addListener (this);
 
-    addAndMakeVisible (fontUnderline = new ToggleButton (""));
+   /* addAndMakeVisible (fontUnderline = new ToggleButton (""));
     fontUnderline->setButtonText (L"Underline");
     fontUnderline->addListener (this);
+    */
 
     addAndMakeVisible (fontItalic = new ToggleButton (""));
     fontItalic->setButtonText (L"Italic");
@@ -98,6 +101,17 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
 
     addAndMakeVisible (fontTest = new CodeEditorComponent (codeDocument, &luaTokeniser));
 
+    addAndMakeVisible(openSearchTabs= new ToggleButton(""));
+    openSearchTabs->setButtonText(L"Open closed tabs after match");
+    openSearchTabs->addListener(this);
+
+    bool savedOpenSearchTabsState = owner.getComponentTree().getProperty(Ids::openSearchTabsState, false); // 'false' is the default if not found
+    openSearchTabs->setToggleState(savedOpenSearchTabsState, dontSendNotification);
+    owner.setOpenSearchTabsEnabled(savedOpenSearchTabsState);
+
+    addAndMakeVisible(resetButton = new TextButton("RESET")); // Added JG
+    resetButton->addListener(this); 
+    resetButton->setColour(TextButton::buttonColourId, Colours::cornflowerblue);
 
     //[UserPreSize]
     codeFont = owner.getOwner().getCtrlrManagerOwner().getFontManager().getFontFromString(owner.getComponentTree().getProperty(Ids::luaMethodEditorFont, owner.getOwner().getCtrlrManagerOwner().getFontManager().getStringFromFont (Font(owner.getOwner().getCtrlrManagerOwner().getFontManager().getDefaultMonoFontName(), 14.0f, Font::plain))));
@@ -112,7 +126,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     lineNumbersColour->setColour(VAR2COLOUR(owner.getComponentTree().getProperty(Ids::luaMethodEditorLineNumbersColour, Colours::black.toString())));
 
     fontSize->setValue (codeFont.getHeight(), dontSendNotification);
-    fontUnderline->setToggleState (codeFont.isUnderlined(), dontSendNotification);
+    //fontUnderline->setToggleState (codeFont.isUnderlined(), dontSendNotification);
     fontBold->setToggleState (codeFont.isBold(), dontSendNotification);
     fontItalic->setToggleState (codeFont.isItalic(), dontSendNotification);
     owner.getOwner().getCtrlrManagerOwner().getFontManager().fillCombo (*fontTypeface);
@@ -120,7 +134,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     codeDocument.replaceAllContent ("-- This is a comment\nfunction myFunction(argument)\n\tcall(\"string\")\nend");
     //[/UserPreSize]
 
-    setSize (334, 360);
+    setSize (334, 450);
 
 
     //[Constructor] You can add your own custom stuff here..
@@ -135,7 +149,7 @@ CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
     deleteAndZero (label0);
     deleteAndZero (fontTypeface);
     deleteAndZero (fontBold);
-    deleteAndZero (fontUnderline);
+    //deleteAndZero (fontUnderline);
     deleteAndZero (fontItalic);
     deleteAndZero (fontSize);
     deleteAndZero (label1);
@@ -145,6 +159,8 @@ CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
     deleteAndZero (label3);
     deleteAndZero (lineNumbersColour);
     deleteAndZero (fontTest);
+    deleteAndZero (openSearchTabs);
+    deleteAndZero (resetButton);
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -172,7 +188,7 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     label0->setBounds(marginLeft - 4, marginTop+ sampleHeight +8, sampleWidth, 24);
     fontTypeface->setBounds(marginLeft, marginTop + sampleHeight + 24 + 8, sampleWidth, 24);
     fontBold->setBounds(marginLeft, marginTop + sampleHeight + 24 + 40, 56, 24);
-    fontUnderline->setBounds(marginLeft + 128, marginTop + sampleHeight + 24 + 40, 88, 24);
+    //fontUnderline->setBounds(marginLeft + 128, marginTop + sampleHeight + 24 + 40, 88, 24);
     fontItalic->setBounds(marginLeft + 64, marginTop + sampleHeight + 24 + 40, 64, 24);
     fontSize->setBounds(marginLeft + 224, marginTop + sampleHeight + 24 + 40, 78, 24);
     //[UserResized] Add your own custom resize handling here..
@@ -182,8 +198,11 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     lineNumbersBgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 32, sampleWidth, 24);
     label3->setBounds(marginLeft - 4, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 2 * 32, sampleWidth, 24);
     lineNumbersColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 3 * 24 + 2 * 32, sampleWidth, 24);
+    openSearchTabs->setBounds(marginLeft + 0, marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40,sampleWidth, 24);
+    resetButton->setBounds(marginLeft+sampleWidth/2-(sampleWidth / 4+marginLeft/2), marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 80, sampleWidth / 2, 24);
     //[/UserResized]
 }
+
 
 void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
 {
@@ -201,15 +220,23 @@ void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged (ComboBox* comboBoxThatHa
     //[/UsercomboBoxChanged_Post]
 }
 
-void CtrlrLuaMethodCodeEditorSettings::buttonClicked (Button* buttonThatWasClicked)
+void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicked)
 {
     //[UserbuttonClicked_Pre]
     //[/UserbuttonClicked_Pre]
 
-    if (buttonThatWasClicked == fontBold)
+if (buttonThatWasClicked == fontBold)
     {
         //[UserButtonCode_fontBold] -- add your button handler code here..
         //[/UserButtonCode_fontBold]
+    }
+    else if (buttonThatWasClicked == openSearchTabs)
+    {
+    // This is where currentState is defined and assigned.
+    bool currentState = openSearchTabs->getToggleState();
+    // Update the state in the owner (CtrlrLuaMethodEditor)
+    owner.setOpenSearchTabsEnabled(currentState);
+    owner.getComponentTree().setProperty(Ids::openSearchTabsState, currentState, nullptr);
     }
     else if (buttonThatWasClicked == fontUnderline)
     {
@@ -221,12 +248,26 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked (Button* buttonThatWasClick
         //[UserButtonCode_fontItalic] -- add your button handler code here..
         //[/UserButtonCode_fontItalic]
     }
+    else if (buttonThatWasClicked == resetButton) // Add this
+    {
+		DBG("Reset button clicked");
+        // Move your reset code here from resetButtonClicked
+        //fontTypeface->setSelectedId(1, dontSendNotification);
+        fontTypeface->setText("Courier New", dontSendNotification); // or whatever default font you want
+        fontBold->setToggleState(false, dontSendNotification);
+       // fontUnderline->setToggleState(false, dontSendNotification);
+        fontItalic->setToggleState(false, dontSendNotification);
+        openSearchTabs->setToggleState(false, dontSendNotification);
+        fontSize->setValue(14.0f, dontSendNotification);
+        bgColour->setColour(Colours::white);
+        lineNumbersBgColour->setColour(Colour(0xffc5ddf1));
+        lineNumbersColour->setColour(Colours::black);
+    }
 
     //[UserbuttonClicked_Post]
     changeListenerCallback(nullptr);
     //[/UserbuttonClicked_Post]
 }
-
 void CtrlrLuaMethodCodeEditorSettings::sliderValueChanged (Slider* sliderThatWasMoved)
 {
     //[UsersliderValueChanged_Pre]
@@ -267,7 +308,7 @@ const Font CtrlrLuaMethodCodeEditorSettings::getFont()
     font.setHeight (fontSize->getValue());
     font.setBold (fontBold->getToggleState());
     font.setItalic (fontItalic->getToggleState());
-    font.setUnderline (fontUnderline->getToggleState());
+   // font.setUnderline (fontUnderline->getToggleState());
     return (font);
 }
 

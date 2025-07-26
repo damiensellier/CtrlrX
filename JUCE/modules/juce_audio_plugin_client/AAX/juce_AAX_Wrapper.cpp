@@ -48,7 +48,7 @@ JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wnon-virtual-dtor",
 
 #include <AAX_Version.h>
 
-static_assert (AAX_SDK_CURRENT_REVISION >= AAX_SDK_2p3p0_REVISION, "JUCE requires AAX SDK version 2.3.0 or higher");
+static_assert (AAX_SDK_CURRENT_REVISION >= AAX_SDK_2p3p0_REVISION, "JUCE requires AAX SDK version 2.3.0 or higher"); // Currently used version AAX SDK 2.8.1
 
 #include <AAX_Exports.cpp>
 #include <AAX_ICollection.h>
@@ -310,9 +310,9 @@ namespace AAXClasses
                 case AAX_eStemFormat_Ambi_1_ACN: return AudioChannelSet::ambisonic (1);
                 case AAX_eStemFormat_Ambi_2_ACN: return AudioChannelSet::ambisonic (2);
                 case AAX_eStemFormat_Ambi_3_ACN: return AudioChannelSet::ambisonic (3);
-                case AAX_eStemFormat_Reserved_1:
-                case AAX_eStemFormat_Reserved_2:
-                case AAX_eStemFormat_Reserved_3:
+                //case AAX_eStemFormat_Reserved_1: // Removed v5.6.34. For Compatibility with AAX SDK 2.8+
+                //case AAX_eStemFormat_Reserved_2: // Removed v5.6.34. For Compatibility with AAX SDK 2.8+
+                //case AAX_eStemFormat_Reserved_3: // Removed v5.6.34. For Compatibility with AAX SDK 2.8+
                 case AAX_eStemFormatNum:
                 case AAX_eStemFormat_Any:
                 case AAX_eStemFormat_INT32_MAX:

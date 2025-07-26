@@ -59,7 +59,7 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
 		void setPositionLabelText (const String &text);
 
 		void addNewMethod(ValueTree parentGroup=ValueTree());
-		void addNewClass(ValueTree parentGroup=ValueTree());
+		//void addNewClass(ValueTree parentGroup=ValueTree()); JG 1/19/2025
 		void addMethodFromFile(ValueTree parentGroup=ValueTree());
 
 		void addNewGroup(ValueTree parentGroup=ValueTree());
@@ -113,17 +113,19 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
 		/* Debugger stuff
 		*/
 		void insertRawDebuggerOutput(const String &debuggerOutput);
-		void setRawDebuggerOutput(const String &debuggerOutput);
+		//void setRawDebuggerOutput(const String &debuggerOutput); JG 1/19/2025
 		void setJsonDebuggerOutput(const String &jsonData);
 		int waitForCommand();
 		const String getCurrentDebuggerCommand(const bool clearTheReturnedCommand=true);
-
+		void setOpenSearchTabsEnabled(bool shouldOpen); // used for toggling search closed files
+		bool getOpenSearchTabsEnabled() const; // getter
 		JUCE_LEAK_DETECTOR(CtrlrLuaMethodEditor)
 
 		bool caseCansitive, findDialogActive;
 		String lookInString, searchInString, currentSearchString;
 
-	private:
+private:
+		bool openSearchTabsEnabledState = false; // Add this private member variable
 		WeakReference<CtrlrLuaMethodEditor>::Master masterReference;
 		friend class WeakReference<CtrlrLuaMethodEditor>;
 		File lastBrowsedSourceDir;
@@ -132,6 +134,7 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
 		StretchableLayoutResizerBar *resizer;
 		CtrlrPanel &owner;
 		CtrlrLuaMethodEditArea *methodEditArea;
+		GenericCodeEditorComponent* editorComponent;
 };
 
 

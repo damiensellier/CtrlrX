@@ -1048,7 +1048,7 @@ int ChildSorter::compareElements (ValueTree first, ValueTree second)
 
 StringArray CtrlrLuaMethodEditor::getMenuBarNames()
 {
-	const char* const names[] = { "File", "Edit", nullptr };
+	const char* const names[] = { "File", "Edit", "Help", nullptr};
 	return StringArray (names);
 }
 
@@ -1070,6 +1070,7 @@ PopupMenu CtrlrLuaMethodEditor::getMenuForIndex(int topLevelMenuIndex, const Str
 	}
 	else if (topLevelMenuIndex == 1)
 	{
+		menu.addItem (15, "Search");
 		menu.addItem (4, "Find and replace");
 		menu.addItem (7, "Debugger");
 		menu.addItem (8, "Console");
@@ -1078,6 +1079,18 @@ PopupMenu CtrlrLuaMethodEditor::getMenuForIndex(int topLevelMenuIndex, const Str
 		menu.addSeparator();
         // menu.addItem (6, "Settings"); // Removed v5.6.31
 		menu.addItem (6, "Preferences"); // Added v5.6.31
+	}
+	else if (topLevelMenuIndex == 2)
+	{
+		menu.addSectionHeader("Key Commands");
+		menu.addItem(10,"Single line comment: Ctrl+/");
+		menu.addItem(11, "Multi line comment: Ctrl+Q");
+		menu.addItem(12, "Duplicate line: Ctrl+D");
+		menu.addItem(13, "Go to line: Ctrl+G");
+		menu.addSeparator();
+		menu.addItem(14, "Find: Ctrl+F");
+		menu.addItem(15, "Find & replace: Ctrl+H");
+
 	}
 	return (menu);
 }
@@ -1128,6 +1141,17 @@ void CtrlrLuaMethodEditor::menuItemSelected(int menuItemID, int topLevelMenuInde
 	else if (menuItemID == 4 && topLevelMenuIndex == 1)
 	{
 		methodEditArea->showFindDialog();
+	}
+	else if (menuItemID == 15 && topLevelMenuIndex == 1)
+	{
+		if (getCurrentEditor())
+		{
+			getCurrentEditor()->getCodeComponent()->showFindPanel(false);
+		}
+		else if (methodEditArea)
+		{
+			methodEditArea->showFindDialog();
+		}
 	}
 	else if (menuItemID == 5 && topLevelMenuIndex == 1)
 	{
@@ -1258,4 +1282,14 @@ const String CtrlrLuaMethodEditor::getCurrentDebuggerCommand(const bool clearThe
 int CtrlrLuaMethodEditor::waitForCommand()
 {
 	return (getParentComponent()->runModalLoop());
+}
+
+void CtrlrLuaMethodEditor::setOpenSearchTabsEnabled(bool shouldOpen)
+{
+	openSearchTabsEnabledState = shouldOpen;
+}
+
+bool CtrlrLuaMethodEditor::getOpenSearchTabsEnabled() const
+{
+	return openSearchTabsEnabledState;
 }
