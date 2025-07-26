@@ -164,7 +164,7 @@ void CtrlrLuaMethodFind::resized()
     replaceAllButton->setBounds ((proportionOfWidth (0.4505f) + proportionOfWidth (0.3302f)) + proportionOfWidth (0.0991f), 4, proportionOfWidth (0.0991f), 32);
     label->setBounds (4 + 0, 40, 64, 24);
     matchCase->setBounds (4 + 68, 40, 96, 24);
-    openSearchTabs->setBounds (4 + 68, 60, 120, 24);
+    openSearchTabs->setBounds (4 + 68, 60, 300, 24);
     label2->setBounds (proportionOfWidth (0.4505f) + 121, 40, 64, 24);
     whereToFindCombo->setBounds (176, 40, 128, 24);
     //[UserResized] Add your own custom resize handling here..
