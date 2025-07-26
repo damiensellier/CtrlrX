@@ -643,6 +643,23 @@ CtrlrPanel *CtrlrManager::getPanel(const int panelIndex)
 	return (0);
 }
 
+CtrlrPanel* CtrlrManager::getPanelForEditor(CtrlrPanelEditor* editorToFind) // Added v5.6.34. To assign the right panel index from the tab index. Panel tab close button. 
+{
+    // Iterate through the 'ctrlrPanels' array
+    for (int i = 0; i < ctrlrPanels.size(); ++i)
+    {
+        CtrlrPanel* panel = ctrlrPanels.getUnchecked(i); // Access the panel from the internal array
+
+        // Check if this panel exists and its editor matches the one we're looking for
+        // CtrlrPanel::getEditor(false) returns the editor for that panel
+        if (panel != nullptr && panel->getEditor(false) == editorToFind)
+        {
+            return panel; // Found the correct CtrlrPanel for the given editor
+        }
+    }
+    return nullptr; // No matching CtrlrPanel found for the given editor
+}
+
 int CtrlrManager::getNumPanels()
 {
 	return (ctrlrPanels.size());
