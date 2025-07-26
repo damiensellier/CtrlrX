@@ -11,10 +11,8 @@ class CtrlrProcessor;
 class CtrlrEditor  : public AudioProcessorEditor,
 					 public ApplicationCommandTarget,
 					 public MenuBarModel,
-					 public Slider::Listener,
-					 public LookAndFeel_V4
-//,
-//                     public LookAndFeel_V3 // Added v5.6.31
+					 public Slider::Listener //,
+					 // public LookAndFeel_V4 // Removed v5.6.34 to set lnf version independently
 {
 	public:
 		CtrlrEditor (CtrlrProcessor *ownerFilter, CtrlrManager &_owner);
@@ -157,8 +155,10 @@ class CtrlrEditor  : public AudioProcessorEditor,
 		void performKeyGenerator();
 		void performMidiDeviceRefresh();
 		void setMenuBarVisible(const bool shouldBeVisible=true);
-        void setMenuBarLookAndFeel(const String &lookAndFeelDesc);
-
+    
+        // New method to set the main LookAndFeel for the editor and its children
+        void setEditorLookAndFeel (const String &lookAndFeelDesc, const juce::var& colourSchemeProperty); // Added v5.6.34
+    
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrEditor)
 
 	private:
@@ -190,6 +190,9 @@ class CtrlrEditor  : public AudioProcessorEditor,
         int panelCanvasWidth;
         double vpStandaloneAspectRatio;
         bool vpMenuBarVisible;
+    
+        // Use a ScopedPointer to manage the current LookAndFeel object
+        ScopedPointer<LookAndFeel> currentLookAndFeel;
 };
 
 

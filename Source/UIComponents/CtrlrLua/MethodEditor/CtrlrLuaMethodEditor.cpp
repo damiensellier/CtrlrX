@@ -752,7 +752,7 @@ const AttributedString CtrlrLuaMethodEditor::getDisplayString(const ValueTree &i
 		}
 		else
 		{
-			str.append (File::descriptionOfSizeInBytes (item.getProperty(Ids::luaMethodCode).toString().length()), fSmall, text.brighter(0.2f));
+			str.append (File::descriptionOfSizeInBytes (item.getProperty(Ids::luaMethodCode).toString().length()), fSmallItalic, text.brighter(0.2f)); // Updated v5.6.34. Thanks to @dobo365
 		}
 
 		str.setJustification (Justification::left);

@@ -89,8 +89,14 @@ namespace gui {
     juce::LookAndFeel_V4::ColourScheme getArturOrangeColourScheme();
     juce::LookAndFeel_V4::ColourScheme getAiraGreenColourScheme();
 
+    // Your existing colourSchemeFromProperty function
+    juce::LookAndFeel_V4::ColourScheme colourSchemeFromProperty(const juce::var &property);
+
     // The central LookAndFeel factory function
-    juce::LookAndFeel* createLookAndFeelFromDescription(const juce::String& description, bool returnDefaultV4ForUnknown = true);
+    // Keep the optional 'colourSchemeProperty' parameter, it's not directly used here but the signature is fine.
+    juce::LookAndFeel* createLookAndFeelFromDescription(const juce::String& description,
+                                                        const juce::var& colourSchemeProperty = juce::var(),
+                                                        bool returnDefaultV4ForUnknown = true);
 
     // Your existing colourSchemeFromProperty function (can now call createLookAndFeelFromDescription if it uses properties
     // that map directly to the names used in createLookAndFeelFromDescription)

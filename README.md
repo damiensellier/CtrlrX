@@ -340,7 +340,7 @@ Tuturial coming soon.
 
 ## Changelog
 
-#### Version 5.6.34 | 2025.07.25
+#### Version 5.6.34 | 2025.07.26
 
 * **NEW** ProTools AAX plugin support (requires AAX SDK 2.8+ and codesigning via PACE)
 * **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
@@ -364,6 +364,8 @@ Tuturial coming soon.
 * **UPDATED** Close panel alert window buttons set to "Close" & "Cancel". `CtrlrDocumentPanel.cpp`
 * **UPDATED** LnF version & ColourScheme selection method centralized to CtrlrInlineUtilitiesGUI. `CtrlrInlineUtilitiesGUI.cpp` & `.h`, `.jucer`, `juce_LookAndFeel_V4.cpp` & `.h`, `CtrlrEditor.cpp`, `CtrlrButton.cpp`, `CtrlrToggleButton.cpp`, `CtrlrCombo.cpp`, `CtrlrGroup.cpp`, `CtrlrFixedImageSlider.cpp`, `CtrlrFixedSlider.cpp`, `CtrlrFixedSlider.cpp`, `CtrlrImageSlider.cpp`, `CtrlrSlider.cpp`, `CtrlrPanelEditor.cpp`
 * **UPDATED** Panel tab close button method with canClose(bool) for consistency. `CtrlrDocumentPanel.cpp`, `CtrlrManager.cpp` & `.h`
+* **FIXED** Alert windows LnF version not following the global LnF for V3. `CtrlrEditor.cpp` & `.h`, `CtrlrInlineUtilitiesGUI.cpp` & `.h`
+
 
 #### Version 5.6.33 | 2025.05.28
 

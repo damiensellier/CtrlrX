@@ -1986,7 +1986,7 @@ class CtrlrTextPropLabel  : public Label  // Text Box for Type In Properties suc
 				textEditor->setReturnKeyStartsNewLine (true);
 				textEditor->setJustification(juce::Justification::topLeft); // Added v5.6.34.
                 // IMPORTANT: Adjust the TextEditor's internal indents
-				// The default indents might push the text from the top-left. Experiment with these values.
+				// The default indents might push the text from the top-left. Experiment with these values, that will shift text position on focus/edit.
 				// textEditor->setIndents(0, 0); // Set left and top indents.
 	        }
 

@@ -18,8 +18,11 @@ CtrlrEditor::CtrlrEditor (CtrlrProcessor *_ownerFilter, CtrlrManager &_owner)
 		menuHandlerCalled(false),
 		lastCommandInvocationMillis(0)
 {
-	LookAndFeel::setDefaultLookAndFeel(this);  // Set V4 Light as Default LnF. Requires updating depending on the selected LnF
-    // menuBarLookAndFeel = new CtrlrMenuBarLookAndFeel (*this); // For version 5.3.198 and before
+    // Initialize currentLookAndFeel to a default LookAndFeel_V4 Light.
+    // This provides a starting point before properties are loaded.
+    currentLookAndFeel = new LookAndFeel_V4(juce::LookAndFeel_V4::getLightColourScheme());
+    setLookAndFeel(currentLookAndFeel); // Set the editor's LookAndFeel initially
+
 	Rectangle<int> editorRect;
     // http://www.juce.com/forum/topic/applicationcommandmanager-menus-not-active-annoyance#new
     owner.getCommandManager().setFirstCommandTarget (this);
@@ -129,16 +132,40 @@ CtrlrEditor::CtrlrEditor (CtrlrProcessor *_ownerFilter, CtrlrManager &_owner)
             setSize(800, 600);
     }
     
-    if (owner.getProperty(Ids::uiPanelLegacyMode) == "1") // Added v5.6.31. Force exported instances to get LnF v3 for legacy mode if panel has LnF in legacyMode
+    // --- LOOK AND FEEL AND COLOUR SCHEME LOGIC ---
+    String lookAndFeelVersionToApply;
+    var colourSchemePropertyToApply; // Will be passed to setEditorLookAndFeel
+
+    // 1. Check for global legacy mode first
+    bool isLegacyModeGlobal = owner.getProperty(Ids::ctrlrLegacyMode); // This is a Bool property
+
+    if (isLegacyModeGlobal)
     {
-        LookAndFeel::setDefaultLookAndFeel(new LookAndFeel_V3()); // Added v5.6.31
-        setLookAndFeel(new LookAndFeel_V3()); // Added v5.6.31
+        lookAndFeelVersionToApply = "V3"; // Force V3 if legacy mode is on
+        colourSchemePropertyToApply = var(); // No colour scheme for V3
     }
     else
     {
-        setColourScheme(gui::colourSchemeFromProperty(owner.getProperty(Ids::ctrlrColourScheme))); // Added v5.6.31. Sets the LookAndFeel_V4 colourScheme from the Ctrlr General Preferences, not from the loaded Panel
+        // 2. If not in legacy mode, check global LookAndFeel version
+        lookAndFeelVersionToApply = owner.getProperty(Ids::ctrlrLookAndFeel).toString();
+        colourSchemePropertyToApply = owner.getProperty(Ids::ctrlrColourScheme);
+
+        // 3. If no global L&F version or colour scheme, check panel properties
+        if (lookAndFeelVersionToApply.isEmpty() && owner.getActivePanel())
+        {
+            lookAndFeelVersionToApply = owner.getActivePanel()->getEditor()->getProperty(Ids::uiPanelLookAndFeel).toString();
+        }
+        if (colourSchemePropertyToApply.isUndefined() && owner.getActivePanel())
+        {
+            colourSchemePropertyToApply = owner.getActivePanel()->getEditor()->getProperty(Ids::ctrlrColourScheme);
+        }
     }
-    
+
+    // Apply the determined LookAndFeel and ColourScheme
+    setEditorLookAndFeel(lookAndFeelVersionToApply, colourSchemePropertyToApply);
+
+    menuBar->setLookAndFeel(currentLookAndFeel); // Ensure menuBar uses the current L&F
+
     lookAndFeelChanged(); // Added v5.6.31. Update LnF for all components
 
     getLookAndFeel().setUsingNativeAlertWindows((bool)owner.getProperty(Ids::ctrlrNativeAlerts)); // Sets OS Native alert windows or JUCE
@@ -156,6 +183,7 @@ CtrlrEditor::CtrlrEditor (CtrlrProcessor *_ownerFilter, CtrlrManager &_owner)
 
 CtrlrEditor::~CtrlrEditor()
 {
+    menuBar->setLookAndFeel(nullptr); // Detach LookAndFeel from menuBar first
     deleteAndZero (menuBar);
 	masterReference.clear();
 }
@@ -180,6 +208,40 @@ void CtrlrEditor::resized()
 	owner.setProperty (Ids::ctrlrEditorBounds, getBounds().toString());
 }
 
+// Added v5.6.34. New method to set the main LookAndFeel for the editor and its children
+void CtrlrEditor::setEditorLookAndFeel (const String &lookAndFeelDesc, const var& colourSchemeProperty)
+{
+    // 1. Create the new LookAndFeel object based on the description (V1, V2, V3, V4 default)
+    // Pass an empty var for colourSchemeProperty to gui::createLookAndFeelFromDescription,
+    // as it will only return the base L&F instance type.
+    ScopedPointer<LookAndFeel> newLookAndFeel = gui::createLookAndFeelFromDescription(lookAndFeelDesc, juce::var());
+
+    // If a valid LookAndFeel was created, update the current one
+    if (newLookAndFeel != nullptr)
+    {
+        // 2. If it's a LookAndFeel_V4, apply the specific ColourScheme from the property.
+        if (LookAndFeel_V4* lnf4 = dynamic_cast<LookAndFeel_V4*>(newLookAndFeel.get()))
+        {
+            // Only apply a colour scheme if the property is a valid string
+            if (colourSchemeProperty.isString() && !colourSchemeProperty.toString().isEmpty())
+            {
+                lnf4->setColourScheme(gui::colourSchemeFromProperty(colourSchemeProperty));
+            }
+        }
+
+        currentLookAndFeel = newLookAndFeel; // Transfers ownership from ScopedPointer
+        setLookAndFeel (currentLookAndFeel); // Set the editor's LookAndFeel, which propagates to children
+
+        // --- THESE ARE THE CRUCIAL LINES FOR THE MENUBAR UPDATE ---
+        menuBar->setLookAndFeel(currentLookAndFeel); // Ensure menuBar also gets the new L&F
+        menuBar->lookAndFeelChanged();               // Explicitly notify the menu bar that its L&F has changed
+        menuBar->repaint();                          // Force a repaint of the menu bar's background
+
+        // Force a repaint and update of all components to reflect the new LookAndFeel
+        lookAndFeelChanged(); // This calls lookAndFeelChanged() on this component and its children (like the main panel)
+        repaint();            // Force a repaint of the CtrlrEditor itself
+    }
+}
 
 void CtrlrEditor::activeCtrlrChanged()
 {
@@ -195,8 +257,31 @@ void CtrlrEditor::activeCtrlrChanged()
 			setMenuBarVisible(menuBarVisible);
 		}
         
-        String currentLookAndFeel = owner.getActivePanel()->getEditor()->getProperty(Ids::uiPanelLookAndFeel);
-        setMenuBarLookAndFeel(currentLookAndFeel); // Updates the current component LookAndFeel : PanelEditor
+        // Re-determine LookAndFeel and ColourScheme based on active panel
+        String lookAndFeelVersionToApply;
+        var colourSchemePropertyToApply;
+
+        // Check panel's legacy mode first (from uiPanelLegacyMode property on the panel)
+        bool isLegacyModePanel = owner.getActivePanel()->getEditor()->getProperty(Ids::uiPanelLegacyMode);
+        
+        if (isLegacyModePanel)
+        {
+            lookAndFeelVersionToApply = "V3"; // Force V3 if panel legacy mode is on
+            colourSchemePropertyToApply = var(); // No colour scheme for V3
+        }
+        else
+        {
+            // If not in panel's legacy mode, get L&F and color scheme from panel properties
+            lookAndFeelVersionToApply = owner.getActivePanel()->getEditor()->getProperty(Ids::uiPanelLookAndFeel).toString();
+            colourSchemePropertyToApply = owner.getActivePanel()->getEditor()->getProperty(Ids::ctrlrColourScheme);
+        }
+
+        // Apply the determined LookAndFeel and ColourScheme
+        // This single call handles setting the L&F for the editor and explicitly for the menuBar
+        setEditorLookAndFeel(lookAndFeelVersionToApply, colourSchemePropertyToApply);
+
+        //String currentLookAndFeel = owner.getActivePanel()->getEditor()->getProperty(Ids::uiPanelLookAndFeel);
+        //setMenuBarLookAndFeel(currentLookAndFeel); // Updates the current component LookAndFeel : PanelEditor
         
         lookAndFeelChanged();
 
@@ -214,7 +299,20 @@ void CtrlrEditor::activeCtrlrChanged()
 //        String customMenuBarHighlightedTextColour = owner.getActivePanel()->getEditor()->getProperty(Ids::ctrlrMenuBarHighlightedTextColour);
 //        String customMenuBarHighlightColour = owner.getActivePanel()->getEditor()->getProperty(Ids::ctrlrMenuBarHighlightColour);
 //        String customMenuBarFont = owner.getActivePanel()->getEditor()->getProperty(Ids::ctrlrMenuBarFont);
-	}
+    }
+    else // logic for no active panel
+    {
+        // No active panel, set L&F to "V4 Light"
+        setEditorLookAndFeel("V4 Light", juce::var());
+
+        // Also ensure menu bar visibility is handled when no panel is active.
+        // You might want the menu bar to always be visible, or hide if no panel.
+        // For fallback, let's assume it should be visible with the default L&F.
+        if (!menuBar->isVisible()) // If it was hidden by a panel before
+        {
+            setMenuBarVisible(true);
+        }
+    }
 }
 
 MenuBarComponent *CtrlrEditor::getMenuBar()
@@ -268,12 +366,4 @@ void CtrlrEditor::setMenuBarVisible(const bool shouldBeVisible)
 {
 	menuBar->setVisible (shouldBeVisible);
 	resized();
-}
-
-void CtrlrEditor::setMenuBarLookAndFeel(const juce::String &lookAndFeelDesc) // Updated v5.6.34.
-{
-    // The previous LookAndFeel set on menuBar will be automatically deleted by JUCE
-    // when you call setLookAndFeel again.
-    menuBar->setLookAndFeel(gui::createLookAndFeelFromDescription(lookAndFeelDesc, true));
-    // The `true` argument ensures that if the description is unknown, it defaults to V4 Light.
 }
