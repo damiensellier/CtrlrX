@@ -146,5 +146,10 @@ public:
 		static Value searchTabsValue(true); // default to true
 		return searchTabsValue;
 	}
+	static const String& getSearchTabsLabel()
+	{
+		static const String label("Keep methods opened after a match");
+		return label;
+	}
 };
 #endif

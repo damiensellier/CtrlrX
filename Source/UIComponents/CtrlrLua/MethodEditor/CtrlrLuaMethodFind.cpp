@@ -110,8 +110,8 @@ CtrlrLuaMethodFind::CtrlrLuaMethodFind(CtrlrLuaMethodEditor& owner_, juce::Value
     whereToFindCombo->addItem (TRANS("All"), 3);
     whereToFindCombo->addListener (this);
 
-	openSearchTabs = new juce::ToggleButton("Open all search files in new tabs");
-	openSearchTabs->setButtonText(L"Open all search files in new tabs");
+	openSearchTabs = new juce::ToggleButton(SharedValues::getSearchTabsLabel());
+	openSearchTabs->setButtonText(SharedValues::getSearchTabsLabel());
 	openSearchTabs->addListener(this);
 
 	addAndMakeVisible(openSearchTabs);

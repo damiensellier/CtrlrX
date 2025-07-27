@@ -102,7 +102,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     addAndMakeVisible (fontTest = new CodeEditorComponent (codeDocument, &luaTokeniser));
 
     addAndMakeVisible(openSearchTabs = new ToggleButton(""));
-    openSearchTabs->setButtonText(L"Open closed tabs after match");
+    openSearchTabs->setButtonText(SharedValues::getSearchTabsLabel());
     openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue());
 
     addAndMakeVisible(resetButton = new TextButton("RESET")); // Added JG
