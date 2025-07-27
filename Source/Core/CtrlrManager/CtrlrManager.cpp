@@ -103,7 +103,6 @@ void CtrlrManager::setDefaults()
     setProperty (Ids::ctrlrMenuBarHeight, 24);
     setProperty (Ids::ctrlrTabBarDepth, 24);
     setProperty (Ids::ctrlrPropertyLineheightBaseValue, 36); // Added v5.6.33.
-    setProperty (Ids::ctrlrPropertyLineImprovedLegibility, false); // Added v5.6.34.
     setProperty (Ids::uiLuaConsoleInputRemoveAfterRun, true);
     setProperty (Ids::luaCtrlrSaveState, COMBO_ITEM_NONE);
     setProperty (Ids::luaCtrlrRestoreState, COMBO_ITEM_NONE);
