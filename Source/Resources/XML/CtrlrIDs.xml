@@ -817,7 +817,8 @@
   <id name="ctrlrFontSizeBaseValue"             text="Base value for all font sizes (won't affect panel UI)" type="Numeric" min="6.0" max="128.0" int="0.1"/>
   <id name="ctrlrTabBarDepth"                   text="Depth of all tab bars" type="Numeric" min="6" max="128" int="1"/>
   <id name="ctrlrPropertyLineheightBaseValue"   text="Base value for property line height" type="Numeric" min="24" max="72" int="1"/>
-
+  <id name="ctrlrPropertyLineImprovedLegibility"   text="Improve legibility (B&W) for property line" type="Bool"/>
+  
   <!-- LUA callbacks -->
   <id name="luaManagerMethods"                text="luaManagerMethods"                                    type="Text" />
   <id name="luaMethodCode"                    text="luaMethodCode"                                        type="Text" />

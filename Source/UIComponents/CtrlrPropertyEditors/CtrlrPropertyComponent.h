@@ -605,10 +605,7 @@ class CtrlrSysExPropertyComponent  : public Component,
 class CtrlrTextPropertyComponent : public Component, public CtrlrPropertyChild
 {
 	public:
-		CtrlrTextPropertyComponent (const Value& _valueToControl,
-									const int maxNumChars,
-									const bool isMultiLine,
-									const bool isReadOnly=false);
+        CtrlrTextPropertyComponent (juce::Value valueToControl_, int maxNumChars_, bool isMultiLine_, bool isReadOnly_ = false, bool useImprovedLegibility_ = false);
 
 		~CtrlrTextPropertyComponent();
 		void refresh();
@@ -623,6 +620,7 @@ class CtrlrTextPropertyComponent : public Component, public CtrlrPropertyChild
 		ScopedPointer<Label> textEditor;
 		void createEditor (int maxNumChars, bool isMultiLine);
 		Value valueToControl;
+		bool useImprovedLegibility; // New member
 };
 
 class CtrlrTimestampProperty : public Component, public CtrlrPropertyChild
