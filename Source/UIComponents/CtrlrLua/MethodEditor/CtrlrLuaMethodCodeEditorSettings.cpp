@@ -103,7 +103,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
 
     addAndMakeVisible(openSearchTabs = new ToggleButton(""));
     openSearchTabs->setButtonText(L"Open closed tabs after match");
-    openSearchTabs->getToggleStateValue().referTo(sharedSearchTabsValue);
+    openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue());
 
     addAndMakeVisible(resetButton = new TextButton("RESET")); // Added JG
     resetButton->addListener(this); 

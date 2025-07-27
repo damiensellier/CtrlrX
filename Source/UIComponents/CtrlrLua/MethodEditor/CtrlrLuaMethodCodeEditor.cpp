@@ -7,46 +7,54 @@
 #include "CtrlrLuaDebugger.h"
 #include "CtrlrLuaManager.h"
 
-CtrlrLuaMethodCodeEditor::CtrlrLuaMethodCodeEditor(CtrlrLuaMethodEditor &_owner, CtrlrLuaMethod *_method)
-	:	editorComponent(nullptr),
-		owner(_owner),
-		method(_method),
-		lastFoundPosition(-1)
+CtrlrLuaMethodCodeEditor::CtrlrLuaMethodCodeEditor(CtrlrLuaMethodEditor& _owner, CtrlrLuaMethod* _method, juce::Value& sharedSearchTabsValue_)
+	: owner(_owner), method(_method), sharedSearchTabsValue(sharedSearchTabsValue_), lastFoundPosition(0)
 {
-	addAndMakeVisible (editorComponent	= new GenericCodeEditorComponent (*this,
-															document, codeTokeniser = new CtrlrLuaCodeTokeniser()));
+	addAndMakeVisible(editorComponent = new GenericCodeEditorComponent(*this,
+		document, codeTokeniser = new CtrlrLuaCodeTokeniser()));
 
+	// Create the hidden toggle button
+	hiddenSearchTabsToggle = new ToggleButton("Hidden Search Tabs");
+	hiddenSearchTabsToggle->setVisible(false); // Make it hidden
+	addAndMakeVisible(hiddenSearchTabsToggle);
+
+	// Connect the hidden toggle to the shared value
+	hiddenSearchTabsToggle->getToggleStateValue().referTo(SharedValues::getSearchTabsValue());
+
+	// Listen for changes to the shared value
+	//sharedSearchTabsValue.addListener(this);
+	SharedValues::getSearchTabsValue().addListener(this);
 	editorComponent->setScrollbarThickness(owner.getOwner().getOwner().getProperty(Ids::ctrlrScrollbarThickness));
 	document.replaceAllContent(method->getCode());
 	document.setSavePoint();
 
-	document.addListener (this);
-	editorComponent->addMouseListener (this, true);
-	editorComponent->addKeyListener (this);
-    
-    editorComponent->setColour(CodeEditorComponent::backgroundColourId, Colours::white); // findColour(CodeEditorComponent::backgroundColourId));
-    editorComponent->setColour(CodeEditorComponent::defaultTextColourId, Colours::black); // findColour(CodeEditorComponent::defaultTextColourId));
-    editorComponent->setColour(CodeEditorComponent::highlightColourId, findColour(CodeEditorComponent::highlightColourId));
-    editorComponent->setColour(CodeEditorComponent::lineNumberTextId, findColour(CodeEditorComponent::lineNumberTextId));
-    editorComponent->setColour(CodeEditorComponent::lineNumberBackgroundId, findColour(CodeEditorComponent::lineNumberBackgroundId));
-    
+	document.addListener(this);
+	editorComponent->addMouseListener(this, true);
+	editorComponent->addKeyListener(this);
+
+	editorComponent->setColour(CodeEditorComponent::backgroundColourId, Colours::white); // findColour(CodeEditorComponent::backgroundColourId));
+	editorComponent->setColour(CodeEditorComponent::defaultTextColourId, Colours::black); // findColour(CodeEditorComponent::defaultTextColourId));
+	editorComponent->setColour(CodeEditorComponent::highlightColourId, findColour(CodeEditorComponent::highlightColourId));
+	editorComponent->setColour(CodeEditorComponent::lineNumberTextId, findColour(CodeEditorComponent::lineNumberTextId));
+	editorComponent->setColour(CodeEditorComponent::lineNumberBackgroundId, findColour(CodeEditorComponent::lineNumberBackgroundId));
+
 	if (method != nullptr)
-		method->setCodeEditor (this);
+		method->setCodeEditor(this);
 
-	if (owner.getComponentTree().hasProperty (Ids::luaMethodEditorFont))
+	if (owner.getComponentTree().hasProperty(Ids::luaMethodEditorFont))
 	{
-		setFontAndColour (owner.getOwner().getCtrlrManagerOwner().getFontManager().getFontFromString (owner.getComponentTree().getProperty (Ids::luaMethodEditorFont)),
-        VAR2COLOUR(owner.getComponentTree().getProperty (Ids::luaMethodEditorBgColour, Colours::white.toString()))); // (String) findColour(CodeEditorComponent::backgroundColourId).toString())));
+		setFontAndColour(owner.getOwner().getCtrlrManagerOwner().getFontManager().getFontFromString(owner.getComponentTree().getProperty(Ids::luaMethodEditorFont)),
+			VAR2COLOUR(owner.getComponentTree().getProperty(Ids::luaMethodEditorBgColour, Colours::white.toString()))); // (String) findColour(CodeEditorComponent::backgroundColourId).toString())));
 
-        editorComponent->setColour(CodeEditorComponent::lineNumberTextId,
-        VAR2COLOUR(owner.getComponentTree().getProperty (Ids::luaMethodEditorLineNumbersColour, Colours::grey.toString()))); // Added v5.6.31
-        
-        editorComponent->setColour(CodeEditorComponent::lineNumberBackgroundId,
-        VAR2COLOUR(owner.getComponentTree().getProperty (Ids::luaMethodEditorLineNumbersBgColour, Colours::cyan.toString()))); // Added v5.6.31
+		editorComponent->setColour(CodeEditorComponent::lineNumberTextId,
+			VAR2COLOUR(owner.getComponentTree().getProperty(Ids::luaMethodEditorLineNumbersColour, Colours::grey.toString()))); // Added v5.6.31
+
+		editorComponent->setColour(CodeEditorComponent::lineNumberBackgroundId,
+			VAR2COLOUR(owner.getComponentTree().getProperty(Ids::luaMethodEditorLineNumbersBgColour, Colours::cyan.toString()))); // Added v5.6.31
 	}
 	else
 	{
-		setFontAndColour (Font (Font::getDefaultMonospacedFontName(), 14.0f, Font::plain), Colours::white); // findColour(CodeEditorComponent::backgroundColourId));
+		setFontAndColour(Font(Font::getDefaultMonospacedFontName(), 14.0f, Font::plain), Colours::white); // findColour(CodeEditorComponent::backgroundColourId));
 	}
 	//editorComponent->grabKeyboardFocus();
 }
@@ -56,50 +64,55 @@ CtrlrLuaMethodCodeEditor::~CtrlrLuaMethodCodeEditor()
 	masterReference.clear();
 
 	if (method)
-		method->setCodeEditor (nullptr);
+		method->setCodeEditor(nullptr);
 
-	document.removeListener (this);
+	// Remove the value listener FIRST before other cleanup
+	//sharedSearchTabsValue.removeListener(this);
+	SharedValues::getSearchTabsValue().removeListener(this);
+	document.removeListener(this);
 	deleteAndZero(editorComponent);
-	deleteAndZero (codeTokeniser);
+	deleteAndZero(codeTokeniser);
+
+	// hiddenSearchTabsToggle will be automatically deleted by Component destructor
 }
 
 void CtrlrLuaMethodCodeEditor::resized()
 {
-	editorComponent->setBounds (0,0,getWidth(),getHeight());
+	editorComponent->setBounds(0, 0, getWidth(), getHeight());
 }
 
-void CtrlrLuaMethodCodeEditor::mouseDown (const MouseEvent &e)
+void CtrlrLuaMethodCodeEditor::mouseDown(const MouseEvent& e)
 {
 	CodeDocument::Position pos = editorComponent->getCaretPos();
 	String url;
-	if (isMouseOverUrl (pos, &url))
+	if (isMouseOverUrl(pos, &url))
 	{
 		URL(url).launchInDefaultBrowser();
 	}
-	owner.setPositionLabelText ("Line:  " + String(pos.getLineNumber()+1) + " Column: " + String(pos.getIndexInLine()));
+	owner.setPositionLabelText("Line:  " + String(pos.getLineNumber() + 1) + " Column: " + String(pos.getIndexInLine()));
 }
 
-void CtrlrLuaMethodCodeEditor::mouseMove (const MouseEvent &e)
+void CtrlrLuaMethodCodeEditor::mouseMove(const MouseEvent& e)
 {
 	if (e.eventComponent == editorComponent)
 	{
-		CodeDocument::Position pos = editorComponent->getPositionAt (e.x, e.y);
-		if (isMouseOverUrl (pos))
+		CodeDocument::Position pos = editorComponent->getPositionAt(e.x, e.y);
+		if (isMouseOverUrl(pos))
 		{
-			editorComponent->setMouseCursor (MouseCursor::PointingHandCursor);
+			editorComponent->setMouseCursor(MouseCursor::PointingHandCursor);
 			return;
 		}
 		else if (editorComponent->getMouseCursor() == MouseCursor::PointingHandCursor)
 		{
-			editorComponent->setMouseCursor (MouseCursor::IBeamCursor);
+			editorComponent->setMouseCursor(MouseCursor::IBeamCursor);
 		}
 	}
 }
 
-bool CtrlrLuaMethodCodeEditor::keyStateChanged (bool isKeyDown, Component *originatingComponent)
+bool CtrlrLuaMethodCodeEditor::keyStateChanged(bool isKeyDown, Component* originatingComponent)
 {
 	CodeDocument::Position pos = editorComponent->getCaretPos();
-	owner.setPositionLabelText ("Line:  " + String(pos.getLineNumber()+1) + " Column: " + String(pos.getIndexInLine()));
+	owner.setPositionLabelText("Line:  " + String(pos.getLineNumber() + 1) + " Column: " + String(pos.getIndexInLine()));
 	return (false);
 }
 
@@ -122,9 +135,9 @@ bool CtrlrLuaMethodCodeEditor::keyPressed(const KeyPress& key, Component* origin
 			toggleLineComment();
 			return true;
 		}
-		if(key.getKeyCode() == 9)
+		if (key.getKeyCode() == 9)
 		{
-			owner.keyPressed (key, originatingComponent);
+			owner.keyPressed(key, originatingComponent);
 			return (true);
 		}
 		if (key.getKeyCode() == 83) // CTRL + S
@@ -132,19 +145,19 @@ bool CtrlrLuaMethodCodeEditor::keyPressed(const KeyPress& key, Component* origin
 			saveDocument();
 			return (true);
 		}
-		if (CharacterFunctions::toUpperCase ((juce_wchar) (key.getKeyCode())) == 70) // CTRL + F
+		if (CharacterFunctions::toUpperCase((juce_wchar)(key.getKeyCode())) == 70) // CTRL + F
 		{
 			// Show search Dialog
 			editorComponent->showFindPanel();
 			return (true);
 		}
-		if (CharacterFunctions::toUpperCase ((juce_wchar) (key.getKeyCode())) == 71) // CTRL + G
+		if (CharacterFunctions::toUpperCase((juce_wchar)(key.getKeyCode())) == 71) // CTRL + G
 		{
 			// Show Go To Dialog
 			editorComponent->showGoTOPanel();
 			return (true);
 		}
-		if (CharacterFunctions::toUpperCase ((juce_wchar) (key.getKeyCode())) == 72) // CTRL + H
+		if (CharacterFunctions::toUpperCase((juce_wchar)(key.getKeyCode())) == 72) // CTRL + H
 		{
 			// Show search Dialog
 			editorComponent->showFindPanel(true);
@@ -186,17 +199,17 @@ bool CtrlrLuaMethodCodeEditor::keyPressed(const KeyPress& key, Component* origin
 	}
 
 	CodeDocument::Position pos = editorComponent->getCaretPos();
-	owner.setPositionLabelText ("Line:  " + String(pos.getLineNumber()+1) + " Column: " + String(pos.getIndexInLine()));
+	owner.setPositionLabelText("Line:  " + String(pos.getLineNumber() + 1) + " Column: " + String(pos.getIndexInLine()));
 	return (false);
 }
 
-void CtrlrLuaMethodCodeEditor::codeDocumentTextInserted (const String& newText, int insertIndex)
+void CtrlrLuaMethodCodeEditor::codeDocumentTextInserted(const String& newText, int insertIndex)
 {
 	document.newTransaction();
 	documentChanged(false);
 }
 
-void CtrlrLuaMethodCodeEditor::codeDocumentTextDeleted (int startIndex, int endIndex)
+void CtrlrLuaMethodCodeEditor::codeDocumentTextDeleted(int startIndex, int endIndex)
 {
 	document.newTransaction();
 	documentChanged(false);
@@ -204,7 +217,7 @@ void CtrlrLuaMethodCodeEditor::codeDocumentTextDeleted (int startIndex, int endI
 
 void CtrlrLuaMethodCodeEditor::documentChanged(const bool save, const bool recompile)
 {
-	owner.tabChanged (this, save, recompile);
+	owner.tabChanged(this, save, recompile);
 }
 
 void CtrlrLuaMethodCodeEditor::saveDocument()
@@ -249,14 +262,14 @@ void CtrlrLuaMethodCodeEditor::saveAndCompileDocument()
 	documentChanged(true, true);
 }
 
-const bool CtrlrLuaMethodCodeEditor::isMouseOverUrl(CodeDocument::Position &position, String *url)
+const bool CtrlrLuaMethodCodeEditor::isMouseOverUrl(CodeDocument::Position& position, String* url)
 {
 	if (position.getPosition() >= document.getNumCharacters())
 	{
 		return (false);
 	}
 
-	int moveLeft=0;
+	int moveLeft = 0;
 
 	while (!CharacterFunctions::isWhitespace(position.getCharacter()))
 	{
@@ -268,7 +281,7 @@ const bool CtrlrLuaMethodCodeEditor::isMouseOverUrl(CodeDocument::Position &posi
 	}
 
 	int start = position.getPosition();
-	position.setPosition (position.getPosition()+moveLeft);
+	position.setPosition(position.getPosition() + moveLeft);
 
 	while (!CharacterFunctions::isWhitespace(position.getCharacter()))
 	{
@@ -280,15 +293,15 @@ const bool CtrlrLuaMethodCodeEditor::isMouseOverUrl(CodeDocument::Position &posi
 
 	int end = position.getPosition();
 
-	const String word = document.getTextBetween (CodeDocument::Position(document, start), CodeDocument::Position(document, end)).trim();
+	const String word = document.getTextBetween(CodeDocument::Position(document, start), CodeDocument::Position(document, end)).trim();
 
-	if (word.startsWith ("http://"))
+	if (word.startsWith("http://"))
 	{
 		if (url)
 		{
 			*url = word;
 		}
-		return (URL::isProbablyAWebsiteURL (word));
+		return (URL::isProbablyAWebsiteURL(word));
 	}
 
 	return (false);
@@ -296,31 +309,31 @@ const bool CtrlrLuaMethodCodeEditor::isMouseOverUrl(CodeDocument::Position &posi
 
 void CtrlrLuaMethodCodeEditor::handleAsyncUpdate()
 {
-	owner.tabChanged (this, false, false);
+	owner.tabChanged(this, false, false);
 }
 
-void CtrlrLuaMethodCodeEditor::setErrorLine (const int lineNumber)
+void CtrlrLuaMethodCodeEditor::setErrorLine(const int lineNumber)
 {
-	editorComponent->scrollToLine (lineNumber-1);
-	CodeDocument::Position start(document, lineNumber-1,0);
-	CodeDocument::Position end(document,lineNumber-1,document.getLine (lineNumber-1).length());
+	editorComponent->scrollToLine(lineNumber - 1);
+	CodeDocument::Position start(document, lineNumber - 1, 0);
+	CodeDocument::Position end(document, lineNumber - 1, document.getLine(lineNumber - 1).length());
 	editorComponent->setHighlightedRegion(Range<int>(start.getPosition(), end.getPosition()));
 }
 
-void CtrlrLuaMethodCodeEditor::setFontAndColour (const Font newFont, const Colour newColour)
+void CtrlrLuaMethodCodeEditor::setFontAndColour(const Font newFont, const Colour newColour)
 {
-	editorComponent->setColour (CodeEditorComponent::backgroundColourId, newColour);
-	editorComponent->setFont (newFont);
+	editorComponent->setColour(CodeEditorComponent::backgroundColourId, newColour);
+	editorComponent->setFont(newFont);
 }
 
-void CtrlrLuaMethodCodeEditor::findNextMatch(const String & search, bool bMatchCase)
+void CtrlrLuaMethodCodeEditor::findNextMatch(const String& search, bool bMatchCase)
 {
 	if (owner.getCurrentEditor() == nullptr)
 	{
 		return;
 	}
 
-	CodeDocument &doc = owner.getCurrentEditor()->getCodeDocument();
+	CodeDocument& doc = owner.getCurrentEditor()->getCodeDocument();
 	int position = -1;
 
 	if (bMatchCase)
@@ -346,105 +359,104 @@ void CtrlrLuaMethodCodeEditor::findNextMatch(const String & search, bool bMatchC
 	}
 }
 
-void CtrlrLuaMethodCodeEditor::replaceNextMatch(const String &search, const String &replace, bool bMatchCase)
+void CtrlrLuaMethodCodeEditor::replaceNextMatch(const String& search, const String& replace, bool bMatchCase)
 {
 	if (owner.getCurrentEditor() == nullptr)
 	{
 		return;
 	}
 
-	CodeDocument &doc		= owner.getCurrentEditor()->getCodeDocument();
+	CodeDocument& doc = owner.getCurrentEditor()->getCodeDocument();
 	findNextMatch(search, bMatchCase);
 	if (lastFoundPosition >= 0)
 	{
 		doc.newTransaction();
-		doc.deleteSection (lastFoundPosition, lastFoundPosition+search.length());
-		doc.insertText (lastFoundPosition, replace);
+		doc.deleteSection(lastFoundPosition, lastFoundPosition + search.length());
+		doc.insertText(lastFoundPosition, replace);
 	}
 }
 
-void CtrlrLuaMethodCodeEditor::replaceAllMatches(const String &search, const String &replace,bool bMatchCase)
+void CtrlrLuaMethodCodeEditor::replaceAllMatches(const String& search, const String& replace, bool bMatchCase)
 {
 	lastFoundPosition = -1;
 	do
 	{
 		replaceNextMatch(search, replace, bMatchCase);
-	}
-	while (lastFoundPosition >= 0);
+	} while (lastFoundPosition >= 0);
 }
 
-void CtrlrLuaMethodCodeEditor::findInOpened(const String &search)
+void CtrlrLuaMethodCodeEditor::findInOpened(const String& search)
 {
 	if (owner.getTabs() == nullptr)
 		return;
 
 	StringArray names = owner.getTabs()->getTabNames();
 
-	owner.getMethodEditArea()->insertOutput("\n\nSearching for: \""+search+"\" in all opened methods (double click line to jump)\n", Colours::darkblue);
+	owner.getMethodEditArea()->insertOutput("\n\nSearching for: \"" + search + "\" in all opened methods (double click line to jump)\n", Colours::darkblue);
 
-	for (int i=0; i<owner.getTabs()->getNumTabs(); i++)
+	for (int i = 0; i < owner.getTabs()->getNumTabs(); i++)
 	{
-		CtrlrLuaMethodCodeEditor *codeEditor = dynamic_cast<CtrlrLuaMethodCodeEditor*>(owner.getTabs()->getTabContentComponent(i));
+		CtrlrLuaMethodCodeEditor* codeEditor = dynamic_cast<CtrlrLuaMethodCodeEditor*>(owner.getTabs()->getTabContentComponent(i));
 
-		if (codeEditor != nullptr )
+		if (codeEditor != nullptr)
 		{
-			CodeDocument &doc	= codeEditor->getCodeDocument() ;
+			CodeDocument& doc = codeEditor->getCodeDocument();
 
-			Array<Range<int> > results = searchForMatchesInDocument (doc, search);
+			Array<Range<int> > results = searchForMatchesInDocument(doc, search);
 
-			for (int j=0; j<results.size(); j++)
+			for (int j = 0; j < results.size(); j++)
 			{
-				reportFoundMatch (doc, names[i], results[j]);
+				reportFoundMatch(doc, names[i], results[j]);
 			}
 		}
 	}
 
-	owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0,true);
+	owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0, true);
 }
 bool isValidSearchString(const String& search)
 {
-    String trimmed = search.trim();
-    
-    // Minimum length check
-    if (trimmed.length() < 3)
-        return false;
-    
-    // Check for only whitespace
-    if (trimmed.isEmpty() || trimmed.containsOnly(" \t\n\r"))
-        return false;
-    
-    // Check for repetitive single characters (like "aaa" or "111")
-    if (trimmed.length() >= 3)
-    {
-        bool allSame = true;
-        juce_wchar firstChar = trimmed[0];
-        for (int i = 1; i < trimmed.length(); i++)
-        {
-            if (trimmed[i] != firstChar)
-            {
-                allSame = false;
-                break;
-            }
-        }
-        if (allSame)
-            return false;
-    }
-    
-    // Check for very common single characters or short sequences
-    StringArray commonInvalidSearches = {
-        "a", "an", "and", "the", "of", "to", "in", "it", "is", "be", "as", "at", "by", "for", "with", "on",
-        "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
-        "aa", "bb", "cc", "dd", "ee", "ff", "gg", "hh", "ii", "jj", "kk", "ll", "mm", "nn", "oo", "pp",
-        "11", "22", "33", "44", "55", "66", "77", "88", "99", "00"
-    };
-    
-    for (const String& invalid : commonInvalidSearches)
-    {
-        if (trimmed.equalsIgnoreCase(invalid))
-            return false;
-    }
-    
-    return true;
+	String trimmed = search.trim();
+
+	// Minimum length check
+	if (trimmed.length() < 3)
+		return false;
+
+	// Check for only whitespace
+	if (trimmed.isEmpty() || trimmed.containsOnly(" \t\n\r"))
+		return false;
+
+	// Check for repetitive single characters (like "aaa" or "111")
+	if (trimmed.length() >= 3)
+	{
+		bool allSame = true;
+		juce_wchar firstChar = trimmed[0];
+		for (int i = 1; i < trimmed.length(); i++)
+		{
+			if (trimmed[i] != firstChar)
+			{
+				allSame = false;
+				break;
+			}
+		}
+		if (allSame)
+			return false;
+	}
+
+	// Check for very common single characters or short sequences
+	StringArray commonInvalidSearches = {
+		"a", "an", "and", "the", "of", "to", "in", "it", "is", "be", "as", "at", "by", "for", "with", "on",
+		"1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
+		"aa", "bb", "cc", "dd", "ee", "ff", "gg", "hh", "ii", "jj", "kk", "ll", "mm", "nn", "oo", "pp",
+		"11", "22", "33", "44", "55", "66", "77", "88", "99", "00"
+	};
+
+	for (const String& invalid : commonInvalidSearches)
+	{
+		if (trimmed.equalsIgnoreCase(invalid))
+			return false;
+	}
+
+	return true;
 }
 void CtrlrLuaMethodCodeEditor::findInAll(const String& search)
 {
@@ -460,9 +472,10 @@ void CtrlrLuaMethodCodeEditor::findInAll(const String& search)
 	owner.getMethodEditArea()->insertOutput("\n\nSearching for: \"" + search + "\" in all methods (double click line to jump)\n", Colours::darkblue);
 	StringArray names;
 
-	// Get the toggle state from the owner ONCE at the beginning
-	const bool shouldOpenTabs = owner.getOpenSearchTabsEnabled(); // gets toggle state in Edit->Preferences
-
+	// Get the toggle state from the HIDDEN toggle instead of the problematic reference
+	const bool shouldOpenTabs = hiddenSearchTabsToggle->getToggleState();
+	DBG("findInAll: shouldOpenTabs = " + String(shouldOpenTabs ? "true" : "false"));
+	DBG("findInAll: sharedSearchTabsValue = " + sharedSearchTabsValue.toString());
 	for (int i = 0; i < owner.getMethodManager().getNumMethods(); i++)
 	{
 		CtrlrLuaMethod* m = owner.getMethodManager().getMethodByIndex(i);
@@ -502,10 +515,20 @@ void CtrlrLuaMethodCodeEditor::findInAll(const String& search)
 				// Decide whether to keep the tab open based on toggle state AND whether there were results
 				if (!shouldOpenTabs || results.size() == 0)
 				{
+
+					DBG("Closing tab for method: " + names[i] +
+						" (shouldOpenTabs=" + String(shouldOpenTabs ? "true" : "false") +
+						", results=" + String(results.size()) + ")");
 					// Close the tab if:
 					// 1. The user doesn't want tabs opened automatically, OR
 					// 2. No search results were found (regardless of toggle state)
 					owner.closeCurrentTab();
+				}
+				else
+				{
+					DBG("Keeping tab open for method: " + names[i] +
+						" (shouldOpenTabs=" + String(shouldOpenTabs ? "true" : "false") +
+						", results=" + String(results.size()) + ")");
 				}
 				// If shouldOpenTabs is true AND results.size() > 0, keep the tab open
 			}
@@ -579,11 +602,11 @@ void CtrlrLuaMethodCodeEditor::findInAll(const String& search)
 //	owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0,true);
 //}
 
-const Array<Range<int> > CtrlrLuaMethodCodeEditor::searchForMatchesInDocument(CodeDocument &doc, const String &search)
+const Array<Range<int> > CtrlrLuaMethodCodeEditor::searchForMatchesInDocument(CodeDocument& doc, const String& search)
 {
 	Array<Range<int> > results;
-	int position			= -1;
-	lastFoundPosition		= -1;
+	int position = -1;
+	lastFoundPosition = -1;
 	do
 	{
 		String documentContent = doc.getAllContent();
@@ -591,108 +614,107 @@ const Array<Range<int> > CtrlrLuaMethodCodeEditor::searchForMatchesInDocument(Co
 		{
 			if (editorComponent->isCaseSensitiveSearch())
 			{
-				position = documentContent.indexOfIgnoreCase (lastFoundPosition+1, search);
+				position = documentContent.indexOfIgnoreCase(lastFoundPosition + 1, search);
 			}
 			else
 			{
-				position = documentContent.indexOf (lastFoundPosition+1, search);
+				position = documentContent.indexOf(lastFoundPosition + 1, search);
 			}
 		}
 
 
 		if (position >= 0)
 		{
-			lastFoundPosition		= position;
-			results.add (Range<int> (lastFoundPosition, lastFoundPosition+search.length()));
+			lastFoundPosition = position;
+			results.add(Range<int>(lastFoundPosition, lastFoundPosition + search.length()));
 		}
 		else
 		{
 			lastFoundPosition = -1;
 		}
-	}
-	while (lastFoundPosition >= 0);
+	} while (lastFoundPosition >= 0);
 
 	return (results);
 }
 
-void CtrlrLuaMethodCodeEditor::reportFoundMatch (CodeDocument &doc, const String &methodName, const Range<int> range)
+void CtrlrLuaMethodCodeEditor::reportFoundMatch(CodeDocument& doc, const String& methodName, const Range<int> range)
 {
-	CodeDocument::Position pos (doc, range.getStart());
+	CodeDocument::Position pos(doc, range.getStart());
 	AttributedString as;
-    as.append ("Method: ", Colours::black);
-	as.append (methodName, Colours::blue);
- 
-    as.append ("\tline: ", Colours::black);
-	as.append (String(pos.getLineNumber()+1), Colours::darkgreen);
+	as.append("Method: ", Colours::black);
+	as.append(methodName, Colours::blue);
 
-    as.append ("\tstart: ", Colours::black);
-	as.append (String(range.getStart()), Colours::darkgreen);
+	as.append("\tline: ", Colours::black);
+	as.append(String(pos.getLineNumber() + 1), Colours::darkgreen);
 
-    as.append ("\tend: ", Colours::black);
-	as.append (String(range.getEnd()), Colours::darkgreen);
+	as.append("\tstart: ", Colours::black);
+	as.append(String(range.getStart()), Colours::darkgreen);
 
-	owner.getMethodEditArea()->insertOutput (as);
+	as.append("\tend: ", Colours::black);
+	as.append(String(range.getEnd()), Colours::darkgreen);
+
+	owner.getMethodEditArea()->insertOutput(as);
 }
 
 void CtrlrLuaMethodCodeEditor::gotoLine(int position, const bool selectLine)
 {
-	editorComponent->scrollToLine(position-3);
+	editorComponent->scrollToLine(position - 3);
 	editorComponent->moveCaretTo(CodeDocument::Position(document, position - 1, 0), false);
 	if (selectLine)
-    {
-        editorComponent->selectRegion (CodeDocument::Position (document, position - 1, 0), CodeDocument::Position (document, position - 1, 1024));
-    }
+	{
+		editorComponent->selectRegion(CodeDocument::Position(document, position - 1, 0), CodeDocument::Position(document, position - 1, 1024));
+	}
 	//editorComponent->selectRegion(CodeDocument::Position(document, position - 1, 0), CodeDocument::Position(document, position - 1, 1));
 	editorComponent->grabKeyboardFocus();
 	editorComponent->hideGoTOPanel();
 }
 
-CtrlrLuaMethodEditor &CtrlrLuaMethodCodeEditor::getOwner()
+CtrlrLuaMethodEditor& CtrlrLuaMethodCodeEditor::getOwner()
 {
-    return  (owner);
+	return  (owner);
 }
 
 //==============================================================================
-class GenericCodeEditorComponent::GoToPanel  : public Component,
+class GenericCodeEditorComponent::GoToPanel : public Component,
 	private TextEditor::Listener,
 	private Button::Listener
 {
 public:
 	GoToPanel() : goToButton("", 0.0, Colours::white)
 	{
-		editor.setColour (CaretComponent::caretColourId, Colours::black);
+		editor.setColour(CaretComponent::caretColourId, Colours::black);
 		editor.setInputRestrictions(5, ("1234567890"));
-		editor.addListener (this);
-		addAndMakeVisible (editor);
+		editor.addListener(this);
+		addAndMakeVisible(editor);
 		goToButton.addListener(this);
-		addAndMakeVisible (goToButton);
+		addAndMakeVisible(goToButton);
 
-		label.setText ("Go To:", dontSendNotification);
-		label.setColour (Label::textColourId, Colours::white);
-		label.attachToComponent (&editor, true);
+		label.setText("Go To:", dontSendNotification);
+		label.setColour(Label::textColourId, Colours::white);
+		label.attachToComponent(&editor, true);
 
-		setWantsKeyboardFocus (false);
-		setFocusContainer (true);
+		setWantsKeyboardFocus(false);
+		setFocusContainer(true);
 	}
 
-	void paint (Graphics& g) override
+	void paint(Graphics& g) override
 	{
 		Path outline;
-		outline.addRoundedRectangle (1.0f, 1.0f, getWidth() - 2.0f, getHeight() - 2.0f, 8.0f);
+		outline.addRoundedRectangle(1.0f, 1.0f, getWidth() - 2.0f, getHeight() - 2.0f, 8.0f);
 
-		g.setColour (Colours::black.withAlpha (0.6f));
-		g.fillPath (outline);
-		g.setColour (Colours::white.withAlpha (0.8f));
-		g.strokePath (outline, PathStrokeType (1.0f));
+		g.setColour(Colours::black.withAlpha(0.6f));
+		g.fillPath(outline);
+		g.setColour(Colours::white.withAlpha(0.8f));
+		g.strokePath(outline, PathStrokeType(1.0f));
 	}
 
 	void resized() override
 	{
 		int y = 5;
-		editor.setBounds (45, y, getWidth() - 90, 24);
-		goToButton.setBounds(editor.getRight() + 5, y+1, 30, 24);
+		editor.setBounds(45, y, getWidth() - 90, 24);
+		goToButton.setBounds(editor.getRight() + 5, y + 1, 30, 24);
 	}
-	void buttonClicked (Button* button) override
+	void buttonClicked(Button* button) override
 	{
 		GenericCodeEditorComponent* ed = getOwner();
 		if (ed)
@@ -704,11 +726,11 @@ public:
 		}
 	}
 
-	void textEditorTextChanged (TextEditor&) override	{}
+	void textEditorTextChanged(TextEditor&) override {}
 
-	void textEditorFocusLost (TextEditor&) override {}
+	void textEditorFocusLost(TextEditor&) override {}
 
-	void textEditorReturnKeyPressed (TextEditor& textEditor) override
+	void textEditorReturnKeyPressed(TextEditor& textEditor) override
 	{
 		GenericCodeEditorComponent* ed = getOwner();
 		if (ed)
@@ -717,7 +739,7 @@ public:
 		}
 	}
 
-	void textEditorEscapeKeyPressed (TextEditor&) override
+	void textEditorEscapeKeyPressed(TextEditor&) override
 	{
 		if (GenericCodeEditorComponent* ed = getOwner())
 			ed->hideGoTOPanel();
@@ -734,33 +756,33 @@ public:
 };
 
 //==============================================================================
-class GenericCodeEditorComponent::FindPanel  : public Component,
+class GenericCodeEditorComponent::FindPanel : public Component,
 	private TextEditor::Listener,
 	private Button::Listener,
 	private ComboBox::Listener
 {
 public:
 	FindPanel()
-		: caseButton ("Match Case"),
-		findPrev ("<", "Search Previous"),
-		findNext (">", "Search Next"),
+		: caseButton("Match Case"),
+		findPrev("<", "Search Previous"),
+		findNext(">", "Search Next"),
 		searchButton("", 0.0, Colours::white)
 	{
-		editor.setColour (CaretComponent::caretColourId, Colours::black);
-		editor.addListener (this);
-		addAndMakeVisible (editor);
+		editor.setColour(CaretComponent::caretColourId, Colours::black);
+		editor.addListener(this);
+		addAndMakeVisible(editor);
 		searchButton.addListener(this);
-		addAndMakeVisible (searchButton);
+		addAndMakeVisible(searchButton);
 
-		label.setText ("Find:", dontSendNotification);
-		label.setColour (Label::textColourId, Colours::white);
-		label.attachToComponent (&editor, true);
+		label.setText("Find:", dontSendNotification);
+		label.setColour(Label::textColourId, Colours::white);
+		label.attachToComponent(&editor, true);
 
-		searchInComboBox.setEditableText (false);
-		searchInComboBox.setJustificationType (Justification::centredLeft);
-		searchInComboBox.addItem (TRANS("Editor"), 1);
-		searchInComboBox.addItem (TRANS("Output"), 2);
-		searchInComboBox.addItem (TRANS("Methods"), 3);
+		searchInComboBox.setEditableText(false);
+		searchInComboBox.setJustificationType(Justification::centredLeft);
+		searchInComboBox.addItem(TRANS("Editor"), 1);
+		searchInComboBox.addItem(TRANS("Output"), 2);
+		searchInComboBox.addItem(TRANS("Methods"), 3);
 		searchInComboBox.setSelectedItemIndex(0, dontSendNotification);
 		searchInComboBox.addListener(this);
 		searchInComboBox.setEnabled(false);
@@ -778,26 +800,26 @@ public:
 		caseButton.addListener(this);
 
 
-		lookInComboBox.setEditableText (false);
-		lookInComboBox.setJustificationType (Justification::centredLeft);
-		lookInComboBox.addItem (TRANS("Current"), 1);
-		lookInComboBox.addItem (TRANS("All Open"), 2);
-		lookInComboBox.addItem (TRANS("All"), 3);
+		lookInComboBox.setEditableText(false);
+		lookInComboBox.setJustificationType(Justification::centredLeft);
+		lookInComboBox.addItem(TRANS("Current"), 1);
+		lookInComboBox.addItem(TRANS("All Open"), 2);
+		lookInComboBox.addItem(TRANS("All"), 3);
 		lookInComboBox.setSelectedItemIndex(0, dontSendNotification);
 		lookInComboBox.addListener(this);
 		addAndMakeVisible(lookInComboBox);
 
-		findPrev.setConnectedEdges (Button::ConnectedOnRight);
+		findPrev.setConnectedEdges(Button::ConnectedOnRight);
 		findPrev.addListener(this);
-		findNext.setConnectedEdges (Button::ConnectedOnLeft);
+		findNext.setConnectedEdges(Button::ConnectedOnLeft);
 		findNext.addListener(this);
-		addAndMakeVisible (findPrev);
-		addAndMakeVisible (findNext);
+		addAndMakeVisible(findPrev);
+		addAndMakeVisible(findNext);
 
-		setWantsKeyboardFocus (false);
-		setFocusContainer (true);
-		findPrev.setWantsKeyboardFocus (true);
-		findNext.setWantsKeyboardFocus (true);
+		setWantsKeyboardFocus(false);
+		setFocusContainer(true);
+		findPrev.setWantsKeyboardFocus(true);
+		findNext.setWantsKeyboardFocus(true);
 	}
 
 	~FindPanel()
@@ -810,7 +832,7 @@ public:
 
 	void applyCurrentSetting()
 	{
-		if(GenericCodeEditorComponent* ed = getOwner())
+		if (GenericCodeEditorComponent* ed = getOwner())
 		{
 			caseButton.setToggleState(ed->getCtrlrLuaMethodCodeEditor().getCtrlrLuaMethodEditor().caseCansitive, dontSendNotification);
 			lookInComboBox.setText(ed->getCtrlrLuaMethodCodeEditor().getCtrlrLuaMethodEditor().lookInString, dontSendNotification);
@@ -827,50 +849,50 @@ public:
 	void addReplaceComponents()
 	{
 		replaceEditor = new TextEditor();
-		replaceEditor->setColour (CaretComponent::caretColourId, Colours::black);
-		addAndMakeVisible (*replaceEditor);
+		replaceEditor->setColour(CaretComponent::caretColourId, Colours::black);
+		addAndMakeVisible(*replaceEditor);
 
 		replaceLabel = new Label();
-		replaceLabel->setText ("Replace:", dontSendNotification);
-		replaceLabel->setFont(Font (13.00f, Font::plain));
-		replaceLabel->setColour (Label::textColourId, Colours::white);
-		replaceLabel->attachToComponent (replaceEditor, true);
+		replaceLabel->setText("Replace:", dontSendNotification);
+		replaceLabel->setFont(Font(13.00f, Font::plain));
+		replaceLabel->setColour(Label::textColourId, Colours::white);
+		replaceLabel->attachToComponent(replaceEditor, true);
 
 		replaceButton = new TextButton(">", "Replace Next");
 		replaceButton->addListener(this);
-		addAndMakeVisible (*replaceButton);
+		addAndMakeVisible(*replaceButton);
 
 		replaceAllButton = new TextButton("A", "Replace all in current");
 		replaceAllButton->addListener(this);
-		addAndMakeVisible (*replaceAllButton);
+		addAndMakeVisible(*replaceAllButton);
 
-		replaceButton->setConnectedEdges (Button::ConnectedOnRight);
-		replaceAllButton->setConnectedEdges (Button::ConnectedOnLeft);
+		replaceButton->setConnectedEdges(Button::ConnectedOnRight);
+		replaceAllButton->setConnectedEdges(Button::ConnectedOnLeft);
 
-		replaceEditor->addListener (this);
+		replaceEditor->addListener(this);
 		resized();
 	}
 
-	void paint (Graphics& g) override
+	void paint(Graphics& g) override
 	{
 		Path outline;
-		outline.addRoundedRectangle (1.0f, 1.0f, getWidth() - 2.0f, getHeight() - 2.0f, 8.0f);
+		outline.addRoundedRectangle(1.0f, 1.0f, getWidth() - 2.0f, getHeight() - 2.0f, 8.0f);
 
-		g.setColour (Colours::black.withAlpha (0.6f));
-		g.fillPath (outline);
-		g.setColour (Colours::white.withAlpha (0.8f));
-		g.strokePath (outline, PathStrokeType (1.0f));
+		g.setColour(Colours::black.withAlpha(0.6f));
+		g.fillPath(outline);
+		g.setColour(Colours::white.withAlpha(0.8f));
+		g.strokePath(outline, PathStrokeType(1.0f));
 	}
 
 	void resized() override
 	{
 		int y = 5;
-		editor.setBounds (45, y, getWidth() - 90, 24);
-		searchButton.setBounds(editor.getRight() + 5, y+1, 30, 24);
+		editor.setBounds(45, y, getWidth() - 90, 24);
+		searchButton.setBounds(editor.getRight() + 5, y + 1, 30, 24);
 		y += 30;
 		if (replaceEditor != nullptr)
 		{
-			replaceEditor->setBounds (45, y, getWidth() - 90, 24);
+			replaceEditor->setBounds(45, y, getWidth() - 90, 24);
 			replaceButton->setBounds(replaceEditor->getRight(), y, 20, 24);
 			replaceAllButton->setBounds(replaceButton->getRight(), y, 20, 24);
 			y += 30;
@@ -880,8 +902,8 @@ public:
 		//lookInComboBox.setBounds(searchInComboBox.getRight() + 5, y, 70, 24);
 		caseButton.setBounds(5, y, 75, 22);
 		lookInComboBox.setBounds(searchInComboBox.getRight() + 75, y, 90, 24);
-		findPrev.setBounds (lookInComboBox.getRight(), y, 15, 24);
-		findNext.setBounds (findPrev.getRight(), y, 15, 24);
+		findPrev.setBounds(lookInComboBox.getRight(), y, 15, 24);
+		findNext.setBounds(findPrev.getRight(), y, 15, 24);
 	}
 
 	void comboBoxChanged(ComboBox* combo) override
@@ -911,34 +933,34 @@ public:
 				}
 				break;
 			}
-			if(GenericCodeEditorComponent* ed = getOwner())
-				ed->getCtrlrLuaMethodCodeEditor().getCtrlrLuaMethodEditor().searchInString=
+			if (GenericCodeEditorComponent* ed = getOwner())
+				ed->getCtrlrLuaMethodCodeEditor().getCtrlrLuaMethodEditor().searchInString =
 				searchInComboBox.getText();
 		}
 		else if (combo == &lookInComboBox)
 		{
-			if(GenericCodeEditorComponent* ed = getOwner())
+			if (GenericCodeEditorComponent* ed = getOwner())
 				ed->getCtrlrLuaMethodCodeEditor().getCtrlrLuaMethodEditor().lookInString =
 				lookInComboBox.getText();
 		}
 	}
 
-	void buttonClicked (Button* button) override
+	void buttonClicked(Button* button) override
 	{
 		GenericCodeEditorComponent* ed = getOwner();
 		if (ed)
 		{
-			if (button == &findNext )
+			if (button == &findNext)
 			{
-				ed->findNext (true, true);
+				ed->findNext(true, true);
 			}
-			else if (button == &findPrev )
+			else if (button == &findPrev)
 			{
-				ed->findNext (false, false);
+				ed->findNext(false, false);
 			}
 			else if (button == replaceButton)
 			{
-				ed->replaceNextMatch (editor.getText(), replaceEditor->getText(), caseButton.getToggleState());
+				ed->replaceNextMatch(editor.getText(), replaceEditor->getText(), caseButton.getToggleState());
 			}
 			else if (button == replaceAllButton)
 			{
@@ -956,14 +978,14 @@ public:
 		}
 	}
 
-	void textEditorTextChanged (TextEditor& te) override
+	void textEditorTextChanged(TextEditor& te) override
 	{
-		switch(searchInComboBox.getSelectedItemIndex())
+		switch (searchInComboBox.getSelectedItemIndex())
 		{
 		case 0:
 			if (GenericCodeEditorComponent* ed = getOwner())
 			{
-				ed->findNext (true, false);
+				ed->findNext(true, false);
 				ed->getCtrlrLuaMethodCodeEditor().getCtrlrLuaMethodEditor().currentSearchString = editor.getText();
 			}
 			break;
@@ -972,9 +994,9 @@ public:
 		}
 	}
 
-	void textEditorFocusLost (TextEditor&) override {}
+	void textEditorFocusLost(TextEditor&) override {}
 
-	void textEditorReturnKeyPressed (TextEditor& textEditor) override
+	void textEditorReturnKeyPressed(TextEditor& textEditor) override
 	{
 		if (&textEditor == &editor)
 		{
@@ -993,13 +1015,13 @@ public:
 	{
 		if (GenericCodeEditorComponent* ed = getOwner())
 		{
-			switch(lookInComboBox.getSelectedItemIndex())
+			switch (lookInComboBox.getSelectedItemIndex())
 			{
 			case 0: // code editor current
-				switch(searchInComboBox.getSelectedItemIndex())
+				switch (searchInComboBox.getSelectedItemIndex())
 				{
 				case 0: // code editor
-					ed->findNext (true, true);
+					ed->findNext(true, true);
 					break;
 				case 1: // output window
 					break;
@@ -1021,7 +1043,7 @@ public:
 		}
 	}
 
-	void textEditorEscapeKeyPressed (TextEditor&) override
+	void textEditorEscapeKeyPressed(TextEditor&) override
 	{
 		if (GenericCodeEditorComponent* ed = getOwner())
 			ed->hideFindPanel();
@@ -1045,11 +1067,11 @@ public:
 };
 
 //==============================================================================
-GenericCodeEditorComponent::GenericCodeEditorComponent (CtrlrLuaMethodCodeEditor &_owner, CodeDocument &codeDocument,
-	CodeTokeniser* tokeniser)	: CodeEditorComponent (codeDocument, tokeniser), owner(_owner), bSensitive(false),
+GenericCodeEditorComponent::GenericCodeEditorComponent(CtrlrLuaMethodCodeEditor& _owner, CodeDocument& codeDocument,
+	CodeTokeniser* tokeniser) : CodeEditorComponent(codeDocument, tokeniser), owner(_owner), bSensitive(false),
 	lookUpString("")
 {
-    setColour (CodeEditorComponent::lineNumberTextId, Colours::black);
+	setColour(CodeEditorComponent::lineNumberTextId, Colours::black);
 }
 
 GenericCodeEditorComponent::~GenericCodeEditorComponent()
@@ -1062,13 +1084,13 @@ void GenericCodeEditorComponent::resized()
 
 	if (findPanel != nullptr)
 	{
-		findPanel->setSize (jmin (260, getWidth() - 32), 100);
-		findPanel->setTopRightPosition (getWidth() - 6, 4);
+		findPanel->setSize(jmin(260, getWidth() - 32), 100);
+		findPanel->setTopRightPosition(getWidth() - 6, 4);
 	}
 	if (goToPanel != nullptr)
 	{
-		goToPanel->setSize (jmin (160, getWidth() - 32), 40);
-		goToPanel->setTopRightPosition (getWidth() - 6, getHeight() -40);
+		goToPanel->setSize(jmin(160, getWidth() - 32), 40);
+		goToPanel->setTopRightPosition(getWidth() - 6, getHeight() - 40);
 	}
 }
 
@@ -1082,13 +1104,13 @@ void GenericCodeEditorComponent::showFindPanel(bool bForReplace)
 	if (findPanel == nullptr)
 	{
 		findPanel = new FindPanel();
-		addAndMakeVisible (findPanel);
+		addAndMakeVisible(findPanel);
 		resized();
 	}
 
 	if (findPanel != nullptr)
 	{
-		findPanel->setSearchText(getTextInRange (getHighlightedRegion()));
+		findPanel->setSearchText(getTextInRange(getHighlightedRegion()));
 		findPanel->applyCurrentSetting();
 		if (bForReplace)
 			findPanel->addReplaceComponents();
@@ -1109,7 +1131,7 @@ void GenericCodeEditorComponent::showGoTOPanel()
 	if (goToPanel == nullptr)
 	{
 		goToPanel = new GoToPanel();
-		addAndMakeVisible (goToPanel);
+		addAndMakeVisible(goToPanel);
 		resized();
 	}
 	if (goToPanel != nullptr)
@@ -1132,50 +1154,50 @@ void GenericCodeEditorComponent::findSelection(bool forward)
 	{
 		if (forward)
 		{
-			findNext (true, true);
+			findNext(true, true);
 		}
 		else
 		{
-			findNext (false, false);
+			findNext(false, false);
 		}
 	}
 }
 
-void GenericCodeEditorComponent::findNext (bool forwards, bool skipCurrentSelection)
+void GenericCodeEditorComponent::findNext(bool forwards, bool skipCurrentSelection)
 {
-	const Range<int> highlight (getHighlightedRegion());
-	const CodeDocument::Position startPos (getDocument(), skipCurrentSelection ? highlight.getEnd()
+	const Range<int> highlight(getHighlightedRegion());
+	const CodeDocument::Position startPos(getDocument(), skipCurrentSelection ? highlight.getEnd()
 		: highlight.getStart());
 	int lineNum = startPos.getLineNumber();
 	int linePos = startPos.getIndexInLine();
 
 	const int totalLines = getDocument().getNumLines();
-	const String searchText (getSearchString());
+	const String searchText(getSearchString());
 	const bool caseSensitive = isCaseSensitiveSearch();
 
 	for (int linesToSearch = totalLines; --linesToSearch >= 0;)
 	{
-		String line (getDocument().getLine (lineNum));
+		String line(getDocument().getLine(lineNum));
 		int index;
 
 		if (forwards)
 		{
-			index = caseSensitive ? line.indexOf (linePos, searchText)
-				: line.indexOfIgnoreCase (linePos, searchText);
+			index = caseSensitive ? line.indexOf(linePos, searchText)
+				: line.indexOfIgnoreCase(linePos, searchText);
 		}
 		else
 		{
 			if (linePos >= 0)
-				line = line.substring (0, linePos);
+				line = line.substring(0, linePos);
 
-			index = caseSensitive ? line.lastIndexOf (searchText)
-				: line.lastIndexOfIgnoreCase (searchText);
+			index = caseSensitive ? line.lastIndexOf(searchText)
+				: line.lastIndexOfIgnoreCase(searchText);
 		}
 
 		if (index >= 0)
 		{
-			const CodeDocument::Position p (getDocument(), lineNum, index);
-			selectRegion (p, p.movedBy (searchText.length()));
+			const CodeDocument::Position p(getDocument(), lineNum, index);
+			selectRegion(p, p.movedBy(searchText.length()));
 			break;
 		}
 
@@ -1206,7 +1228,7 @@ String GenericCodeEditorComponent::getSearchString()
 	if (findPanel != nullptr)
 		searchString = findPanel->editor.getText();
 	else
-		searchString = getTextInRange (getHighlightedRegion());
+		searchString = getTextInRange(getHighlightedRegion());
 	return searchString;
 }
 
@@ -1223,249 +1245,282 @@ void GenericCodeEditorComponent::gotoLine(int position)
 	owner.gotoLine(position);
 }
 
-void GenericCodeEditorComponent::replaceAllMatches(const String &search, const String &replace, bool bMatchCase)
+void GenericCodeEditorComponent::replaceAllMatches(const String& search, const String& replace, bool bMatchCase)
 {
-	owner.replaceAllMatches(search,replace,bMatchCase);
+	owner.replaceAllMatches(search, replace, bMatchCase);
 }
-void GenericCodeEditorComponent::replaceNextMatch(const String &search, const String &replace, bool bMatchCase)
+void GenericCodeEditorComponent::replaceNextMatch(const String& search, const String& replace, bool bMatchCase)
 {
-	owner.replaceNextMatch(search, replace,bMatchCase);
+	owner.replaceNextMatch(search, replace, bMatchCase);
 }
-void GenericCodeEditorComponent::findInAll(const String &search)
+void GenericCodeEditorComponent::findInAll(const String& search)
 {
 	owner.findInAll(search);
 }
-void GenericCodeEditorComponent::findInOpened(const String &search)
+void GenericCodeEditorComponent::findInOpened(const String& search)
 {
 	owner.findInOpened(search);
 }
 
-CtrlrLuaDebugger &GenericCodeEditorComponent::getDebugger()
+CtrlrLuaDebugger& GenericCodeEditorComponent::getDebugger()
 {
-    return (owner.getOwner().getOwner().getCtrlrLuaManager().getDebugger());
+	return (owner.getOwner().getOwner().getCtrlrLuaManager().getDebugger());
 }
 
 void GenericCodeEditorComponent::markedLinesChanged(int lineNumber, bool isNowSelected)
 {
-    getDebugger().setBreakpoint (lineNumber, owner.getMethod() ? owner.getMethod()->getName() : "ctrlr", isNowSelected);
+	getDebugger().setBreakpoint(lineNumber, owner.getMethod() ? owner.getMethod()->getName() : "ctrlr", isNowSelected);
 }
 /***************************************************************************************/
 
-	void CtrlrLuaMethodCodeEditor::duplicateCurrentLine()
+void CtrlrLuaMethodCodeEditor::duplicateCurrentLine()
+{
+	if (!editorComponent)
+		return;
+
+	CodeDocument::Position caretPos = editorComponent->getCaretPos();
+	int lineNumber = caretPos.getLineNumber();
+
+	// Get the current line content
+	String currentLine = document.getLine(lineNumber);
+
+	// Move to end of current line
+	CodeDocument::Position endOfLine(document, lineNumber, currentLine.length());
+
+	// Insert newline and duplicate the line
+	document.newTransaction();
+	document.insertText(endOfLine.getPosition(), "\n" + currentLine);
+
+	// Move caret to the same position on the new line
+	int newLineNumber = lineNumber + 1;
+	CodeDocument::Position newCaretPos(document, newLineNumber, caretPos.getIndexInLine());
+	editorComponent->moveCaretTo(newCaretPos, false);
+
+	documentChanged(false, false);
+}
+
+
+void CtrlrLuaMethodCodeEditor::toggleLineComment()
+{
+	if (!editorComponent)
+		return;
+
+	Range<int> selection = editorComponent->getHighlightedRegion();
+	CodeDocument::Position startPos(document, selection.getStart());
+	CodeDocument::Position endPos(document, selection.getEnd());
+
+	int startLine = startPos.getLineNumber();
+	int endLine = endPos.getLineNumber();
+
+	// If selection ends at start of line, don't include that line
+	if (endPos.getIndexInLine() == 0 && endLine > startLine)
+		endLine--;
+
+	document.newTransaction();
+
+	// Check if all lines are commented (to decide whether to comment or uncomment)
+	bool allLinesCommented = true;
+	for (int lineNum = startLine; lineNum <= endLine; lineNum++)
 	{
-		if (!editorComponent)
-			return;
-
-		CodeDocument::Position caretPos = editorComponent->getCaretPos();
-		int lineNumber = caretPos.getLineNumber();
-
-		// Get the current line content
-		String currentLine = document.getLine(lineNumber);
-
-		// Move to end of current line
-		CodeDocument::Position endOfLine(document, lineNumber, currentLine.length());
-
-		// Insert newline and duplicate the line
-		document.newTransaction();
-		document.insertText(endOfLine.getPosition(), "\n" + currentLine);
-
-		// Move caret to the same position on the new line
-		int newLineNumber = lineNumber + 1;
-		CodeDocument::Position newCaretPos(document, newLineNumber, caretPos.getIndexInLine());
-		editorComponent->moveCaretTo(newCaretPos, false);
-
-		documentChanged(false, false);
+		String line = document.getLine(lineNum);
+		String trimmed = line.trimStart();
+		if (trimmed.isNotEmpty() && !trimmed.startsWith("--"))
+		{
+			allLinesCommented = false;
+			break;
+		}
 	}
 
+	// Store the original caret position
+	CodeDocument::Position originalCaret = editorComponent->getCaretPos();
+	int caretOffset = 0;
 
-	void CtrlrLuaMethodCodeEditor::toggleLineComment()
+	if (allLinesCommented)
 	{
-		if (!editorComponent)
-			return;
+		// Uncomment lines
+		for (int lineNum = startLine; lineNum <= endLine; lineNum++)
+		{
+			String line = document.getLine(lineNum);
 
-		Range<int> selection = editorComponent->getHighlightedRegion();
-		CodeDocument::Position startPos(document, selection.getStart());
-		CodeDocument::Position endPos(document, selection.getEnd());
+			// Find the first occurrence of "--" and remove it
+			int commentPos = line.indexOf("--");
+			if (commentPos >= 0)
+			{
+				CodeDocument::Position lineStart(document, lineNum, 0);
+				CodeDocument::Position commentStart(document, lineNum, commentPos);
+				CodeDocument::Position commentEnd(document, lineNum, commentPos + 2);
 
-		int startLine = startPos.getLineNumber();
-		int endLine = endPos.getLineNumber();
+				// Remove the "--"
+				document.deleteSection(commentStart.getPosition(), commentEnd.getPosition());
 
-		// If selection ends at start of line, don't include that line
-		if (endPos.getIndexInLine() == 0 && endLine > startLine)
-			endLine--;
-
-		document.newTransaction();
-
-		// Check if all lines are commented (to decide whether to comment or uncomment)
-		bool allLinesCommented = true;
+				// Adjust caret position if it's on this line and after the comment
+				if (lineNum == originalCaret.getLineNumber() && originalCaret.getIndexInLine() > commentPos)
+				{
+					caretOffset = -2; // "--" was removed
+				}
+			}
+		}
+	}
+	else
+	{
+		// Comment lines
 		for (int lineNum = startLine; lineNum <= endLine; lineNum++)
 		{
 			String line = document.getLine(lineNum);
 			String trimmed = line.trimStart();
-			if (trimmed.isNotEmpty() && !trimmed.startsWith("--"))
+
+			// Skip empty lines
+			if (trimmed.isEmpty())
+				continue;
+
+			// Find first non-whitespace character
+			int firstNonSpace = line.indexOfAnyOf(" \t", 0, false);
+			if (firstNonSpace < 0)
+				firstNonSpace = 0;
+			else
+				firstNonSpace = line.length() - line.trimStart().length();
+
+			CodeDocument::Position insertPos(document, lineNum, firstNonSpace);
+			document.insertText(insertPos.getPosition(), "--");
+
+			// Adjust caret position if it's on this line and at/after the insertion point
+			if (lineNum == originalCaret.getLineNumber() && originalCaret.getIndexInLine() >= firstNonSpace)
 			{
-				allLinesCommented = false;
-				break;
+				caretOffset = 2; // "--" was added
 			}
 		}
+	}
 
-		// Store the original caret position
-		CodeDocument::Position originalCaret = editorComponent->getCaretPos();
-		int caretOffset = 0;
+	// Restore caret position with adjustment
+	if (caretOffset != 0)
+	{
+		int newCaretIndex = jmax(0, originalCaret.getIndexInLine() + caretOffset);
+		CodeDocument::Position newCaret(document, originalCaret.getLineNumber(), newCaretIndex);
+		editorComponent->moveCaretTo(newCaret, false);
+	}
+	else
+	{
+		editorComponent->moveCaretTo(originalCaret, false);
+	}
 
-		if (allLinesCommented)
+	documentChanged(false, false);
+}
+
+void CtrlrLuaMethodCodeEditor::toggleLongLineComment()
+{
+	if (!editorComponent)
+		return;
+
+	Range<int> selection = editorComponent->getHighlightedRegion();
+	CodeDocument::Position startPos(document, selection.getStart());
+	CodeDocument::Position endPos(document, selection.getEnd());
+
+	// If no selection, select the current line
+	if (selection.isEmpty())
+	{
+		int currentLine = startPos.getLineNumber();
+		startPos = CodeDocument::Position(document, currentLine, 0);
+		endPos = CodeDocument::Position(document, currentLine + 1, 0);
+		selection = Range<int>(startPos.getPosition(), endPos.getPosition());
+	}
+
+	document.newTransaction();
+
+	// Get the selected text
+	String selectedText = document.getTextBetween(startPos, endPos);
+
+	// Check if the selection is already block commented
+	String trimmedStart = selectedText.trimStart();
+	String trimmedEnd = selectedText.trimEnd();
+
+	bool isBlockCommented = trimmedStart.startsWith("--[[") && trimmedEnd.endsWith("--]]");
+
+	// Store the original caret position
+	CodeDocument::Position originalCaret = editorComponent->getCaretPos();
+
+	if (isBlockCommented)
+	{
+		// Uncomment: Remove --[[ from start and --]] from end
+		String uncommentedText = selectedText;
+
+		// Remove --[[ from the beginning
+		int startCommentPos = uncommentedText.indexOf("--[[");
+		if (startCommentPos >= 0)
 		{
-			// Uncomment lines
-			for (int lineNum = startLine; lineNum <= endLine; lineNum++)
-			{
-				String line = document.getLine(lineNum);
-
-				// Find the first occurrence of "--" and remove it
-				int commentPos = line.indexOf("--");
-				if (commentPos >= 0)
-				{
-					CodeDocument::Position lineStart(document, lineNum, 0);
-					CodeDocument::Position commentStart(document, lineNum, commentPos);
-					CodeDocument::Position commentEnd(document, lineNum, commentPos + 2);
-
-					// Remove the "--"
-					document.deleteSection(commentStart.getPosition(), commentEnd.getPosition());
-
-					// Adjust caret position if it's on this line and after the comment
-					if (lineNum == originalCaret.getLineNumber() && originalCaret.getIndexInLine() > commentPos)
-					{
-						caretOffset = -2; // "--" was removed
-					}
-				}
-			}
+			uncommentedText = uncommentedText.substring(0, startCommentPos) +
+				uncommentedText.substring(startCommentPos + 4);
 		}
-		else
+
+		// Remove --]] from the end
+		int endCommentPos = uncommentedText.lastIndexOf("--]]");
+		if (endCommentPos >= 0)
 		{
-			// Comment lines
-			for (int lineNum = startLine; lineNum <= endLine; lineNum++)
-			{
-				String line = document.getLine(lineNum);
-				String trimmed = line.trimStart();
-
-				// Skip empty lines
-				if (trimmed.isEmpty())
-					continue;
-
-				// Find first non-whitespace character
-				int firstNonSpace = line.indexOfAnyOf(" \t", 0, false);
-				if (firstNonSpace < 0)
-					firstNonSpace = 0;
-				else
-					firstNonSpace = line.length() - line.trimStart().length();
-
-				CodeDocument::Position insertPos(document, lineNum, firstNonSpace);
-				document.insertText(insertPos.getPosition(), "--");
-
-				// Adjust caret position if it's on this line and at/after the insertion point
-				if (lineNum == originalCaret.getLineNumber() && originalCaret.getIndexInLine() >= firstNonSpace)
-				{
-					caretOffset = 2; // "--" was added
-				}
-			}
+			uncommentedText = uncommentedText.substring(0, endCommentPos) +
+				uncommentedText.substring(endCommentPos + 4);
 		}
 
-		// Restore caret position with adjustment
-		if (caretOffset != 0)
+		// Replace the selected text
+		document.replaceSection(startPos.getPosition(), endPos.getPosition(), uncommentedText);
+
+		// Adjust caret position (moved back by the length of removed comment markers)
+		int caretAdjustment = -8; // Length of "--[[" + "--]]"
+		if (originalCaret.getPosition() > startPos.getPosition())
 		{
-			int newCaretIndex = jmax(0, originalCaret.getIndexInLine() + caretOffset);
-			CodeDocument::Position newCaret(document, originalCaret.getLineNumber(), newCaretIndex);
+			int newCaretPos = jmax(startPos.getPosition(), originalCaret.getPosition() + caretAdjustment);
+			CodeDocument::Position newCaret(document, newCaretPos);
 			editorComponent->moveCaretTo(newCaret, false);
 		}
-		else
-		{
-			editorComponent->moveCaretTo(originalCaret, false);
-		}
-
-		documentChanged(false, false);
 	}
-
-	void CtrlrLuaMethodCodeEditor::toggleLongLineComment()
+	else
 	{
-		if (!editorComponent)
-			return;
+		// Comment: Add --[[ at start and --]] at end
+		String commentedText = "--[[\n" + selectedText + "\n--]]";
 
-		Range<int> selection = editorComponent->getHighlightedRegion();
-		CodeDocument::Position startPos(document, selection.getStart());
-		CodeDocument::Position endPos(document, selection.getEnd());
+		// Replace the selected text
+		document.replaceSection(startPos.getPosition(), endPos.getPosition(), commentedText);
 
-		// If no selection, select the current line
-		if (selection.isEmpty())
+		// Adjust caret position (moved forward by the length of added comment markers)
+		int caretAdjustment = 6; // Length of "--[[\n" 
+		if (originalCaret.getPosition() >= startPos.getPosition())
 		{
-			int currentLine = startPos.getLineNumber();
-			startPos = CodeDocument::Position(document, currentLine, 0);
-			endPos = CodeDocument::Position(document, currentLine + 1, 0);
-			selection = Range<int>(startPos.getPosition(), endPos.getPosition());
+			int newCaretPos = originalCaret.getPosition() + caretAdjustment;
+			CodeDocument::Position newCaret(document, newCaretPos);
+			editorComponent->moveCaretTo(newCaret, false);
 		}
+	}
 
-		document.newTransaction();
-
-		// Get the selected text
-		String selectedText = document.getTextBetween(startPos, endPos);
-
-		// Check if the selection is already block commented
-		String trimmedStart = selectedText.trimStart();
-		String trimmedEnd = selectedText.trimEnd();
-
-		bool isBlockCommented = trimmedStart.startsWith("--[[") && trimmedEnd.endsWith("--]]");
-
-		// Store the original caret position
-		CodeDocument::Position originalCaret = editorComponent->getCaretPos();
-
-		if (isBlockCommented)
+	documentChanged(false, false);
+}
+void CtrlrLuaMethodCodeEditor::valueChanged(Value& value)
+{
+	if (value.refersToSameSourceAs(sharedSearchTabsValue))
+	{
+		// The shared search tabs value has changed
+		bool newState = sharedSearchTabsValue.getValue();
+		DBG("CtrlrLuaMethodCodeEditor::valueChanged - new state: " + String(newState ? "true" : "false"));
+		// Also check if the hidden toggle updated correctly
+		DBG("Hidden toggle state: " + String(hiddenSearchTabsToggle->getToggleState() ? "true" : "false"));
+		if (value.refersToSameSourceAs(sharedSearchTabsValue))
+    {
+        bool newState = sharedSearchTabsValue.getValue();
+        DBG("CtrlrLuaMethodCodeEditor::valueChanged - new state: " + String(newState ? "true" : "false"));
+        
+        // Also check if the hidden toggle updated correctly
+        DBG("Hidden toggle state: " + String(hiddenSearchTabsToggle->getToggleState() ? "true" : "false"));
+    }
+		// Add your custom logic here that should happen when the toggle state changes
+		if (newState)
 		{
-			// Uncomment: Remove --[[ from start and --]] from end
-			String uncommentedText = selectedText;
-
-			// Remove --[[ from the beginning
-			int startCommentPos = uncommentedText.indexOf("--[[");
-			if (startCommentPos >= 0)
-			{
-				uncommentedText = uncommentedText.substring(0, startCommentPos) +
-					uncommentedText.substring(startCommentPos + 4);
-			}
-
-			// Remove --]] from the end
-			int endCommentPos = uncommentedText.lastIndexOf("--]]");
-			if (endCommentPos >= 0)
-			{
-				uncommentedText = uncommentedText.substring(0, endCommentPos) +
-					uncommentedText.substring(endCommentPos + 4);
-			}
-
-			// Replace the selected text
-			document.replaceSection(startPos.getPosition(), endPos.getPosition(), uncommentedText);
-
-			// Adjust caret position (moved back by the length of removed comment markers)
-			int caretAdjustment = -8; // Length of "--[[" + "--]]"
-			if (originalCaret.getPosition() > startPos.getPosition())
-			{
-				int newCaretPos = jmax(startPos.getPosition(), originalCaret.getPosition() + caretAdjustment);
-				CodeDocument::Position newCaret(document, newCaretPos);
-				editorComponent->moveCaretTo(newCaret, false);
-			}
+			// Handle when search tabs are enabled
+			DBG("Search tabs enabled in CtrlrLuaMethodCodeEditor");
 		}
 		else
 		{
-			// Comment: Add --[[ at start and --]] at end
-			String commentedText = "--[[\n" + selectedText + "\n--]]";
-
-			// Replace the selected text
-			document.replaceSection(startPos.getPosition(), endPos.getPosition(), commentedText);
-
-			// Adjust caret position (moved forward by the length of added comment markers)
-			int caretAdjustment = 6; // Length of "--[[\n" 
-			if (originalCaret.getPosition() >= startPos.getPosition())
-			{
-				int newCaretPos = originalCaret.getPosition() + caretAdjustment;
-				CodeDocument::Position newCaret(document, newCaretPos);
-				editorComponent->moveCaretTo(newCaret, false);
-			}
+			// Handle when search tabs are disabled
+			DBG("Search tabs disabled in CtrlrLuaMethodCodeEditor");
 		}
 
-		documentChanged(false, false);
+		// The hiddenSearchTabsToggle will automatically update because it's referencing the same value
+		// You can also trigger any additional UI updates here if needed
 	}
+}

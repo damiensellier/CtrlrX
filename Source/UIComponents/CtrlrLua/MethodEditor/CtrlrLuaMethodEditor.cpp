@@ -640,7 +640,7 @@ CtrlrLuaMethodCodeEditor *CtrlrLuaMethodEditor::getEditorForMethod (CtrlrLuaMeth
     return (nullptr);
 }
 
-void CtrlrLuaMethodEditor::createNewTab (CtrlrLuaMethod *method)
+void CtrlrLuaMethodEditor::createNewTab(CtrlrLuaMethod* method)
 {
 	if (method == nullptr)
 	{
@@ -648,13 +648,12 @@ void CtrlrLuaMethodEditor::createNewTab (CtrlrLuaMethod *method)
 		return;
 	}
 
-	CtrlrLuaMethodCodeEditor *methodEditor = new CtrlrLuaMethodCodeEditor (*this, method);
-	methodEditor->addKeyListener (this);
-	methodEditArea->getTabs()->addTab (method->getName(), Colours::white, methodEditor, true, -1);
-	methodEditArea->getTabs()->setCurrentTabIndex (methodEditArea->getTabs()->getNumTabs() - 1, true);
+	CtrlrLuaMethodCodeEditor* methodEditor = new CtrlrLuaMethodCodeEditor(*this, method, sharedSearchTabsValue);
+	methodEditor->addKeyListener(this);
+	methodEditArea->getTabs()->addTab(method->getName(), Colours::white, methodEditor, true, -1);
+	methodEditArea->getTabs()->setCurrentTabIndex(methodEditArea->getTabs()->getNumTabs() - 1, true);
 	saveSettings(); // save settings
 }
-
 void CtrlrLuaMethodEditor::saveSettings()
 {
 	String settings;

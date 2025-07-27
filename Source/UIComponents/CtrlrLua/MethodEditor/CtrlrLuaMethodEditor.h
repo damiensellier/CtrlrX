@@ -52,7 +52,7 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
 		CtrlrLuaMethod *setEditedMethod (const String &methodName);
 		CtrlrLuaMethodCodeEditor *getEditorForMethod (CtrlrLuaMethod *method);
 		void highlightCode (const String &methodName, const int lineNumber);
-		void createNewTab (CtrlrLuaMethod *method);
+		void createNewTab(CtrlrLuaMethod* method);
 		CtrlrLuaMethodCodeEditor *getCurrentEditor();
 		CtrlrLuaMethodEditArea *getMethodEditArea();
 		void restoreState(const ValueTree &savedState);
@@ -125,6 +125,7 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
 		String lookInString, searchInString, currentSearchString;
 
 private:
+		juce::Value sharedSearchTabsValue;
 		bool openSearchTabsEnabledState = false; // Add this private member variable
 		WeakReference<CtrlrLuaMethodEditor>::Master masterReference;
 		friend class WeakReference<CtrlrLuaMethodEditor>;
@@ -137,5 +138,13 @@ private:
 		GenericCodeEditorComponent* editorComponent;
 };
 
-
+class SharedValues
+{
+public:
+	static Value& getSearchTabsValue()
+	{
+		static Value searchTabsValue(true); // default to true
+		return searchTabsValue;
+	}
+};
 #endif

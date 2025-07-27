@@ -115,7 +115,7 @@ CtrlrLuaMethodFind::CtrlrLuaMethodFind(CtrlrLuaMethodEditor& owner_, juce::Value
 	openSearchTabs->addListener(this);
 
 	addAndMakeVisible(openSearchTabs);
-	openSearchTabs->getToggleStateValue().referTo(sharedSearchTabsValue);
+	openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue());
 
     //[UserPreSize]
 	replaceInput->addListener (this);
