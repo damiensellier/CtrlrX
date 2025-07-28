@@ -105,15 +105,13 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
     
 	propertyType = CtrlrIDManager::stringToType(identifierDefinition.getProperty("type"));
     
-    int propertyLineheightBaseValue; // Declare the variable outside the if-else block
-
-    if (panel) // Added v5.5.33.
+    int propertyLineheightBaseValue = 36; // Declare the variable outside the if-else block
+	bool propertyLineImprovedLegibility = false; // Declare the variable outside the if-else block
+    
+	if (panel) // Added v5.5.33. Accessing to managerTree directly will crashes CtrlrX from Preferences window, checking panel will prevent that.
     {
-        propertyLineheightBaseValue = panel->getOwner().getManagerTree().getProperty(Ids::ctrlrPropertyLineheightBaseValue, 36); // Accessing to managerTree crashes CtrlrX
-    }
-    else
-    {
-        propertyLineheightBaseValue = 36;
+        propertyLineheightBaseValue = panel->getOwner().getManagerTree().getProperty(Ids::ctrlrPropertyLineheightBaseValue, 36); // Added v5.6.33.
+		propertyLineImprovedLegibility = panel->getOwner().getManagerTree().getProperty(Ids::ctrlrPropertyLineImprovedLegibility, false); // Added v5.6.34.
     }
     
     switch (propertyType)
@@ -121,22 +119,28 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
 		case CtrlrIDManager::ReadOnly:
             // preferredHeight = 36;
             preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.0); // Updated v5.6.33.
-			return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true)); // valueToControl, maxNumChars, isMultiLine, isReadOnly
+			//return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true)); // valueToControl, maxNumChars, isMultiLine, isReadOnly
+			return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true, propertyLineImprovedLegibility)); // <--- MODIFIED (added 'false' for isReadOnly)
             
 		case CtrlrIDManager::Text:
             // preferredHeight = 36;
             preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.0); // Updated v5.6.33.
-			return (new CtrlrTextPropertyComponent (valueToControl, 1024, false));
+			// return (new CtrlrTextPropertyComponent (valueToControl, 1024, false));
+			return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, false, propertyLineImprovedLegibility)); // <--- MODIFIED (added 'false' for isReadOnly)
+
 
 		case CtrlrIDManager::MultiLine:
 			// preferredHeight = 96;
             preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 2.7); // Updated v5.6.33.
-			return (new CtrlrTextPropertyComponent (valueToControl, 8192*4, true));
+			// return (new CtrlrTextPropertyComponent (valueToControl, 8192*4, true));
+			return (new CtrlrTextPropertyComponent (valueToControl, 8192*4, true, false, propertyLineImprovedLegibility)); // <--- MODIFIED (added 'false' for isReadOnly)
+
 
 		case CtrlrIDManager::MultiLineSmall:
 			// preferredHeight = 64;
             preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.78); // Updated v5.6.33.
-			return (new CtrlrTextPropertyComponent (valueToControl, 8192, true));
+			// return (new CtrlrTextPropertyComponent (valueToControl, 8192, true));
+			return (new CtrlrTextPropertyComponent (valueToControl, 8192, true, false, propertyLineImprovedLegibility)); // <--- MODIFIED (added 'false' for isReadOnly)
 
 		case CtrlrIDManager::Expression:
 			// preferredHeight = 64;
@@ -1960,16 +1964,26 @@ void CtrlrSysExPropertyComponent::refresh()
 class CtrlrTextPropLabel  : public Label  // Text Box for Type In Properties such as Panel Name etc
 {
 	public:
-		CtrlrTextPropLabel (CtrlrTextPropertyComponent& owner_, const int maxChars_, const bool isMultiline_)
-			: Label ("", ""),
-				owner (owner_), maxChars (maxChars_), isMultiline (isMultiline_)
+			CtrlrTextPropLabel (CtrlrTextPropertyComponent& owner_,
+								const int maxChars_,
+								const bool isMultiline_,
+								bool useImprovedLegibility_)
+			: Label ("", ""), owner (owner_), maxChars (maxChars_), isMultiline (isMultiline_), useImprovedLegibility (useImprovedLegibility_)
 		{
             setEditable (true, true, false); // single click, double-click, lossOfFocusDiscardsChanges
-            
-            setColour (Label::backgroundColourId, findColour(Slider::backgroundColourId)); // The background colour to fill the label with
-            setColour(Label::textColourId, findColour(Slider::textBoxTextColourId)); // The colour for the text
+			
+			if (useImprovedLegibility)
+			{
+				setColour(juce::Label::backgroundColourId, juce::Colour(0xfffffefa)); // halfwhite
+				setColour(juce::Label::textColourId, juce::Colour(0xff000000)); // black
+			}
+			else
+			{
+				setColour (Label::backgroundColourId, findColour(Slider::backgroundColourId)); // The background colour to fill the label with
+				setColour(Label::textColourId, findColour(Slider::textBoxTextColourId)); // The colour for the text
+			}
+			
             setColour (Label::outlineColourId, findColour (Slider::textBoxOutlineColourId)); // An optional colour to use to draw a border around the label
-            
             setColour(Label::backgroundWhenEditingColourId, findColour(Slider::backgroundColourId).withAlpha(0.7f)); // The background colour when the label is being edited
             setColour(Label::textWhenEditingColourId, findColour(Label::textWhenEditingColourId).withAlpha(0.7f)); // The colour for the text when the label is being edited
             setColour(Label::outlineWhenEditingColourId, findColour(Slider::textBoxOutlineColourId)); // An optional border colour when the label is being edited
@@ -1978,19 +1992,34 @@ class CtrlrTextPropLabel  : public Label  // Text Box for Type In Properties suc
 		TextEditor* createEditorComponent()
 		{
 			TextEditor* const textEditor = Label::createEditorComponent();
-            textEditor->setJustification(juce::Justification::centredLeft); // Added v5.6.34.
+			textEditor->setJustification(juce::Justification::centredLeft); // Added v5.6.34.
 
-            if (isMultiline)
-            {
-                textEditor->setMultiLine (true, true);
-                textEditor->setReturnKeyStartsNewLine (true);
-                textEditor->setJustification(juce::Justification::topLeft); // Added v5.6.34.
-                // IMPORTANT: Adjust the TextEditor's internal indents
-                // The default indents might push the text from the top-left. Experiment with these values.
-                // textEditor->setIndents(0, 0); // Set left and top indents.
-            }
-
-		    return textEditor;
+			if (useImprovedLegibility)
+			{
+				textEditor->setColour(juce::TextEditor::backgroundColourId, juce::Colour(0xfffffefa)); // halfwhite
+				textEditor->setColour(juce::TextEditor::textColourId, juce::Colour(0xff000000)); // black
+			}
+			else
+			{
+				// Use LookAndFeel for standard colors
+				textEditor->setColour(juce::TextEditor::backgroundColourId, findColour(juce::Slider::backgroundColourId));
+				textEditor->setColour(juce::TextEditor::textColourId, findColour(juce::Slider::textBoxTextColourId));
+				// Ensure these are also set for the non-improved legibility case if needed
+				textEditor->setColour(juce::TextEditor::highlightColourId, findColour(juce::TextEditor::highlightColourId));
+				textEditor->setColour(juce::TextEditor::outlineColourId, findColour(juce::Slider::textBoxOutlineColourId)); // Use slider outline for consistency
+			}
+			
+			if (isMultiline)
+			{
+				textEditor->setMultiLine (true, true);
+				textEditor->setReturnKeyStartsNewLine (true);
+				textEditor->setJustification(juce::Justification::topLeft); // Added v5.6.34.
+				// IMPORTANT: Adjust the TextEditor's internal indents
+				// The default indents might push the text from the top-left. Experiment with these values.
+				// textEditor->setIndents(0, 0); // Set left and top indents.
+			}
+			
+			return textEditor;
 		}
 
 		void textWasEdited()
@@ -2002,12 +2031,17 @@ class CtrlrTextPropLabel  : public Label  // Text Box for Type In Properties suc
 	    CtrlrTextPropertyComponent& owner;
 	    int maxChars;
 	    bool isMultiline;
+		bool useImprovedLegibility; // Added v5.6.34
 };
 
 //==============================================================================
 CtrlrTextPropertyComponent::CtrlrTextPropertyComponent (const Value& _valueToControl,
 														const int maxNumChars,
-														const bool isMultiLine, const bool isReadOnly) : valueToControl(_valueToControl)
+														const bool isMultiLine,
+														const bool isReadOnly,
+                                                        bool useImprovedLegibility)
+		: valueToControl(_valueToControl),
+		useImprovedLegibility (useImprovedLegibility)
 {
     createEditor (maxNumChars, isMultiLine);
     textEditor->getTextValue().referTo (valueToControl);
@@ -2039,7 +2073,7 @@ String CtrlrTextPropertyComponent::getText() const
 
 void CtrlrTextPropertyComponent::createEditor (const int maxNumChars, const bool isMultiLine)
 {
-    addAndMakeVisible (textEditor = new CtrlrTextPropLabel (*this, maxNumChars, isMultiLine));
+    addAndMakeVisible (textEditor = new CtrlrTextPropLabel (*this, maxNumChars, isMultiLine, useImprovedLegibility)); // Updated v5.6.34. 5th member useImprovedLegibility added.
 
     if (isMultiLine)
     {
