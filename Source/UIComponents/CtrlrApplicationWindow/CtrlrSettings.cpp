@@ -50,6 +50,7 @@ CtrlrSettings::CtrlrSettings (CtrlrManager &_owner) : Component ("Global Propert
     // guiProperties.add(owner.getIDManager().createComponentForProperty(Identifier("ctrlrPropertiesAreURLs"), owner.getManagerTree(), nullptr)); // Useless, not assigned
     guiProperties.add(owner.getIDManager().createComponentForProperty(Identifier("ctrlrNativeFileDialogs"), owner.getManagerTree(), nullptr));
     guiProperties.add(owner.getIDManager().createComponentForProperty(Identifier("ctrlrNativeAlerts"), owner.getManagerTree(), nullptr));
+    guiProperties.add(owner.getIDManager().createComponentForProperty(Identifier("ctrlrPropertyLineImprovedLegibility"), owner.getManagerTree(), nullptr)); // Added v5.6.34.
     // guiProperties.add(owner.getIDManager().createComponentForProperty(Identifier("ctrlrUseEditorWrapper"), owner.getManagerTree(), nullptr)); // Useless, only for Ableton live.  Automatically set to true via CtrlrProcessor.cpp OS & DAW detection
     
     if (JUCEApplication::isStandaloneApp())
@@ -63,7 +64,6 @@ CtrlrSettings::CtrlrSettings (CtrlrManager &_owner) : Component ("Global Propert
     guiProperties.add(owner.getIDManager().createComponentForProperty(Identifier("ctrlrMenuBarHeight"), owner.getManagerTree(), nullptr));
     guiProperties.add(owner.getIDManager().createComponentForProperty(Identifier("ctrlrTabBarDepth"), owner.getManagerTree(), nullptr));
     guiProperties.add(owner.getIDManager().createComponentForProperty(Identifier("ctrlrPropertyLineheightBaseValue"), owner.getManagerTree(), nullptr)); // Added v5.6.33.
-    guiProperties.add(owner.getIDManager().createComponentForProperty(Identifier("ctrlrPropertyLineImprovedLegibility"), owner.getManagerTree(), nullptr)); // Added v5.6.34.
     
     // Debug section
     debugProperties.add(owner.getIDManager().createComponentForProperty(Identifier("ctrlrLogToFile"), owner.getManagerTree(), nullptr));
