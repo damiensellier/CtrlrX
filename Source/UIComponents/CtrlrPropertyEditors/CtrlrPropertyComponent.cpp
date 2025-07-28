@@ -1978,13 +1978,17 @@ class CtrlrTextPropLabel  : public Label  // Text Box for Type In Properties suc
 		TextEditor* createEditorComponent()
 		{
 			TextEditor* const textEditor = Label::createEditorComponent();
-			textEditor->setInputRestrictions (maxChars);
+            textEditor->setJustification(juce::Justification::centredLeft); // Added v5.6.34.
 
-			if (isMultiline)
-			{
-				textEditor->setMultiLine (true, true);
-				textEditor->setReturnKeyStartsNewLine (true);
-	        }
+            if (isMultiline)
+            {
+                textEditor->setMultiLine (true, true);
+                textEditor->setReturnKeyStartsNewLine (true);
+                textEditor->setJustification(juce::Justification::topLeft); // Added v5.6.34.
+                // IMPORTANT: Adjust the TextEditor's internal indents
+                // The default indents might push the text from the top-left. Experiment with these values.
+                // textEditor->setIndents(0, 0); // Set left and top indents.
+            }
 
 		    return textEditor;
 		}
@@ -2007,15 +2011,16 @@ CtrlrTextPropertyComponent::CtrlrTextPropertyComponent (const Value& _valueToCon
 {
     createEditor (maxNumChars, isMultiLine);
     textEditor->getTextValue().referTo (valueToControl);
-
-	if (isReadOnly)
-	{
-		//textEditor->setColour (Label::backgroundColourId, textEditor->findColour(Label::backgroundColourId,false).withAlpha(0.5f)); // Was set to false for non inheritance
-		//textEditor->setColour (Label::textColourId, textEditor->findColour(Label::textColourId,false).brighter(0.5f)); // Was set to false for non inheritance
+    
+    if (isReadOnly)
+    {
+        // textEditor->setColour (Label::backgroundColourId, textEditor->findColour(Label::backgroundColourId,false).withAlpha(0.5f)); // Was set to false for non inheritance
+        // textEditor->setColour (Label::textColourId, textEditor->findColour(Label::textColourId,false).brighter(0.5f)); // Was set to false for non inheritance
         textEditor->setColour (Label::backgroundColourId, findColour(Label::backgroundColourId));
         textEditor->setColour (Label::textColourId, findColour(Label::textColourId));
-		textEditor->setEditable (false, false, false);
-	}
+        textEditor->setEditable (false, false, false);
+        // textEditor->setJustificationType(juce::Justification::topLeft); // Added v5.6.34.
+    }
 }
 
 CtrlrTextPropertyComponent::~CtrlrTextPropertyComponent()
