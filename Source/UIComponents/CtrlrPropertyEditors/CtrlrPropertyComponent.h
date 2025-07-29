@@ -608,7 +608,8 @@ class CtrlrTextPropertyComponent : public Component, public CtrlrPropertyChild
 		CtrlrTextPropertyComponent (const Value& _valueToControl,
 									const int maxNumChars,
 									const bool isMultiLine,
-									const bool isReadOnly=false);
+									const bool isReadOnly=false,
+                                    const bool useImprovedLegibility=false); // Added v5.6.34.
 
 		~CtrlrTextPropertyComponent();
 		void refresh();
@@ -622,7 +623,10 @@ class CtrlrTextPropertyComponent : public Component, public CtrlrPropertyChild
 
 		ScopedPointer<Label> textEditor;
 		void createEditor (int maxNumChars, bool isMultiLine);
-		Value valueToControl;
+		
+        Value valueToControl;
+        bool isReadOnly; // Added v5.6.34
+        bool useImprovedLegibility; // Added v5.6.34
 };
 
 class CtrlrTimestampProperty : public Component, public CtrlrPropertyChild
