@@ -106,14 +106,12 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
 	propertyType = CtrlrIDManager::stringToType(identifierDefinition.getProperty("type"));
     
     int propertyLineheightBaseValue; // Declare the variable outside the if-else block
-
-    if (panel) // Added v5.5.33.
+    bool propertyLineImprovedLegibility = false; // Declare the variable outside the if-else block
+    
+    if (panel) // Added v5.5.33. Accessing to managerTree directly will crashes CtrlrX from Preferences window, checking panel will prevent that.
     {
-        propertyLineheightBaseValue = panel->getOwner().getManagerTree().getProperty(Ids::ctrlrPropertyLineheightBaseValue, 36); // Accessing to managerTree crashes CtrlrX
-    }
-    else
-    {
-        propertyLineheightBaseValue = 36;
+        propertyLineheightBaseValue = panel->getOwner().getManagerTree().getProperty(Ids::ctrlrPropertyLineheightBaseValue, 36); // Added v5.6.33.
+        propertyLineImprovedLegibility = panel->getOwner().getManagerTree().getProperty(Ids::ctrlrPropertyLineImprovedLegibility, false); // Added v5.6.34.
     }
     
     switch (propertyType)
