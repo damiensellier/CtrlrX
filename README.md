@@ -365,7 +365,8 @@ Tuturial coming soon.
 * **UPDATED** LnF version & ColourScheme selection method centralized to CtrlrInlineUtilitiesGUI. `CtrlrInlineUtilitiesGUI.cpp` & `.h`, `.jucer`, `juce_LookAndFeel_V4.cpp` & `.h`, `CtrlrEditor.cpp`, `CtrlrButton.cpp`, `CtrlrToggleButton.cpp`, `CtrlrCombo.cpp`, `CtrlrGroup.cpp`, `CtrlrFixedImageSlider.cpp`, `CtrlrFixedSlider.cpp`, `CtrlrFixedSlider.cpp`, `CtrlrImageSlider.cpp`, `CtrlrSlider.cpp`, `CtrlrPanelEditor.cpp`
 * **UPDATED** Panel tab close button method with canClose(bool) for consistency. `CtrlrDocumentPanel.cpp`, `CtrlrManager.cpp` & `.h`
 * **FIXED** Alert windows LnF version not following the global LnF for V3. `CtrlrEditor.cpp` & `.h`, `CtrlrInlineUtilitiesGUI.cpp` & `.h`
-
+* **ADDED** Preferences "ctrlrPropertyLineImprovedLegibility" to force B&W text for property pane text entry fields. `CtrlrPropertyComponent.cpp`, `CtrlrIDs.xml`, `CtrlrIDs.h`
+* **FIXED** CtrlrPanel.cpp panelVersionMajor & panelVersionMinor stored as int. `CtrlrPanel.cpp` 
 
 #### Version 5.6.33 | 2025.05.28
 
