@@ -240,6 +240,10 @@ void CtrlrEditor::setEditorLookAndFeel (const String &lookAndFeelDesc, const var
         // Force a repaint and update of all components to reflect the new LookAndFeel
         lookAndFeelChanged(); // This calls lookAndFeelChanged() on this component and its children (like the main panel)
         repaint();            // Force a repaint of the CtrlrEditor itself
+        
+        // This makes sure any subsequently created JUCE components (like dialogs, other windows)
+        // will default to *your* currentLookAndFeel instance.
+        LookAndFeel::setDefaultLookAndFeel(currentLookAndFeel); 
     }
 }
 

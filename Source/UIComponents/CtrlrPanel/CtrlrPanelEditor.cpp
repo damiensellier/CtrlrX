@@ -184,6 +184,12 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
         // Updated v5.6.34. For a generic method schemeName Property--> schemeName. Get the current colour scheme name from the property
         juce::String schemeName = ed.getProperty (Ids::ctrlrColourScheme).toString();
         
+        // <fallback for empty instances without any colourscheme yet defined
+        if (schemeName.isEmpty())
+        {
+            schemeName = "Light";
+        }
+        
         // Determine the LookAndFeel description string
         juce::String lookAndFeelDesc;
         
