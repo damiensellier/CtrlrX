@@ -340,9 +340,9 @@ Tuturial coming soon.
 
 ## Changelog
 
-#### Version 5.6.34 | 2025.06.23
+#### Version 5.6.34 | 2025.07.26
 
-* **NEW** ProTools AAX plugin support (requires codesigning via PACE)
+* **NEW** ProTools AAX plugin support (requires AAX SDK 2.8+ and codesigning via PACE)
 * **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
 * **UPDATED** LuaBind function `addChild()` to `valueTree` class. `LCore.cpp`
 * **ADDED** LuaBind function `jmap()`, `mapToLog10()`, `mapFromLog10()`, `isWithin()` to GlobalFunctions. `LCore.cpp`
@@ -352,6 +352,21 @@ Tuturial coming soon.
 * **UPDATED** MIDI Plugin Options default settings set to 'Input from plugin host" & "Input from host to comparator". `CtrlrPanel.cpp`
 * **UPDATED** MIDI Keyboard component, Octave DOWN/UP added with key assignment "x" & "z" by default. Top line colour on focus. `CtrlrMidiKeyboard.cpp`, `CtrlrMidiKeyboard.h`, `CtrlrIDs.xml`, `CtrlrIDs.h` 
 * **UPDATED** focusGained(), focusLost() to CtrlrComponent. `CtrlrComponent.cpp` & `.h`
+* **UPDATED** Plugin Wrapper is used by CtrlrX only on WIN with Ableton Live as VST2. The "ctrlrUseEditorWrapper" property is deprecated. `CtrlrProcessor.cpp` & `.h`, `CtrlrManager.cpp`, `CtrlrManagerInstance.cpp`, `CtrlrPanel.cpp`
+* **UPDATED** LuaBind InputStream class. `LCore.cpp`
+* **UPDATED** Boost library v1.8.8. `Source/Misc/boost/`
+* **ADDED** Visual Studio 2022 configuration. `CtrlrX.jucer`
+* **ADDED** JUCE, Boost, LuaBind version infos in the About window. `CtrlrAbout.cpp` & `.h`
+* **REMOVED** VST2.4 SDK due to licensing compliance. `/Source/Misc/vst2sdk/`
+* **NEW** Support for online plugin authorization (Requires PHP & SQL Server with keygen and authentication scripts and exec). `CtrlrX.jucer`, `LCore.cpp`, `LMachineIDUtilities.cpp` & `.h`, `LOnlineUnlockStatus.cpp` & `.h`, `LOnlineUnlockStatusCheck.cpp`& `.h`, `LRSAKey.cpp` & `.h`
+* **UPDATED** askForTextInputWindow fallback for cancel button value to -1. `CtrlrLuaUtils.cpp`
+* **UPDATED** LuaMethodEditor, "Open" and "Rename" method items added to the menu. `CtrlrLuaMethodEditor.cpp` & `.h`
+* **UPDATED** Close panel alert window buttons set to "Close" & "Cancel". `CtrlrDocumentPanel.cpp`
+* **UPDATED** LnF version & ColourScheme selection method centralized to CtrlrInlineUtilitiesGUI. `CtrlrInlineUtilitiesGUI.cpp` & `.h`, `.jucer`, `juce_LookAndFeel_V4.cpp` & `.h`, `CtrlrEditor.cpp`, `CtrlrButton.cpp`, `CtrlrToggleButton.cpp`, `CtrlrCombo.cpp`, `CtrlrGroup.cpp`, `CtrlrFixedImageSlider.cpp`, `CtrlrFixedSlider.cpp`, `CtrlrFixedSlider.cpp`, `CtrlrImageSlider.cpp`, `CtrlrSlider.cpp`, `CtrlrPanelEditor.cpp`
+* **UPDATED** Panel tab close button method with canClose(bool) for consistency. `CtrlrDocumentPanel.cpp`, `CtrlrManager.cpp` & `.h`
+* **FIXED** Alert windows LnF version not following the global LnF for V3. `CtrlrEditor.cpp` & `.h`, `CtrlrInlineUtilitiesGUI.cpp` & `.h`
+* **ADDED** Preferences "ctrlrPropertyLineImprovedLegibility" to force B&W text for property pane text entry fields. `CtrlrPropertyComponent.cpp`, `CtrlrIDs.xml`, `CtrlrIDs.h`
+* **FIXED** CtrlrPanel.cpp panelVersionMajor & panelVersionMinor stored as int. `CtrlrPanel.cpp` 
 
 #### Version 5.6.33 | 2025.05.28
 

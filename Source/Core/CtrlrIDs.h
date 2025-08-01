@@ -237,6 +237,9 @@ namespace Ids
     DECLARE_ID (panelCertificateWinSelectPath); // Added v5.6.32
     DECLARE_ID (panelCertificateWinPath); // Added v5.6.32
     DECLARE_ID (panelCertificateWinPassCode); // Added v5.6.32
+    DECLARE_ID (panelExportPublicKey); // Added v5.6.34
+    DECLARE_ID (panelExportPrivateKey); // Added v5.6.34
+    DECLARE_ID (panelExportServerAuthURL); // Added v5.6.34
     
     DECLARE_ID (panelModulatorListColumns);
     DECLARE_ID (panelModulatorListCsvDelimiter);
@@ -825,6 +828,7 @@ namespace Ids
     DECLARE_ID (ctrlrPrivateKey);
     DECLARE_ID (ctrlrFontSizeBaseValue);
     DECLARE_ID (ctrlrPropertyLineheightBaseValue); // Added v5.6.33
+    DECLARE_ID (ctrlrPropertyLineImprovedLegibility); // Added v5.6.34
     DECLARE_ID (ctrlrScrollbarThickness);
     DECLARE_ID (ctrlrLegacyMode);
     DECLARE_ID (ctrlrColourScheme);

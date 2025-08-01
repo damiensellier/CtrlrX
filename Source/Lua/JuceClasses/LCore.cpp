@@ -809,34 +809,38 @@ void LTimer::wrapForLua (lua_State *L)
 	];
 }
 
-void LURL::wrapForLua (lua_State *L)
+void LURL::wrapForLua (lua_State *L) // Updated v5.6.34. Required for Online Registration
 {
-	using namespace luabind;
+    using namespace luabind;
 
-	module(L)
+    module(L)
     [
-		class_<URL>("URL")
-			.def(constructor<const String &>())
-			.def("toString", &URL::toString)
-			.def("isWellFormed", &URL::isWellFormed)
-			.def("getDomain", &URL::getDomain)
-			.def("getSubPath", &URL::getSubPath)
-			.def("getScheme", &URL::getScheme)
-			.def("withNewSubPath", &URL::withNewSubPath)
-			.def("withParameter", &URL::withParameter)
-			.def("withFileToUpload", &URL::withFileToUpload)
-			.def("withPOSTData", (URL (URL::*)(const String &) const) &URL::withPOSTData)
-			.def("withPOSTData", (URL (URL::*)(const MemoryBlock &) const) &URL::withPOSTData)
-			.def("getPostData", &URL::getPostData)
-			.def("launchInDefaultBrowser", &URL::launchInDefaultBrowser)
-			.def("isProbablyAWebsiteURL", &URL::isProbablyAWebsiteURL)
-			.def("isProbablyAnEmailAddress", &URL::isProbablyAnEmailAddress)
-			.def("readEntireTextStream", &URL::readEntireTextStream)
-			//.def("readEntireXmlStream", &URL::readEntireXmlStream)
-			.def("readEntireBinaryStream", &URL::readEntireBinaryStream)
-			.def("addEscapeChars", &URL::addEscapeChars)
-			.def("removeEscapeChars", &URL::removeEscapeChars)
-	];
+        class_<URL>("URL")
+            .def(constructor<const String &>())
+            //.def("toString", &URL::toString)
+            .def("toString", (juce::String (juce::URL::*)() const) &juce::URL::toString) // Updated v5.6.34.
+            .def("isWellFormed", &URL::isWellFormed)
+            .def("getDomain", &URL::getDomain)
+            .def("getSubPath", &URL::getSubPath)
+            .def("getScheme", &URL::getScheme)
+            .def("withNewSubPath", &URL::withNewSubPath)
+            // Correct static_cast for withParameter (assuming the String, String overload)
+            .def("withParameter", (URL (URL::*)(const String &, const String &) const) &URL::withParameter)
+            .def("withFileToUpload", &URL::withFileToUpload)
+            .def("withPOSTData", (URL (URL::*)(const String &) const) &URL::withPOSTData)
+            .def("withPOSTData", (URL (URL::*)(const MemoryBlock &) const) &URL::withPOSTData)
+            .def("getPostData", &URL::getPostData)
+            .def("launchInDefaultBrowser", &URL::launchInDefaultBrowser)
+            .def("isProbablyAWebsiteURL", &URL::isProbablyAWebsiteURL)
+            .def("isProbablyAnEmailAddress", &URL::isProbablyAnEmailAddress)
+            // Correct static_cast for readEntireTextStream (assuming the bool overload, which is common for POST/GET)
+            .def("readEntireTextStream", (String (URL::*)(bool) const) &URL::readEntireTextStream)
+            // If you also use the version that takes email/password/timeout/extraHeaders, you'd need another .def:
+            // .def("readEntireTextStreamComplex", (String (URL::*)(bool, String, String, int, String) const) &URL::readEntireTextStream)
+            .def("readEntireBinaryStream", &URL::readEntireBinaryStream)
+            .def("addEscapeChars", &URL::addEscapeChars)
+            .def("removeEscapeChars", &URL::removeEscapeChars)
+    ];
 }
 
 void LValue::wrapForLua (lua_State *L)
@@ -1085,12 +1089,18 @@ void LZipFile::wrapForLua(lua_State* L) // Updated v5.6.34. Thanks to @dnaldoog
 }
 
 
-void LInputStream::wrapForLua (lua_State *L)
+void LInputStream::wrapForLua (lua_State *L) // Updated v5.6.34. Thanks to @dnaldoog. https://github.com/damiensellier/CtrlrX/pull/116
 {
 	using namespace luabind;
 
 	module(L)
-    [
-		class_<InputStream>("InputStream")
-	];
+        [
+            class_<InputStream>("InputStream")
+                .def("readEntireStreamAsString", &InputStream::readEntireStreamAsString)
+                .def("readIntoMemoryBlock", (size_t(InputStream::*)(MemoryBlock&, ssize_t)) & InputStream::readIntoMemoryBlock)
+                .def("getTotalLength", &InputStream::getTotalLength)
+                .def("getPosition", &InputStream::getPosition)
+                .def("setPosition", &InputStream::setPosition)
+                .def("isExhausted", &InputStream::isExhausted)
+        ];
 }

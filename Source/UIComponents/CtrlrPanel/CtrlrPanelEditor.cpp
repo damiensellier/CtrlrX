@@ -181,62 +181,31 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
         setProperty(Ids::uiPanelLookAndFeel, "V4");
         
         // Requires passing the colourScheme to the property uiPanelLookAndFeel from ctrlrColourScheme
-        if (ed.getProperty(Ids::ctrlrColourScheme) == "Light")
+        // Updated v5.6.34. For a generic method schemeName Property--> schemeName. Get the current colour scheme name from the property
+        juce::String schemeName = ed.getProperty (Ids::ctrlrColourScheme).toString();
+        
+        // <fallback for empty instances without any colourscheme yet defined
+        if (schemeName.isEmpty())
         {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 Light");
+            schemeName = "Light";
         }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "Grey")
+        
+        // Determine the LookAndFeel description string
+        juce::String lookAndFeelDesc;
+        
+        if (schemeName.startsWith ("V4 "))
         {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 Grey");
+            // If it already has "V4 ", use it as is
+            lookAndFeelDesc = schemeName;
         }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "Dark")
+        else
         {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 Dark");
+            // Otherwise, prepend "V4 " (e.g., "Light" becomes "V4 Light")
+            lookAndFeelDesc = "V4 " + schemeName;
         }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "Midnight")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 Midnight");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "V4 JetBlack")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 JetBlack");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "YamDX")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 YamDX");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "AkAPC")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 AkAPC");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "AkMPC")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 AkMPC");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "LexiBlue")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 LexiBlue");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "KurzGreen")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 KurzGreen");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "KorGrey")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 KorGrey");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "KorGold")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 KorGold");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "ArturOrange")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 ArturOrange");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "AiraGreen")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 AiraGreen");
-        }
+        
+        // Set the uiPanelLookAndFeel property with the determined string
+        setProperty (Ids::uiPanelLookAndFeel, lookAndFeelDesc);
     }
     
     //setProperty(Ids::uiPanelLegacyMode, false);
@@ -641,45 +610,21 @@ void CtrlrPanelEditor::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasC
     }
 }
 
-
-LookAndFeel *CtrlrPanelEditor::getLookAndFeelFromDescription(const String &lookAndFeelDesc)
+juce::LookAndFeel *CtrlrPanelEditor::getLookAndFeelFromDescription(const juce::String &lookAndFeelDesc) // Added v5.6.34
 {
-    if (lookAndFeelDesc == "V4" || lookAndFeelDesc == "V4 Light")
-        return new LookAndFeel_V4(LookAndFeel_V4::getLightColourScheme());
-    if (lookAndFeelDesc == "V4 Grey")
-        return new LookAndFeel_V4(LookAndFeel_V4::getGreyColourScheme());
-    if (lookAndFeelDesc == "V4 Dark")
-        return new LookAndFeel_V4(LookAndFeel_V4::getDarkColourScheme());
-    if (lookAndFeelDesc == "V4 Midnight")
-        return new LookAndFeel_V4(LookAndFeel_V4::getMidnightColourScheme());
-    if (lookAndFeelDesc == "V4 JetBlack")
-        return new LookAndFeel_V4(LookAndFeel_V4::getJetBlackColourScheme());
-    if (lookAndFeelDesc == "V4 YamDX")
-        return new LookAndFeel_V4(LookAndFeel_V4::getYamDxColourScheme());
-    if (lookAndFeelDesc == "V4 AkAPC")
-        return new LookAndFeel_V4(LookAndFeel_V4::getAkApcColourScheme());
-    if (lookAndFeelDesc == "V4 AkMPC")
-        return new LookAndFeel_V4(LookAndFeel_V4::getAkMpcColourScheme());
-    if (lookAndFeelDesc == "V4 LexiBlue")
-        return new LookAndFeel_V4(LookAndFeel_V4::getLexiBlueColourScheme());
-    if (lookAndFeelDesc == "V4 KurzGreen")
-        return new LookAndFeel_V4(LookAndFeel_V4::getKurzGreenColourScheme());
-    if (lookAndFeelDesc == "V4 KorGrey")
-        return new LookAndFeel_V4(LookAndFeel_V4::getKorGreyColourScheme());
-    if (lookAndFeelDesc == "V4 KorGold")
-        return new LookAndFeel_V4(LookAndFeel_V4::getKorGoldColourScheme());
-    if (lookAndFeelDesc == "V4 ArturOrange")
-        return new LookAndFeel_V4(LookAndFeel_V4::getArturOrangeColourScheme());
-    if (lookAndFeelDesc == "V4 AiraGreen")
-        return new LookAndFeel_V4(LookAndFeel_V4::getAiraGreenColourScheme());
-    if (lookAndFeelDesc == "V3")
-        return new LookAndFeel_V3();
-    if (lookAndFeelDesc == "V2")
-        return new LookAndFeel_V2();
-    if (lookAndFeelDesc == "V1")
-        return new LookAndFeel_V1();
-    
-    return (nullptr);
+    // If "Default" has a special meaning for CtrlrPanelEditor, handle it here.
+    // Otherwise, you can just directly call the generic function.
+    if (lookAndFeelDesc == "Default")
+    {
+        return nullptr; // Or whatever "Default" means for this specific component
+                        // e.g., return new juce::LookAndFeel_V4();
+    }
+
+    // Now, simply call your centralized function!
+    // The second argument `true` means if the `lookAndFeelDesc` doesn't match
+    // any known scheme, it will return a new LookAndFeel_V4 with the LightColourScheme.
+    // If you prefer it to return nullptr in unknown cases, change it to `false`.
+    return gui::createLookAndFeelFromDescription(lookAndFeelDesc, true);
 }
 
 const var &CtrlrPanelEditor::getProperty(const Identifier &name) const

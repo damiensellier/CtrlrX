@@ -275,6 +275,7 @@ class CtrlrManager :    public ValueTree::Listener,
 		void openPanelFromFile(Component *componentToAttachMenu);
 		CtrlrPanel *getPanelByUid(const String &uid);
 		CtrlrPanel *getPanel(const int panelIndex);
+        CtrlrPanel* getPanelForEditor(CtrlrPanelEditor* editorToFind); // Added v5.6.34
 		int getNumPanels();
 		AudioFormatManager &getAudioFormatManager()																{ return (audioFormatManager); }
 		AudioThumbnailCache &getAudioThumbnailCache()															{ return (audioThumbnailCache); }

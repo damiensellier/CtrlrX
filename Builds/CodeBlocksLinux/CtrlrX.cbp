@@ -19,6 +19,7 @@
           <Add option="-DDEBUG=&quot;1&quot;"/>
           <Add option="-D_DEBUG=&quot;1&quot;"/>
           <Add option="-DJUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=&quot;1&quot;"/>
+          <Add option="-DBOOST_BIND_GLOBAL_PLACEHOLDERS=&quot;1&quot;"/>
           <Add option="-DJUCER_CODEBLOCKS_LINUX_191E0897=&quot;1&quot;"/>
           <Add option="-DJUCE_APP_VERSION=&quot;5.6.34&quot;"/>
           <Add option="-DJUCE_APP_VERSION_HEX=&quot;0x50622&quot;"/>
@@ -83,6 +84,7 @@
           <Add option="-DDEBUG=&quot;1&quot;"/>
           <Add option="-D_DEBUG=&quot;1&quot;"/>
           <Add option="-DJUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=&quot;1&quot;"/>
+          <Add option="-DBOOST_BIND_GLOBAL_PLACEHOLDERS=&quot;1&quot;"/>
           <Add option="-DJUCER_CODEBLOCKS_LINUX_191E0897=&quot;1&quot;"/>
           <Add option="-DJUCE_APP_VERSION=&quot;5.6.34&quot;"/>
           <Add option="-DJUCE_APP_VERSION_HEX=&quot;0x50622&quot;"/>
@@ -149,6 +151,7 @@
           <Add option="-DDEBUG=&quot;1&quot;"/>
           <Add option="-D_DEBUG=&quot;1&quot;"/>
           <Add option="-DJUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=&quot;1&quot;"/>
+          <Add option="-DBOOST_BIND_GLOBAL_PLACEHOLDERS=&quot;1&quot;"/>
           <Add option="-DJUCER_CODEBLOCKS_LINUX_191E0897=&quot;1&quot;"/>
           <Add option="-DJUCE_APP_VERSION=&quot;5.6.34&quot;"/>
           <Add option="-DJUCE_APP_VERSION_HEX=&quot;0x50622&quot;"/>
@@ -212,6 +215,7 @@
           <Add option="-DLINUX=&quot;1&quot;"/>
           <Add option="-DNDEBUG=&quot;1&quot;"/>
           <Add option="-DJUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=&quot;1&quot;"/>
+          <Add option="-DBOOST_BIND_GLOBAL_PLACEHOLDERS=&quot;1&quot;"/>
           <Add option="-DJUCER_CODEBLOCKS_LINUX_191E0897=&quot;1&quot;"/>
           <Add option="-DJUCE_APP_VERSION=&quot;5.6.34&quot;"/>
           <Add option="-DJUCE_APP_VERSION_HEX=&quot;0x50622&quot;"/>
@@ -238,6 +242,20 @@
           <Add directory="../../JuceLibraryCode"/>
           <Add directory="../../../../juce"/>
           <Add directory="../../JUCE/modules"/>
+          <Add directory="../../Source"/>
+          <Add directory="../../Source/Misc"/>
+          <Add directory="../../Source/Misc/include"/>
+          <Add directory="../../Source/Misc/lua/include"/>
+          <Add directory="../../Source/Misc/luabind"/>
+          <Add directory="../../Source/Misc/libusb/include"/>
+          <Add directory="../../Source/Misc/boost"/>
+          <Add directory="../../Source/MIDI"/>
+          <Add directory="../../Source/Core"/>
+          <Add directory="../../Source/Native"/>
+          <Add directory="../../Source/Plugin"/>
+          <Add directory="../../Source/UIComponents"/>
+          <Add directory="../../Source/Lua"/>
+          <Add directory="../../JUCE/modules"/>
           <Add directory="/usr/include/freetype2"/>
         </Compiler>
         <Linker>
@@ -261,6 +279,7 @@
           <Add option="-DLINUX=&quot;1&quot;"/>
           <Add option="-DNDEBUG=&quot;1&quot;"/>
           <Add option="-DJUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=&quot;1&quot;"/>
+          <Add option="-DBOOST_BIND_GLOBAL_PLACEHOLDERS=&quot;1&quot;"/>
           <Add option="-DJUCER_CODEBLOCKS_LINUX_191E0897=&quot;1&quot;"/>
           <Add option="-DJUCE_APP_VERSION=&quot;5.6.34&quot;"/>
           <Add option="-DJUCE_APP_VERSION_HEX=&quot;0x50622&quot;"/>
@@ -285,6 +304,20 @@
           <Add directory="../../Source/Misc/vst2sdk"/>
           <Add directory="../../JuceLibraryCode"/>
           <Add directory="../../../../juce"/>
+          <Add directory="../../JUCE/modules"/>
+          <Add directory="../../Source"/>
+          <Add directory="../../Source/Misc"/>
+          <Add directory="../../Source/Misc/include"/>
+          <Add directory="../../Source/Misc/lua/include"/>
+          <Add directory="../../Source/Misc/luabind"/>
+          <Add directory="../../Source/Misc/libusb/include"/>
+          <Add directory="../../Source/Misc/boost"/>
+          <Add directory="../../Source/MIDI"/>
+          <Add directory="../../Source/Core"/>
+          <Add directory="../../Source/Native"/>
+          <Add directory="../../Source/Plugin"/>
+          <Add directory="../../Source/UIComponents"/>
+          <Add directory="../../Source/Lua"/>
           <Add directory="../../JUCE/modules"/>
           <Add directory="/usr/include/freetype2"/>
         </Compiler>
@@ -312,6 +345,7 @@
           <Add option="-DLINUX=&quot;1&quot;"/>
           <Add option="-DNDEBUG=&quot;1&quot;"/>
           <Add option="-DJUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=&quot;1&quot;"/>
+          <Add option="-DBOOST_BIND_GLOBAL_PLACEHOLDERS=&quot;1&quot;"/>
           <Add option="-DJUCER_CODEBLOCKS_LINUX_191E0897=&quot;1&quot;"/>
           <Add option="-DJUCE_APP_VERSION=&quot;5.6.34&quot;"/>
           <Add option="-DJUCE_APP_VERSION_HEX=&quot;0x50622&quot;"/>
@@ -336,6 +370,20 @@
           <Add directory="../../Source/Misc/vst2sdk"/>
           <Add directory="../../JuceLibraryCode"/>
           <Add directory="../../../../juce"/>
+          <Add directory="../../JUCE/modules"/>
+          <Add directory="../../Source"/>
+          <Add directory="../../Source/Misc"/>
+          <Add directory="../../Source/Misc/include"/>
+          <Add directory="../../Source/Misc/lua/include"/>
+          <Add directory="../../Source/Misc/luabind"/>
+          <Add directory="../../Source/Misc/libusb/include"/>
+          <Add directory="../../Source/Misc/boost"/>
+          <Add directory="../../Source/MIDI"/>
+          <Add directory="../../Source/Core"/>
+          <Add directory="../../Source/Native"/>
+          <Add directory="../../Source/Plugin"/>
+          <Add directory="../../Source/UIComponents"/>
+          <Add directory="../../Source/Lua"/>
           <Add directory="../../JUCE/modules"/>
           <Add directory="/usr/include/freetype2"/>
         </Compiler>
@@ -1411,6 +1459,10 @@
       <Option compile="0"/>
       <Option link="0"/>
     </Unit>
+    <Unit filename="../../Source/Core/CtrlrInlineUtilitiesGUI.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+    </Unit>
     <Unit filename="../../Source/Core/CtrlrInlineUtilitiesGUI.h">
       <Option target="Shared Code | Debug"/>
       <Option target="Shared Code | Release"/>
@@ -1817,6 +1869,16 @@
       <Option compile="0"/>
       <Option link="0"/>
     </Unit>
+    <Unit filename="../../Source/Lua/JuceClasses/LMachineIDUtilities.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+    </Unit>
+    <Unit filename="../../Source/Lua/JuceClasses/LMachineIDUtilities.h">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
     <Unit filename="../../Source/Lua/JuceClasses/LMemory.cpp">
       <Option target="Shared Code | Debug"/>
       <Option target="Shared Code | Release"/>
@@ -1875,6 +1937,26 @@
       <Option compile="0"/>
       <Option link="0"/>
     </Unit>
+    <Unit filename="../../Source/Lua/JuceClasses/LOnlineUnlockStatus.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+    </Unit>
+    <Unit filename="../../Source/Lua/JuceClasses/LOnlineUnlockStatus.h">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../Source/Lua/JuceClasses/LOnlineUnlockStatusCheck.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+    </Unit>
+    <Unit filename="../../Source/Lua/JuceClasses/LOnlineUnlockStatusCheck.h">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
     <Unit filename="../../Source/Lua/JuceClasses/LPath.h">
       <Option target="Shared Code | Debug"/>
       <Option target="Shared Code | Release"/>
@@ -1918,6 +2000,16 @@
       <Option link="0"/>
     </Unit>
     <Unit filename="../../Source/Lua/JuceClasses/LResult.h">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../Source/Lua/JuceClasses/LRSAKey.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+    </Unit>
+    <Unit filename="../../Source/Lua/JuceClasses/LRSAKey.h">
       <Option target="Shared Code | Debug"/>
       <Option target="Shared Code | Release"/>
       <Option compile="0"/>
@@ -12893,6 +12985,90 @@
       <Option compile="0"/>
       <Option link="0"/>
     </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/in_app_purchases/juce_InAppPurchases.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/in_app_purchases/juce_InAppPurchases.h">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/marketplace/juce_KeyFileGeneration.h">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/marketplace/juce_OnlineUnlockForm.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/marketplace/juce_OnlineUnlockForm.h">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/marketplace/juce_OnlineUnlockStatus.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/marketplace/juce_OnlineUnlockStatus.h">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/marketplace/juce_TracktionMarketplaceStatus.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/marketplace/juce_TracktionMarketplaceStatus.h">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/native/juce_android_InAppPurchases.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/native/juce_ios_InAppPurchases.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/juce_product_unlocking.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/juce_product_unlocking.mm">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
+    <Unit filename="../../JUCE/modules/juce_product_unlocking/juce_product_unlocking.h">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
     <Unit filename="../../JuceLibraryCode/AppConfig.h">
       <Option target="Shared Code | Debug"/>
       <Option target="Shared Code | Release"/>
@@ -12966,6 +13142,10 @@
       <Option target="Shared Code | Release"/>
     </Unit>
     <Unit filename="../../JuceLibraryCode/include_juce_gui_extra.cpp">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+    </Unit>
+    <Unit filename="../../JuceLibraryCode/include_juce_product_unlocking.cpp">
       <Option target="Shared Code | Debug"/>
       <Option target="Shared Code | Release"/>
     </Unit>

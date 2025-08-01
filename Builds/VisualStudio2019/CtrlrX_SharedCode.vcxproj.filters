@@ -574,6 +574,18 @@
     <Filter Include="JUCE Modules\juce_gui_extra">
       <UniqueIdentifier>{A4D76113-9EDC-DA60-D89B-5BACF7F1C426}</UniqueIdentifier>
     </Filter>
+    <Filter Include="JUCE Modules\juce_product_unlocking\in_app_purchases">
+      <UniqueIdentifier>{640F6C76-C532-710A-DF73-582F2350F6A3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JUCE Modules\juce_product_unlocking\marketplace">
+      <UniqueIdentifier>{FFA9DA63-69C5-A392-4EEE-395CD07733BB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JUCE Modules\juce_product_unlocking\native">
+      <UniqueIdentifier>{D3DCC9A9-ADBC-E37E-3CAA-43B3F156B8B9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JUCE Modules\juce_product_unlocking">
+      <UniqueIdentifier>{409F7733-AD90-6113-85BA-7136DD178413}</UniqueIdentifier>
+    </Filter>
     <Filter Include="JUCE Modules">
       <UniqueIdentifier>{FE955B6B-68AC-AA07-70D8-2413F6DB65C8}</UniqueIdentifier>
     </Filter>
@@ -771,6 +783,9 @@
     <ClCompile Include="..\..\Source\Core\CtrlrIDManager.cpp">
       <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\Core\CtrlrInlineUtilitiesGUI.cpp">
+      <Filter>CtrlrX\Source\Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\Core\CtrlrLog.cpp">
       <Filter>CtrlrX\Source\Core</Filter>
     </ClCompile>
@@ -828,7 +843,19 @@
     <ClCompile Include="..\..\Source\Lua\JuceClasses\LJuce.cpp">
       <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\Lua\JuceClasses\LMachineIDUtilities.cpp">
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\Lua\JuceClasses\LMemory.cpp">
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Lua\JuceClasses\LOnlineUnlockStatus.cpp">
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Lua\JuceClasses\LOnlineUnlockStatusCheck.cpp">
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\Lua\JuceClasses\LRSAKey.cpp">
       <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Lua\Methods\CtrlrLuaMethod.cpp">
@@ -3081,6 +3108,30 @@
     <ClCompile Include="..\..\JUCE\modules\juce_gui_extra\juce_gui_extra.cpp">
       <Filter>JUCE Modules\juce_gui_extra</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_product_unlocking\in_app_purchases\juce_InAppPurchases.cpp">
+      <Filter>JUCE Modules\juce_product_unlocking\in_app_purchases</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_product_unlocking\marketplace\juce_OnlineUnlockForm.cpp">
+      <Filter>JUCE Modules\juce_product_unlocking\marketplace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_product_unlocking\marketplace\juce_OnlineUnlockStatus.cpp">
+      <Filter>JUCE Modules\juce_product_unlocking\marketplace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_product_unlocking\marketplace\juce_TracktionMarketplaceStatus.cpp">
+      <Filter>JUCE Modules\juce_product_unlocking\marketplace</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_product_unlocking\native\juce_android_InAppPurchases.cpp">
+      <Filter>JUCE Modules\juce_product_unlocking\native</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_product_unlocking\native\juce_ios_InAppPurchases.cpp">
+      <Filter>JUCE Modules\juce_product_unlocking\native</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_product_unlocking\juce_product_unlocking.cpp">
+      <Filter>JUCE Modules\juce_product_unlocking</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JUCE\modules\juce_product_unlocking\juce_product_unlocking.mm">
+      <Filter>JUCE Modules\juce_product_unlocking</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\BinaryData.cpp">
       <Filter>JUCE Library Code</Filter>
     </ClCompile>
@@ -3121,6 +3172,9 @@
       <Filter>JUCE Library Code</Filter>
     </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_gui_extra.cpp">
+      <Filter>JUCE Library Code</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\JuceLibraryCode\include_juce_product_unlocking.cpp">
       <Filter>JUCE Library Code</Filter>
     </ClCompile>
   </ItemGroup>
@@ -3668,6 +3722,9 @@
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LLookAndFeel.h">
       <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\Lua\JuceClasses\LMachineIDUtilities.h">
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LMemoryBlock.h">
       <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
@@ -3695,6 +3752,12 @@
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LMouseInputSource.h">
       <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\Lua\JuceClasses\LOnlineUnlockStatus.h">
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Lua\JuceClasses\LOnlineUnlockStatusCheck.h">
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LPath.h">
       <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
@@ -3717,6 +3780,9 @@
       <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LResult.h">
+      <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\Lua\JuceClasses\LRSAKey.h">
       <Filter>CtrlrX\Source\Lua\JuceClasses</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\Lua\JuceClasses\LSlider.h">
@@ -6367,6 +6433,24 @@
     </ClInclude>
     <ClInclude Include="..\..\JUCE\modules\juce_gui_extra\juce_gui_extra.h">
       <Filter>JUCE Modules\juce_gui_extra</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_product_unlocking\in_app_purchases\juce_InAppPurchases.h">
+      <Filter>JUCE Modules\juce_product_unlocking\in_app_purchases</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_product_unlocking\marketplace\juce_KeyFileGeneration.h">
+      <Filter>JUCE Modules\juce_product_unlocking\marketplace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_product_unlocking\marketplace\juce_OnlineUnlockForm.h">
+      <Filter>JUCE Modules\juce_product_unlocking\marketplace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_product_unlocking\marketplace\juce_OnlineUnlockStatus.h">
+      <Filter>JUCE Modules\juce_product_unlocking\marketplace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_product_unlocking\marketplace\juce_TracktionMarketplaceStatus.h">
+      <Filter>JUCE Modules\juce_product_unlocking\marketplace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\JUCE\modules\juce_product_unlocking\juce_product_unlocking.h">
+      <Filter>JUCE Modules\juce_product_unlocking</Filter>
     </ClInclude>
     <ClInclude Include="..\..\JuceLibraryCode\AppConfig.h">
       <Filter>JUCE Library Code</Filter>

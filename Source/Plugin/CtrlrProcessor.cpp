@@ -504,26 +504,55 @@ void CtrlrProcessor::activePanelChanged()
 	sendChangeMessage();
 }
 
-
-bool CtrlrProcessor::useWrapper()
+bool CtrlrProcessor::useWrapper() // Updated v5.6.34. JUCE 6.0.8 has option "plugin requires keyboard focus" and the keyboard focus is handled better with VST3 than VST2 so Live Wrapper seems useless nowadays.
 {
-	if (JUCEApplication::isStandaloneApp())
-	{
-		return (false);
-	}
+    File debugLog = File::getSpecialLocation(File::currentApplicationFile);
+    String fileExt = debugLog.getFileExtension();
+    // PluginLoggerVst3 logger(debugLog); // Create logger instance
+    // logger.log("CtrlrX source fileExtension is :" + fileExt);
+    
+    if (JUCEApplication::isStandaloneApp())
+    {
+        return (false);
+    }
 
-	if (((SystemStats::getOperatingSystemType() & SystemStats::Windows) != 0) && host.isAbletonLive())
-	{
-		if (hasProperty(Ids::ctrlrUseEditorWrapper))
-		{
-			return ((bool)getProperty(Ids::ctrlrUseEditorWrapper));
-		}
-		else
-		{
-			return (true);
-		}
-	}
-	return (false);
+    // Logic for Windows + Ableton Live
+    if (((SystemStats::getOperatingSystemType() & SystemStats::Windows) != 0) && host.isAbletonLive())
+    {
+        // logger.log("useWrapper(): Running on Windows in Ableton Live.");
+        
+        if (fileExt ==".vst3") // Check if the currently loaded plugin format is VST3
+        {
+            // logger.log("useWrapper(): Detected VST3 on Windows Live. Forcing native editor (no wrapper) for testing.");
+            return (false); // Force native VST3 editor on Windows for testing
+        }
+        
+        else if (fileExt ==".dll") // Check if the currently loaded plugin format is VST (VST2)
+        {
+            // If it's a VST2 plugin, the original developer's logic suggests using the wrapper. We'll keep this behavior for VST2.
+            // logger.log("useWrapper(): Detected VST2 on Windows Live. Using wrapper as per original developer's notes.");
+            
+            // if (hasProperty(Ids::ctrlrUseEditorWrapper))
+            // {
+            //     return ((bool)getProperty(Ids::ctrlrUseEditorWrapper));
+            // }
+            // else
+            // {
+            //     return (true); // Default to true for VST2 on Windows Live
+            // }
+            
+            return (true); // Hard coded default to true for VST2 on Windows Live. Condition based on property ctrlrUseEditorWrapper bypassed.
+        }
+    }
+    // Keep the macOS logic as it was, the wrapper is useless on macOS.
+    else if (((SystemStats::getOperatingSystemType() & SystemStats::MacOSX) != 0) && host.isAbletonLive())
+    {
+        return (false); // Default to false for macOS
+    }
+    
+    // Default to false for all other cases (other DAWs, other OSes, or unhandled plugin types)
+    // logger.log("useWrapper(): Not Ableton Live on Windows, or unhandled plugin type. Returning false (no wrapper).");
+    return (false);
 }
 
 AudioProcessorEditor* CtrlrProcessor::createEditor()

@@ -75,7 +75,7 @@ void CtrlrManager::setDefaults()
     setProperty (Ids::ctrlrAutoSaveInterval, 300);
     // setProperty (Ids::ctrlrLogOptions, 32); // Updated v5.6.31. Value sets default properties as enabled
     setProperty (Ids::ctrlrLogOptions, 6014); // 6014 shows everything by default with MIDI messages in Hex
-    setProperty (Ids::ctrlrUseEditorWrapper, true);
+    // setProperty (Ids::ctrlrUseEditorWrapper, true); // Removed v5.6.34. Conditions hard coded for the wrapper with Ableton Live on Windows
     setProperty (Ids::ctrlrPropertiesAreURLs, true);
     setProperty (Ids::ctrlrNativeAlerts, false);
     
@@ -103,6 +103,7 @@ void CtrlrManager::setDefaults()
     setProperty (Ids::ctrlrMenuBarHeight, 24);
     setProperty (Ids::ctrlrTabBarDepth, 24);
     setProperty (Ids::ctrlrPropertyLineheightBaseValue, 36); // Added v5.6.33.
+    setProperty (Ids::ctrlrPropertyLineImprovedLegibility, false); // Added v5.6.34.
     setProperty (Ids::uiLuaConsoleInputRemoveAfterRun, true);
     setProperty (Ids::luaCtrlrSaveState, COMBO_ITEM_NONE);
     setProperty (Ids::luaCtrlrRestoreState, COMBO_ITEM_NONE);
@@ -641,6 +642,23 @@ CtrlrPanel *CtrlrManager::getPanel(const int panelIndex)
 		return (ctrlrPanels[panelIndex]);
 	}
 	return (0);
+}
+
+CtrlrPanel* CtrlrManager::getPanelForEditor(CtrlrPanelEditor* editorToFind) // Added v5.6.34. To assign the right panel index from the tab index. Panel tab close button. 
+{
+    // Iterate through the 'ctrlrPanels' array
+    for (int i = 0; i < ctrlrPanels.size(); ++i)
+    {
+        CtrlrPanel* panel = ctrlrPanels.getUnchecked(i); // Access the panel from the internal array
+
+        // Check if this panel exists and its editor matches the one we're looking for
+        // CtrlrPanel::getEditor(false) returns the editor for that panel
+        if (panel != nullptr && panel->getEditor(false) == editorToFind)
+        {
+            return panel; // Found the correct CtrlrPanel for the given editor
+        }
+    }
+    return nullptr; // No matching CtrlrPanel found for the given editor
 }
 
 int CtrlrManager::getNumPanels()

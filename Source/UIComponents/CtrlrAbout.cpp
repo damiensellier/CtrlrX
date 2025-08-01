@@ -42,6 +42,20 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     ctrlrxReleaseDateLabel->setColour (Label::textColourId, Colour(getLookAndFeel().findColour (Label::textColourId).withAlpha(0.8f)));
     ctrlrxReleaseDateLabel->setColour (Label::backgroundColourId, Colour(getLookAndFeel().findColour (Label::backgroundColourId)));
     
+    // CtrlrX libs version Label
+    String juceVersion = SystemStats::getJUCEVersion().fromLastOccurrenceOf("JUCE v", false, true);
+    String luaVersion = LUA_RELEASE;
+    String luabindVersion = _STR(LUABIND_VERSION / 1000) + "." + _STR(LUABIND_VERSION / 100 % 100) + "." + _STR(LUABIND_VERSION % 100);
+    String boostVersion = _STR(BOOST_VERSION / 100000) + "." + _STR((BOOST_VERSION / 100) % 1000) + "." + _STR(BOOST_VERSION % 100);
+    String buildDetails = "JUCE " + juceVersion + " | " + luaVersion + " | LuaBind " + luabindVersion + " | Boost " + boostVersion;
+    addAndMakeVisible (ctrlrxLibsVersionLabel = new Label ("Version",  buildDetails));
+    ctrlrxLibsVersionLabel->setFont (Font (12.00f, Font::plain));
+    ctrlrxLibsVersionLabel->setJustificationType (Justification::topLeft);
+    ctrlrxLibsVersionLabel->setEditable (false, false, false);
+    ctrlrxLibsVersionLabel->setMinimumHorizontalScale(1.0f);
+    ctrlrxLibsVersionLabel->setColour (Label::textColourId, Colour(getLookAndFeel().findColour (Label::textColourId).withAlpha(0.8f)));
+    ctrlrxLibsVersionLabel->setColour (Label::backgroundColourId, Colour(getLookAndFeel().findColour (Label::backgroundColourId)));
+    
     // Credits Label
     addAndMakeVisible (creditsLabel = new TextEditor (""));
     creditsLabel->setFont (Font (13.00f, Font::plain));
@@ -351,6 +365,7 @@ CtrlrAbout::~CtrlrAbout()
     ctrlrLogo = nullptr;
     vst3AuJuceLogo = nullptr;
     versionInfoLabel = nullptr;
+    ctrlrxLibsVersionLabel = nullptr;
     creditsLabel = nullptr;
     ctrlrxVersionLabel = nullptr;
     ctrlrxReleaseDateLabel = nullptr;
@@ -387,7 +402,7 @@ void CtrlrAbout::paint (Graphics& g)
     
     // Vertical line separator
     g.setColour(getLookAndFeel().findColour (Label::textColourId).withAlpha(0.5f));
-    g.drawVerticalLine(190, 270, 310); // vert separation @ 170
+    g.drawVerticalLine(190, 280, 320); // vert separation @ 170
 
 }
 
@@ -418,8 +433,12 @@ void CtrlrAbout::resized()
     heightPosition += ( ctrlrxVersionLabelheight );
     ctrlrxReleaseDateLabel->setBounds (ctrlrLogoSize + paddingSize*3, heightPosition, rightColumnWidth, ctrlrxReleaseDateLabelheight);
     
+    int ctrlrxLibsVersionLabelheight = 18;
+    heightPosition += ( ctrlrxReleaseDateLabelheight );
+    ctrlrxLibsVersionLabel->setBounds (ctrlrLogoSize + paddingSize*3, heightPosition, rightColumnWidth, ctrlrxLibsVersionLabelheight);
+    
     int creditsLabelheight = 32;
-    heightPosition += ( ctrlrxReleaseDateLabelheight + paddingSize );
+    heightPosition += ( ctrlrxLibsVersionLabelheight + paddingSize );
     creditsLabel->setBounds (ctrlrLogoSize + paddingSize*3 + 4, heightPosition, rightColumnWidth, creditsLabelheight);
         
     int ctrlrxUrlHeight = 18;
@@ -435,7 +454,7 @@ void CtrlrAbout::resized()
     
     // Centered
     int descriptionLabelheight = 48;
-    heightPosition = ( ctrlrLogoSize + paddingSize*3 );
+    heightPosition = ( ctrlrLogoSize + paddingSize*4 );
     descriptionLabel->setBounds (paddingSize, heightPosition, getWidth() - paddingSize*2, descriptionLabelheight);
     
     

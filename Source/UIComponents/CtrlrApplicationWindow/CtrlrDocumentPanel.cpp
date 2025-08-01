@@ -87,7 +87,7 @@ void CtrlrDocumentPanel::activeDocumentChanged()
 }
 
 
-void CtrlrDocumentPanel::buttonClicked (Button *button)
+void CtrlrDocumentPanel::buttonClicked (Button *button) // Updated v5.6.34. Get the appropriate index panel from the close tab index.
 {
     int index = (int)button->getProperties().getWithDefault("index", -1);
     TabbedComponent *tc = getCurrentTabbedComponent();
@@ -98,9 +98,16 @@ void CtrlrDocumentPanel::buttonClicked (Button *button)
 
         if (ed != nullptr)
         {
-            if (AlertWindow::showYesNoCancelBox (AlertWindow::QuestionIcon, "Close panel", "Are you sure you want to close this panel [" + ed->getName() + "]", "Yes", "No", "Cancel", this) == 1)
+            // Get the actual CtrlrPanel associated with this editor 'ed'
+            CtrlrPanel* panelToClose = owner.getPanelForEditor(ed);
+
+            if (panelToClose != nullptr)
             {
-                owner.removePanel(ed);
+                // Call canClose on the CtrlrPanel instance related to the close button
+                if (panelToClose->canClose(true))
+                {
+                    owner.removePanel(ed);
+                }
             }
         }
     }

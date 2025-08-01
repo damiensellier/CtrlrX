@@ -114,6 +114,14 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
     }
     setProperty (Ids::panelPlugType, "Instrument|Synth"); // Added v5.6.32
 
+    // Store the public key string (modulus,exponent) in a property.
+    // This is the key your plugin will use to verify the server's signature.
+    setProperty (Ids::panelExportPublicKey, "");
+
+    // Set the server URL property
+    // This could also be a development server URL that changes for release
+    setProperty (Ids::panelExportServerAuthURL, "https://localhost:8000/auth/authenticate"); // Example local dev server URL
+    
     setProperty (Ids::panelMidiSnapshotAfterLoad, false);
     setProperty (Ids::panelMidiSnapshotAfterProgramChange, false);
     setProperty (Ids::panelMidiSnapshotDelay, 10);
@@ -206,7 +214,7 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
 //    setProperty (Ids::ctrlrMenuBarHighlightColour, Colour(HIGHLIGHT_COLOUR).toString());
 //    setProperty (Ids::ctrlrMenuBarFont, owner.getFontManager().getStringFromFont (Font (18.0f)));
 
-    setProperty (Ids::ctrlrUseEditorWrapper, false);
+    // setProperty (Ids::ctrlrUseEditorWrapper, false); // Removed v5.6.34. Conditions hard coded for the wrapper with Ableton Live on Windows
     
     owner.addChangeListener (this);
     midiMessageCollector.reset (SAMPLERATE);
@@ -600,6 +608,32 @@ void CtrlrPanel::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChange
 			ctrlrPanelEditor->setProperty (Ids::name, getProperty(Ids::name));
 		}
 	}
+    if (property == Ids::panelVersionMajor || property == Ids::panelVersionMinor) // Added v5.6.34. Force storing values as int to valueTree.
+    {
+        // Get the value that was *just set* (which is now stored in the tree).
+        // This value might be 5.0 if JUCE promoted it to a double.
+        juce::var currentValue = getProperty(property);
+
+        // Convert it to an integer. This truncates any decimal part (e.g., 5.0 -> 5).
+        int intValueToStore = static_cast<int>(currentValue);
+
+        // IMPORTANT: Only re-set the property if the integer version is different from
+        //            what's currently stored as a 'raw' var, or if its type implies
+        //            it's currently a double when it should be an int.
+        //            This prevents an infinite loop of property change notifications
+        //            if the ValueTree somehow sees setting 5 as different from 5.0.
+        //
+        // A robust check: if the var is currently a double, or if it's an int but
+        //                 the stored int isn't what we expect (shouldn't happen with this logic).
+        if (currentValue.isDouble() || (currentValue.isInt() && static_cast<int>(currentValue) != intValueToStore))
+        {
+            // Set the property back, explicitly providing an int to juce::var.
+            // Pass nullptr for the UndoManager if you're not using one here.
+            // If you are using an UndoManager, pass it: getUndoManager() or your specific manager.
+            setProperty(property, juce::var(intValueToStore), nullptr);
+        }
+        return; // Handled this property, no need to check other conditions below.
+    }
     else if (property == Ids::panelCertificateMacSelectId) // Added v5.6.32. Returns the MAC certificate ID from the popupMenu
     {
         if (getRestoreState()) // Prevent showing up the popupMenu on load

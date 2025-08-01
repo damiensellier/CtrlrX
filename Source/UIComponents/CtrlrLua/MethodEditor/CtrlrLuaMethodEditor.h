@@ -59,7 +59,8 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
 		void setPositionLabelText (const String &text);
 
 		void addNewMethod(ValueTree parentGroup=ValueTree());
-		void addNewClass(ValueTree parentGroup=ValueTree());
+        void renameMethod(ValueTree currentMethod = ValueTree()); // Added 5.6.34. Thanks to @dobo365
+		// void addNewClass(ValueTree parentGroup=ValueTree()); // Removed 5.6.34. Thanks to @dobo365
 		void addMethodFromFile(ValueTree parentGroup=ValueTree());
 
 		void addNewGroup(ValueTree parentGroup=ValueTree());
@@ -113,7 +114,7 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
 		/* Debugger stuff
 		*/
 		void insertRawDebuggerOutput(const String &debuggerOutput);
-		void setRawDebuggerOutput(const String &debuggerOutput);
+		// void setRawDebuggerOutput(const String &debuggerOutput); // Removed 5.6.34. Thanks to @dobo365
 		void setJsonDebuggerOutput(const String &jsonData);
 		int waitForCommand();
 		const String getCurrentDebuggerCommand(const bool clearTheReturnedCommand=true);

@@ -291,6 +291,22 @@ void CtrlrLuaMethodEditor::addNewMethod(ValueTree parentGroup)
 	saveSettings(); // save settings
 }
 
+void CtrlrLuaMethodEditor::renameMethod(ValueTree currentMethod) // Added 5.6.34. Thanks to @dobo365
+{
+    AlertWindow w("Rename method", "", AlertWindow::QuestionIcon, this);
+    w.addTextEditor("name", currentMethod.getProperty(Ids::name).toString());
+    w.addButton("OK", 1, KeyPress(KeyPress::returnKey));
+    w.addButton("Cancel", 0, KeyPress(KeyPress::escapeKey));
+    
+    if (w.runModalLoop())
+    {
+        currentMethod.setProperty(Ids::name, w.getTextEditorContents("name"), nullptr);
+        updateRootItem();
+    }
+    
+    saveSettings(); // save settings
+}
+
 void CtrlrLuaMethodEditor::addMethodFromFile(ValueTree parentGroup)
 {
 	// See if group folder exists
@@ -736,7 +752,7 @@ const AttributedString CtrlrLuaMethodEditor::getDisplayString(const ValueTree &i
 		}
 		else
 		{
-			str.append (File::descriptionOfSizeInBytes (item.getProperty(Ids::luaMethodCode).toString().length()), fSmall, text.brighter(0.2f));
+			str.append (File::descriptionOfSizeInBytes (item.getProperty(Ids::luaMethodCode).toString().length()), fSmallItalic, text.brighter(0.2f)); // Updated v5.6.34. Thanks to @dobo365
 		}
 
 		str.setJustification (Justification::left);
@@ -888,7 +904,9 @@ void CtrlrLuaMethodEditor::itemClicked (const MouseEvent &e, ValueTree &item)
 			}
 
 			m.addSeparator();
+			m.addItem (1,"Open method"); // Added 5.6.34. Thanks to @dobo365
 			m.addItem (2,"Remove method");
+			m.addItem (3, "Rename method"); // Added 5.6.34. Thanks to @dobo365
 
 			const int ret = m.show();
 
@@ -903,6 +921,16 @@ void CtrlrLuaMethodEditor::itemClicked (const MouseEvent &e, ValueTree &item)
 			else if (ret == 10)
 			{
 				/* convert a method from a file to a in-memory property */
+			}
+			else if (ret == 1) // Added 5.6.34. Thanks to @dobo365
+			{
+				/* open a method */
+				setEditedMethod(Uuid(item.getProperty(Ids::uuid).toString()));
+			}
+			else if (ret == 3) // Added 5.6.34. Thanks to @dobo365
+			{
+				/* rename a method */
+				renameMethod(item);
 			}
 			else if (ret == 2)
 			{

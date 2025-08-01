@@ -105,15 +105,13 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
     
 	propertyType = CtrlrIDManager::stringToType(identifierDefinition.getProperty("type"));
     
-    int propertyLineheightBaseValue; // Declare the variable outside the if-else block
-
-    if (panel) // Added v5.5.33.
+    int propertyLineheightBaseValue = 36; // Declare the variable outside the if-else block. Mandatory for Preference window property lines.
+    bool propertyLineImprovedLegibility = false; // Declare the variable outside the if-else block. Mandatory for Preference window property lines.
+    
+    if (panel) // Added v5.5.33. Accessing to managerTree directly will crashes CtrlrX from Preferences window, checking panel will prevent that.
     {
-        propertyLineheightBaseValue = panel->getOwner().getManagerTree().getProperty(Ids::ctrlrPropertyLineheightBaseValue, 36); // Accessing to managerTree crashes CtrlrX
-    }
-    else
-    {
-        propertyLineheightBaseValue = 36;
+        propertyLineheightBaseValue = panel->getOwner().getManagerTree().getProperty(Ids::ctrlrPropertyLineheightBaseValue, 36); // Added v5.6.33.
+        propertyLineImprovedLegibility = panel->getOwner().getManagerTree().getProperty(Ids::ctrlrPropertyLineImprovedLegibility, false); // Added v5.6.34.
     }
     
     switch (propertyType)
@@ -121,22 +119,26 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
 		case CtrlrIDManager::ReadOnly:
             // preferredHeight = 36;
             preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.0); // Updated v5.6.33.
-			return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true)); // valueToControl, maxNumChars, isMultiLine, isReadOnly
+			// return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true)); // valueToControl, maxNumChars, isMultiLine, isReadOnly
+            return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true, propertyLineImprovedLegibility)); // valueToControl, maxNumChars, isMultiLine, isReadOnly, propertyLineImprovedLegibility
             
 		case CtrlrIDManager::Text:
             // preferredHeight = 36;
             preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.0); // Updated v5.6.33.
-			return (new CtrlrTextPropertyComponent (valueToControl, 1024, false));
+			// return (new CtrlrTextPropertyComponent (valueToControl, 1024, false));
+            return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, false, propertyLineImprovedLegibility)); // valueToControl, maxNumChars, isMultiLine, isReadOnly, propertyLineImprovedLegibility
 
 		case CtrlrIDManager::MultiLine:
 			// preferredHeight = 96;
             preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 2.7); // Updated v5.6.33.
-			return (new CtrlrTextPropertyComponent (valueToControl, 8192*4, true));
+			// return (new CtrlrTextPropertyComponent (valueToControl, 8192*4, true));
+            return (new CtrlrTextPropertyComponent (valueToControl, 8192*4, true, false, propertyLineImprovedLegibility)); // valueToControl, maxNumChars, isMultiLine, isReadOnly, propertyLineImprovedLegibility
 
 		case CtrlrIDManager::MultiLineSmall:
 			// preferredHeight = 64;
             preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.78); // Updated v5.6.33.
-			return (new CtrlrTextPropertyComponent (valueToControl, 8192, true));
+			// return (new CtrlrTextPropertyComponent (valueToControl, 8192, true));
+            return (new CtrlrTextPropertyComponent (valueToControl, 8192, true, false, propertyLineImprovedLegibility)); // valueToControl, maxNumChars, isMultiLine, isReadOnly, propertyLineImprovedLegibility
 
 		case CtrlrIDManager::Expression:
 			// preferredHeight = 64;
@@ -1959,62 +1961,95 @@ void CtrlrSysExPropertyComponent::refresh()
 
 class CtrlrTextPropLabel  : public Label  // Text Box for Type In Properties such as Panel Name etc
 {
-	public:
-		CtrlrTextPropLabel (CtrlrTextPropertyComponent& owner_, const int maxChars_, const bool isMultiline_)
-			: Label ("", ""),
-				owner (owner_), maxChars (maxChars_), isMultiline (isMultiline_)
-		{
-            setEditable (true, true, false); // single click, double-click, lossOfFocusDiscardsChanges
-            
-            setColour (Label::backgroundColourId, findColour(Slider::backgroundColourId)); // The background colour to fill the label with
-            setColour(Label::textColourId, findColour(Slider::textBoxTextColourId)); // The colour for the text
-            setColour (Label::outlineColourId, findColour (Slider::textBoxOutlineColourId)); // An optional colour to use to draw a border around the label
-            
-            setColour(Label::backgroundWhenEditingColourId, findColour(Slider::backgroundColourId).withAlpha(0.7f)); // The background colour when the label is being edited
-            setColour(Label::textWhenEditingColourId, findColour(Label::textWhenEditingColourId).withAlpha(0.7f)); // The colour for the text when the label is being edited
-            setColour(Label::outlineWhenEditingColourId, findColour(Slider::textBoxOutlineColourId)); // An optional border colour when the label is being edited
-		}
+public:
+    CtrlrTextPropLabel (CtrlrTextPropertyComponent& owner_,
+                        const int maxChars_,
+                        const bool isMultiline_,
+                        const bool useImprovedLegibility) // Updated v5.6.34. useImprovedLegibility member added
+        : Label ("", ""),
+          owner (owner_),
+          maxChars (maxChars_),
+          isMultiline (isMultiline_),
+          useImprovedLegibility (useImprovedLegibility) // Initialize from the parameter
+    {
+        setEditable (true, true, false); // Default: editable (CtrlrTextPropertyComponent will set to false if read-only)
 
-		TextEditor* createEditorComponent()
-		{
-			TextEditor* const textEditor = Label::createEditorComponent();
-			textEditor->setInputRestrictions (maxChars);
+        if (useImprovedLegibility)
+        {
+            setColour(juce::Label::backgroundColourId, juce::Colour(0xfffffefa)); // halfwhite
+            setColour(juce::Label::textColourId, juce::Colour(0xff000000)); // black
+        }
+        else
+        {
+            setColour (Label::backgroundColourId, findColour(Slider::backgroundColourId));
+            setColour(Label::textColourId, findColour(Slider::textBoxTextColourId));
+        }
 
-			if (isMultiline)
-			{
-				textEditor->setMultiLine (true, true);
-				textEditor->setReturnKeyStartsNewLine (true);
-	        }
+        setColour (Label::outlineColourId, findColour (Slider::textBoxOutlineColourId));
+        setColour(Label::backgroundWhenEditingColourId, findColour(Slider::backgroundColourId).withAlpha(0.7f));
+        setColour(Label::textWhenEditingColourId, findColour(Label::textWhenEditingColourId).withAlpha(0.7f));
+        setColour(Label::outlineWhenEditingColourId, findColour(Slider::textBoxOutlineColourId));
+    }
 
-		    return textEditor;
-		}
+    TextEditor* createEditorComponent()
+    {
+        TextEditor* const textEditor = Label::createEditorComponent();
+        textEditor->setInputRestrictions (maxChars);
+        textEditor->setJustification(juce::Justification::centredLeft);
 
-		void textWasEdited()
-		{
-	        owner.textWasEdited();
-	    }
+        if (useImprovedLegibility) // Uses the member variable
+        {
+            textEditor->setColour(juce::TextEditor::backgroundColourId, juce::Colour(0xfffffefa)); // halfwhite
+            textEditor->setColour(juce::TextEditor::textColourId, juce::Colour(0xff000000)); // black
+        }
+        else
+        {
+            textEditor->setColour(juce::TextEditor::backgroundColourId, findColour(juce::Slider::backgroundColourId));
+            textEditor->setColour(juce::TextEditor::textColourId, findColour(juce::Slider::textBoxTextColourId));
+            textEditor->setColour(juce::TextEditor::highlightColourId, findColour(juce::TextEditor::highlightColourId));
+            textEditor->setColour(juce::TextEditor::outlineColourId, findColour(juce::Slider::textBoxOutlineColourId));
+        }
 
-	private:
-	    CtrlrTextPropertyComponent& owner;
-	    int maxChars;
-	    bool isMultiline;
+        if (isMultiline)
+        {
+            textEditor->setMultiLine (true, true);
+            textEditor->setReturnKeyStartsNewLine (true);
+            textEditor->setJustification(juce::Justification::topLeft);
+            // textEditor->setIndents(0, 0);
+        }
+        return textEditor;
+    }
+
+    void textWasEdited()
+    {
+        owner.textWasEdited();
+    }
+
+private:
+    CtrlrTextPropertyComponent& owner;
+    int maxChars;
+    bool isMultiline;
+    bool useImprovedLegibility;
 };
 
 //==============================================================================
 CtrlrTextPropertyComponent::CtrlrTextPropertyComponent (const Value& _valueToControl,
 														const int maxNumChars,
-														const bool isMultiLine, const bool isReadOnly) : valueToControl(_valueToControl)
+														const bool isMultiLine,
+                                                        const bool isReadOnly,
+                                                        const bool useImprovedLegibility) // Updated v5.6.34. useImprovedLegibility added
+    : valueToControl(_valueToControl),
+      isReadOnly (isReadOnly),
+      useImprovedLegibility (useImprovedLegibility) // Updated v5.6.34. useImprovedLegibility parameter added
 {
     createEditor (maxNumChars, isMultiLine);
     textEditor->getTextValue().referTo (valueToControl);
 
 	if (isReadOnly)
 	{
-		//textEditor->setColour (Label::backgroundColourId, textEditor->findColour(Label::backgroundColourId,false).withAlpha(0.5f)); // Was set to false for non inheritance
-		//textEditor->setColour (Label::textColourId, textEditor->findColour(Label::textColourId,false).brighter(0.5f)); // Was set to false for non inheritance
         textEditor->setColour (Label::backgroundColourId, findColour(Label::backgroundColourId));
         textEditor->setColour (Label::textColourId, findColour(Label::textColourId));
-		textEditor->setEditable (false, false, false);
+        textEditor->setEditable (false, false, false);
 	}
 }
 
@@ -2034,7 +2069,7 @@ String CtrlrTextPropertyComponent::getText() const
 
 void CtrlrTextPropertyComponent::createEditor (const int maxNumChars, const bool isMultiLine)
 {
-    addAndMakeVisible (textEditor = new CtrlrTextPropLabel (*this, maxNumChars, isMultiLine));
+    addAndMakeVisible (textEditor = new CtrlrTextPropLabel (*this, maxNumChars, isMultiLine, useImprovedLegibility)); // Updated v5.6.34. useImprovedLegibility arg added
 
     if (isMultiLine)
     {

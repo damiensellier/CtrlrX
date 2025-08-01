@@ -115,10 +115,11 @@ tags                      # Ctags output
 # Boost library (ignore everything except boost.zip)
 Source/Misc/boost/
 !Source/Misc/boost/boost.zip
-
+!Source/Misc/boost/boost-version-info.txt
 .DS_Store
 
 # Other project-specific ignores
 Panels/                   # Ignore the Panels directory and its contents
 # /Panels                 # If 'Panels' can also exist as a file in root and needs ignoring, use this
 Source/Misc/boost/boost.zip
+Source/Misc/vst2sdk/
