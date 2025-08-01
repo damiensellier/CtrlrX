@@ -14,7 +14,7 @@ on:
         default: false
 
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.ref }}-cmake
   cancel-in-progress: true
 
 
@@ -45,7 +45,7 @@ jobs:
             c_compiler: clang
             cpp_compiler: clang++
           - os: macos-latest
-            name: macos-13
+            name: macos-latest
             c_compiler: clang
             cpp_compiler: clang++
 
@@ -92,53 +92,10 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Cache FRUT
-      id: cache-frut
-      uses: actions/cache@v4
-      env:
-        cache-name: cache-FRUT-dependency
-      with:
-        path: ./FRUT
-        # The key hashes the README, so if that gets updated we update the FRUT dependency (can be improved)
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('README.md') }}
-        restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-
-          ${{ runner.os }}-build-
-          ${{ runner.os }}-
-
-    - name: Checkout FRUT
-      if: ${{ steps.cache-frut.outputs.cache-hit != 'true' }}
-      uses: actions/checkout@v4
-      with:
-        repository: McMartin/FRUT
-        path: './FRUT'
-
-    # We opt to repeatedly generate the CMakeFiles.txt from the .jucer project
-    # to keep the .jucer project the 'source of truth', for now...
-    - name: Build FRUT
-      if: ${{ steps.cache-frut.outputs.cache-hit != 'true' }}
-      shell: bash
-      run: |
-        mkdir ./FRUT/build
-        pushd ./FRUT/build
-        cmake .. -DCMAKE_INSTALL_PREFIX="../" -DJUCE_ROOT="../../JUCE"
-        cmake --build . --target install
-        popd
-
-    - name: Convert .jucer to CMake
-      shell: bash
-      # with some hacks...
-      run: |
-        FRUT/FRUT/bin/Jucer2CMake reprojucer "CtrlrX 5.6.34 [Without AAX & VST].jucer" FRUT/FRUT/cmake/Reprojucer.cmake
-        sed -Ei~ "s/Visual Studio 2019/Visual Studio 2022/g" CMakeLists.txt
-        sed -Ei~ '/PREBUILD_SHELL_SCRIPT \[=\[/,/\]=\]/d' CMakeLists.txt
-        sed -Ei~ '/EXTRA_LINKER_FLAGS/,/"800"/d' CMakeLists.txt
-
     - name: Configure CtrlrX
       shell: bash
       # the extra file copy is probably due to an issue in the .jucer project
       run: |
-        cp Source/Misc/include/MingW/inttypes.h Source/Misc/include/
         mkdir build/
         cmake -B build/ -DCMAKE_BUILD_TYPE=Release
         
@@ -151,15 +108,14 @@ jobs:
       id: version
       shell: bash
       run: |
-        ls -lh build/
+        ls -lh build/CtrlrX_artefacts/Release/**
           
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: CtrlrX-${{ matrix.name }}
         path: |
-          build/CtrlrX*
-          CMakeLists.txt
+          build/CtrlrX_artefacts/Release/**
 
     # Enable tmate debugging of manually-triggered workflows if the input option was provided
     - name: Setup tmate session
