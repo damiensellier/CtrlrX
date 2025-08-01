@@ -111,9 +111,6 @@ endif
 
 OBJECTS_ALL := \
 
-OBJECTS_VST := \
-  $(JUCE_OBJDIR)/include_juce_audio_plugin_client_VST2_dd551e08.o \
-
 OBJECTS_VST3 := \
   $(JUCE_OBJDIR)/include_juce_audio_plugin_client_VST3_dd633589.o \
 
@@ -384,11 +381,6 @@ $(JUCE_OUTDIR)/$(JUCE_TARGET_SHARED_CODE) : $(OBJECTS_SHARED_CODE) $(RESOURCES)
 	-$(V_AT)mkdir -p $(JUCE_LIBDIR)
 	-$(V_AT)mkdir -p $(JUCE_OUTDIR)
 	$(V_AT)$(AR) -rcs $(JUCE_OUTDIR)/$(JUCE_TARGET_SHARED_CODE) $(OBJECTS_SHARED_CODE)
-
-$(JUCE_OBJDIR)/include_juce_audio_plugin_client_VST2_dd551e08.o: ../../JuceLibraryCode/include_juce_audio_plugin_client_VST2.cpp
-	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
-	@echo "Compiling include_juce_audio_plugin_client_VST2.cpp"
-	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_VST) $(JUCE_CFLAGS_VST) -o "$@" -c "$<"
 
 $(JUCE_OBJDIR)/include_juce_audio_plugin_client_VST3_dd633589.o: ../../JuceLibraryCode/include_juce_audio_plugin_client_VST3.cpp
 	-$(V_AT)mkdir -p $(JUCE_OBJDIR)

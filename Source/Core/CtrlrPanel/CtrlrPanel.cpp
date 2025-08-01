@@ -630,7 +630,7 @@ void CtrlrPanel::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChange
             // Set the property back, explicitly providing an int to juce::var.
             // Pass nullptr for the UndoManager if you're not using one here.
             // If you are using an UndoManager, pass it: getUndoManager() or your specific manager.
-            setProperty(property, juce::var(intValueToStore), nullptr);
+            setProperty(property, juce::var(intValueToStore), false);
         }
         return; // Handled this property, no need to check other conditions below.
     }

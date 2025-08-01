@@ -22,7 +22,7 @@ endif()
 # Note: This cannot have spaces (it may be 2024, but you can't have it all!)
 # Worry not, JUCE's PRODUCT_NAME can have spaces (and is what DAWs display)
 set(PROJECT_NAME "CtrlrX")
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 14) # the lua bindings prevent newer C++ standard usage.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Worry not, JUCE's PRODUCT_NAME can have spaces (and is what DAWs will display)
 # You can also just have it be the same thing as PROJECT_NAME
@@ -118,6 +118,7 @@ file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/Plugin/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/Source/Plugin/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/UIComponents/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/Source/UIComponents/*.h"
 )
+#list(FILTER SourceFiles EXCLUDE REGEX "exclude_regex")
 
 target_sources(SharedCode INTERFACE ${SourceFiles})
 target_include_directories(SharedCode INTERFACE
@@ -162,6 +163,9 @@ target_compile_definitions(SharedCode
     # Uncomment if you are paying for a an Indie/Pro license or releasing under GPLv3
     JUCE_DISPLAY_SPLASH_SCREEN=0
 
+    # to prevent warnings on declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated
+    BOOST_BIND_GLOBAL_PLACEHOLDERS=1
+
     # lets the app known if we're Debug or Release
     CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
     VERSION="${CURRENT_VERSION}"
@@ -181,17 +185,18 @@ target_link_libraries(SharedCode
     juce_audio_basics
     juce_audio_devices
     juce_audio_formats
-    juce_audio_utils
     juce_audio_plugin_client
     juce_audio_processors
+    juce_audio_utils
     juce_core
     juce_cryptography
     juce_data_structures
-    juce_dsp
+#    juce_dsp
     juce_events
     juce_graphics
     juce_gui_basics
     juce_gui_extra
+    juce_product_unlocking
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
