@@ -1520,9 +1520,11 @@ void CtrlrSysExEditor::mouseDown (const MouseEvent& e)
 			m.addItem (8193, "Current bank number");
 
 			m.addSectionHeader ("Checksums (tN) t=type N=num bytes to count");
-			m.addItem (13, "Roland JP8080 Checksum");
+			m.addItem (13, "Roland Checksum"); // Updated v5.6.34.
+			m.addItem (13, "Yamaha Checksum"); // Added v5.6.34.
 			m.addItem (14, "Waldorf RackAttack Checksum");
-			m.addItem (15, "Ignore this byte on input");
+			m.addItem (15, "Technics Checksum"); // Added v5.6.34.
+			m.addItem (16, "Ignore this byte on input");
 			PopupMenu km,lm,mm,nm;
 
 			for (int i=0; i<16; i++)
@@ -1595,10 +1597,10 @@ void CtrlrSysExEditor::mouseDown (const MouseEvent& e)
 				l->setText ("w5", sendNotification);
 				break;
 			case 15:
-				l->setText ("ii", sendNotification);
+				l->setText ("tc", sendNotification); // Added v5.6.34
 				break;
 			case 16:
-				l->setText ("tc", sendNotification); // Added v5.6.34
+				l->setText ("ii", sendNotification);
 				break;
 			}
 

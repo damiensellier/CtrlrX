@@ -82,7 +82,7 @@ void CtrlrSysexProcessor::sysExProcessToken (const CtrlrSysexToken token, uint8 
         case CurrentBank:
 		case Ignore:
 		case ChecksumRolandJP8080:
-        case ChecksumTechnics:
+		case ChecksumTechnics:
 		case ChecksumWaldorfRackAttack:
 		case FormulaToken:
 		case LUAToken:
@@ -273,6 +273,7 @@ Array<CtrlrSysexToken> CtrlrSysexProcessor::sysExToTokenArray (const String &for
 		}
 		if (tokenToAdd.getType() == GlobalVariable
 			|| tokenToAdd.getType() == ChecksumRolandJP8080
+			|| tokenToAdd.getType() == ChecksumTechnics // Added v5.6.34.
 			|| tokenToAdd.getType() == ChecksumWaldorfRackAttack)
 		{
 			tokenToAdd.setAdditionalData (ar[i].substring(1,2).getHexValue32());
