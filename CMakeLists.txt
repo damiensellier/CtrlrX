@@ -141,8 +141,10 @@ target_include_directories(SharedCode INTERFACE
    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Lua"
    "${CMAKE_CURRENT_SOURCE_DIR}/JuceLibraryCode"
 )
+if(UNIX)
 target_compile_options(SharedCode INTERFACE
     -w -Wno-implicit-fallthrough -Wno-maybe-uninitialized -Wno-missing-field-initializers -Wno-free-nonheap-object)
+endif()
 
 # Adds a BinaryData target for embedding assets into the binary
 include(Assets)
