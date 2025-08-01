@@ -1597,6 +1597,9 @@ void CtrlrSysExEditor::mouseDown (const MouseEvent& e)
 			case 15:
 				l->setText ("ii", sendNotification);
 				break;
+			case 16:
+				l->setText ("tc", sendNotification); // Added v5.6.34
+				break;
 			}
 
 			if (ret >= 20 && ret < 37)

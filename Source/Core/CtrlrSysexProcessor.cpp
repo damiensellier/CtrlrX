@@ -82,6 +82,7 @@ void CtrlrSysexProcessor::sysExProcessToken (const CtrlrSysexToken token, uint8 
         case CurrentBank:
 		case Ignore:
 		case ChecksumRolandJP8080:
+        case ChecksumTechnics:
 		case ChecksumWaldorfRackAttack:
 		case FormulaToken:
 		case LUAToken:
@@ -108,21 +109,26 @@ void CtrlrSysexProcessor::sysExProcess (const Array<CtrlrSysexToken> &tokens, Mi
 
 void CtrlrSysexProcessor::sysexProcessChecksums(const Array<CtrlrSysexToken> &tokens, MidiMessage &m)
 {
-	if (tokens.size() != m.getRawDataSize())
-		return;
-
-	for (int i=0; i<m.getRawDataSize(); i++)
-	{
-		if (tokens.getReference(i).getType() == ChecksumRolandJP8080)
-		{
-			checksumRolandJp8080 (tokens.getReference(i), m);
-		}
-
-		if (tokens.getReference(i).getType() == ChecksumWaldorfRackAttack)
-		{
-			checksumWaldorfRackAttack (tokens.getReference(i), m);
-		}
-	}
+    if (tokens.size() != m.getRawDataSize())
+        return;
+    
+    for (int i=0; i<m.getRawDataSize(); i++)
+    {
+        if (tokens.getReference(i).getType() == ChecksumRolandJP8080)
+        {
+            checksumRolandJp8080 (tokens.getReference(i), m);
+        }
+        
+        if (tokens.getReference(i).getType() == ChecksumWaldorfRackAttack)
+        {
+            checksumWaldorfRackAttack (tokens.getReference(i), m);
+        }
+        
+        if (tokens.getReference(i).getType() == ChecksumTechnics)
+        {
+            checksumTechnics (tokens.getReference(i), m);
+        }
+    }
 }
 
 void CtrlrSysexProcessor::sysexProcessPrograms(const Array<CtrlrSysexToken> &tokens, MidiMessage &m)
@@ -357,11 +363,57 @@ CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String &s)
 	{
 		return (CurrentBank);
 	}
+	if (s == "tc")
+	{
+		return (ChecksumTechnics);
+	}
 	return (NoToken);
 }
 
 /** Checksum processors
 */
+
+/*
+ * Calculates a Technics-style checksum using a chained XOR operation.
+ *
+ * This function calculates the checksum over a specified range of bytes
+ * within a SysEx message. The range starts after the F0 header.
+ *
+ * SM:
+ * Checksum for checking data errors.
+ * Based on EXCLUSIVE-OR operation from
+ * IDC to CN. Where IDC = 0x50 MATSUSHITA ELECTRIC INDUSTRIAL CO LTD
+ * CN = Subsequent Data up to the checksum byte.
+ */
+
+void CtrlrSysexProcessor::checksumTechnics(const CtrlrSysexToken token, MidiMessage& m)
+{
+    const int messageLength = m.getRawDataSize();
+    const int tokenPos = token.getPosition();
+
+    // For Technics, always start from byte 1 (0x50) up to but not including the tc token
+    const int startByte = 1; // Start at manufacturer ID (0x50)
+
+    // Bounds checking
+    if (startByte >= tokenPos || tokenPos >= messageLength) {
+        return;
+    }
+
+    uint8* ptr = (uint8*)m.getRawData();
+
+    // Start with the first byte (0x50)
+    uint8 chTotal = *(ptr + startByte);
+
+    // XOR with subsequent bytes up to (but not including) the tc position
+    for (int i = startByte + 1; i < tokenPos; i++)
+    {
+        chTotal ^= *(ptr + i);
+    }
+
+    // Store the checksum at the token position
+    *(ptr + tokenPos) = chTotal;
+}
+
 void CtrlrSysexProcessor::checksumRolandJp8080(const CtrlrSysexToken token, MidiMessage &m)
 {
 	/*
@@ -375,18 +427,19 @@ void CtrlrSysexProcessor::checksumRolandJp8080(const CtrlrSysexToken token, Midi
 
 	This means that the message transmitted will be F0 41 10 00 06 12 01 00 10 03 1D 4F F7
 	*/
-
+	
 	const int startByte = token.getPosition() - token.getAdditionalData();
-	double chTotal		= 0.0;
-	uint8 *ptr	= (uint8 *)m.getRawData();
-
-	for (int i=startByte; i<token.getPosition(); i++)
+	uint32 chTotal = 0; // Changed from double to uint32 - no need for floating point
+	uint8* ptr = (uint8*)m.getRawData();
+	
+	for (int i = startByte; i < token.getPosition(); i++)
 	{
-		chTotal = chTotal + *(ptr+i); // From v5.6.31
+		chTotal += *(ptr + i);
 	}
-    const double remainder    = fmod(chTotal, 128);
-    const uint8 ch            = (uint8)(remainder ? (128 - remainder) : 0);
-    *(ptr+token.getPosition())   = ch;
+	
+	const uint8 remainder = chTotal % 128; // Direct modulo, no need for fmod
+	const uint8 ch = remainder ? (128 - remainder) : 0;
+	*(ptr + token.getPosition()) = ch;
 }
 
 void CtrlrSysexProcessor::checksumWaldorfRackAttack(const CtrlrSysexToken token, MidiMessage &m)
