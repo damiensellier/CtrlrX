@@ -23,6 +23,7 @@ class CtrlrSysexProcessor
 		const StringArray templatesPrepare();
 
 		void checksumRolandJp8080(const CtrlrSysexToken token, MidiMessage &m);
+		void checksumTechnics(const CtrlrSysexToken token, MidiMessage &m);
 		uint8 getRolandSplit (const int value, const int byteNum);
 		void checksumWaldorfRackAttack(const CtrlrSysexToken token, MidiMessage &m);
 		int getGlobalIndex(const CtrlrSysexToken token);

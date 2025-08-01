@@ -139,8 +139,26 @@ void CtrlrFixedImageSlider::setComponentValue (const double newValue, const bool
 
 void CtrlrFixedImageSlider::sliderContentChanged()
 {
-    valueMap->copyFrom (owner.getProcessor().setValueMap (getProperty(Ids::uiFixedSliderContent)));
-    ctrlrSlider->setRange (valueMap->getNonMappedMin(), valueMap->getNonMappedMax(), 1);
+    valueMap->copyFrom(owner.getProcessor().setValueMap(getProperty(Ids::uiFixedSliderContent)));
+
+    // Get the range values
+    double minVal = valueMap->getNonMappedMin();
+    double maxVal = valueMap->getNonMappedMax();
+
+    // Validate the range values
+    if (std::isnan(minVal) || std::isnan(maxVal) ||
+        std::isinf(minVal) || std::isinf(maxVal) ||
+        minVal >= maxVal)
+    {
+        // Set safe default values if the range is invalid
+        minVal = 0.0;
+        maxVal = 127.0;
+
+        // Optional: Log the error for debugging
+        DBG("CtrlrFixedImageSlider: Invalid range values detected, using defaults (0-127)");
+    }
+
+    ctrlrSlider->setRange(minVal, maxVal, 1);
 }
 
 

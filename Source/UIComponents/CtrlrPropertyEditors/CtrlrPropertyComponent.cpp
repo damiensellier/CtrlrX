@@ -1598,7 +1598,7 @@ void CtrlrSysExEditor::mouseDown (const MouseEvent& e)
 				l->setText ("ii", sendNotification);
 				break;
 			case 16:
-				l->setText ("t5", sendNotification);
+				l->setText ("tc", sendNotification);
 				break;
 			}
 
