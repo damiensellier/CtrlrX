@@ -96,7 +96,7 @@ jobs:
       shell: bash
       # Try to derive version from a jucer file before configuring cmake
       run: |
-        if [ -n "`grep -h 'version=.\+Ctrlr' *.jucer`" ]
+        if [ -n "`grep -h 'version=.\+Ctrlr' *.jucer`" ]; then
           grep -h 'version=.\+Ctrlr' *.jucer | sed 's/.\+version="\([^"]*\).*/\1/' | head -n 1 > VERSION
         fi
         mkdir build/
