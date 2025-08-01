@@ -68,13 +68,16 @@ void CtrlrPanelResourceEditor::paint (Graphics& g)
 {
 }
 
-void CtrlrPanelResourceEditor::resized() // Updated v5.6.33. FIX issue #86 : unresponsive buttons
+void CtrlrPanelResourceEditor::resized() // Updated v5.6.34. Thanks to @dobo365. Updated v5.6.33. FIX issue #86 : unresponsive buttons
 {
-    resourceList->setBounds(0, 0, getWidth() - 0, getHeight() - 64);
-    add->setBounds(0, getHeight() - 48, 72, 32);
-    remove->setBounds(72, getHeight() - 48, 72, 32);
-    move->setBounds(144, getHeight() - 48, 72, 32);
-    reload->setBounds(getWidth() - 64, getHeight() - 48, 64, 32);
+    int margin = 8;
+    int buttonWidth = 72;
+
+    resourceList->setBounds(0, 0, getWidth(), getHeight() - 48);
+    add->setBounds(margin + 0, getHeight() - 48 + margin, buttonWidth, 32);
+    remove->setBounds(2*margin + buttonWidth, getHeight() - 48 + margin, buttonWidth, 32);
+    move->setBounds(3*margin + 2*buttonWidth, getHeight() - 48 + margin, buttonWidth, 32);
+    reload->setBounds(getWidth() - buttonWidth - margin, getHeight() - 48 + margin, buttonWidth, 32);
 }
 
 void CtrlrPanelResourceEditor::buttonClicked (Button* buttonThatWasClicked)
