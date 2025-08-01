@@ -94,8 +94,11 @@ jobs:
 
     - name: Configure CtrlrX
       shell: bash
-      # the extra file copy is probably due to an issue in the .jucer project
+      # Try to derive version from a jucer file before configuring cmake
       run: |
+        if [ -n "`grep -h 'version=.\+Ctrlr' *.jucer`" ]
+          grep -h 'version=.\+Ctrlr' *.jucer | sed 's/.\+version="\([^"]*\).*/\1/' | head -n 1 > VERSION
+        fi
         mkdir build/
         cmake -B build/ -DCMAKE_BUILD_TYPE=Release
         
