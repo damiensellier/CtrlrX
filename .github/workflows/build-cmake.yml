@@ -119,6 +119,7 @@ jobs:
         name: CtrlrX-${{ matrix.name }}
         path: |
           build/CtrlrX_artefacts/Release/**
+          !build/**/*.a
 
     # Enable tmate debugging of manually-triggered workflows if the input option was provided
     - name: Setup tmate session
