@@ -18,16 +18,16 @@ void LMachineIDUtilities::wrapForLua (lua_State *L)
 {
     using namespace luabind;
 
-    // Binding juce::StringArray as "StringArray"
-    module(L)
-    [
-        class_<juce::StringArray>("StringArray")
-            .def(constructor<>())
-            .def("size", &juce::StringArray::size)
-            .def("isEmpty", &juce::StringArray::isEmpty)
-            .def("get", (const juce::String& (juce::StringArray::*)(int) const) &juce::StringArray::operator[])
-            .def("joinIntoString", &juce::StringArray::joinIntoString)
-    ];
+    // EDIT : THIS IS ALREADY BOUND SOMEWHERE ELSE. Binding juce::StringArray as "StringArray"
+//    module(L)
+//    [
+//        class_<juce::StringArray>("StringArray")
+//            .def(constructor<>())
+//            .def("size", &juce::StringArray::size)
+//            .def("isEmpty", &juce::StringArray::isEmpty)
+//            .def("get", (const juce::String& (juce::StringArray::*)(int) const) &juce::StringArray::operator[])
+//            .def("joinIntoString", &juce::StringArray::joinIntoString)
+//    ];
 
     module(L)
     [

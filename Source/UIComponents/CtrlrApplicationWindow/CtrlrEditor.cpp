@@ -229,6 +229,11 @@ void CtrlrEditor::setEditorLookAndFeel (const String &lookAndFeelDesc, const var
             }
         }
 
+        // Explicitly set the L&F of the editor and menubar to nullptr first
+        // This ensures no components are using the old L&F before we destroy it.
+        setLookAndFeel (nullptr);
+        menuBar->setLookAndFeel(nullptr);
+        
         currentLookAndFeel = newLookAndFeel; // Transfers ownership from ScopedPointer
         setLookAndFeel (currentLookAndFeel); // Set the editor's LookAndFeel, which propagates to children
 
