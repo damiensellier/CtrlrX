@@ -40,14 +40,17 @@ jobs:
             name: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
+            extra-flags: -G Ninja
           - os: macos-13
             name: macos-13
             c_compiler: clang
             cpp_compiler: clang++
+            extra-flags: -G Ninja
           - os: macos-latest
             name: macos-latest
             c_compiler: clang
             cpp_compiler: clang++
+            extra-flags: -G Ninja -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
 
     runs-on: ${{ matrix.os }}
 
@@ -63,10 +66,11 @@ jobs:
         echo "OS: $RUNNER_OS"
         if [ "$RUNNER_OS" == "Linux" ]; then
           sudo apt-get update
-          sudo apt install -y binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev
+          sudo apt install -y binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev xvfb ninja-build
         elif [ "$RUNNER_OS" == "Windows" ]; then
           # to not clutter the build step logs:
           ./Scripts/post-commit unpack_boost
+          choco install ninja
         elif [ "$RUNNER_OS" == "macOS" ]; then
           brew install boost ninja osxutils
           # somehow cmake doesn't pick up on /usr/local/include/boost/ ... maybe have to set it in the .jucer project
@@ -100,12 +104,12 @@ jobs:
           grep -h 'version=.\+Ctrlr' *.jucer | sed -E 's/.*version="([^"]*).*/\1/g' | head -n 1 > VERSION
         fi
         mkdir build/
-        cmake -B build/ -DCMAKE_BUILD_TYPE=Release
+        cmake -B build/ -DCMAKE_BUILD_TYPE=Release ${{ matrix.extra-flags }}
         
     - name: Build CtrlrX
       shell: bash
       run: |
-        cmake --build build/
+        cmake --build build/ --config Release 
   
     - name: Show Installer Directory
       id: version
