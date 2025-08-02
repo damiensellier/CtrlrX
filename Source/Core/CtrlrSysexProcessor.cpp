@@ -415,32 +415,19 @@ void CtrlrSysexProcessor::checksumTechnics(const CtrlrSysexToken token, MidiMess
     *(ptr + tokenPos) = chTotal;
 }
 
-void CtrlrSysexProcessor::checksumRolandJp8080(const CtrlrSysexToken token, MidiMessage &m)
+void CtrlrSysexProcessor::checksumRolandJp8080(const CtrlrSysexToken token, MidiMessage &m) // Update v5.6.34. Thanks to @dnaldoog
 {
-	/*
-	Since +5 is parameter value 1DH,
-	F0 41 10 00 06 (model id) 12 (command if) 01 00 10 03 (address) 1D (data) ?? (checksum) F7
-
-	Next we calculate the checksum.
-	01H + 00H + 10H + 03H + 1DH = 1 + 0 + 16 + 3 + 29 = 49 (sum)
-	49 (total) 128 ÷ 0 (quotient) ... 49 (remainder)
-	checksum = 128 - 49 (quotient) = 79 = 4FH
-
-	This means that the message transmitted will be F0 41 10 00 06 12 01 00 10 03 1D 4F F7
-	*/
-	
 	const int startByte = token.getPosition() - token.getAdditionalData();
-	uint32 chTotal = 0; // Changed from double to uint32 - no need for floating point
-	uint8* ptr = (uint8*)m.getRawData();
-	
-	for (int i = startByte; i < token.getPosition(); i++)
+	uint8 chTotal		= 0;
+	uint8 *ptr	= (uint8 *)m.getRawData();
+
+	for (int i=startByte; i<token.getPosition(); i++)
 	{
-		chTotal += *(ptr + i);
+		chTotal = chTotal + *(ptr+i); // From v5.6.31
 	}
-	
-	const uint8 remainder = chTotal % 128; // Direct modulo, no need for fmod
-	const uint8 ch = remainder ? (128 - remainder) : 0;
-	*(ptr + token.getPosition()) = ch;
+	chTotal = ~chTotal & 0x7f; // Invert and mask to 7 bits
+	++chTotal;
+	*(ptr + token.getPosition()) = chTotal;
 }
 
 void CtrlrSysexProcessor::checksumWaldorfRackAttack(const CtrlrSysexToken token, MidiMessage &m)
