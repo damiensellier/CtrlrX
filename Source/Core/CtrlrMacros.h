@@ -101,6 +101,7 @@ enum CtrlrSysExFormulaToken
 	FormulaToken,
 	LUAToken,
 	ChecksumTechnics,
+	ChecksumXor,
 	ChecksumWaldorfRackAttack,
 	CurrentProgram,
 	CurrentBank,

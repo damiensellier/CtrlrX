@@ -18,7 +18,7 @@ int CtrlrSysexProcessor::getGlobalIndex(const CtrlrSysexToken token)
 	return (token.getAdditionalData());
 }
 
-void CtrlrSysexProcessor::sysExProcessToken (const CtrlrSysexToken token, uint8 *byte, const int value, const int channel)
+void CtrlrSysexProcessor::sysExProcessToken(const CtrlrSysexToken token, uint8* byte, const int value, const int channel)
 {
 	if (byte == NULL)
 		return;
@@ -27,176 +27,181 @@ void CtrlrSysexProcessor::sysExProcessToken (const CtrlrSysexToken token, uint8 
 
 	switch (token.getType())
 	{
-		case ByteValue:
-			*byte = (uint8)value;
-			break;
+	case ByteValue:
+		*byte = (uint8)value;
+		break;
 
-		case ByteChannel:
-			*byte = (uint8)jlimit (0,15, channel-1);
-			break;
+	case ByteChannel:
+		*byte = (uint8)jlimit(0, 15, channel - 1);
+		break;
 
-		case LSB7bitValue:
-			*byte = (uint8)(value & 127);
-			break;
+	case LSB7bitValue:
+		*byte = (uint8)(value & 127);
+		break;
 
-		case MSB7bitValue:
-            *byte = (uint8)((value & 0x3fff) >> 7); // Added v5.6.31 from dnaldoog
-			break;
+	case MSB7bitValue:
+		*byte = (uint8)((value & 0x3fff) >> 7); // Added v5.6.31 from dnaldoog
+		break;
 
-		case ByteChannel4Bit:
-			bi = BigInteger ((uint8)jlimit (0,15, channel-1));
-			bi.setBitRangeAsInt (4, 3, token.getAdditionalData());
-			*byte = (uint8)bi.getBitRangeAsInt(0,7);
-			break;
+	case ByteChannel4Bit:
+		bi = BigInteger((uint8)jlimit(0, 15, channel - 1));
+		bi.setBitRangeAsInt(4, 3, token.getAdditionalData());
+		*byte = (uint8)bi.getBitRangeAsInt(0, 7);
+		break;
 
-		case GlobalVariable:
-			if (getGlobalVariables() [token.getAdditionalData()] >= 0)
-				*byte = (uint8)getGlobalVariables() [token.getAdditionalData()];
-			break;
+	case GlobalVariable:
+		if (getGlobalVariables()[token.getAdditionalData()] >= 0)
+			*byte = (uint8)getGlobalVariables()[token.getAdditionalData()];
+		break;
 
-		case LSB4bitValue:
-			*byte = (uint8)(value & 0xf);
-			break;
+	case LSB4bitValue:
+		*byte = (uint8)(value & 0xf);
+		break;
 
-		case MSB4bitValue:
-			*byte = (uint8)((value >> 4) & 0xf);
-			break;
+	case MSB4bitValue:
+		*byte = (uint8)((value >> 4) & 0xf);
+		break;
 
-		case RolandSplitByte1:
-			*byte = getRolandSplit (value, 1);
-			break;
+	case RolandSplitByte1:
+		*byte = getRolandSplit(value, 1);
+		break;
 
-		case RolandSplitByte2:
-			*byte = getRolandSplit (value, 2);
-			break;
+	case RolandSplitByte2:
+		*byte = getRolandSplit(value, 2);
+		break;
 
-		case RolandSplitByte3:
-			*byte = getRolandSplit (value, 3);
-			break;
+	case RolandSplitByte3:
+		*byte = getRolandSplit(value, 3);
+		break;
 
-		case RolandSplitByte4:
-			*byte = getRolandSplit (value, 4);
-			break;
+	case RolandSplitByte4:
+		*byte = getRolandSplit(value, 4);
+		break;
 
-        case CurrentProgram:
-        case CurrentBank:
-		case Ignore:
-		case ChecksumRolandJP8080:
-		case ChecksumTechnics:
-		case ChecksumWaldorfRackAttack:
-		case FormulaToken:
-		case LUAToken:
-		case NoToken:
-			break;
+	case CurrentProgram:
+	case CurrentBank:
+	case Ignore:
+	case ChecksumRolandJP8080:
+	case ChecksumTechnics:
+	case ChecksumXor:
+	case ChecksumWaldorfRackAttack:
+	case FormulaToken:
+	case LUAToken:
+	case NoToken:
+		break;
 	}
 }
 
-void CtrlrSysexProcessor::sysExProcess (const Array<CtrlrSysexToken> &tokens, MidiMessage &m, const int value, const int channel)
+void CtrlrSysexProcessor::sysExProcess(const Array<CtrlrSysexToken>& tokens, MidiMessage& m, const int value, const int channel)
 {
 	if (tokens.size() != m.getRawDataSize())
 		return;
 
-	uint8 *dataPtr = (uint8 *)m.getRawData();
+	uint8* dataPtr = (uint8*)m.getRawData();
 
-	for (int i=0; i<m.getRawDataSize(); i++)
+	for (int i = 0; i < m.getRawDataSize(); i++)
 	{
-		sysExProcessToken (tokens.getReference(i), dataPtr+i, value, channel);
+		sysExProcessToken(tokens.getReference(i), dataPtr + i, value, channel);
 	}
 
 	sysexProcessPrograms(tokens, m);
 	sysexProcessChecksums(tokens, m);
 }
 
-void CtrlrSysexProcessor::sysexProcessChecksums(const Array<CtrlrSysexToken> &tokens, MidiMessage &m)
+void CtrlrSysexProcessor::sysexProcessChecksums(const Array<CtrlrSysexToken>& tokens, MidiMessage& m)
 {
-    if (tokens.size() != m.getRawDataSize())
-        return;
-    
-    for (int i=0; i<m.getRawDataSize(); i++)
-    {
-        if (tokens.getReference(i).getType() == ChecksumRolandJP8080)
-        {
-            checksumRolandJp8080 (tokens.getReference(i), m);
-        }
-        
-        if (tokens.getReference(i).getType() == ChecksumWaldorfRackAttack)
-        {
-            checksumWaldorfRackAttack (tokens.getReference(i), m);
-        }
-        
-        if (tokens.getReference(i).getType() == ChecksumTechnics)
-        {
-            checksumTechnics (tokens.getReference(i), m);
-        }
-    }
+	if (tokens.size() != m.getRawDataSize())
+		return;
+
+	for (int i = 0; i < m.getRawDataSize(); i++)
+	{
+		if (tokens.getReference(i).getType() == ChecksumRolandJP8080)
+		{
+			checksumRolandJp8080(tokens.getReference(i), m);
+		}
+
+		if (tokens.getReference(i).getType() == ChecksumWaldorfRackAttack)
+		{
+			checksumWaldorfRackAttack(tokens.getReference(i), m);
+		}
+
+		if (tokens.getReference(i).getType() == ChecksumTechnics)
+		{
+			checksumTechnics(tokens.getReference(i), m);
+		}
+		if (tokens.getReference(i).getType() == ChecksumXor)
+		{
+			checksumXor(tokens.getReference(i), m);
+		}
+	}
 }
 
-void CtrlrSysexProcessor::sysexProcessPrograms(const Array<CtrlrSysexToken> &tokens, MidiMessage &m)
+void CtrlrSysexProcessor::sysexProcessPrograms(const Array<CtrlrSysexToken>& tokens, MidiMessage& m)
 {
 	return;
 }
 
 
-CtrlrMidiMessageEx CtrlrSysexProcessor::sysexMessageFromString (const String &formula, const int value, const int channel)
+CtrlrMidiMessageEx CtrlrSysexProcessor::sysexMessageFromString(const String& formula, const int value, const int channel)
 {
 	MidiMessage m;
-	MemoryBlock bl(0,true);
+	MemoryBlock bl(0, true);
 	StringArray tokens;
-	tokens.addTokens (formula, " ;:", "\"");
+	tokens.addTokens(formula, " ;:", "\"");
 
-	for (int i=0; i<tokens.size(); i++)
+	for (int i = 0; i < tokens.size(); i++)
 	{
-		const int d = jmin<int> (tokens[i].getHexValue32(),255);
-		bl.append (&d, 1);
+		const int d = jmin<int>(tokens[i].getHexValue32(), 255);
+		bl.append(&d, 1);
 	}
 
 	Array <CtrlrSysexToken> tokenArray = sysExToTokenArray(formula);
 
 	CtrlrMidiMessageEx mex;
-	mex.m  = MidiMessage (bl.getData(), (int)bl.getSize());
+	mex.m = MidiMessage(bl.getData(), (int)bl.getSize());
 	mex.setTokenArray(tokenArray);
 	return (mex);
 }
 
-double CtrlrSysexProcessor::getValueFromSysExData (const Array<CtrlrSysexToken> &tokens, const CtrlrMidiMessageEx &message)
+double CtrlrSysexProcessor::getValueFromSysExData(const Array<CtrlrSysexToken>& tokens, const CtrlrMidiMessageEx& message)
 {
 	double v = 0;
 
-	for (int i=0; i<tokens.size(); i++)
+	for (int i = 0; i < tokens.size(); i++)
 	{
 		if (tokens[i].isHoldingValue())
 		{
-			v += indirectReverseOperation (*(message.m.getRawData()+i), tokens[i].getType());
+			v += indirectReverseOperation(*(message.m.getRawData() + i), tokens[i].getType());
 		}
 	}
 
 	return (v);
 }
 
-uint8 CtrlrSysexProcessor::getRolandSplit (const int value, const int byteNum)
+uint8 CtrlrSysexProcessor::getRolandSplit(const int value, const int byteNum)
 {
-	const double result4   = value/16;
+	const double result4 = value / 16;
 	const double reminder4 = fmod((double)value, 16.0);
 
-	const double result3   = result4/16;
+	const double result3 = result4 / 16;
 	const double reminder3 = fmod(result4, 16.0);
 
-	const double result2   = result3/16;
+	const double result2 = result3 / 16;
 	const double reminder2 = fmod(result3, 16.0);
 	const double reminder1 = fmod(result2, 16.0);
 
 	switch (byteNum)
 	{
-		case 1:
-			return (jlimit<uint8>(0,127,(uint8)reminder1));
-		case 2:
-			return (jlimit<uint8>(0,127,(uint8)reminder2));
-		case 3:
-			return (jlimit<uint8>(0,127,(uint8)reminder3));
-		case 4:
-			return (jlimit<uint8>(0,127,(uint8)reminder4));
-		default:
-			return (0);
+	case 1:
+		return (jlimit<uint8>(0, 127, (uint8)reminder1));
+	case 2:
+		return (jlimit<uint8>(0, 127, (uint8)reminder2));
+	case 3:
+		return (jlimit<uint8>(0, 127, (uint8)reminder3));
+	case 4:
+		return (jlimit<uint8>(0, 127, (uint8)reminder4));
+	default:
+		return (0);
 	}
 }
 
@@ -204,9 +209,9 @@ const StringArray CtrlrSysexProcessor::templatesPrepare()
 {
 	StringArray templates;
 
-	for (int i=0; i<kMidiMessageType; i++)
+	for (int i = 0; i < kMidiMessageType; i++)
 	{
-		templates.add (midiMessageTypeToString((CtrlrMidiMessageType)i));
+		templates.add(midiMessageTypeToString((CtrlrMidiMessageType)i));
 	}
 
 	return (templates);
@@ -215,77 +220,85 @@ const StringArray CtrlrSysexProcessor::templatesPrepare()
 /** Static functions
 */
 
-double CtrlrSysexProcessor::getValue(const Array<CtrlrSysexToken> &tokens, const CtrlrMidiMessageEx &message)
+double CtrlrSysexProcessor::getValue(const Array<CtrlrSysexToken>& tokens, const CtrlrMidiMessageEx& message)
 {
 	double v = -1;
 
-	for (int i=0; i<tokens.size(); i++)
+	for (int i = 0; i < tokens.size(); i++)
 	{
 		if (tokens[i].isHoldingValue())
 		{
-			v += indirectReverseOperation (*(message.m.getRawData()+i), tokens[i].getType());
+			v += indirectReverseOperation(*(message.m.getRawData() + i), tokens[i].getType());
 		}
 	}
 
 	return (v);
 }
 
-void CtrlrSysexProcessor::setSysExFormula(CtrlrMidiMessage &message, const String &formulaString)
+void CtrlrSysexProcessor::setSysExFormula(CtrlrMidiMessage& message, const String& formulaString)
 {
 	/* parse the formula to byte format */
 	message.getMidiMessageArray().clear();
-	message.getMidiMessageArray().add (sysexMessageFromString(formulaString, message.getValue(), message.getChannel()));
+	message.getMidiMessageArray().add(sysexMessageFromString(formulaString, message.getValue(), message.getChannel()));
 }
 
-void CtrlrSysexProcessor::setMultiMessageFromString(CtrlrMidiMessage &message, const String &savedState)
+void CtrlrSysexProcessor::setMultiMessageFromString(CtrlrMidiMessage& message, const String& savedState)
 {
 	if (savedState.trim() == "")
 		return;
 
 	StringArray messages;
 	const int ch = message.getChannel();
-	const int v  = message.getValue();
-	const int n  = message.getNumber();
+	const int v = message.getValue();
+	const int n = message.getNumber();
 
 	message.getMidiMessageArray().clear();
-	messages.addTokens (savedState.trim(), ":", "\"\'");
+	messages.addTokens(savedState.trim(), ":", "\"\'");
 
-	for (int i=0; i<messages.size(); i++)
+	for (int i = 0; i < messages.size(); i++)
 	{
-		message.getMidiMessageArray().add (midiMessageExfromString (messages[i], ch, n, v));
+		message.getMidiMessageArray().add(midiMessageExfromString(messages[i], ch, n, v));
 	}
 }
 
-Array<CtrlrSysexToken> CtrlrSysexProcessor::sysExToTokenArray (const String &formula)
+Array<CtrlrSysexToken> CtrlrSysexProcessor::sysExToTokenArray(const String& formula)
 {
 	Array <CtrlrSysexToken> tokensToReturn;
 
 	StringArray ar;
-	ar.addTokens (formula, " :;", "\"\'");
+	ar.addTokens(formula, " :;", "\"\'");
 
-	for (int i=0; i<ar.size(); i++)
+	for (int i = 0; i < ar.size(); i++)
 	{
-		CtrlrSysexToken tokenToAdd (i, *ar[i].substring(0,1).toUTF8(), sysExIdentifyToken (ar[i]));
+		CtrlrSysexToken tokenToAdd(i, *ar[i].substring(0, 1).toUTF8(), sysExIdentifyToken(ar[i]));
 
 		if (tokenToAdd.getType() == ByteChannel4Bit)
 		{
-			tokenToAdd.setAdditionalData (ar[i].substring(0,1).getHexValue32());
+			tokenToAdd.setAdditionalData(ar[i].substring(0, 1).getHexValue32());
 		}
 		if (tokenToAdd.getType() == GlobalVariable
 			|| tokenToAdd.getType() == ChecksumRolandJP8080
 			|| tokenToAdd.getType() == ChecksumTechnics // Added v5.6.34.
+			|| tokenToAdd.getType() == ChecksumXor
 			|| tokenToAdd.getType() == ChecksumWaldorfRackAttack)
 		{
+			/*
 			tokenToAdd.setAdditionalData (ar[i].substring(1,2).getHexValue32());
+
+			This old code was passing a hexString which works up to 9 but if you pass 10 ie z10
+			it will be passed through as 16, so getter is changed to getIntValue()
+
+			*/
+			tokenToAdd.setAdditionalData(ar[i].substring(1).trim().getIntValue());
 		}
 
-		tokensToReturn.add (tokenToAdd);
+		tokensToReturn.add(tokenToAdd);
 	}
 
 	return (tokensToReturn);
 }
 
-CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String &s)
+CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String& s)
 {
 	if (s == "xx")
 	{
@@ -303,6 +316,10 @@ CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String &s)
 	{
 		return (ChecksumRolandJP8080);
 	}
+	if (s.startsWith("e"))
+	{
+		return (ChecksumXor);
+	}
 	if (s.startsWith("w"))
 	{
 		return (ChecksumWaldorfRackAttack);
@@ -311,7 +328,7 @@ CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String &s)
 	{
 		return (LUAToken);
 	}
-	if (s.startsWith ("v"))
+	if (s.startsWith("v"))
 	{
 		return (FormulaToken);
 	}
@@ -389,58 +406,70 @@ CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String &s)
 
 void CtrlrSysexProcessor::checksumTechnics(const CtrlrSysexToken token, MidiMessage& m)
 {
-    const int messageLength = m.getRawDataSize();
-    const int tokenPos = token.getPosition();
+	const int messageLength = m.getRawDataSize();
+	const int tokenPos = token.getPosition();
 
-    // For Technics, always start from byte 1 (0x50) up to but not including the tc token
-    const int startByte = 1; // Start at manufacturer ID (0x50)
+	// For Technics, always start from byte 1 (0x50) up to but not including the tc token
+	const int startByte = 1; // Start at manufacturer ID (0x50)
 
-    // Bounds checking
-    if (startByte >= tokenPos || tokenPos >= messageLength) {
-        return;
-    }
+	// Bounds checking
+	if (startByte >= tokenPos || tokenPos >= messageLength) {
+		return;
+	}
 
-    uint8* ptr = (uint8*)m.getRawData();
+	uint8* ptr = (uint8*)m.getRawData();
 
-    // Start with the first byte (0x50)
-    uint8 chTotal = *(ptr + startByte);
+	// Start with the first byte (0x50)
+	uint8 chTotal = *(ptr + startByte);
 
-    // XOR with subsequent bytes up to (but not including) the tc position
-    for (int i = startByte + 1; i < tokenPos; i++)
-    {
-        chTotal ^= *(ptr + i);
-    }
+	// XOR with subsequent bytes up to (but not including) the tc position
+	for (int i = startByte + 1; i < tokenPos; i++)
+	{
+		chTotal ^= *(ptr + i);
+	}
 
-    // Store the checksum at the token position
-    *(ptr + tokenPos) = chTotal;
+	// Store the checksum at the token position
+	*(ptr + tokenPos) = chTotal;
 }
 
-void CtrlrSysexProcessor::checksumRolandJp8080(const CtrlrSysexToken token, MidiMessage &m) // Update v5.6.34. Thanks to @dnaldoog
+void CtrlrSysexProcessor::checksumXor(const CtrlrSysexToken token, MidiMessage& m)
 {
 	const int startByte = token.getPosition() - token.getAdditionalData();
-	uint8 chTotal		= 0;
-	uint8 *ptr	= (uint8 *)m.getRawData();
-
-	for (int i=startByte; i<token.getPosition(); i++)
+	uint8 chTotal = 0;
+	uint8* ptr = (uint8*)m.getRawData();
+	for (int i = startByte; i < token.getPosition(); i++)
 	{
-		chTotal = chTotal + *(ptr+i); // From v5.6.31
+		chTotal ^= *(ptr + i);
+	}
+	*(ptr + token.getPosition()) = chTotal;
+}
+
+void CtrlrSysexProcessor::checksumRolandJp8080(const CtrlrSysexToken token, MidiMessage& m) // Update v5.6.34. Thanks to @dnaldoog
+{
+	const int startByte = token.getPosition() - token.getAdditionalData();
+	uint8 chTotal = 0;
+	uint8* ptr = (uint8*)m.getRawData();
+
+	for (int i = startByte; i < token.getPosition(); i++)
+	{
+		chTotal = chTotal + *(ptr + i); // From v5.6.31
 	}
 	chTotal = ~chTotal & 0x7f; // Invert and mask to 7 bits
 	++chTotal;
 	*(ptr + token.getPosition()) = chTotal;
 }
 
-void CtrlrSysexProcessor::checksumWaldorfRackAttack(const CtrlrSysexToken token, MidiMessage &m)
+void CtrlrSysexProcessor::checksumWaldorfRackAttack(const CtrlrSysexToken token, MidiMessage& m)
 {
 	const int startByte = token.getPosition() - token.getAdditionalData();
-	int chTotal			= 0;
-	uint8 *ptr			= (uint8 *)m.getRawData();
+	int chTotal = 0;
+	uint8* ptr = (uint8*)m.getRawData();
 
 
-	for (int i=startByte; i<token.getPosition(); i++)
+	for (int i = startByte; i < token.getPosition(); i++)
 	{
-		chTotal = chTotal + *(ptr+i);
+		chTotal = chTotal + *(ptr + i);
 	}
 
-	*(ptr+token.getPosition())   = chTotal & 0x7f;
+	*(ptr + token.getPosition()) = chTotal & 0x7f;
 }
