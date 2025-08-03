@@ -33,7 +33,8 @@
 
 //==============================================================================
 CtrlrLuaMethodEditArea::CtrlrLuaMethodEditArea (CtrlrLuaMethodEditor &_owner)
-    : owner(_owner)
+    : owner(_owner),
+    sharedSearchTabsValue()
 {
     addAndMakeVisible (lowerTabs = new TabbedComponent (TabbedButtonBar::TabsAtBottom));
     lowerTabs->setCurrentTabIndex (-1);
@@ -54,8 +55,8 @@ CtrlrLuaMethodEditArea::CtrlrLuaMethodEditArea (CtrlrLuaMethodEditor &_owner)
 	output->setColour (TextEditor::outlineColourId, Colours::transparentBlack);
 	output->setColour (TextEditor::shadowColourId, Colours::transparentBlack);
 
-	find						= new CtrlrLuaMethodFind(owner);
-	addAndMakeVisible (resizer	= new StretchableLayoutResizerBar (&layoutManager, 1, false));
+    find = new CtrlrLuaMethodFind(owner, sharedSearchTabsValue);
+    addAndMakeVisible (resizer  = new StretchableLayoutResizerBar (&layoutManager, 1, false));
     debuggerPrompt              = new CtrlrLuaMethodDebuggerPrompt(owner);
 	luaConsole                  = new CtrlrLuaConsole (owner.getOwner());
 
@@ -117,31 +118,31 @@ void CtrlrLuaMethodEditArea::resized()
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 void CtrlrLuaMethodEditArea::mouseDoubleClick (const MouseEvent &e)
 {
-	// LUA compile error: ERROR: [string "function myNewMethod()..."]:4: '=' expected near 'end'
-	// Search result: SEARCH: [method]:3 position:43-46
+    // LUA compile error: ERROR: [string "function myNewMethod()..."]:4: '=' expected near 'end'
+    // Search result: SEARCH: [method]:3 position:43-46
 
-	const String line = output->getLineAtPosition (output->getTextIndexAt (e.x, e.y)).trim();
+    const String line = output->getLineAtPosition (output->getTextIndexAt (e.x, e.y)).trim();
 
-	//_DBG(line);
+    //_DBG(line);
 
-	if (line.startsWithIgnoreCase("ERROR"))
-	{
-		const int errorInLine = line.fromFirstOccurrenceOf ("]:", false, true).getIntValue();
+    if (line.startsWithIgnoreCase("ERROR"))
+    {
+        const int errorInLine = line.fromFirstOccurrenceOf ("]:", false, true).getIntValue();
 
-		if (errorInLine > 0 && owner.getCurrentEditor())
-		{
-			owner.getCurrentEditor()->setErrorLine(errorInLine);
-		}
-	}
-	else if (line.startsWithIgnoreCase("Method: "))
-	{
-		const String methodName	= line.fromFirstOccurrenceOf ("Method: ", false, false).upToFirstOccurrenceOf("line: ", false, true).trim();
-		const int errorInLine	= line.fromFirstOccurrenceOf ("line: ", false, true).getIntValue();
-		const int positionStart	= line.fromFirstOccurrenceOf ("start: ", false,true).getIntValue();
-		const int positionEnd	= line.fromFirstOccurrenceOf ("end: ", false,true).getIntValue();
+        if (errorInLine > 0 && owner.getCurrentEditor())
+        {
+            owner.getCurrentEditor()->setErrorLine(errorInLine);
+        }
+    }
+    else if (line.startsWithIgnoreCase("Method: "))
+    {
+        const String methodName  = line.fromFirstOccurrenceOf("Method: ", false, false).upToFirstOccurrenceOf("line: ", false, true).trim();
+        const int errorInLine    = line.fromFirstOccurrenceOf("line: ", false, true).getIntValue();
+        const int positionStart  = line.fromFirstOccurrenceOf("start: ", false,true).getIntValue();
+        const int positionEnd    = line.fromFirstOccurrenceOf("end: ", false,true).getIntValue();
 
-		owner.searchResultClicked (methodName, errorInLine, positionStart, positionEnd);
-	}
+        owner.searchResultClicked (methodName, errorInLine, positionStart, positionEnd);
+    }
 }
 
 CtrlrLuaMethodEditorTabs *CtrlrLuaMethodEditArea::getTabs()

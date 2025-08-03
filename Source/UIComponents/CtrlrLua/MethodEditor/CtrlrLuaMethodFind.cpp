@@ -32,8 +32,10 @@
 //[/MiscUserDefs]
 
 //==============================================================================
-CtrlrLuaMethodFind::CtrlrLuaMethodFind (CtrlrLuaMethodEditor &_owner)
-    : owner(_owner)
+CtrlrLuaMethodFind::CtrlrLuaMethodFind(CtrlrLuaMethodEditor& owner_, juce::Value& sharedSearchTabsValue_)
+    : Component("CtrlrLuaMethodFind"),
+    owner(owner_),
+    sharedSearchTabsValue(sharedSearchTabsValue_)
 {
     setName ("Search and Replace");
     addAndMakeVisible (findInput = new TextEditor (""));
@@ -108,14 +110,20 @@ CtrlrLuaMethodFind::CtrlrLuaMethodFind (CtrlrLuaMethodEditor &_owner)
     whereToFindCombo->addItem (TRANS("All"), 3);
     whereToFindCombo->addListener (this);
 
+    openSearchTabs = new juce::ToggleButton(SharedValues::getSearchTabsLabel());
+    openSearchTabs->setButtonText(SharedValues::getSearchTabsLabel());
+    openSearchTabs->addListener(this);
+
+    addAndMakeVisible(openSearchTabs);
+    openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue());
 
     //[UserPreSize]
-	replaceInput->addListener (this);
-	findInput->addListener (this);
+    replaceInput->addListener (this);
+    findInput->addListener (this);
 
-	lastFoundPosition = -1;
-	findInput->setFont (Font(16));
-	replaceInput->setFont (Font(16));
+    lastFoundPosition = -1;
+    findInput->setFont (Font(16));
+    replaceInput->setFont (Font(16));
     //[/UserPreSize]
 
     setSize (424, 64);
@@ -130,6 +138,7 @@ CtrlrLuaMethodFind::~CtrlrLuaMethodFind()
     //[Destructor_pre]. You can add your own custom destruction code here..
     //[/Destructor_pre]
 
+    openSearchTabs = nullptr;
     findInput = nullptr;
     replaceInput = nullptr;
     findNext = nullptr;
@@ -155,6 +164,7 @@ void CtrlrLuaMethodFind::resized()
     replaceAllButton->setBounds ((proportionOfWidth (0.4505f) + proportionOfWidth (0.3302f)) + proportionOfWidth (0.0991f), 4, proportionOfWidth (0.0991f), 32);
     label->setBounds (4 + 0, 40, 64, 24);
     matchCase->setBounds (4 + 68, 40, 96, 24);
+    openSearchTabs->setBounds (4 + 68, 60, 300, 24);
     label2->setBounds (proportionOfWidth (0.4505f) + 121, 40, 64, 24);
     whereToFindCombo->setBounds (176, 40, 128, 24);
     //[UserResized] Add your own custom resize handling here..
@@ -169,30 +179,31 @@ void CtrlrLuaMethodFind::buttonClicked (Button* buttonThatWasClicked)
     if (buttonThatWasClicked == findNext)
     {
         //[UserButtonCode_findNext] -- add your button handler code here..
-		if (whereToFindCombo->getSelectedId() == 1 || whereToFindCombo->getSelectedId() == 0)
-		{
-			findNextMatch();
-		}
-		else if (whereToFindCombo->getSelectedId() == 2)
-		{
-			findInOpened();
-		}
-		else if (whereToFindCombo->getSelectedId() == 3)
-		{
-			findInAll();
-		}
+        if (whereToFindCombo->getSelectedId() == 1 || whereToFindCombo->getSelectedId() == 0)
+        {
+            findNextMatch();
+        }
+        else if (whereToFindCombo->getSelectedId() == 2)
+        {
+            findInOpened();
+        }
+        else if (whereToFindCombo->getSelectedId() == 3)
+        {
+            findInAll();
+        }
         //[/UserButtonCode_findNext]
     }
+    else if (buttonThatWasClicked == openSearchTabs) {}
     else if (buttonThatWasClicked == replaceNextButton)
     {
         //[UserButtonCode_replaceNextButton] -- add your button handler code here..
-		replaceNextMatch();
+        replaceNextMatch();
         //[/UserButtonCode_replaceNextButton]
     }
     else if (buttonThatWasClicked == replaceAllButton)
     {
         //[UserButtonCode_replaceAllButton] -- add your button handler code here..
-		replaceAllMatches();
+        replaceAllMatches();
         //[/UserButtonCode_replaceAllButton]
     }
     else if (buttonThatWasClicked == matchCase)
@@ -223,20 +234,20 @@ void CtrlrLuaMethodFind::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
 void CtrlrLuaMethodFind::visibilityChanged()
 {
     //[UserCode_visibilityChanged] -- Add your code here...
-	if (isVisible())
-	{
-		findInput->grabKeyboardFocus();
-		findInput->selectAll();
-	}
+    if (isVisible())
+    {
+        findInput->grabKeyboardFocus();
+        findInput->selectAll();
+    }
     //[/UserCode_visibilityChanged]
 }
 
 bool CtrlrLuaMethodFind::keyPressed (const KeyPress& key)
 {
     //[UserCode_keyPressed] -- Add your code here...
-	if (key.getKeyCode() == 65650) // F3
-	{
-	}
+    if (key.getKeyCode() == 65650) // F3
+    {
+    }
     return false;  // Return true if your handler uses this key event, or false to allow it to be passed-on.
     //[/UserCode_keyPressed]
 }
@@ -246,26 +257,26 @@ bool CtrlrLuaMethodFind::keyPressed (const KeyPress& key)
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 void CtrlrLuaMethodFind::textEditorReturnKeyPressed (TextEditor &editor)
 {
-	if (&editor == findInput)
-	{
-		if (whereToFindCombo->getSelectedId() <= 1)
-		{
-			findNextMatch();
-		}
-		else if (whereToFindCombo->getSelectedId() == 2)
-		{
-			findInOpened();
-		}
-		else if (whereToFindCombo->getSelectedId() == 3)
-		{
-			findInAll();
-		}
-	}
+    if (&editor == findInput)
+    {
+        if (whereToFindCombo->getSelectedId() <= 1)
+        {
+            findNextMatch();
+        }
+        else if (whereToFindCombo->getSelectedId() == 2)
+        {
+            findInOpened();
+        }
+        else if (whereToFindCombo->getSelectedId() == 3)
+        {
+            findInAll();
+        }
+    }
 
-	if (&editor == replaceInput)
-	{
-		replaceNextMatch();
-	}
+    if (&editor == replaceInput)
+    {
+        replaceNextMatch();
+    }
 }
 
 void CtrlrLuaMethodFind::textEditorTextChanged (TextEditor &editor)
@@ -274,185 +285,205 @@ void CtrlrLuaMethodFind::textEditorTextChanged (TextEditor &editor)
 
 void CtrlrLuaMethodFind::replaceNextMatch()
 {
-	if (owner.getCurrentEditor() == nullptr)
-	{
-		return;
-	}
+    if (owner.getCurrentEditor() == nullptr)
+    {
+        return;
+    }
 
-	CodeDocument &doc		= owner.getCurrentEditor()->getCodeDocument();
-	const String search		= findInput->getText();
-	const String replace	= replaceInput->getText();
+    CodeDocument &doc        = owner.getCurrentEditor()->getCodeDocument();
+    const String search        = findInput->getText();
+    const String replace    = replaceInput->getText();
 
-	findNextMatch(); // correction to find and replace on first time also
-	if (lastFoundPosition >= 0)
-	{
-		doc.newTransaction();
-		doc.deleteSection (lastFoundPosition, lastFoundPosition+search.length());
-		doc.insertText (lastFoundPosition, replace);
-	}
+    findNextMatch(); // correction to find and replace on first time also
+    if (lastFoundPosition >= 0)
+    {
+        doc.newTransaction();
+        doc.deleteSection (lastFoundPosition, lastFoundPosition+search.length());
+        doc.insertText (lastFoundPosition, replace);
+    }
 }
 
 void CtrlrLuaMethodFind::replaceAllMatches()
 {
-	lastFoundPosition = -1;
+    lastFoundPosition = -1;
 
-	do
-	{
-		replaceNextMatch();
-	}
-	while (lastFoundPosition >= 0);
+    do
+    {
+        replaceNextMatch();
+    }
+    while (lastFoundPosition >= 0);
 }
 
 void CtrlrLuaMethodFind::setFocusOnFindInput()
 {
-	findInput->grabKeyboardFocus();
+    findInput->grabKeyboardFocus();
 }
 
 void CtrlrLuaMethodFind::findNextMatch()
 {
-	if (owner.getCurrentEditor() == nullptr)
-	{
-		return;
-	}
+    if (owner.getCurrentEditor() == nullptr)
+    {
+        return;
+    }
 
-	CodeDocument &doc		= owner.getCurrentEditor()->getCodeDocument();
-	CodeEditorComponent *ed	= owner.getCurrentEditor()->getCodeComponent();
-	const String search		= findInput->getText();
-	int position			= -1;
+    CodeDocument &doc        = owner.getCurrentEditor()->getCodeDocument();
+    CodeEditorComponent *ed    = owner.getCurrentEditor()->getCodeComponent();
+    const String search        = findInput->getText();
+    int position            = -1;
 
-	if (!matchCase->getToggleState())
-	{
-		position = doc.getAllContent().indexOfIgnoreCase (lastFoundPosition+1, search);
-	}
-	else
-	{
-		position = doc.getAllContent().indexOf (lastFoundPosition+1, search);
-	}
+    if (!matchCase->getToggleState())
+    {
+        position = doc.getAllContent().indexOfIgnoreCase (lastFoundPosition+1, search);
+    }
+    else
+    {
+        position = doc.getAllContent().indexOf (lastFoundPosition+1, search);
+    }
 
-	if (position >= 0)
-	{
-		lastFoundPosition = position;
-		if (ed)
-		{
-			ed->selectRegion (CodeDocument::Position(doc,lastFoundPosition), CodeDocument::Position(doc, lastFoundPosition+search.length()));
-		}
-	}
-	else
-	{
-		lastFoundPosition = -1;
-	}
+    if (position >= 0)
+    {
+        lastFoundPosition = position;
+        if (ed)
+        {
+            ed->selectRegion (CodeDocument::Position(doc,lastFoundPosition), CodeDocument::Position(doc, lastFoundPosition+search.length()));
+        }
+    }
+    else
+    {
+        lastFoundPosition = -1;
+    }
 }
 
 void CtrlrLuaMethodFind::findInOpened()
 {
-	if (owner.getTabs() == nullptr)
-		return;
+    if (owner.getTabs() == nullptr)
+        return;
 
-	StringArray names = owner.getTabs()->getTabNames();
+    StringArray names = owner.getTabs()->getTabNames();
 
-	owner.getMethodEditArea()->insertOutput("\n\nSearching for: \""+findInput->getText()+"\" in all opened methods (double click line to jump)\n", Colours::darkblue);
+    owner.getMethodEditArea()->insertOutput("\n\nSearching for: \""+findInput->getText()+"\" in all opened methods (double click line to jump)\n", Colours::darkblue);
 
-	for (int i=0; i<owner.getTabs()->getNumTabs(); i++)
-	{
-		CtrlrLuaMethodCodeEditor *codeEditor = dynamic_cast<CtrlrLuaMethodCodeEditor*>(owner.getTabs()->getTabContentComponent(i));
+    for (int i=0; i<owner.getTabs()->getNumTabs(); i++)
+    {
+        CtrlrLuaMethodCodeEditor *codeEditor = dynamic_cast<CtrlrLuaMethodCodeEditor*>(owner.getTabs()->getTabContentComponent(i));
 
-		if (codeEditor != nullptr)
-		{
-			CodeDocument &doc		= codeEditor->getCodeDocument();
+        if (codeEditor != nullptr)
+        {
+            CodeDocument &doc        = codeEditor->getCodeDocument();
 
-			Array<Range<int> > results = searchForMatchesInDocument (doc);
+            Array<Range<int> > results = searchForMatchesInDocument (doc);
 
-			for (int j=0; j<results.size(); j++)
-			{
-				reportFoundMatch (doc, names[i], results[j]);
-			}
-		}
-	}
+            for (int j=0; j<results.size(); j++)
+            {
+                reportFoundMatch (doc, names[i], results[j]);
+            }
+        }
+    }
 
-	owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0,true);
+    owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0,true);
 }
 
 void CtrlrLuaMethodFind::findInAll()
 {
-	owner.getMethodEditArea()->insertOutput("\n\nSearching for: \""+findInput->getText()+"\" in all methods (double click line to jump)\n", Colours::darkblue);
-	StringArray names;
+    owner.getMethodEditArea()->insertOutput("\n\nSearching for: \"" + findInput->getText() + "\" in all methods (double click line to jump)\n", Colours::darkblue);
+    StringArray names;
+    const bool shouldOpenTabs = openSearchTabs->getToggleState();
+    for (int i = 0; i < owner.getMethodManager().getNumMethods(); i++)
+    {
+        CtrlrLuaMethod* m = owner.getMethodManager().getMethodByIndex(i);
 
-	for (int i=0; i<owner.getMethodManager().getNumMethods(); i++)
-	{
-		CtrlrLuaMethod *m = owner.getMethodManager().getMethodByIndex (i);
+        if (m)
+        {
+            names.add(m->getName());
 
-		if (m)
-		{
-			names.add (m->getName());
+            if (m->getCodeEditor())
+            {
+                /* it has an editor so it's open */
+                CodeDocument& doc = m->getCodeEditor()->getCodeDocument();
 
-			if (m->getCodeEditor())
-			{
-				/* it has an editor so it's open */
-				CodeDocument &doc		= m->getCodeEditor()->getCodeDocument();
+                Array<Range<int> > results = searchForMatchesInDocument(doc);
 
-				Array<Range<int> > results = searchForMatchesInDocument (doc);
+                for (int j = 0; j < results.size(); j++)
+                {
+                    reportFoundMatch(doc, names[i], results[j]);
+                }
+            }
+            else // Added 5.6.34 by goodweather. Search in not yet opened methods
+            {
+                /* Open method */
+                owner.createNewTab(m);
+                owner.setCurrentTab(m);
 
-				for (int j=0; j<results.size(); j++)
-				{
-					reportFoundMatch (doc, names[i], results[j]);
-				}
-			}
-		}
-	}
+                /* Perform search and report result */
+                CodeDocument& doc = m->getCodeEditor()->getCodeDocument();
 
-	owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0,true);
+                Array<Range<int> > results = searchForMatchesInDocument(doc);
+
+                for (int j = 0; j < results.size(); j++)
+                {
+                    reportFoundMatch(doc, names[i], results[j]);
+                }
+
+                if (!shouldOpenTabs) // Only open if the toggle button is enabled
+                {
+                    owner.closeCurrentTab();
+                }
+            }
+        }
+    }
+
+    owner.getMethodEditArea()->getLowerTabs()->setCurrentTabIndex(0, true);
 }
-
 const Array<Range<int> > CtrlrLuaMethodFind::searchForMatchesInDocument(CodeDocument &doc)
 {
-	Array<Range<int> > results;
-	const String search		= findInput->getText();
-	int position			= -1;
-	lastFoundPosition		= -1;
+    Array<Range<int> > results;
+    const String search        = findInput->getText();
+    int position            = -1;
+    lastFoundPosition        = -1;
 
-	do
-	{
-		if (!matchCase->getToggleState())
-		{
-			position = doc.getAllContent().indexOfIgnoreCase (lastFoundPosition+1, search);
-		}
-		else
-		{
-			position = doc.getAllContent().indexOf (lastFoundPosition+1, search);
-		}
+    do
+    {
+        if (!matchCase->getToggleState())
+        {
+            position = doc.getAllContent().indexOfIgnoreCase (lastFoundPosition+1, search);
+        }
+        else
+        {
+            position = doc.getAllContent().indexOf (lastFoundPosition+1, search);
+        }
 
-		if (position >= 0)
-		{
-			lastFoundPosition		= position;
-			results.add (Range<int> (lastFoundPosition, lastFoundPosition+search.length()));
-		}
-		else
-		{
-			lastFoundPosition = -1;
-		}
-	}
-	while (lastFoundPosition >= 0);
+        if (position >= 0)
+        {
+            lastFoundPosition        = position;
+            results.add (Range<int> (lastFoundPosition, lastFoundPosition+search.length()));
+        }
+        else
+        {
+            lastFoundPosition = -1;
+        }
+    }
+    while (lastFoundPosition >= 0);
 
-	return (results);
+    return (results);
 }
 
 void CtrlrLuaMethodFind::reportFoundMatch (CodeDocument &document, const String &methodName, const Range<int> range)
 {
-	CodeDocument::Position pos (document, range.getStart());
-	AttributedString as;
-	as.append ("Method: ", Colours::black);
-	as.append (methodName, Colours::blue);
+    CodeDocument::Position pos (document, range.getStart());
+    AttributedString as;
+    as.append ("Method: ", Colours::black);
+    as.append (methodName, Colours::blue);
 
-	as.append ("\tline: ", Colours::black);
-	as.append (String(pos.getLineNumber()+1), Colours::darkgreen);
+    as.append ("\tline: ", Colours::black);
+    as.append (String(pos.getLineNumber()+1), Colours::darkgreen);
 
-	as.append ("\tstart: ", Colours::black);
-	as.append (String(range.getStart()), Colours::darkgreen);
+    as.append ("\tstart: ", Colours::black);
+    as.append (String(range.getStart()), Colours::darkgreen);
 
-	as.append ("\tend: ", Colours::black);
-	as.append (String(range.getEnd()), Colours::darkgreen);
+    as.append ("\tend: ", Colours::black);
+    as.append (String(range.getEnd()), Colours::darkgreen);
 
-	owner.getMethodEditArea()->insertOutput (as);
+    owner.getMethodEditArea()->insertOutput (as);
 }
 //[/MiscUserCode]
 

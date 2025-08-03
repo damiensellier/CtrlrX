@@ -44,19 +44,19 @@ class CtrlrLuaMethodEditor;
 */
 class CtrlrLuaMethodCodeEditorSettings  : public Component,
                                           public ChangeListener,
-										  public ComboBox::Listener,
-										  public Button::Listener,
-										  public Slider::Listener
+                                          public ComboBox::Listener,
+                                          public Button::Listener,
+                                          public Slider::Listener
 {
 public:
     //==============================================================================
-    CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMethodEditor &_owner);
+    CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMethodEditor &_owner, juce::Value& sharedSearchTabsValue_);
     ~CtrlrLuaMethodCodeEditorSettings();
 
     //==============================================================================
     //[UserMethods]     -- You can add your own custom methods in this section.
-	void changeListenerCallback (ChangeBroadcaster* source);
-	const Font getFont();
+    void changeListenerCallback (ChangeBroadcaster* source);
+    const Font getFont();
     const Colour getBgColour(); // Added v5.6.31
     const Colour getLineNumbersBgColour(); // Added v5.6.31
     const Colour getLineNumbersColour(); // Added v5.6.31
@@ -72,10 +72,10 @@ public:
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
-	CtrlrLuaCodeTokeniser luaTokeniser;
-	CodeDocument codeDocument;
-	CtrlrLuaMethodEditor &owner;
-	Font codeFont;
+    CtrlrLuaCodeTokeniser luaTokeniser;
+    CodeDocument codeDocument;
+    CtrlrLuaMethodEditor &owner;
+    Font codeFont;
     int marginLeft; // Added v5.6.31
     int marginTop;
     int sampleWidth;
@@ -88,6 +88,8 @@ private:
     ToggleButton* fontBold;
     ToggleButton* fontUnderline;
     ToggleButton* fontItalic;
+    ToggleButton* openSearchTabs;
+    TextButton* resetButton; // added JG
     Slider* fontSize;
     Label* label1; // Added v5.6.31
     CtrlrColourEditorComponent* bgColour;
@@ -96,6 +98,7 @@ private:
     Label* label3; // Added v5.6.31
     CtrlrColourEditorComponent* lineNumbersColour; // Added v5.6.31
     CodeEditorComponent* fontTest;
+    juce::Value& sharedSearchTabsValue;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrLuaMethodCodeEditorSettings);

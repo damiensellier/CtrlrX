@@ -851,6 +851,8 @@ namespace Ids
     DECLARE_ID (luaManager);
     DECLARE_ID (luaMethodValid);
     
+    DECLARE_ID (openSearchTabsState); // Added v5.6.34
+    
     DECLARE_ID (luaModulatorValueChange);
     DECLARE_ID (luaModulatorComponentChange);
     DECLARE_ID (luaModulatorPropertyChanged);

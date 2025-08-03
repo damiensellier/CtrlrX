@@ -42,7 +42,7 @@ class CtrlrLuaMethodFind  : public Component,
 {
 public:
     //==============================================================================
-    CtrlrLuaMethodFind (CtrlrLuaMethodEditor &_owner);
+    CtrlrLuaMethodFind(CtrlrLuaMethodEditor& owner_, juce::Value& sharedSearchTabsValue_);
     ~CtrlrLuaMethodFind();
 
     //==============================================================================
@@ -73,15 +73,17 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    ScopedPointer<TextEditor> findInput;
-    ScopedPointer<TextEditor> replaceInput;
-    ScopedPointer<TextButton> findNext;
-    ScopedPointer<TextButton> replaceNextButton;
-    ScopedPointer<TextButton> replaceAllButton;
-    ScopedPointer<Label> label;
-    ScopedPointer<ToggleButton> matchCase;
-    ScopedPointer<Label> label2;
-    ScopedPointer<ComboBox> whereToFindCombo;
+    ToggleButton* openSearchTabs;
+    TextEditor* findInput;
+    TextEditor* replaceInput;
+    TextButton* findNext;
+    TextButton* replaceNextButton;
+    TextButton* replaceAllButton;
+    Label* label;
+    ToggleButton* matchCase;
+    Label* label2;
+    ComboBox* whereToFindCombo;
+    juce::Value sharedSearchTabsValue;
 
 
     //==============================================================================
