@@ -294,13 +294,13 @@ void CtrlrLuaMethodEditor::addNewMethod(ValueTree parentGroup)
 void CtrlrLuaMethodEditor::renameMethod(ValueTree currentMethod) // Added 5.6.34. Thanks to @dobo365
 {
     AlertWindow w("Rename method", "", AlertWindow::QuestionIcon, this);
-    w.addTextEditor("name", currentMethod.getProperty(Ids::name).toString());
+    w.addTextEditor("name", currentMethod.getProperty(Ids::luaMethodName).toString());
     w.addButton("OK", 1, KeyPress(KeyPress::returnKey));
     w.addButton("Cancel", 0, KeyPress(KeyPress::escapeKey));
     
     if (w.runModalLoop())
     {
-        currentMethod.setProperty(Ids::name, w.getTextEditorContents("name"), nullptr);
+        currentMethod.setProperty(Ids::luaMethodName, w.getTextEditorContents("name"), nullptr);
         updateRootItem();
     }
     
