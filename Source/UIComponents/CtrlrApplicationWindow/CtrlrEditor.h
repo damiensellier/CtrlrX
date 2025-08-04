@@ -159,6 +159,8 @@ class CtrlrEditor  : public AudioProcessorEditor,
         // New method to set the main LookAndFeel for the editor and its children
         void setEditorLookAndFeel (const String &lookAndFeelDesc, const juce::var& colourSchemeProperty); // Added v5.6.34
     
+        void performLuaEditorCommand(const int commandID); // Added v5.6.34. Required to add shortcuts to LUA Method Editor menu items
+    
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrEditor)
 
 	private:

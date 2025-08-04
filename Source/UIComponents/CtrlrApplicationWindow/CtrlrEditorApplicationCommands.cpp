@@ -3,6 +3,8 @@
 #include "CtrlrAbout.h"
 #include "CtrlrPanel/CtrlrPanel.h"
 #include "CtrlrPanel/CtrlrPanelEditor.h"
+#include "ctrlrEditorApplicationcommandsHandlers.cpp" // Added v5.6.34.
+
 
 void CtrlrEditor::getAllCommands (Array< CommandID > &commands)
 {
@@ -71,14 +73,41 @@ void CtrlrEditor::getAllCommands (Array< CommandID > &commands)
 								doQuit
 							};
 
-        commands.addArray (ids, numElementsInArray (ids));
+    // This adds the first array of commands
+    commands.addArray (ids, numElementsInArray (ids));
+
+    // This is the correct, more efficient way to add your Lua commands
+    const CommandID luaIds[] =
+    {
+        LuaMethodEditorCommandIDs::fileSave,
+        LuaMethodEditorCommandIDs::fileSaveAndCompile,
+        LuaMethodEditorCommandIDs::fileSaveAndCompileAll,
+        LuaMethodEditorCommandIDs::fileCloseCurrentTab,
+        LuaMethodEditorCommandIDs::fileCloseAllTabs,
+        LuaMethodEditorCommandIDs::fileConvertToFiles,
+        LuaMethodEditorCommandIDs::fileClose,
+        LuaMethodEditorCommandIDs::editSearch,
+        LuaMethodEditorCommandIDs::editFindAndReplace,
+        LuaMethodEditorCommandIDs::editDebugger,
+        LuaMethodEditorCommandIDs::editConsole,
+        LuaMethodEditorCommandIDs::editClearOutput,
+        LuaMethodEditorCommandIDs::editPreferences,
+        LuaMethodEditorCommandIDs::editSingleLineComment,
+        LuaMethodEditorCommandIDs::editMultiLineComment,
+        LuaMethodEditorCommandIDs::editDuplicateLine,
+        LuaMethodEditorCommandIDs::editGoToLine
+    };
+
+    // Now, add the array of Lua editor commands using addArray
+    commands.addArray(luaIds, numElementsInArray(luaIds));
 }
 
 void CtrlrEditor::getCommandInfo (CommandID commandID, ApplicationCommandInfo &result)
 {
 	const String globalCategory ("Global");
 	const String panelCategory ("Panel");
-
+    const String luaCategory ("Lua Editor"); // defines the new Lua Editor category of commandIDs
+    
 	switch (commandID)
 	{
 		case doSaveState:
@@ -485,10 +514,157 @@ void CtrlrEditor::getCommandInfo (CommandID commandID, ApplicationCommandInfo &r
 			result.setActive (JUCEApplication::isStandaloneApp());
             result.addDefaultKeypress ('q', ModifierKeys::commandModifier); // Added v5.6.32
 			break;
+            
+        // Added v5.6.34. CASES for LUA Method Editor menu items. This is for showing the shortcuts to the GUI.
+        // Those combos are not picked up by the app and I don't know why.
+        // So we handle them manually in CtrlrLuaMethodCodeEditor.cpp with CtrlrLuaMethodEditor::keyPressed
+
+        case LuaMethodEditorCommandIDs::fileSave:
+            result.setInfo("Save", "Saves the current Lua method", luaCategory, 0);
+            result.addDefaultKeypress('s', ModifierKeys::commandModifier);
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::fileSaveAndCompile:
+            result.setInfo("Save and Compile", "Saves and compiles the current Lua method", luaCategory, 0);
+
+            // Corrected syntax for Cmd+Shift+S
+            result.addDefaultKeypress(CharacterFunctions::toUpperCase('s'), ModifierKeys::commandModifier | ModifierKeys::shiftModifier);
+            
+            // This was already correct
+            result.addDefaultKeypress(KeyPress::F7Key, ModifierKeys::noModifiers);
+            
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::fileSaveAndCompileAll:
+            result.setInfo("Save and Compile All", "Saves and compiles all Lua methods", luaCategory, 0);
+            
+            // This was already correct
+            result.addDefaultKeypress(KeyPress::F8Key, ModifierKeys::noModifiers);
+            
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::fileCloseCurrentTab:
+            result.setInfo("Close Current Tab", "Closes the current Lua method tab", luaCategory, 0);
+            result.addDefaultKeypress('w', ModifierKeys::commandModifier);
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::fileCloseAllTabs:
+            result.setInfo("Close All Tabs", "Closes all Lua method tabs", luaCategory, 0);
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::fileConvertToFiles:
+            result.setInfo("Export Methods to Files", "Converts all methods to individual files", luaCategory, 0);
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::fileClose:
+            result.setInfo("Close Lua Editor", "Closes the Lua editor window", luaCategory, 0);
+            // result.addDefaultKeypress (KeyPress::F12_KEY, ModifierKeys::noModifiers, 0); // OR whatever
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::editSearch:
+            result.setInfo("Search", "Finds text in the editor", luaCategory, 0);
+            result.addDefaultKeypress('f', ModifierKeys::commandModifier);
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::editFindAndReplace:
+            result.setInfo("Find and Replace", "Finds and replaces text in the editor", luaCategory, 0);
+            result.addDefaultKeypress('h', ModifierKeys::commandModifier); // Not a good idea since cmd+h is to hide the app for macOS cmd+r would be better
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::editDebugger:
+            result.setInfo("Show Debugger", "Shows the debugger panel", luaCategory, 0);
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::editConsole:
+            result.setInfo("Show Console", "Shows the console panel", luaCategory, 0);
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::editClearOutput:
+            result.setInfo("Clear Output", "Clears the output window", luaCategory, 0);
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::editPreferences:
+            result.setInfo("Preferences", "Opens the editor preferences", luaCategory, 0);
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::editSingleLineComment:
+            result.setInfo("Toggle single line comment", "Toggles single line comment", luaCategory, 0);
+            result.addDefaultKeypress('/', ModifierKeys::commandModifier);
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::editMultiLineComment:
+            result.setInfo("Toggle Multi-Line Comment", "Toggles multi-line comments on the selection", luaCategory, 0);
+            result.addDefaultKeypress('Q', ModifierKeys::commandModifier); // It's going to quit the app ???
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::editDuplicateLine:
+            result.setInfo("Duplicate Line", "Duplicates the current line or selection", luaCategory, 0);
+            result.addDefaultKeypress(CharacterFunctions::toUpperCase('d'), ModifierKeys::commandModifier);
+            result.setActive(isPanelActive());
+            break;
+            
+        case LuaMethodEditorCommandIDs::editGoToLine:
+            result.setInfo("Go to Line", "Jumps to a specific line number", luaCategory, 0);
+            result.addDefaultKeypress('g', ModifierKeys::commandModifier);
+            result.setActive(isPanelActive());
+            break;
+            
+        default:
+            break;
 	}
 }
 
-ApplicationCommandTarget* CtrlrEditor::getNextCommandTarget()
+ApplicationCommandTarget* CtrlrEditor::getNextCommandTarget() // Added v5.6.34. Required for the LUA method manager combo shortcuts
 {
-	return findFirstTargetParentComponent();
+    // Check if this method is even being called.
+    _DBG("getNextCommandTarget called");
+
+    // Use getActivePanel() which returns a CtrlrPanel*.
+    if (CtrlrPanel* activePanel = getActivePanel())
+    {
+        _DBG("Active panel exists.");
+
+        juce::Component* luaEditorContent = activePanel->getPanelWindowManager().getContent(CtrlrPanelWindowManager::LuaMethodEditor);
+
+        if (luaEditorContent != nullptr)
+        {
+            _DBG("Lua editor content exists.");
+
+            if (luaEditorContent->hasKeyboardFocus(true))
+            {
+                _DBG("Lua editor has keyboard focus.");
+                return dynamic_cast<ApplicationCommandTarget*>(luaEditorContent);
+            }
+            else
+            {
+                _DBG("Lua editor does NOT have keyboard focus.");
+            }
+        }
+        else
+        {
+            _DBG("Lua editor content is nullptr.");
+        }
+    }
+    else
+    {
+        _DBG("Active panel is nullptr.");
+    }
+
+    // If no specific component is active and focused, return the default.
+    return findFirstTargetParentComponent();
 }

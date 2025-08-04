@@ -102,6 +102,8 @@ class CtrlrPanelEditor  :	public Component,
         static LookAndFeel* getLookAndFeelFromDescription(const String &lookAndFeelDesc);
         void editModeChanged(const bool isEditMode);
     
+        bool luaEditorExistsAndIsFocused(); // Added v5.6.34. Required to pass keypress to the LUA method manager for menu items. Handles the focus gain/loss.
+    
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrPanelEditor)
 
 	private:

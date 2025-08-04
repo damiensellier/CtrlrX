@@ -739,3 +739,18 @@ void CtrlrPanelEditor::reloadResources(Array<CtrlrPanelResource *> resourcesThat
 void CtrlrPanelEditor::searchForProperty()
 {
 }
+
+bool CtrlrPanelEditor::luaEditorExistsAndIsFocused() // Added v5.6.34. Required to pass keypress to the LUA method manager for menu items. Handles the focus gain/loss.
+{
+    // We use the public getContent() method on the window manager.
+    // This will return a pointer to the component inside the Lua editor window.
+    juce::Component* luaEditorContent = owner.getPanelWindowManager().getContent(CtrlrPanelWindowManager::LuaMethodEditor);
+
+    // Now we check if the content component exists and has keyboard focus.
+    if (luaEditorContent != nullptr && luaEditorContent->hasKeyboardFocus(true))
+    {
+        return true;
+    }
+
+    return false;
+}

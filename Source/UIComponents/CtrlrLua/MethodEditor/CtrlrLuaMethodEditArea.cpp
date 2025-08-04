@@ -224,23 +224,32 @@ TabbedComponent *CtrlrLuaMethodEditArea::getLowerTabs()
 	return (lowerTabs);
 }
 
-bool CtrlrLuaMethodEditArea::keyPressed (const KeyPress &key, Component *event)
+bool CtrlrLuaMethodEditArea::keyPressed (const KeyPress &key, Component *originatingComponent) // Updated v5.6.34. was : bool CtrlrLuaMethodEditArea::keyPressed (const KeyPress &key, Component *event)
 {
-    if (getTabs())
+    const auto modifiers = key.getModifiers();
+    
+    // Ctrl + Tab: Switch tabs
+    if (modifiers.isCommandDown() && key.getKeyCode() == 9)
     {
-        if (getTabs()->getCurrentTabIndex() < (getTabs()->getNumTabs()-1) && getTabs()->getCurrentTabIndex() >= 0)
+        if (getTabs())
         {
-            getTabs()->setCurrentTabIndex(getTabs()->getCurrentTabIndex() + 1);
-            return (true);
-        }
-
-        if (getTabs()->getCurrentTabIndex() >= getTabs()->getNumTabs() - 1)
-        {
-            getTabs()->setCurrentTabIndex(0);
-            return (true);
+            int current = getTabs()->getCurrentTabIndex();
+            int numTabs = getTabs()->getNumTabs();
+            
+            if (current < numTabs - 1)
+            {
+                getTabs()->setCurrentTabIndex(current + 1);
+            }
+            else
+            {
+                getTabs()->setCurrentTabIndex(0);
+            }
+            return true;
         }
     }
-    return (false);
+    
+    // If we didn't handle the key, return false so the parent can handle it.
+    return false;
 }
 
 void CtrlrLuaMethodEditArea::setActiveOutputTab()
