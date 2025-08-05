@@ -608,7 +608,7 @@ void CtrlrEditor::getCommandInfo (CommandID commandID, ApplicationCommandInfo &r
             
         case LuaMethodEditorCommandIDs::editMultiLineComment:
             result.setInfo("Toggle Multi-Line Comment", "Toggles multi-line comments on the selection", luaCategory, 0);
-            result.addDefaultKeypress('Q', ModifierKeys::commandModifier); // It's going to quit the app ???
+            result.addDefaultKeypress('/', ModifierKeys::commandModifier | ModifierKeys::shiftModifier); // Cmd+Shift+/
             result.setActive(isPanelActive());
             break;
             
