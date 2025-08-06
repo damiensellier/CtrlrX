@@ -248,7 +248,7 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked (Button* buttonThatWasClick
         // Show confirmation dialog
         int result = AlertWindow::showOkCancelBox(
             AlertWindow::QuestionIcon,
-            "Reset Editor", 
+            "Reset Editor",
             "Reset Editor to default?",
             "OK",
             "Cancel"
@@ -265,7 +265,7 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked (Button* buttonThatWasClick
             lineNumbersBgColour->setColour(Colour(0xffc5ddf1));
             lineNumbersColour->setColour(Colours::black);
         }
-
+    }
     //[UserbuttonClicked_Post]
     changeListenerCallback(nullptr);
     //[/UserbuttonClicked_Post]

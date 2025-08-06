@@ -16,43 +16,161 @@ CtrlrValueMap::~CtrlrValueMap()
 {
 }
 
-void CtrlrValueMap::parseString (const String &stringToParseAsMap)
+//void CtrlrValueMap::parseString (const String &stringToParseAsMap)
+//{
+//	values.clear();
+//	numericValues.clear();
+//	additionalData.clear();
+//
+//	StringArray arLines;
+//	arLines.addTokens (stringToParseAsMap.trim(), "\n", "\"\'");
+//	for (int line=0; line<arLines.size(); line++)
+//	{
+//		if (arLines[line].startsWith("__"))
+//		{
+//			addAdditionalData (line, arLines[line]);
+//			continue;
+//		}
+//
+//		CtrlrValue val;
+//		StringArray arLine;
+//		arLine.addTokens (arLines[line], "=", "\'\"");
+//
+//		if (arLine.size() == 2)
+//		{
+//			val.numericValue			= arLine[1].getIntValue();
+//			val.textRepresentation		= arLine[0];
+//		}
+//		if (arLine.size() == 1)
+//		{
+//			val.textRepresentation		= arLine[0];
+//			val.numericValue			= line;
+//		}
+//
+//		values.add (val);
+//		numericValues.add (val.numericValue);
+//	}
+//
+//	DefaultElementComparator<int> sorter;
+//	numericValues.sort (sorter);
+//}
+void CtrlrValueMap::parseString(const String& stringToParseAsMap)
 {
-	values.clear();
-	numericValues.clear();
-	additionalData.clear();
+    values.clear();
+    numericValues.clear();
+    additionalData.clear();
+    StringArray arLines;
 
-	StringArray arLines;
-	arLines.addTokens (stringToParseAsMap.trim(), "\n", "\"\'");
-	for (int line=0; line<arLines.size(); line++)
-	{
-		if (arLines[line].startsWith("__"))
-		{
-			addAdditionalData (line, arLines[line]);
-			continue;
-		}
+    // Split by newlines only, don't treat quotes as special characters
+    arLines.addTokens(stringToParseAsMap.trim(), "\n", "");
 
-		CtrlrValue val;
-		StringArray arLine;
-		arLine.addTokens (arLines[line], "=", "\'\"");
+    for (int line = 0; line < arLines.size(); line++)
+    {
+        String currentLine = arLines[line].trim();
+        if (currentLine.isEmpty()) continue;
 
-		if (arLine.size() == 2)
-		{
-			val.numericValue			= arLine[1].getIntValue();
-			val.textRepresentation		= arLine[0];
-		}
-		if (arLine.size() == 1)
-		{
-			val.textRepresentation		= arLine[0];
-			val.numericValue			= line;
-		}
+        if (currentLine.startsWith("__"))
+        {
+            addAdditionalData(line, currentLine);
+            continue;
+        }
 
-		values.add (val);
-		numericValues.add (val.numericValue);
-	}
+        CtrlrValue val;
 
-	DefaultElementComparator<int> sorter;
-	numericValues.sort (sorter);
+        // Find the first unquoted equals sign
+        int equalsPos = findUnquotedEquals(currentLine);
+
+        if (equalsPos >= 0)
+        {
+            // We have a key=value pair
+            String key = currentLine.substring(0, equalsPos).trim();
+            String value = currentLine.substring(equalsPos + 1).trim();
+
+            // Remove surrounding quotes from key if present
+            key = removeQuotes(key);
+
+            val.numericValue = value.getIntValue();
+            val.textRepresentation = key;
+        }
+        else
+        {
+            // No equals sign, just a display name
+            String displayName = removeQuotes(currentLine);
+            val.textRepresentation = displayName;
+            val.numericValue = line;
+        }
+
+        values.add(val);
+        numericValues.add(val.numericValue);
+    }
+
+    DefaultElementComparator<int> sorter;
+    numericValues.sort(sorter);
+}
+
+// Helper method - add this to CtrlrValueMap class
+int CtrlrValueMap::findUnquotedEquals(const String& line)
+{
+    bool inSingleQuotes = false;
+    bool inDoubleQuotes = false;
+    bool escaped = false;
+
+    for (int i = 0; i < line.length(); i++)
+    {
+        juce_wchar ch = line[i];
+
+        if (escaped)
+        {
+            escaped = false;
+            continue;
+        }
+
+        if (ch == '\\')
+        {
+            escaped = true;
+            continue;
+        }
+
+        if (ch == '\'' && !inDoubleQuotes)
+        {
+            inSingleQuotes = !inSingleQuotes;
+        }
+        else if (ch == '"' && !inSingleQuotes)
+        {
+            inDoubleQuotes = !inDoubleQuotes;
+        }
+        else if (ch == '=' && !inSingleQuotes && !inDoubleQuotes)
+        {
+            return i;
+        }
+    }
+
+    return -1; // No unquoted equals found
+}
+
+// Helper method - add this to CtrlrValueMap class  
+String CtrlrValueMap::removeQuotes(const String& str)
+{
+    String trimmed = str.trim();
+
+    // Check for surrounding quotes
+    bool hasDoubleQuotes = (trimmed.startsWithChar('"') && trimmed.endsWithChar('"') && trimmed.length() >= 2);
+    bool hasSingleQuotes = (trimmed.startsWithChar('\'') && trimmed.endsWithChar('\'') && trimmed.length() >= 2);
+
+    if (hasDoubleQuotes || hasSingleQuotes)
+    {
+        // Remove surrounding quotes
+        String result = trimmed.substring(1, trimmed.length() - 1);
+
+        // Handle escaped characters
+        result = result.replace("\\'", "'");
+        result = result.replace("\\\"", "\"");
+        result = result.replace("\\\\", "\\");
+
+        return result;
+    }
+
+    return trimmed;
 }
 
 int CtrlrValueMap::getMappedMax() const

@@ -472,7 +472,7 @@ void CtrlrModulatorProcessor::sendMidiMessage()
 		ctrlrMidiMessage->setValue (getValueForMidiMessage(currentValue.value));
 	}
 }
-
+// used by combo
 const CtrlrValueMap &CtrlrModulatorProcessor::setValueMap (const String &mapAsString)
 {
 	{
