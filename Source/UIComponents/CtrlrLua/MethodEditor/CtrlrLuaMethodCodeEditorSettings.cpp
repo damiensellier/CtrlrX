@@ -245,19 +245,26 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked (Button* buttonThatWasClick
     }
     else if (buttonThatWasClicked == resetButton) // Add this
     {
-        DBG("Reset button clicked");
-        // Move your reset code here from resetButtonClicked
-        //fontTypeface->setSelectedId(1, dontSendNotification);
-        fontTypeface->setText("Courier New", dontSendNotification); // or whatever default font you want
-        fontBold->setToggleState(false, dontSendNotification);
-        // fontUnderline->setToggleState(false, dontSendNotification);
-        fontItalic->setToggleState(false, dontSendNotification);
-        openSearchTabs->setToggleState(false, dontSendNotification);
-        fontSize->setValue(14.0f, dontSendNotification);
-        bgColour->setColour(Colours::white);
-        lineNumbersBgColour->setColour(Colour(0xffc5ddf1));
-        lineNumbersColour->setColour(Colours::black);
-    }
+        // Show confirmation dialog
+        int result = AlertWindow::showOkCancelBox(
+            AlertWindow::QuestionIcon,
+            "Reset Editor", 
+            "Reset Editor to default?",
+            "OK",
+            "Cancel"
+        );
+
+        if (result == 1) // User clicked OK
+        {
+            fontTypeface->setText("Courier New", dontSendNotification);
+            fontBold->setToggleState(false, dontSendNotification);
+            fontItalic->setToggleState(false, dontSendNotification);
+            openSearchTabs->setToggleState(false, dontSendNotification);
+            fontSize->setValue(14.0f, dontSendNotification);
+            bgColour->setColour(Colours::white);
+            lineNumbersBgColour->setColour(Colour(0xffc5ddf1));
+            lineNumbersColour->setColour(Colours::black);
+        }
 
     //[UserbuttonClicked_Post]
     changeListenerCallback(nullptr);
