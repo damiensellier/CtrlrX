@@ -315,7 +315,7 @@ CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String &s)
 	{
 		return (ChecksumRolandJP8080);
 	}
-	if (s.startsWith("o"))
+	if (s.startsWith("c"))
 	{
 		return (ChecksumOnesComplement);
 	}
@@ -452,6 +452,7 @@ void CtrlrSysexProcessor::checksumRolandJp8080(const CtrlrSysexToken token, Midi
 
 void CtrlrSysexProcessor::checksumOnesComplement(const CtrlrSysexToken token, MidiMessage& m) 
 {
+	DBG("CtrlrSysexProcessor::checksumOnesComplement - This is a ones complement checksum, not a CRC. It just adds up the bytes and inverts the result.");
 	const int startByte = token.getPosition() - token.getAdditionalData();
 	uint8 chTotal = 0;
 	uint8* ptr = (uint8*)m.getRawData();
@@ -466,6 +467,7 @@ void CtrlrSysexProcessor::checksumOnesComplement(const CtrlrSysexToken token, Mi
 
 void CtrlrSysexProcessor::checksumSummingSimple(const CtrlrSysexToken token, MidiMessage &m)
 {
+	DBG("CtrlrSysexProcessor::checksumSummingSimple - This is a simple summing checksum, not a CRC. It just adds up the bytes and masks to 7 bits.");
 	const int startByte = token.getPosition() - token.getAdditionalData();
 	uint8 chTotal = 0;
 	uint8 *ptr = (uint8 *)m.getRawData();
@@ -477,19 +479,6 @@ void CtrlrSysexProcessor::checksumSummingSimple(const CtrlrSysexToken token, Mid
 	*(ptr+token.getPosition()) = chTotal;
 }
 
-void CtrlrSysexProcessor::checksumOnesComplement(const CtrlrSysexToken token, MidiMessage& m)
-{
-	const int startByte = token.getPosition() - token.getAdditionalData();
-	uint8 chTotal = 0;
-	uint8* ptr = (uint8*)m.getRawData();
-
-	for (int i = startByte; i < token.getPosition(); i++)
-	{
-		chTotal = chTotal + *(ptr + i);
-	}
-	chTotal = ~chTotal & 0x7f; // One's Complement
-	*(ptr + token.getPosition()) = chTotal;
-}
 void CtrlrSysexProcessor::checksumWaldorfRackAttack(const CtrlrSysexToken token, MidiMessage &m)
 {
 	const int startByte = token.getPosition() - token.getAdditionalData();
