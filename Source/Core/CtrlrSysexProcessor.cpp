@@ -83,6 +83,8 @@ void CtrlrSysexProcessor::sysExProcessToken (const CtrlrSysexToken token, uint8 
 		case Ignore:
 		case ChecksumRolandJP8080:
 		case ChecksumTechnics:
+		case ChecksumOnesComplement:
+		case ChecksumSummingSimple:
 		case ChecksumWaldorfRackAttack:
 		case FormulaToken:
 		case LUAToken:
@@ -127,6 +129,14 @@ void CtrlrSysexProcessor::sysexProcessChecksums(const Array<CtrlrSysexToken> &to
         if (tokens.getReference(i).getType() == ChecksumTechnics)
         {
             checksumTechnics (tokens.getReference(i), m);
+        }
+        if (tokens.getReference(i).getType() == ChecksumOnesComplement)
+        {
+            checksumOnesComplement (tokens.getReference(i), m);
+        }
+        if (tokens.getReference(i).getType() == ChecksumSummingSimple)
+        {
+			checksumSummingSimple(tokens.getReference(i), m);
         }
     }
 }
@@ -274,6 +284,8 @@ Array<CtrlrSysexToken> CtrlrSysexProcessor::sysExToTokenArray (const String &for
 		if (tokenToAdd.getType() == GlobalVariable
 			|| tokenToAdd.getType() == ChecksumRolandJP8080
 			|| tokenToAdd.getType() == ChecksumTechnics // Added v5.6.34.
+			|| tokenToAdd.getType() == ChecksumOnesComplement 
+			|| tokenToAdd.getType() == ChecksumSummingSimple
 			|| tokenToAdd.getType() == ChecksumWaldorfRackAttack)
 		{
 			tokenToAdd.setAdditionalData (ar[i].substring(1,2).getHexValue32());
@@ -302,6 +314,14 @@ CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String &s)
 	if (s.startsWith("z"))
 	{
 		return (ChecksumRolandJP8080);
+	}
+	if (s.startsWith("o"))
+	{
+		return (ChecksumOnesComplement);
+	}
+	if (s.startsWith("s"))
+	{
+		return (ChecksumSummingSimple);
 	}
 	if (s.startsWith("w"))
 	{
@@ -430,6 +450,46 @@ void CtrlrSysexProcessor::checksumRolandJp8080(const CtrlrSysexToken token, Midi
 	*(ptr + token.getPosition()) = chTotal;
 }
 
+void CtrlrSysexProcessor::checksumOnesComplement(const CtrlrSysexToken token, MidiMessage& m) 
+{
+	const int startByte = token.getPosition() - token.getAdditionalData();
+	uint8 chTotal = 0;
+	uint8* ptr = (uint8*)m.getRawData();
+
+	for (int i = startByte; i < token.getPosition(); i++)
+	{
+		chTotal = chTotal + *(ptr + i); 
+	}
+	chTotal = ~chTotal & 0x7f; // One's Complement
+	*(ptr + token.getPosition()) = chTotal;
+}
+
+void CtrlrSysexProcessor::checksumSummingSimple(const CtrlrSysexToken token, MidiMessage &m)
+{
+	const int startByte = token.getPosition() - token.getAdditionalData();
+	uint8 chTotal = 0;
+	uint8 *ptr = (uint8 *)m.getRawData();
+	for (int i=startByte; i<token.getPosition(); i++)
+	{
+		chTotal = chTotal + *(ptr + i); // Some implementations just add up the data, but still need to mask it to 7 bits
+	}
+	chTotal = chTotal & 0x7f; // Mask to 7 bits
+	*(ptr+token.getPosition()) = chTotal;
+}
+
+void CtrlrSysexProcessor::checksumOnesComplement(const CtrlrSysexToken token, MidiMessage& m)
+{
+	const int startByte = token.getPosition() - token.getAdditionalData();
+	uint8 chTotal = 0;
+	uint8* ptr = (uint8*)m.getRawData();
+
+	for (int i = startByte; i < token.getPosition(); i++)
+	{
+		chTotal = chTotal + *(ptr + i);
+	}
+	chTotal = ~chTotal & 0x7f; // One's Complement
+	*(ptr + token.getPosition()) = chTotal;
+}
 void CtrlrSysexProcessor::checksumWaldorfRackAttack(const CtrlrSysexToken token, MidiMessage &m)
 {
 	const int startByte = token.getPosition() - token.getAdditionalData();

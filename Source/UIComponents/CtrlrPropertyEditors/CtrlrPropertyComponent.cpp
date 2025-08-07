@@ -1524,6 +1524,8 @@ void CtrlrSysExEditor::mouseDown (const MouseEvent& e)
 			m.addItem (13, "Yamaha Checksum"); // Added v5.6.34.
 			m.addItem (14, "Waldorf RackAttack Checksum");
 			m.addItem (15, "Technics Checksum"); // Added v5.6.34.
+			m.addItem (17, "1's Complement"); 
+			m.addItem (18, "Sum bytes and mask 0x7F"); // Added v5.6.34.
 			m.addItem (16, "Ignore this byte on input");
 			PopupMenu km,lm,mm,nm;
 
@@ -1601,6 +1603,12 @@ void CtrlrSysExEditor::mouseDown (const MouseEvent& e)
 				break;
 			case 16:
 				l->setText ("ii", sendNotification);
+				break;
+			case 17:
+				l->setText ("o5", sendNotification);
+				break;
+			case 18:
+				l->setText ("s5", sendNotification);
 				break;
 			}
 
