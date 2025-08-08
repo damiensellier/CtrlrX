@@ -550,34 +550,29 @@ void CtrlrSysexProcessor::checksumKawaiK5(const CtrlrSysexToken token, MidiMessa
 	const int startByte = token.getPosition() - token.getAdditionalData();
 	uint8* ptr = (uint8*)m.getRawData();
 
-	// Kawai K5 uses separate sums for odd and even positioned bytes
-	int oddSum = 0;
-	int evenSum = 0;
+	// GitHub algorithm: Process data as 16-bit words (little-endian)
+	int sum = 0;
 
-	// Sum data bytes from startByte to token position
-	for (int i = startByte; i < token.getPosition(); i++)
+	// Process byte pairs as 16-bit words
+	for (int i = startByte; i < token.getPosition(); i += 2)
 	{
-		uint8 currentByte = *(ptr + i);  // Fixed: was adding startByte twice
-
-		// Calculate position relative to start for odd/even determination
-		int relativePosition = i - startByte;
-
-		if (relativePosition % 2 == 0) // Even position (0-indexed relative to start)
+		if (i + 1 < token.getPosition()) // Ensure we have a complete pair
 		{
-			evenSum += currentByte;
+			// Little-endian: high byte << 8 | low byte
+			int word = ((*(ptr + i + 1) & 0xFF) << 8) | (*(ptr + i) & 0xFF);
+			sum += word;
 		}
-		else // Odd position (0-indexed relative to start)
+		else if (i < token.getPosition()) // Handle odd number of bytes
 		{
-			oddSum += currentByte;
+			// If we have an odd byte at the end, treat it as low byte with high byte = 0
+			sum += (*(ptr + i) & 0xFF);
 		}
 	}
 
-	// Kawai magic number is 0x5A3C
-	const int kawaiMagicNumber = 0x5A3C;
+	// Apply 16-bit mask and calculate checksum
+	sum = sum & 0xFFFF;
+	int checksum = (0x5A3C - sum) & 0xFFFF;
 
-	// Calculate checksum: magic_number - odd_sum - even_sum
-	int checksum = (kawaiMagicNumber - oddSum - evenSum) & 0xFF;
-
-	// Write checksum to the designated position
-	*(ptr + token.getPosition()) = checksum & 0x7f;
+	// Store as 7-bit value for MIDI compliance
+	*(ptr + token.getPosition()) = checksum & 0x7F;
 }
