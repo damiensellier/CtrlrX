@@ -82,10 +82,13 @@ void CtrlrSysexProcessor::sysExProcessToken (const CtrlrSysexToken token, uint8 
         case CurrentBank:
 		case Ignore:
 		case ChecksumRolandJP8080:
+		case ChecksumXor:
 		case ChecksumTechnics:
 		case ChecksumOnesComplement:
 		case ChecksumSummingSimple:
-		case ChecksumWaldorfRackAttack:
+		case ChecksumSony:
+		//case ChecksumWaldorfRackAttack:
+		case ChecksumKawaiK5:
 		case FormulaToken:
 		case LUAToken:
 		case NoToken:
@@ -121,9 +124,24 @@ void CtrlrSysexProcessor::sysexProcessChecksums(const Array<CtrlrSysexToken> &to
             checksumRolandJp8080 (tokens.getReference(i), m);
         }
         
-        if (tokens.getReference(i).getType() == ChecksumWaldorfRackAttack)
+        //if (tokens.getReference(i).getType() == ChecksumWaldorfRackAttack)
+        //{
+        //    checksumWaldorfRackAttack (tokens.getReference(i), m);
+        //}
+        
+        if (tokens.getReference(i).getType() == ChecksumXor)
         {
-            checksumWaldorfRackAttack (tokens.getReference(i), m);
+			checksumXor(tokens.getReference(i), m);
+        }
+
+        if (tokens.getReference(i).getType() == ChecksumSony)
+        {
+			checksumSony(tokens.getReference(i), m);
+        }
+
+        if (tokens.getReference(i).getType() == ChecksumKawaiK5)
+        {
+			checksumKawaiK5(tokens.getReference(i), m);
         }
         
         if (tokens.getReference(i).getType() == ChecksumTechnics)
@@ -286,9 +304,13 @@ Array<CtrlrSysexToken> CtrlrSysexProcessor::sysExToTokenArray (const String &for
 			|| tokenToAdd.getType() == ChecksumTechnics // Added v5.6.34.
 			|| tokenToAdd.getType() == ChecksumOnesComplement 
 			|| tokenToAdd.getType() == ChecksumSummingSimple
-			|| tokenToAdd.getType() == ChecksumWaldorfRackAttack)
+			|| tokenToAdd.getType() == ChecksumXor
+			|| tokenToAdd.getType() == ChecksumSony
+			//|| tokenToAdd.getType() == ChecksumWaldorfRackAttack
+			|| tokenToAdd.getType() == ChecksumKawaiK5)
 		{
-			tokenToAdd.setAdditionalData (ar[i].substring(1,2).getHexValue32());
+			//tokenToAdd.setAdditionalData (ar[i].substring(1,2).getHexValue32()); limit to 0-9 hex
+			tokenToAdd.setAdditionalData(ar[i].substring(1).getIntValue()); // limit 0-255 dec
 		}
 
 		tokensToReturn.add (tokenToAdd);
@@ -299,6 +321,7 @@ Array<CtrlrSysexToken> CtrlrSysexProcessor::sysExToTokenArray (const String &for
 
 CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String &s)
 {
+
 	if (s == "xx")
 	{
 		return (ByteValue);
@@ -307,25 +330,32 @@ CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String &s)
 	{
 		return (ByteChannel4Bit);
 	}
-	if (s.startsWith("k") || s.startsWith("p") || s.startsWith("n") || s.startsWith("o"))
-	{
-		return (GlobalVariable);
-	}
+
 	if (s.startsWith("z"))
 	{
 		return (ChecksumRolandJP8080);
 	}
-	if (s.startsWith("c"))
+	if (s.startsWith("O") && CharacterFunctions::isDigit(s[1]))
 	{
 		return (ChecksumOnesComplement);
 	}
-	if (s.startsWith("s"))
+	if (s.startsWith("w"))
 	{
 		return (ChecksumSummingSimple);
 	}
-	if (s.startsWith("w"))
+	//if (s.startsWith("w"))
+	//{
+	//	return (ChecksumWaldorfRackAttack);
+	//}
+	if (s.startsWith("W") && CharacterFunctions::isDigit(s[1]))
 	{
-		return (ChecksumWaldorfRackAttack);
+		DBG("calling checksumKawaii");
+		return (ChecksumKawaiK5);
+	}
+	if (s.startsWith("X") && CharacterFunctions::isDigit(s[1]))
+	{
+		DBG("CtrlrSysexProcessor::sysExIdentifyToken - X token found, returning CurrentProgram");
+		return (ChecksumXor);
 	}
 	if (s.startsWith("u"))
 	{
@@ -334,6 +364,10 @@ CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String &s)
 	if (s.startsWith ("v"))
 	{
 		return (FormulaToken);
+	}
+	if (s.startsWith ("S"))
+	{
+		return (ChecksumSony);
 	}
 	if (s == "yy")
 	{
@@ -388,6 +422,10 @@ CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String &s)
 	{
 		return (ChecksumTechnics);
 	}
+	if (s.startsWith("k") || s.startsWith("p") || s.startsWith("n") || s.startsWith("o"))
+	{
+		return (GlobalVariable);
+	}
 	return (NoToken);
 }
 
@@ -437,6 +475,7 @@ void CtrlrSysexProcessor::checksumTechnics(const CtrlrSysexToken token, MidiMess
 
 void CtrlrSysexProcessor::checksumRolandJp8080(const CtrlrSysexToken token, MidiMessage &m) // Update v5.6.34. Thanks to @dnaldoog
 {
+	DBG("I am Roland");
 	const int startByte = token.getPosition() - token.getAdditionalData();
 	uint8 chTotal		= 0;
 	uint8 *ptr	= (uint8 *)m.getRawData();
@@ -445,8 +484,7 @@ void CtrlrSysexProcessor::checksumRolandJp8080(const CtrlrSysexToken token, Midi
 	{
 		chTotal = chTotal + *(ptr+i); // From v5.6.31
 	}
-	chTotal = ~chTotal & 0x7f; // Invert and mask to 7 bits
-	++chTotal;
+	chTotal = (~chTotal + 1) & 0x7f; // Two's complement with mask
 	*(ptr + token.getPosition()) = chTotal;
 }
 
@@ -479,17 +517,67 @@ void CtrlrSysexProcessor::checksumSummingSimple(const CtrlrSysexToken token, Mid
 	*(ptr+token.getPosition()) = chTotal;
 }
 
-void CtrlrSysexProcessor::checksumWaldorfRackAttack(const CtrlrSysexToken token, MidiMessage &m)
+
+void CtrlrSysexProcessor::checksumXor(const CtrlrSysexToken token, MidiMessage& m)
+{
+	DBG("token I am checksumXor()");
+	const int startByte = token.getPosition() - token.getAdditionalData();
+	uint8 chTotal = 0;
+	uint8* ptr = (uint8*)m.getRawData();
+	for (int i = startByte; i < token.getPosition(); i++)
+	{
+		chTotal ^= *(ptr + i);
+	}
+	*(ptr + token.getPosition()) = chTotal & 0x7f;
+}
+
+void CtrlrSysexProcessor::checksumSony(const CtrlrSysexToken token, MidiMessage& m)
 {
 	const int startByte = token.getPosition() - token.getAdditionalData();
-	int chTotal			= 0;
-	uint8 *ptr			= (uint8 *)m.getRawData();
-
-
-	for (int i=startByte; i<token.getPosition(); i++)
+	uint16 chTotal = 0;  // Changed to uint16 to hold sums > 255
+	uint8* ptr = (uint8*)m.getRawData();
+	for (int i = startByte; i < token.getPosition(); i++)
 	{
-		chTotal = chTotal + *(ptr+i);
+		chTotal += *(ptr + i);
+	}
+	*(ptr + token.getPosition()) = (chTotal >> 8) & 0x7f;  // High byte, masked to 7 bits
+}
+
+void CtrlrSysexProcessor::checksumKawaiK5(const CtrlrSysexToken token, MidiMessage& m)
+{
+	DBG("calling checksumKawai function");
+
+	const int startByte = token.getPosition() - token.getAdditionalData();
+	uint8* ptr = (uint8*)m.getRawData();
+
+	// Kawai K5 uses separate sums for odd and even positioned bytes
+	int oddSum = 0;
+	int evenSum = 0;
+
+	// Sum data bytes from startByte to token position
+	for (int i = startByte; i < token.getPosition(); i++)
+	{
+		uint8 currentByte = *(ptr + i);  // Fixed: was adding startByte twice
+
+		// Calculate position relative to start for odd/even determination
+		int relativePosition = i - startByte;
+
+		if (relativePosition % 2 == 0) // Even position (0-indexed relative to start)
+		{
+			evenSum += currentByte;
+		}
+		else // Odd position (0-indexed relative to start)
+		{
+			oddSum += currentByte;
+		}
 	}
 
-	*(ptr+token.getPosition())   = chTotal & 0x7f;
+	// Kawai magic number is 0x5A3C
+	const int kawaiMagicNumber = 0x5A3C;
+
+	// Calculate checksum: magic_number - odd_sum - even_sum
+	int checksum = (kawaiMagicNumber - oddSum - evenSum) & 0xFF;
+
+	// Write checksum to the designated position
+	*(ptr + token.getPosition()) = checksum;
 }

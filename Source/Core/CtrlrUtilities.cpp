@@ -820,8 +820,16 @@ const MemoryBlock midiMessagePattern(const CtrlrMidiMessageEx &mEx, const Array<
 			}
 			else if (tokens[i].getType() != NoToken
 				|| tokens[i].getType() == Ignore
+				|| tokens[i].getType() == ChecksumXor
+				|| tokens[i].getType() == ChecksumSony
 				|| tokens[i].getType() == ChecksumRolandJP8080
-				|| tokens[i].getType() == ChecksumWaldorfRackAttack)
+				//|| tokens[i].getType() == ChecksumWaldorfRackAttack
+				|| tokens[i].getType() == ChecksumOnesComplement
+				|| tokens[i].getType() == ChecksumSummingSimple
+				|| tokens[i].getType() == ChecksumTechnics
+				|| tokens[i].getType() == ChecksumKawaiK5
+				
+				)
 			{
 				bl[i] = midiByteMask;
 			}

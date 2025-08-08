@@ -103,7 +103,10 @@ enum CtrlrSysExFormulaToken
 	ChecksumOnesComplement,
 	ChecksumSummingSimple,
 	ChecksumTechnics,
-	ChecksumWaldorfRackAttack,
+	ChecksumXor,
+	ChecksumSony,
+	//ChecksumWaldorfRackAttack,
+	ChecksumKawaiK5,
 	CurrentProgram,
 	CurrentBank,
 	NoToken
