@@ -3,9 +3,32 @@
 #include "CtrlrAbout.h"
 #include "CtrlrPanel/CtrlrPanel.h"
 #include "CtrlrPanel/CtrlrPanelEditor.h"
-#include "ctrlrEditorApplicationcommandsHandlers.cpp" // Added v5.6.34.
-
-
+#include "LuaMethodEditorCommandIDs.h"
+//#include "ctrlrEditorApplicationcommandsHandlers.cpp" // Added v5.6.34.
+/*Add this file to projucer - produces a crash if included*/
+//namespace LuaMethodEditorCommandIDs
+//{
+//	enum
+//	{
+//		fileSave = 0x7000,
+//		fileSaveAndCompile,
+//		fileSaveAndCompileAll,
+//		fileCloseCurrentTab,
+//		fileCloseAllTabs,
+//		fileConvertToFiles,
+//		fileClose,
+//		editSearch,
+//		editFindAndReplace,
+//		editDebugger,
+//		editConsole,
+//		editClearOutput,
+//		editPreferences,
+//		editSingleLineComment,
+//		editMultiLineComment,
+//		editDuplicateLine,
+//		editGoToLine
+//	};
+//}
 void CtrlrEditor::getAllCommands (Array< CommandID > &commands)
 {
 	const CommandID ids[] = {	doSaveState,

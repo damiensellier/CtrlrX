@@ -3,18 +3,19 @@
 <JUCERPROJECT id="hrcYoO" name="CtrlrX" reportAppUsage="1" projectType="audioplug"
               version="5.6.34" bundleIdentifier="com.CtrlrX.CtrlrX" includeBinaryInAppConfig="1"
               buildVST="1" buildVST3="1" buildAU="1" buildAUv3="0" buildRTAS="0"
-              buildAAX="1" buildStandalone="1" enableIAA="0" pluginName="CtrlrX                          "
+              buildAAX="0" buildStandalone="1" enableIAA="0" pluginName="CtrlrX                          "
               pluginManufacturer="CtrlrX Project                  " pluginManufacturerCode="cTrX"
               pluginCode="cTrl" pluginIsSynth="1" pluginWantsMidiIn="1" pluginProducesMidiOut="1"
               pluginIsMidiEffectPlugin="0" pluginEditorRequiresKeys="1" pluginAUExportPrefix="CtrlrXAU"
               pluginRTASCategory="" aaxIdentifier="com.CtrlrX.CtrlrX" companyName="CtrlrX"
-              pluginFormats="buildAAX,buildAU,buildStandalone,buildVST,buildVST3"
-              jucerFormatVersion="1" pluginAUMainType="'aumu'" displaySplashScreen="1"
-              pluginRTASDisableBypass="0" pluginRTASDisableMultiMono="0" pluginAAXDisableBypass="0"
-              pluginAAXDisableMultiMono="0" cppLanguageStandard="14" pluginVST3Category="Instrument,Tools"
+              pluginFormats="buildAU,buildStandalone,buildVST,buildVST3" jucerFormatVersion="1"
+              pluginAUMainType="'aumu'" displaySplashScreen="1" pluginRTASDisableBypass="0"
+              pluginRTASDisableMultiMono="0" pluginAAXDisableBypass="0" pluginAAXDisableMultiMono="0"
+              cppLanguageStandard="14" pluginVST3Category="Instrument,Tools"
               pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn,pluginProducesMidiOut,pluginEditorRequiresKeys"
               pluginAAXCategory="2048">
   <MAINGROUP id="SRLsFb" name="CtrlrX">
+    <GROUP id="{F8652B9A-DA50-2E87-C26D-A34DBF1FD5BF}" name="New Group"/>
     <GROUP id="{BE407432-92DD-AEAB-3C70-AAE03FCD0B1D}" name="Source">
       <GROUP id="{F4D7C0F1-7F03-CB3F-30C6-F728F0E39FE2}" name="Misc">
         <GROUP id="{E0E4DD68-0D44-4709-7B14-B00F9E7420BF}" name="luabind">
@@ -1083,6 +1084,31 @@
               file="Source/UIComponents/CtrlrValueTreeEditor.h"/>
       </GROUP>
     </GROUP>
+    <GROUP id="{DC12E93C-85B1-742D-A85D-4C08EAAE39B9}" name="vst2sdk">
+      <GROUP id="{8A491F4D-7845-DB8F-F269-C5D55CE59504}" name="pluginterfaces">
+        <GROUP id="{72053E1C-5C38-9B80-32F1-AC54A76180AA}" name="vst2.x">
+          <FILE id="NlTEXJ" name="aeffect.h" compile="0" resource="0" file="D:/github/CtrlrX/Source/Misc/vst2sdk/pluginterfaces/vst2.x/aeffect.h"/>
+          <FILE id="qnAvmA" name="aeffectx.h" compile="0" resource="0" file="D:/github/CtrlrX/Source/Misc/vst2sdk/pluginterfaces/vst2.x/aeffectx.h"/>
+          <FILE id="LkzfXM" name="vstfxstore.h" compile="0" resource="0" file="D:/github/CtrlrX/Source/Misc/vst2sdk/pluginterfaces/vst2.x/vstfxstore.h"/>
+        </GROUP>
+      </GROUP>
+      <GROUP id="{7DCDEB26-AB45-322C-8049-FD27C523EEB9}" name="public.sdk">
+        <GROUP id="{3CE3E373-BBD4-BE6A-A125-851E2A8BBF87}" name="source">
+          <GROUP id="{41F40231-C1E5-FA4B-9552-720D3D13C8A2}" name="vst2.x">
+            <FILE id="SaKbZp" name="aeffeditor.h" compile="0" resource="0" file="D:/github/CtrlrX/Source/Misc/vst2sdk/public.sdk/source/vst2.x/aeffeditor.h"/>
+            <FILE id="k6959x" name="audioeffect.cpp" compile="1" resource="0" file="D:/github/CtrlrX/Source/Misc/vst2sdk/public.sdk/source/vst2.x/audioeffect.cpp"/>
+            <FILE id="bZ171y" name="audioeffect.h" compile="0" resource="0" file="D:/github/CtrlrX/Source/Misc/vst2sdk/public.sdk/source/vst2.x/audioeffect.h"/>
+            <FILE id="veHlS9" name="audioeffectx.cpp" compile="1" resource="0"
+                  file="D:/github/CtrlrX/Source/Misc/vst2sdk/public.sdk/source/vst2.x/audioeffectx.cpp"/>
+            <FILE id="ckKX3n" name="audioeffectx.h" compile="0" resource="0" file="D:/github/CtrlrX/Source/Misc/vst2sdk/public.sdk/source/vst2.x/audioeffectx.h"/>
+          </GROUP>
+        </GROUP>
+      </GROUP>
+      <FILE id="yWlG2j" name="CMakeLists.txt" compile="0" resource="1" file="D:/github/CtrlrX/Source/Misc/vst2sdk/CMakeLists.txt"/>
+      <FILE id="x189Bf" name="README.md" compile="0" resource="1" file="D:/github/CtrlrX/Source/Misc/vst2sdk/README.md"/>
+    </GROUP>
+    <FILE id="dbA2Wc" name="LuaMethodEditorCommandIDs.h" compile="0" resource="0"
+          file="Source/Core/LuaMethodEditorCommandIDs.h"/>
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 BOOST_BIND_GLOBAL_PLACEHOLDERS=1"

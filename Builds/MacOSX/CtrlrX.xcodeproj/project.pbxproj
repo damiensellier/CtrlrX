@@ -16,7 +16,6 @@
 			dependencies = (
 				05E6291839DCA038AE5FBB37,
 				F0C497728D844D0AFC81C5C1,
-				DF41BECA45E712554A5518DF,
 				CE4AF46A886FEBCBEE6C322C,
 				A1FB39729F4FB880ABB507C0,
 				BA89B3326599D4CF21A58064,
@@ -48,7 +47,6 @@
 		1823667626212E2AA677511E /* libr-bfd.c */ = {isa = PBXBuildFile; fileRef = CD1306996512A494035C90DF; };
 		18D977AAF8D3C5A8A5D43289 /* CtrlrDocumentPanel.cpp */ = {isa = PBXBuildFile; fileRef = 67F6E4993AD555303FA234D2; };
 		1C27E9263204CD6EA4709AE7 /* LJuce.cpp */ = {isa = PBXBuildFile; fileRef = 4AF81ACADA3736AF41DFEE34; };
-		1D15F67BAE3369F1B084054E /* AAX */ = {isa = PBXBuildFile; fileRef = C1AB06E5D06AED148A1961B9; };
 		1E39CDAF6B48FD6BBC99473D /* threads_windows.c */ = {isa = PBXBuildFile; fileRef = D4355B7EBCF4BEE21C2F3374; };
 		20966DFED6F515F0D85824BB /* include_juce_audio_plugin_client_Standalone.cpp */ = {isa = PBXBuildFile; fileRef = 89A3CF6F02D3A3BF2D2DCA37; };
 		20972EA8469A92454C352C51 /* CtrlrLuaPanelCanvasLayer.cpp */ = {isa = PBXBuildFile; fileRef = 50893BAA6A75C1BB54068890; };
@@ -237,7 +235,6 @@
 		DE90B2A785438E6659EA16CF /* CtrlrLuaMethodCodeEditor.cpp */ = {isa = PBXBuildFile; fileRef = 0E035C378F5533B238D6D9D0; };
 		DFCBC6338D04C672ED729CE8 /* Standalone Plugin */ = {isa = PBXBuildFile; fileRef = C8515F3F3AB5B7773D926D96; };
 		E0C72DCF26A89DA9FEF3CA4F /* CtrlrIDManager.cpp */ = {isa = PBXBuildFile; fileRef = 2A359073C42F087C7994BCB5; };
-		E154BE6B268A8279E13CF3D5 /* include_juce_audio_plugin_client_AAX.mm */ = {isa = PBXBuildFile; fileRef = F1E4DF5750D2275AD79816F9; };
 		E21291DBC05684612CDEE938 /* CtrlrSliderInternal.cpp */ = {isa = PBXBuildFile; fileRef = 828A3523D4EC5ECEB3CA298E; };
 		E23C1D7DFBED154FBF6A1945 /* CtrlrLuaMethodDebuggerPrompt.cpp */ = {isa = PBXBuildFile; fileRef = 24FB975D30768EEDDF9C7AB6; };
 		E2AB78DC7F794664D6ABF46D /* CtrlrWindows.cpp */ = {isa = PBXBuildFile; fileRef = D9520C2B8E02C47E67F731E1; };
@@ -454,7 +451,6 @@
 		40A88138BF25BCB48FDF35E7 /* CtrlrPanelUndoManager.cpp */ /* CtrlrPanelUndoManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrPanelUndoManager.cpp; path = ../../Source/Core/CtrlrPanel/CtrlrPanelUndoManager.cpp; sourceTree = SOURCE_ROOT; };
 		40DE7D540BFF6BB76B471DB3 /* call_member.hpp */ /* call_member.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = call_member.hpp; path = ../../Source/Misc/luabind/luabind/detail/call_member.hpp; sourceTree = SOURCE_ROOT; };
 		411B837E784F99F4C5BFB333 /* CtrlrPanelLayerListItem.cpp */ /* CtrlrPanelLayerListItem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrPanelLayerListItem.cpp; path = ../../Source/UIComponents/CtrlrPanel/CtrlrPanelLayerListItem.cpp; sourceTree = SOURCE_ROOT; };
-		416EA50024723F2552040A77 /* Info-AAX.plist */ /* Info-AAX.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-AAX.plist"; path = "Info-AAX.plist"; sourceTree = SOURCE_ROOT; };
 		42B0E8630C9BE81D4888CCAA /* CtrlrMIDISettingsRouting.h */ /* CtrlrMIDISettingsRouting.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CtrlrMIDISettingsRouting.h; path = ../../Source/UIComponents/CtrlrMIDI/CtrlrMIDISettingsRouting.h; sourceTree = SOURCE_ROOT; };
 		4355EFF6F6BB4F66DBEA5504 /* hotplug.c */ /* hotplug.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = hotplug.c; path = ../../Source/Misc/libusb/src/hotplug.c; sourceTree = SOURCE_ROOT; };
 		43A2F6D24C405CA6D552275E /* RSRC.zip */ /* RSRC.zip */ = {isa = PBXFileReference; lastKnownFileType = file.zip; name = RSRC.zip; path = ../../Source/Resources/Misc/RSRC.zip; sourceTree = SOURCE_ROOT; };
@@ -756,6 +752,7 @@
 		B8AFDD29C107A759B9ECAB46 /* lua51compat.cpp */ /* lua51compat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = lua51compat.cpp; path = ../../Source/Misc/luabind/src/lua51compat.cpp; sourceTree = SOURCE_ROOT; };
 		B91E6C2B4E45307344899920 /* strerror.c */ /* strerror.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = strerror.c; path = ../../Source/Misc/libusb/src/strerror.c; sourceTree = SOURCE_ROOT; };
 		BA01E80D911718E11C616CA0 /* CtrlrProperties.cpp */ /* CtrlrProperties.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrProperties.cpp; path = ../../Source/Core/CtrlrProperties.cpp; sourceTree = SOURCE_ROOT; };
+		BA514DE8D98F0B027BC69BFB /* LuaMethodEditorCommandIDs.h */ /* LuaMethodEditorCommandIDs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = LuaMethodEditorCommandIDs.h; path = ../../Source/Core/LuaMethodEditorCommandIDs.h; sourceTree = SOURCE_ROOT; };
 		BAF352C8F07CAE3FFCB815E0 /* CtrlrManagerWindowManager.cpp */ /* CtrlrManagerWindowManager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrManagerWindowManager.cpp; path = ../../Source/UIComponents/CtrlrWindowManagers/CtrlrManagerWindowManager.cpp; sourceTree = SOURCE_ROOT; };
 		BB173D44637EC96BFC40804C /* CtrlrXYModulator.cpp */ /* CtrlrXYModulator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrXYModulator.cpp; path = ../../Source/UIComponents/CtrlrComponents/Specials/CtrlrXYModulator.cpp; sourceTree = SOURCE_ROOT; };
 		BB30EDDF9D94CCD6775223A5 /* function_introspection.cpp */ /* function_introspection.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = function_introspection.cpp; path = ../../Source/Misc/luabind/src/function_introspection.cpp; sourceTree = SOURCE_ROOT; };
@@ -777,7 +774,6 @@
 		C085E2BECAA7EB82A03452C3 /* CtrlrSlider.cpp */ /* CtrlrSlider.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrSlider.cpp; path = ../../Source/UIComponents/CtrlrComponents/Sliders/CtrlrSlider.cpp; sourceTree = SOURCE_ROOT; };
 		C0AD64546A6AF349E9E1D582 /* class.cpp */ /* class.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = class.cpp; path = ../../Source/Misc/luabind/src/class.cpp; sourceTree = SOURCE_ROOT; };
 		C0C0A9D5DCD4E292E4C2E9CC /* has_get_pointer.hpp */ /* has_get_pointer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = has_get_pointer.hpp; path = ../../Source/Misc/luabind/luabind/detail/has_get_pointer.hpp; sourceTree = SOURCE_ROOT; };
-		C1AB06E5D06AED148A1961B9 /* AAX */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CtrlrX.aaxplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2AD221A3563BA068703FB11 /* CtrlrPanelMIDISnapshot.h */ /* CtrlrPanelMIDISnapshot.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CtrlrPanelMIDISnapshot.h; path = ../../Source/Core/CtrlrPanel/CtrlrPanelMIDISnapshot.h; sourceTree = SOURCE_ROOT; };
 		C2B8BCE7E7EEF6102642AB18 /* CtrlrListBox.h */ /* CtrlrListBox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CtrlrListBox.h; path = ../../Source/UIComponents/CtrlrComponents/Specials/CtrlrListBox.h; sourceTree = SOURCE_ROOT; };
 		C31EC20F95074DD445F5D3A7 /* CtrlrLog.cpp */ /* CtrlrLog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrLog.cpp; path = ../../Source/Core/CtrlrLog.cpp; sourceTree = SOURCE_ROOT; };
@@ -914,7 +910,6 @@
 		F0B231FAB871110BAF83387B /* CtrlrLuaCodeTokeniser.cpp */ /* CtrlrLuaCodeTokeniser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrLuaCodeTokeniser.cpp; path = ../../Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaCodeTokeniser.cpp; sourceTree = SOURCE_ROOT; };
 		F11D202FCA2EEAF6C580CB8E /* CtrlrValueTreeEditor.cpp */ /* CtrlrValueTreeEditor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrValueTreeEditor.cpp; path = ../../Source/UIComponents/CtrlrValueTreeEditor.cpp; sourceTree = SOURCE_ROOT; };
 		F1B113E34155A2CAEEE42521 /* exception_handler.hpp */ /* exception_handler.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = exception_handler.hpp; path = ../../Source/Misc/luabind/luabind/exception_handler.hpp; sourceTree = SOURCE_ROOT; };
-		F1E4DF5750D2275AD79816F9 /* include_juce_audio_plugin_client_AAX.mm */ /* include_juce_audio_plugin_client_AAX.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_plugin_client_AAX.mm; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_AAX.mm; sourceTree = SOURCE_ROOT; };
 		F299599DE4607201E82A83D2 /* libr.h */ /* libr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = libr.h; path = ../../Source/Misc/include/libr.h; sourceTree = SOURCE_ROOT; };
 		F2B4161650FF5D85008A37B4 /* call_function.hpp */ /* call_function.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = call_function.hpp; path = ../../Source/Misc/luabind/luabind/detail/call_function.hpp; sourceTree = SOURCE_ROOT; };
 		F321210BC055AFED477AB53D /* CtrlrMIDIFilter.cpp */ /* CtrlrMIDIFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrMIDIFilter.cpp; path = ../../Source/MIDI/CtrlrMIDIFilter.cpp; sourceTree = SOURCE_ROOT; };
@@ -979,25 +974,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		60212008C04F03849E2CCBBE = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				98F0ADC8B423ED8696F5E9AF,
-				0AF3FD7D96745ED04BC5F6D4,
-				7B646BA09CE20A58EF99FEB4,
-				AD5F166D68B28CCC99A2F46B,
-				6295D31908D48C37464D1999,
-				4D6D24160D269BC6105E97AA,
-				763955490185CD31CCF73F57,
-				AEA98A58B96C35D0852AFB05,
-				87C2F3AB6C44054BD8B8A005,
-				270D27903B9EE88454909712,
-				723FA9CC3B56841D49EDBD63,
-				68EC84A6DB7A3DA154280D74,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		DF3FF19B29C3FD7945852418 = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1495,6 +1471,7 @@
 			isa = PBXGroup;
 			children = (
 				DAD7152268F4D0870C7A18F9,
+				BA514DE8D98F0B027BC69BFB,
 			);
 			name = CtrlrX;
 			sourceTree = "<group>";
@@ -1517,7 +1494,6 @@
 			children = (
 				DE9BC1EBBFB27FB0B0CAB897,
 				060E30DBE4C3B3A5920D511A,
-				416EA50024723F2552040A77,
 				9E4C945505092247AC116660,
 				0F2A10151614696A44E74DF4,
 				9503089C289097F8B3937ABF,
@@ -1774,7 +1750,6 @@
 			children = (
 				645A79C89472FFC0A5E3D73F,
 				EB6134FB2CFC4B1825455D47,
-				C1AB06E5D06AED148A1961B9,
 				908E0C8A957286821FB05A54,
 				C8515F3F3AB5B7773D926D96,
 				75C913600A8B4A361ED6FABA,
@@ -1882,7 +1857,6 @@
 				FCEB86C04B4B279CC2043797,
 				9B735194E301AABE3BB9264C,
 				E6185C722658775A486BA3FA,
-				F1E4DF5750D2275AD79816F9,
 				E21D5F08F666793FCA646F34,
 				3A4B4D0FA27B7B4F1ABCD2C6,
 				AF17B083607B129AA2958B35,
@@ -2283,25 +2257,6 @@
 			productReference = C8515F3F3AB5B7773D926D96;
 			productType = "com.apple.product-type.application";
 		};
-		FDD4D95AAAC25E245173C4BC /* CtrlrX - AAX */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 08808F02D417DD2443DCA6F0;
-			buildPhases = (
-				884D3C6B6512D0A6CAA2ECEC,
-				E5C0F1D36BAA011B56398C74,
-				C0F85EB7D987DDEEC9639D32,
-				DF3FF19B29C3FD7945852418,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				B0C65D18B2EBE18AB9610900,
-			);
-			name = "CtrlrX - AAX";
-			productName = CtrlrX;
-			productReference = C1AB06E5D06AED148A1961B9;
-			productType = "com.apple.product-type.bundle";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -2443,28 +2398,6 @@
 							};
 						};
 					};
-					FDD4D95AAAC25E245173C4BC = {
-						SystemCapabilities = {
-							com.apple.ApplicationGroups.iOS = {
-								enabled = 0;
-							};
-							com.apple.HardenedRuntime = {
-								enabled = 0;
-							};
-							com.apple.InAppPurchase = {
-								enabled = 0;
-							};
-							com.apple.InterAppAudio = {
-								enabled = 0;
-							};
-							com.apple.Push = {
-								enabled = 0;
-							};
-							com.apple.Sandbox = {
-								enabled = 0;
-							};
-						};
-					};
 				};
 			};
 			buildConfigurationList = 12F7390729F977433DEAAC10;
@@ -2481,7 +2414,6 @@
 				46A18ED82E58216C4534B54D,
 				DA246935607B47B955421D13,
 				95BA742C0DD8D4F51296A065,
-				FDD4D95AAAC25E245173C4BC,
 				939EBC04F2B294AE199B7E40,
 				E64B69B5ECADB5780A98FC7C,
 				544444E5E2056935093BEFD1,
@@ -2518,15 +2450,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		AC0AAAB7B88B75F04DFBF657 = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0C304F9AC74497AEB5234479,
-				9FE286B20806467D22D9C426,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E5C0F1D36BAA011B56398C74 = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -2583,17 +2506,6 @@
 			shellScript = "#!/bin/bash\ntimestamp=$(date +\"%Y-%m-%d %H:%M:%S\")\nheaderFile=\"../../Source/Core/CtrlrRevision.h\"\n# Use sed to replace or append the BUILD_TIMESTAMP definition\nif grep -q \"BUILD_TIMESTAMP\" \"$headerFile\"; then\n    sed -i \"\" \"s/#define BUILD_TIMESTAMP.*/#define BUILD_TIMESTAMP \\\"${timestamp}\\\"/\" \"$headerFile\"\nelse\n    echo \"#define BUILD_TIMESTAMP \\\"${timestamp}\\\"\" >> \"$headerFile\"\nfi";
 		};
 		6D45B2DF1FD0E1A6D82FEAF3 /* Pre-build script */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Pre-build script";
-			alwaysOutOfDate = 1;
-			shellPath = /bin/sh;
-			shellScript = "#!/bin/bash\ntimestamp=$(date +\"%Y-%m-%d %H:%M:%S\")\nheaderFile=\"../../Source/Core/CtrlrRevision.h\"\n# Use sed to replace or append the BUILD_TIMESTAMP definition\nif grep -q \"BUILD_TIMESTAMP\" \"$headerFile\"; then\n    sed -i \"\" \"s/#define BUILD_TIMESTAMP.*/#define BUILD_TIMESTAMP \\\"${timestamp}\\\"/\" \"$headerFile\"\nelse\n    echo \"#define BUILD_TIMESTAMP \\\"${timestamp}\\\"\" >> \"$headerFile\"\nfi";
-		};
-		884D3C6B6512D0A6CAA2ECEC /* Pre-build script */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -2883,14 +2795,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C0F85EB7D987DDEEC9639D32 = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E154BE6B268A8279E13CF3D5,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -2910,10 +2814,6 @@
 			isa = PBXTargetDependency;
 			target = E64B69B5ECADB5780A98FC7C;
 		};
-		B0C65D18B2EBE18AB9610900 = {
-			isa = PBXTargetDependency;
-			target = 544444E5E2056935093BEFD1;
-		};
 		B52172725EDA24628CBFEDFC = {
 			isa = PBXTargetDependency;
 			target = 544444E5E2056935093BEFD1;
@@ -2925,10 +2825,6 @@
 		CE4AF46A886FEBCBEE6C322C = {
 			isa = PBXTargetDependency;
 			target = 939EBC04F2B294AE199B7E40;
-		};
-		DF41BECA45E712554A5518DF = {
-			isa = PBXTargetDependency;
-			target = FDD4D95AAAC25E245173C4BC;
 		};
 		F0C497728D844D0AFC81C5C1 = {
 			isa = PBXTargetDependency;
@@ -2981,9 +2877,6 @@
 					"$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
 					"$(SRCROOT)/../../Source/Misc/vst2sdk",
 					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF",
 					"$(SRCROOT)/../../JUCE/modules",
 					"$(SRCROOT)/../../Source",
 					"$(SRCROOT)/../../Source/Misc",
@@ -3008,7 +2901,7 @@
 				LIBRARY_STYLE = Bundle;
 				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-8-1 /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
 				OTHER_LDFLAGS = "-bundle -lCtrlrX -Xlinker -headerpad -Xlinker 800";
@@ -3061,9 +2954,6 @@
 					"$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
 					"$(SRCROOT)/../../Source/Misc/vst2sdk",
 					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF",
 					"$(SRCROOT)/../../JUCE/modules",
 					"$(SRCROOT)/../../Source",
 					"$(SRCROOT)/../../Source/Misc",
@@ -3088,7 +2978,7 @@
 				LIBRARY_STYLE = Bundle;
 				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-8-1 /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
 				OTHER_LDFLAGS = "-bundle -lCtrlrX -Xlinker -headerpad -Xlinker 800";
@@ -3140,9 +3030,6 @@
 					"$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
 					"$(SRCROOT)/../../Source/Misc/vst2sdk",
 					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF",
 					"$(SRCROOT)/../../JUCE/modules",
 					"$(SRCROOT)/../../Source",
 					"$(SRCROOT)/../../Source/Misc",
@@ -3165,7 +3052,7 @@
 				INFOPLIST_PREPROCESS = NO;
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-8-1 /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
 				OTHER_LDFLAGS = "-bundle -lCtrlrX -Xlinker -headerpad -Xlinker 800";
@@ -3216,9 +3103,6 @@
 					"$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
 					"$(SRCROOT)/../../Source/Misc/vst2sdk",
 					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF",
 					"$(SRCROOT)/../../JUCE/modules",
 					"$(SRCROOT)/../../Source",
 					"$(SRCROOT)/../../Source/Misc",
@@ -3241,7 +3125,7 @@
 				INFOPLIST_PREPROCESS = NO;
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-8-1 /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
 				OTHER_LDFLAGS = "-bundle -lCtrlrX -Xlinker -headerpad -Xlinker 800";
@@ -3292,9 +3176,6 @@
 					"$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
 					"$(SRCROOT)/../../Source/Misc/vst2sdk",
 					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF",
 					"$(SRCROOT)/../../JUCE/modules",
 					"$(SRCROOT)/../../Source",
 					"$(SRCROOT)/../../Source/Misc",
@@ -3317,7 +3198,7 @@
 				INFOPLIST_PREPROCESS = NO;
 				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-8-1 /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
 				OTHER_LDFLAGS = "-lCtrlrX -Xlinker -headerpad -Xlinker 800";
@@ -3369,9 +3250,6 @@
 					"$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
 					"$(SRCROOT)/../../Source/Misc/vst2sdk",
 					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF",
 					"$(SRCROOT)/../../JUCE/modules",
 					"$(SRCROOT)/../../Source",
 					"$(SRCROOT)/../../Source/Misc",
@@ -3396,7 +3274,7 @@
 				LIBRARY_STYLE = Bundle;
 				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-8-1 /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
 				OTHER_LDFLAGS = "-bundle -lCtrlrX -Xlinker -headerpad -Xlinker 800";
@@ -3406,90 +3284,6 @@
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "arm64 x86_64";
 				WRAPPER_EXTENSION = vst3;
-			};
-			name = Release;
-		};
-		7BF94E52DA571C7E2DBCC6A1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_LINK_OBJC_RUNTIME = NO;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
-				DEAD_CODE_STRIPPING = YES;
-				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = /;
-				EXCLUDED_ARCHS = "i386 arm64e";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_NDEBUG=1",
-					"NDEBUG=1",
-					"JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1",
-					"BOOST_BIND_GLOBAL_PLACEHOLDERS=1",
-					"JUCER_XCODE_MAC_F6D2F4CF=1",
-					"JUCE_APP_VERSION=5.6.34",
-					"JUCE_APP_VERSION_HEX=0x50622",
-					"JucePlugin_Build_VST=0",
-					"JucePlugin_Build_VST3=0",
-					"JucePlugin_Build_AU=0",
-					"JucePlugin_Build_AUv3=0",
-					"JucePlugin_Build_RTAS=0",
-					"JucePlugin_Build_AAX=1",
-					"JucePlugin_Build_Standalone=0",
-					"JucePlugin_Build_Unity=0",
-				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				GENERATE_PKGINFO_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
-					"$(SRCROOT)/../../Source/Misc/vst2sdk",
-					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF",
-					"$(SRCROOT)/../../JUCE/modules",
-					"$(SRCROOT)/../../Source",
-					"$(SRCROOT)/../../Source/Misc",
-					"$(SRCROOT)/../../Source/Misc/include",
-					"$(SRCROOT)/../../Source/Misc/lua/include",
-					"$(SRCROOT)/../../Source/Misc/luabind",
-					"$(SRCROOT)/../../Source/Misc/libusb/include",
-					"$(SRCROOT)/../../Source/Misc/boost",
-					"$(SRCROOT)/../../Source/Misc/vst2sdk",
-					"$(SRCROOT)/../../Source/MIDI",
-					"$(SRCROOT)/../../Source/Core",
-					"$(SRCROOT)/../../Source/Native",
-					"$(SRCROOT)/../../Source/Plugin",
-					"$(SRCROOT)/../../Source/UIComponents",
-					"$(SRCROOT)/../../Source/Lua",
-					"$(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = Info-AAX.plist;
-				INFOPLIST_PREPROCESS = NO;
-				INSTALL_PATH = "/Library/Application Support/Avid/Audio/Plug-Ins/";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"/Users/DYREC/SDKs/aax-sdk-2-8-1/Libs/Release\"",
-				);
-				LIBRARY_STYLE = Bundle;
-				LLVM_LTO = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-8-1 /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
-				OTHER_CFLAGS = "-w";
-				OTHER_CPLUSPLUSFLAGS = "-w";
-				OTHER_LDFLAGS = "-bundle -lAAXLibrary_libcpp -lCtrlrX -Xlinker -headerpad -Xlinker 800";
-				PRODUCT_BUNDLE_IDENTIFIER = com.CtrlrX.CtrlrX;
-				PRODUCT_NAME = "CtrlrX";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				USE_HEADERMAP = NO;
-				VALID_ARCHS = "arm64 x86_64";
-				WRAPPER_EXTENSION = aaxplugin;
 			};
 			name = Release;
 		};
@@ -3530,9 +3324,6 @@
 					"$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
 					"$(SRCROOT)/../../Source/Misc/vst2sdk",
 					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF",
 					"$(SRCROOT)/../../JUCE/modules",
 					"$(SRCROOT)/../../Source",
 					"$(SRCROOT)/../../Source/Misc",
@@ -3554,7 +3345,7 @@
 				INFOPLIST_FILE = Info-Standalone_Plugin.plist;
 				INFOPLIST_PREPROCESS = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-8-1 /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
 				OTHER_LDFLAGS = "-lCtrlrX -Xlinker -headerpad -Xlinker 800";
@@ -3563,86 +3354,6 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "arm64 x86_64";
-			};
-			name = Debug;
-		};
-		91406ACFB22DEA1D84E448F6 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_LINK_OBJC_RUNTIME = NO;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
-				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
-				COPY_PHASE_STRIP = NO;
-				EXCLUDED_ARCHS = "i386 arm64e";
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_DEBUG=1",
-					"DEBUG=1",
-					"JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1",
-					"BOOST_BIND_GLOBAL_PLACEHOLDERS=1",
-					"JUCER_XCODE_MAC_F6D2F4CF=1",
-					"JUCE_APP_VERSION=5.6.34",
-					"JUCE_APP_VERSION_HEX=0x50622",
-					"JucePlugin_Build_VST=0",
-					"JucePlugin_Build_VST3=0",
-					"JucePlugin_Build_AU=0",
-					"JucePlugin_Build_AUv3=0",
-					"JucePlugin_Build_RTAS=0",
-					"JucePlugin_Build_AAX=1",
-					"JucePlugin_Build_Standalone=0",
-					"JucePlugin_Build_Unity=0",
-				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				GENERATE_PKGINFO_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
-					"$(SRCROOT)/../../Source/Misc/vst2sdk",
-					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF",
-					"$(SRCROOT)/../../JUCE/modules",
-					"$(SRCROOT)/../../Source",
-					"$(SRCROOT)/../../Source/Misc",
-					"$(SRCROOT)/../../Source/Misc/include",
-					"$(SRCROOT)/../../Source/Misc/lua/include",
-					"$(SRCROOT)/../../Source/Misc/luabind",
-					"$(SRCROOT)/../../Source/Misc/libusb/include",
-					"$(SRCROOT)/../../Source/Misc/boost",
-					"$(SRCROOT)/../../Source/Misc/vst2sdk",
-					"$(SRCROOT)/../../Source/MIDI",
-					"$(SRCROOT)/../../Source/Core",
-					"$(SRCROOT)/../../Source/Native",
-					"$(SRCROOT)/../../Source/Plugin",
-					"$(SRCROOT)/../../Source/UIComponents",
-					"$(SRCROOT)/../../Source/Lua",
-					"$(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = Info-AAX.plist;
-				INFOPLIST_PREPROCESS = NO;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"/Users/DYREC/SDKs/aax-sdk-2-8-1/Libs/Debug\"",
-				);
-				LIBRARY_STYLE = Bundle;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-8-1 /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
-				OTHER_CFLAGS = "-w";
-				OTHER_CPLUSPLUSFLAGS = "-w";
-				OTHER_LDFLAGS = "-bundle -lAAXLibrary_libcpp -lCtrlrX -Xlinker -headerpad -Xlinker 800";
-				PRODUCT_BUNDLE_IDENTIFIER = com.CtrlrX.CtrlrX;
-				PRODUCT_NAME = "CtrlrX";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				USE_HEADERMAP = NO;
-				VALID_ARCHS = "arm64 x86_64";
-				WRAPPER_EXTENSION = aaxplugin;
 			};
 			name = Debug;
 		};
@@ -3722,7 +3433,7 @@
 					"JucePlugin_Build_AU=1",
 					"JucePlugin_Build_AUv3=0",
 					"JucePlugin_Build_RTAS=0",
-					"JucePlugin_Build_AAX=1",
+					"JucePlugin_Build_AAX=0",
 					"JucePlugin_Build_Standalone=1",
 					"JucePlugin_Build_Unity=0",
 					"JUCE_SHARED_CODE=1",
@@ -3732,9 +3443,6 @@
 					"$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
 					"$(SRCROOT)/../../Source/Misc/vst2sdk",
 					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF",
 					"$(SRCROOT)/../../JUCE/modules",
 					"$(SRCROOT)/../../Source",
 					"$(SRCROOT)/../../Source/Misc",
@@ -3756,7 +3464,7 @@
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-8-1 /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
 				OTHER_LDFLAGS = "-Xlinker -headerpad -Xlinker 800";
@@ -3797,7 +3505,7 @@
 					"JucePlugin_Build_AU=1",
 					"JucePlugin_Build_AUv3=0",
 					"JucePlugin_Build_RTAS=0",
-					"JucePlugin_Build_AAX=1",
+					"JucePlugin_Build_AAX=0",
 					"JucePlugin_Build_Standalone=1",
 					"JucePlugin_Build_Unity=0",
 					"JUCE_SHARED_CODE=1",
@@ -3807,9 +3515,6 @@
 					"$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
 					"$(SRCROOT)/../../Source/Misc/vst2sdk",
 					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF",
 					"$(SRCROOT)/../../JUCE/modules",
 					"$(SRCROOT)/../../Source",
 					"$(SRCROOT)/../../Source/Misc",
@@ -3830,7 +3535,7 @@
 				);
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-8-1 /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
 				OTHER_LDFLAGS = "-Xlinker -headerpad -Xlinker 800";
@@ -3945,9 +3650,6 @@
 					"$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
 					"$(SRCROOT)/../../Source/Misc/vst2sdk",
 					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces",
-					"/Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF",
 					"$(SRCROOT)/../../JUCE/modules",
 					"$(SRCROOT)/../../Source",
 					"$(SRCROOT)/../../Source/Misc",
@@ -3970,7 +3672,7 @@
 				INFOPLIST_PREPROCESS = NO;
 				LIBRARY_STYLE = Bundle;
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode /Users/DYREC/SDKs/aax-sdk-2-8-1 /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces /Users/DYREC/SDKs/aax-sdk-2-8-1/Interfaces/ACF $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../JuceLibraryCode $(SRCROOT)/../../JUCE/modules $(SRCROOT)/../../Source $(SRCROOT)/../../Source/Misc $(SRCROOT)/../../Source/Misc/include $(SRCROOT)/../../Source/Misc/lua/include $(SRCROOT)/../../Source/Misc/luabind $(SRCROOT)/../../Source/Misc/libusb/include $(SRCROOT)/../../Source/Misc/boost $(SRCROOT)/../../Source/Misc/vst2sdk $(SRCROOT)/../../Source/MIDI $(SRCROOT)/../../Source/Core $(SRCROOT)/../../Source/Native $(SRCROOT)/../../Source/Plugin $(SRCROOT)/../../Source/UIComponents $(SRCROOT)/../../Source/Lua $(SRCROOT)/../../JUCE/modules/juce_audio_plugin_client";
 				OTHER_CFLAGS = "-w";
 				OTHER_CPLUSPLUSFLAGS = "-w";
 				OTHER_LDFLAGS = "-bundle -lCtrlrX -Xlinker -headerpad -Xlinker 800";
@@ -3986,15 +3688,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		08808F02D417DD2443DCA6F0 = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				7BF94E52DA571C7E2DBCC6A1,
-				91406ACFB22DEA1D84E448F6,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		0B12C372827C5A0B17ABABDD = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
