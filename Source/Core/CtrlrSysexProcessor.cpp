@@ -579,5 +579,5 @@ void CtrlrSysexProcessor::checksumKawaiK5(const CtrlrSysexToken token, MidiMessa
 	int checksum = (kawaiMagicNumber - oddSum - evenSum) & 0xFF;
 
 	// Write checksum to the designated position
-	*(ptr + token.getPosition()) = checksum;
+	*(ptr + token.getPosition()) = checksum &0x7f;
 }
