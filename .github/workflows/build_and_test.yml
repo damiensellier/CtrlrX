@@ -81,27 +81,6 @@ jobs:
         if: ${{ matrix.name == 'macOS' }}
         run: brew install ninja osxutils
 
-      - name: Install CtrlrX Deps
-        run: |
-          echo "OS: $RUNNER_OS"
-          echo "Current working directory: $PWD"
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            sudo apt install -y binutils-dev libboost-dev libcurl4-gnutls-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxrandr-dev xorg-dev
-          elif [ "$RUNNER_OS" == "Windows" ]; then
-            # to not clutter the build step logs:
-            ls ${GITHUB_WORKSPACE}
-            pushd ${GITHUB_WORKSPACE}\Source\Misc\
-            unzip boost\boost.zip
-            popd
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-            brew install boost
-            # somehow cmake doesn't pick up on /usr/local/include/boost/ ... maybe have to set it in the .jucer project
-            ls ${GITHUB_WORKSPACE}
-            pushd ${GITHUB_WORKSPACE}/Source/Misc/
-            unzip boost/boost.zip
-            popd
-          fi
-
       # This block can be removed once 15.1 is default (JUCE requires it when building on macOS 14)
       - name: Use latest Xcode on system (macOS)
         if: ${{ matrix.name == 'macOS' }}
@@ -113,6 +92,25 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
+      - name: Install CtrlrX Deps
+        run: |
+          echo "OS: $RUNNER_OS"
+          echo "Current working directory: $PWD"
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt install -y binutils-dev libboost-dev libcurl4-gnutls-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxrandr-dev xorg-dev
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+            # to not clutter the build step logs:
+            pushd ${GITHUB_WORKSPACE}\Source\Misc\
+            unzip boost\boost.zip
+            popd
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install boost
+            # somehow cmake doesn't pick up on /usr/local/include/boost/ ... maybe have to set it in the .jucer project
+            pushd ${GITHUB_WORKSPACE}/Source/Misc/
+            unzip boost/boost.zip
+            popd
+          fi
 
       - name: Cache the build
         uses: mozilla-actions/sccache-action@v0.0.9
