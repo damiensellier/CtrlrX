@@ -89,12 +89,14 @@ jobs:
             sudo apt install -y binutils-dev libboost-dev libcurl4-gnutls-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxrandr-dev xorg-dev
           elif [ "$RUNNER_OS" == "Windows" ]; then
             # to not clutter the build step logs:
-            pushd ${GITHUB_WORKSPACE}/Source/Misc/
-            unzip boost/boost.zip
+            ls ${GITHUB_WORKSPACE}
+            pushd ${GITHUB_WORKSPACE}\Source\Misc\
+            unzip boost\boost.zip
             popd
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew install boost
             # somehow cmake doesn't pick up on /usr/local/include/boost/ ... maybe have to set it in the .jucer project
+            ls ${GITHUB_WORKSPACE}
             pushd ${GITHUB_WORKSPACE}/Source/Misc/
             unzip boost/boost.zip
             popd
@@ -157,7 +159,7 @@ jobs:
           ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}"
 
       - name: Import Certificates (macOS)
-        if: ${{ matrix.name == 'macOS'}} && ${{ env.HAVE_DEV_ID_APP_CERT }} && ${{ env.HAVE_DEV_ID_INSTALLER_CERT }}
+        if: ${{ matrix.name == 'macOS' && env.HAVE_DEV_ID_APP_CERT && env.HAVE_DEV_ID_INSTALLER_CERT }}
         uses: sudara/basic-macos-keychain-action@v1
         id: keychain
         with:
@@ -167,7 +169,7 @@ jobs:
           dev-id-installer-password: ${{ secrets.DEV_ID_INSTALLER_PASSWORD }}
 
       - name: Codesign (macOS)
-        if: ${{ matrix.name == 'macOS' }} && ${{ env.HAVE_DEV_ID_APP_CERT }} && ${{ env.HAVE_DEV_ID_INSTALLER_CERT }}
+        if: ${{ matrix.name == 'macOS' && env.HAVE_DEV_ID_APP_CERT && env.HAVE_DEV_ID_INSTALLER_CERT }}
         timeout-minutes: 5
         run: |
           # Each plugin must be code signed
@@ -196,7 +198,7 @@ jobs:
           SetFile -a C "${{ env.CLAP_PATH }}"
 
       - name: pkgbuild, Productbuild and Notarize
-        if: ${{ matrix.name == 'macOS' }} && ${{ env.HAVE_DEV_ID_APP_CERT }} && ${{ env.HAVE_DEV_ID_INSTALLER_CERT }}
+        if: ${{ matrix.name == 'macOS' && env.HAVE_DEV_ID_APP_CERT && env.HAVE_DEV_ID_INSTALLER_CERT }}
         timeout-minutes: 5
         run: |
           pkgbuild --identifier "${{ env.BUNDLE_ID }}.au.pkg" --version $VERSION --component "${{ env.AU_PATH }}" --install-location "/Library/Audio/Plug-Ins/Components"  "Packaging/${{ env.PRODUCT_NAME }}.au.pkg"
@@ -228,7 +230,7 @@ jobs:
           mv "Packaging/Windows/Output/${{ env.ARTIFACT_NAME }}.exe" "${{ env.ARTIFACTS_PATH }}/"
 
       - name: Codesign with Azure Trusted Signing
-        if: ${{ matrix.name == 'Windows' }} && ${{ env.HAVE_AZURE_CLIENT_SECRET }}
+        if: ${{ matrix.name == 'Windows' && env.HAVE_AZURE_CLIENT_SECRET }}
         uses: azure/trusted-signing-action@v0.5.1
         with:
           # The Azure Active Directory tenant (directory) ID.
@@ -273,6 +275,12 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}.pkg
           path: Packaging/${{ env.ARTIFACT_NAME }}.pkg
+
+      # Enable tmate debugging of manually-triggered workflows if the input option was provided
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
 
   release:
     if: contains(github.ref, 'tags/v')
