@@ -26,8 +26,6 @@ class CtrlrSysexProcessor
 		uint8 getRolandSplit (const int value, const int byteNum);
 		void checksumXor(const CtrlrSysexToken token, MidiMessage &m);
 		//void checksumWaldorfRackAttack(const CtrlrSysexToken token, MidiMessage &m);
-		void checksumSony(const CtrlrSysexToken token, MidiMessage &m);
-		void checksumKawaiK5(const CtrlrSysexToken token, MidiMessage &m);
         void checksumTechnics(const CtrlrSysexToken token, MidiMessage &m); // Added v5.6.34. Thanks to @dnaldoog
         void checksumOnesComplement(const CtrlrSysexToken token, MidiMessage &m);
         void checksumSummingSimple(const CtrlrSysexToken token, MidiMessage &m);

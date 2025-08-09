@@ -1524,10 +1524,8 @@ void CtrlrSysExEditor::mouseDown (const MouseEvent& e)
 			m.addItem(14, "Exclusive OR (XOR) (Akai,Korg,Sequential) ");
 			m.addItem (15, "Simple Summing (Waldorf,Lexicon,Oberheim)");
 			m.addItem (16, "XOR Byte 1 (Technics)"); // Added v5.6.34.
-			m.addItem (17, "Magic 5A3C (Kawai K5)"); 
-			m.addItem (18, "SONY (MSB)"); 
-			m.addItem (19, "1's Complement (E-mu,Korg)"); 
-			m.addItem (20, "Ignore this byte on input");
+			m.addItem (17, "1's Complement (E-mu,Korg)"); 
+			m.addItem (18, "Ignore this byte on input");
 			PopupMenu km,lm,mm,nm;
 
 			for (int i=0; i<16; i++)
@@ -1606,20 +1604,14 @@ void CtrlrSysExEditor::mouseDown (const MouseEvent& e)
 				l->setText("tc", sendNotification); // Technics Matsushita, XOR Byte 1
 				break;
 			case 17:
-				l->setText("W5", sendNotification);// Kawaii K5 magic 5A3C
-				break;
-			case 18:
-				l->setText("S5", sendNotification); //Sony MSB
-				break;
-			case 19:
 				l->setText("O5", sendNotification); //1;s Complement, E-mu, Korg
 				break;
-			case 20:
+			case 18:
 				l->setText("ii", sendNotification); // ignore this byte on input
 				break;
 			}
 
-			if (ret >= 21 && ret < 37)
+			if (ret >= 19 && ret < 37)
 			{
 				l->setText ("k"+String::toHexString(ret-20), sendNotification);
 			}
