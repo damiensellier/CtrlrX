@@ -65,7 +65,7 @@ jobs:
         if: runner.os == 'Linux'
         # Thanks to McMartin & co https://forum.juce.com/t/list-of-juce-dependencies-under-linux/15121/44
         run: |
-          sudo apt-get update && sudo apt install libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libwebkit2gtk-4.0-dev libglu1-mesa-dev xvfb ninja-build
+          sudo apt-get update && sudo apt install libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libglu1-mesa-dev xvfb ninja-build
           sudo /usr/bin/Xvfb $DISPLAY &
 
       - name: Install IPP (Windows)
@@ -88,11 +88,15 @@ jobs:
             sudo apt install -y binutils-dev libboost-dev libcurl4-gnutls-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxrandr-dev xorg-dev
           elif [ "$RUNNER_OS" == "Windows" ]; then
             # to not clutter the build step logs:
+            pushd Source/Misc/
             unzip boost/boost.zip
+            popd
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew install boost
             # somehow cmake doesn't pick up on /usr/local/include/boost/ ... maybe have to set it in the .jucer project
+            pushd Source/Misc/
             unzip boost/boost.zip
+            popd
           fi
 
       # This block can be removed once 15.1 is default (JUCE requires it when building on macOS 14)
