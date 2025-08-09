@@ -40,7 +40,7 @@ jobs:
       matrix:
         include:
           - name: Linux
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             pluginval-binary: ./pluginval
             extra-flags: -G Ninja
           - name: macOS
@@ -82,18 +82,17 @@ jobs:
         run: brew install ninja osxutils
 
       - name: Install CtrlrX Deps
-        shell: bash
         run: |
           echo "OS: $RUNNER_OS"
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt install -y binutils-dev libboost-dev libcurl4-gnutls-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxrandr-dev xorg-dev
           elif [ "$RUNNER_OS" == "Windows" ]; then
             # to not clutter the build step logs:
-            ./Scripts/post-commit unpack_boost
+            unzip boost/boost.zip
           elif [ "$RUNNER_OS" == "macOS" ]; then
             brew install boost
             # somehow cmake doesn't pick up on /usr/local/include/boost/ ... maybe have to set it in the .jucer project
-            ./Scripts/post-commit unpack_boost
+            unzip boost/boost.zip
           fi
 
       # This block can be removed once 15.1 is default (JUCE requires it when building on macOS 14)
@@ -112,7 +111,6 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Extract version from .jucer file
-        shell: bash
         # Try to derive version from a jucer file before configuring cmake
         run: |
           if [ -n "`grep -h 'version=.\+Ctrlr' *.jucer`" ]; then
