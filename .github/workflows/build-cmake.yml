@@ -60,13 +60,14 @@ jobs:
       with:
         submodules: recursive
     
-    - name: Install dependencies
+    - name: Install CtrlrX Deps
       shell: bash
       run: |
         echo "OS: $RUNNER_OS"
         if [ "$RUNNER_OS" == "Linux" ]; then
           sudo apt-get update
-          sudo apt install -y binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev xvfb ninja-build
+          sudo apt install -y libasound2-dev libfreetype6-dev libxinerama-dev xvfb ninja-build
+          sudo apt install -y binutils-dev libboost-dev libcurl4-gnutls-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxrandr-dev xorg-dev
         elif [ "$RUNNER_OS" == "Windows" ]; then
           # to not clutter the build step logs:
           ./Scripts/post-commit unpack_boost
