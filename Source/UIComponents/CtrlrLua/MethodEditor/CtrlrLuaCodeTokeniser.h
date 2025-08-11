@@ -5,28 +5,28 @@
 
 class CtrlrLuaCodeTokeniser : public LuaTokeniser
 {
-	public:
-		CtrlrLuaCodeTokeniser();
-		~CtrlrLuaCodeTokeniser();
-		int readNextToken (CodeDocument::Iterator& source);
-		CodeEditorComponent::ColourScheme getDefaultColourScheme();
-		static bool isReservedKeyword (const String& token) noexcept;
+public:
+	CtrlrLuaCodeTokeniser();
+	~CtrlrLuaCodeTokeniser();
+	int readNextToken(CodeDocument::Iterator& source);
+	CodeEditorComponent::ColourScheme getDefaultColourScheme();
+	static bool isReservedKeyword(const String& token) noexcept;
 
-		enum TokenType
-		{
-	        tokenType_error = 0,
-			tokenType_comment,
-			tokenType_keyword,
-			tokenType_operator,
-			tokenType_identifier,
-			tokenType_integer,
-			tokenType_float,
-			tokenType_string,
-			tokenType_bracket,
-			tokenType_punctuation
-		};
+	enum TokenType
+	{
+		tokenType_error = 0,
+		tokenType_comment,
+		tokenType_keyword,
+		tokenType_operator,
+		tokenType_identifier,
+		tokenType_integer,
+		tokenType_float,
+		tokenType_string,
+		tokenType_bracket,
+		tokenType_punctuation
+	};
 
-		JUCE_LEAK_DETECTOR (CtrlrLuaCodeTokeniser);
+	JUCE_LEAK_DETECTOR(CtrlrLuaCodeTokeniser);
 };
 
 #endif

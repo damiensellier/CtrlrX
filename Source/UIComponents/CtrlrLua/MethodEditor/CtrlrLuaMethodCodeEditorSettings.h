@@ -1,28 +1,31 @@
+#include "stdafx.h"
 /*
   ==============================================================================
 
   This is an automatically generated file created by the Jucer!
 
-  Creation date:  27 Oct 2012 8:17:44pm
+This is an automatically generated file created by the Jucer!
 
-  Be careful when adding custom code to these files, as only the code within
-  the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
-  and re-saved.
+Creation date : 27 Oct 2012 8 : 17 : 44pm
 
-  Jucer version: 1.12
+Be careful when adding custom code to these files, as only the code within
+the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
+and re - saved.
 
-  ------------------------------------------------------------------------------
+Jucer version : 1.12
 
-  The Jucer is part of the JUCE library - "Jules' Utility Class Extensions"
-  Copyright 2004-6 by Raw Material Software ltd.
+------------------------------------------------------------------------------
 
-  ==============================================================================
+The Jucer is part of the JUCE library - "Jules' Utility Class Extensions"
+Copyright 2004 - 6 by Raw Material Software ltd.
+
+==============================================================================
 */
 
 #ifndef __JUCER_HEADER_CTRLRLUAMETHODCODEEDITORSETTINGS_CTRLRLUAMETHODCODEEDITORSETTINGS_FC2CDFB3__
 #define __JUCER_HEADER_CTRLRLUAMETHODCODEEDITORSETTINGS_CTRLRLUAMETHODCODEEDITORSETTINGS_FC2CDFB3__
 
-//[Headers]     -- You can add your own extra header files here --
+//[Headers]       -- You can add your own extra header files here --
 #include "Methods/CtrlrLuaMethod.h"
 #include "CtrlrTextEditor.h"
 #include "CtrlrWindowManagers/CtrlrChildWindowContent.h"
@@ -32,13 +35,15 @@
 class CtrlrLuaMethodEditor;
 //[/Headers]
 
+
+
 //==============================================================================
 /**
-                                                                    //[Comments]
+                                                                              //[Comments]
     An auto-generated component, created by the Jucer.
 
     Describe your class and how it works here!
-                                                                    //[/Comments]
+                                                                              //[/Comments]
 */
 class CtrlrLuaMethodCodeEditorSettings : public Component,
     public ChangeListener,
@@ -52,15 +57,17 @@ public:
     ~CtrlrLuaMethodCodeEditorSettings();
 
     //==============================================================================
-    //[UserMethods]     -- You can add your own custom methods in this section.
+    //[UserMethods]   -- You can add your own custom methods in this section.
     void changeListenerCallback(ChangeBroadcaster* source);
     const Font getFont();
-
-    // Public getter methods for colors
     const Colour getBgColour();
-    const Colour getFontColour();
     const Colour getLineNumbersBgColour();
     const Colour getLineNumbersColour();
+
+    // Moved these from local functions inside the constructor
+    void populateColourCombo(ComboBox* combo);
+    int findColourIndex(const Colour& colour);
+    Colour getColourFromCombo(ComboBox* combo);
     //[/UserMethods]
 
     void paint(Graphics& g);
@@ -68,63 +75,46 @@ public:
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
     void buttonClicked(Button* buttonThatWasClicked);
     void sliderValueChanged(Slider* sliderThatWasMoved);
-    void CtrlrLuaMethodCodeEditorSettings::updateEditorColours();
-    // Add this struct to store color information
-    struct ColorItem {
-        String name;
-        Colour color;
-    };
+
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
+    struct ColourItem {
+        String name;
+        Colour colour;
+    };
+    static const ColourItem availableColours[];
 
     CtrlrLuaCodeTokeniser luaTokeniser;
-    CodeEditorComponent::ColourScheme activeScheme;
-    bool isSchemeInitialized = false;
     CodeDocument codeDocument;
     CtrlrLuaMethodEditor& owner;
     Font codeFont;
-    int marginLeft; // Added v5.6.31
+    int marginLeft;
     int marginTop;
     int sampleWidth;
     int sampleHeight;
+    //[/UserVariables]
 
-    // UI Components
-    Label* label0; // Added v5.6.31
-    Label* label1; // Added v5.6.31
-    Label* label2; // Added v5.6.31
-    Label* label3; // Added v5.6.31
-    Label* label4; // Font color label
-
+    //==============================================================================
+    Label* label0;
     ComboBox* fontTypeface;
-    ComboBox* fontColour;       
-    ComboBox* bgColour;          
+    ComboBox* bgColour;
     ComboBox* lineNumbersBgColour;
-    ComboBox* lineNumbersColour;  
+    ComboBox* lineNumbersColour;
     ToggleButton* fontBold;
-    ToggleButton* fontUnderline;
     ToggleButton* fontItalic;
     ToggleButton* openSearchTabs;
-    TextButton* resetButton; // added JG
+    TextButton* resetButton;
     Slider* fontSize;
-
+    Label* label1;
+    Label* label2;
+    Label* label3;
     CodeEditorComponent* fontTest;
-
-    /*
-    Alternative to CtrlrColourEditorComponent -
-    mostly because setting bgColour to any alpha below 1.0
-    shows garbled editor text
-    so it can never be used anyway except FFxxxxxx
-    */
-    static const ColorItem availableColors[];
-    void populateColorCombo(ComboBox* combo);
-    int findColorIndex(const Colour& color);
-    Colour getColorFromCombo(ComboBox* combo);
-
     juce::Value& sharedSearchTabsValue;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrLuaMethodCodeEditorSettings);
 };
 
-#endif   // __JUCER_HEADER_CTRLRLUAMETHODCODEEDITORSETTINGS_CTRLRLUAMETHODCODEEDITORSETTINGS_FC2CDFB3__
+
+#endif    // __JUCER_HEADER_CTRLRLUAMETHODCODEEDITORSETTINGS_CTRLRLUAMETHODCODEEDITORSETTINGS_FC2CDFB3__

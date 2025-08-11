@@ -5,9 +5,9 @@
 CtrlrLuaCodeTokeniser::CtrlrLuaCodeTokeniser() {}
 CtrlrLuaCodeTokeniser::~CtrlrLuaCodeTokeniser() {}
 
-int CtrlrLuaCodeTokeniser::readNextToken (CodeDocument::Iterator& source)
+int CtrlrLuaCodeTokeniser::readNextToken(CodeDocument::Iterator& source)
 {
-    return CtrlrLuaCodeTokeniserFunctions::readNextToken (source);
+    return CtrlrLuaCodeTokeniserFunctions::readNextToken(source);
 }
 
 CodeEditorComponent::ColourScheme CtrlrLuaCodeTokeniser::getDefaultColourScheme()
@@ -34,13 +34,13 @@ CodeEditorComponent::ColourScheme CtrlrLuaCodeTokeniser::getDefaultColourScheme(
 
     CodeEditorComponent::ColourScheme cs;
 
-    for (unsigned int i = 0; i < sizeof (types) / sizeof (types[0]); ++i)  // (NB: numElementsInArray doesn't work here in GCC4.2)
-        cs.set (types[i].name, Colour (types[i].colour));
+    for (unsigned int i = 0; i < sizeof(types) / sizeof(types[0]); ++i)  // (NB: numElementsInArray doesn't work here in GCC4.2)
+        cs.set(types[i].name, Colour(types[i].colour));
 
     return cs;
 }
 
-bool CtrlrLuaCodeTokeniser::isReservedKeyword (const String& token) noexcept
+bool CtrlrLuaCodeTokeniser::isReservedKeyword(const String& token) noexcept
 {
-    return CtrlrLuaCodeTokeniserFunctions::isReservedKeyword (token.getCharPointer(), token.length());
+    return CtrlrLuaCodeTokeniserFunctions::isReservedKeyword(token.getCharPointer(), token.length());
 }
