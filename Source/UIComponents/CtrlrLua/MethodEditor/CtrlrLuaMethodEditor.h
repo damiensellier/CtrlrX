@@ -119,6 +119,14 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
         void tabChanged(CtrlrLuaMethodCodeEditor *codeEditor, const bool save=false, const bool recompile=false);
         void updateTabs();
         void valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChanged, const Identifier &property);
+    // Add this public method to CtrlrLuaMethodEditor
+    public:
+        // ... existing methods ...
+        /** Returns the current GenericCodeEditorComponent, or nullptr if not available. */
+        GenericCodeEditorComponent* getEditorComponent()
+        {
+            return editorComponent;
+        }
         void valueTreeChildrenChanged (ValueTree &treeWhoseChildHasChanged){}
         void valueTreeParentChanged (ValueTree &treeWhoseParentHasChanged){}
         void valueTreeChildAdded (ValueTree& parentTree, ValueTree& child){}

@@ -842,6 +842,7 @@ namespace Ids
     DECLARE_ID (luaMethodEditorBgColour);
     DECLARE_ID (luaMethodEditorLineNumbersBgColour); // Added v5.6.31
     DECLARE_ID (luaMethodEditorLineNumbersColour); // Added v5.6.31
+    DECLARE_ID (luaMethodEditorFontColour); // Editor font colour
     DECLARE_ID (luaMethodGroup);
     DECLARE_ID (luaMethodCode);
     DECLARE_ID (luaMethodSource);

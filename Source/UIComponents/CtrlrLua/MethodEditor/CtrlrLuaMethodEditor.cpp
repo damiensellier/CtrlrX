@@ -72,7 +72,8 @@ void CtrlrLuaMethodEditor::valueTreePropertyChanged (ValueTree &treeWhosePropert
     if (property == Ids::luaMethodEditorFont
         || property == Ids::luaMethodEditorBgColour
         || property == Ids::luaMethodEditorLineNumbersBgColour
-        || property == Ids::luaMethodEditorLineNumbersColour)
+        || property == Ids::luaMethodEditorLineNumbersColour
+        || property == Ids::luaMethodEditorFontColour)
     {
         for (int i=0; i<methodEditArea->getTabs()->getNumTabs(); i++)
         {
@@ -82,6 +83,8 @@ void CtrlrLuaMethodEditor::valueTreePropertyChanged (ValueTree &treeWhosePropert
                 ed->setFontAndColour (owner.getCtrlrManagerOwner().getFontManager().getFontFromString (componentTree.getProperty(Ids::luaMethodEditorFont)), VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorBgColour)));
                 ed->getCodeComponent()->setColour(CodeEditorComponent::lineNumberTextId, VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorLineNumbersColour)));
                 ed->getCodeComponent()->setColour(CodeEditorComponent::lineNumberBackgroundId, VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorLineNumbersBgColour)));
+                ed->getCodeComponent()->setColour(CodeEditorComponent::defaultTextColourId, VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorFontColour)));
+                //ed->getCodeComponent()->setColour(0x1000440, VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorFontColour)));
             }
         }
     }
