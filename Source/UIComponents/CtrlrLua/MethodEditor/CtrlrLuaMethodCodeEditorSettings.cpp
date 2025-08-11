@@ -312,7 +312,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     codeDocument.replaceAllContent("-- This is a comment\nfunction myFunction(argument)\n\tcall(\"string\")\nend");
 
     setSize(334, 600);
-
+    updateSyntaxColors();
 }
 
 CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
@@ -601,36 +601,39 @@ void CtrlrLuaMethodCodeEditorSettings::populateSyntaxTokenCombo()
     syntaxTokenType->setSelectedId(1, dontSendNotification);
 }
 
-void CtrlrLuaMethodCodeEditorSettings::updateSyntaxColors()
+void CtrlrLuaMethodCodeEditorSettings::updateSyntaxColors() {
+    // Create the custom scheme
+    CodeEditorComponent::ColourScheme scheme = CtrlrLuaCodeTokeniser::getCustomColourScheme(customSyntaxColors);
+
+    // Update the static shared scheme so new editors use it
+    getSharedScheme() = scheme;
+
+    // Update preview
+    fontTest->setColourScheme(scheme);
+
+    // Update current editor
+    CtrlrLuaMethodCodeEditor* currentEditor = owner.getCurrentEditor();
+    if (currentEditor && currentEditor->getCodeComponent()) {
+        try {
+            currentEditor->getCodeComponent()->setColourScheme(scheme);
+            currentEditor->getCodeComponent()->repaint();
+            DBG("Successfully updated current editor");
+        }
+        catch (...) {
+            DBG("Failed to update current editor - trying content refresh");
+            currentEditor->getCodeComponent()->repaint();
+        }
+    }
+    else {
+        DBG("No current editor available");
+    }
+}
+
+CodeEditorComponent::ColourScheme& CtrlrLuaMethodCodeEditorSettings::getSharedScheme()
 {
-    DBG("updateSyntaxColors() called");
-
-    if (fontTest)
-    {
-        DBG("fontTest exists, applying custom color scheme");
-
-        // Create custom color scheme with user settings
-        CodeEditorComponent::ColourScheme customScheme =
-            CtrlrLuaCodeTokeniser::getCustomColourScheme(customSyntaxColors);
-
-        DBG("Custom scheme created, setting on fontTest");
-        fontTest->setColourScheme(customScheme);
-
-        // Force a complete refresh
-        fontTest->repaint();
-        fontTest->resized();
-
-        // Try to force re-tokenization by temporarily changing the content
-        String currentContent = fontTest->getDocument().getAllContent();
-        fontTest->getDocument().replaceAllContent("");
-        fontTest->getDocument().replaceAllContent(currentContent);
-
-        DBG("Color scheme applied to fontTest");
-    }
-    else
-    {
-        DBG("fontTest is null!");
-    }
+    static CodeEditorComponent::ColourScheme sharedScheme =
+        CtrlrLuaCodeTokeniser::getDefaultColourScheme();
+    return sharedScheme;
 }
 
 String CtrlrLuaMethodCodeEditorSettings::getCurrentSelectedTokenType()
@@ -651,8 +654,6 @@ void CtrlrLuaMethodCodeEditorSettings::loadSyntaxColorsFromSettings()
         const String& tokenType = tokenTypes[i];
         String settingKey = "syntaxColor_" + tokenType;
         var colorVar = owner.getComponentTree().getProperty(settingKey);
-
-        // Debug print
         DBG("Loading: " + settingKey + " = " + colorVar.toString());
 
         if (!colorVar.isVoid() && colorVar.toString().isNotEmpty())
@@ -670,10 +671,7 @@ void CtrlrLuaMethodCodeEditorSettings::saveSyntaxColorsToSettings()
     {
         String settingKey = "syntaxColor_" + it.getKey();
         String colorValue = it.getValue().toString();
-
-        // Debug print
         DBG("Saving: " + settingKey + " = " + colorValue);
-
         owner.getComponentTree().setProperty(settingKey, colorValue, nullptr);
     }
 }

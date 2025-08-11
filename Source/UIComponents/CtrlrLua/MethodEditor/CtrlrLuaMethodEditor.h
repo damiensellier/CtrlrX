@@ -153,6 +153,7 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
         int waitForCommand();
         const String getCurrentDebuggerCommand(const bool clearTheReturnedCommand=true);
         void setOpenSearchTabsEnabled(bool shouldOpen); // used for toggling search closed files
+        void applySavedSyntaxColors(CtrlrLuaMethodCodeEditor* editor);
         bool getOpenSearchTabsEnabled() const; // getter
         JUCE_LEAK_DETECTOR(CtrlrLuaMethodEditor)
 
@@ -187,4 +188,8 @@ public:
         return label;
     }
 };
+
+
+
+
 #endif

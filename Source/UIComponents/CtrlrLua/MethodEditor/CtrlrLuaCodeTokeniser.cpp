@@ -42,7 +42,6 @@ CodeEditorComponent::ColourScheme CtrlrLuaCodeTokeniser::getDefaultColourScheme(
 
 CodeEditorComponent::ColourScheme CtrlrLuaCodeTokeniser::getCustomColourScheme(const HashMap<String, Colour>& customColors)
 {
-    // Create default scheme manually since this is a static method
     struct Type
     {
         const char* name;
@@ -72,8 +71,7 @@ CodeEditorComponent::ColourScheme CtrlrLuaCodeTokeniser::getCustomColourScheme(c
     DBG("Applied default colors to scheme");
 
     // Override with custom colors
-    HashMap<String, Colour>::Iterator it(customColors);
-    while (it.next())
+    for (HashMap<String, Colour>::Iterator it(customColors); it.next();)
     {
         DBG("Overriding " + it.getKey() + " with " + it.getValue().toString());
         cs.set(it.getKey(), it.getValue());

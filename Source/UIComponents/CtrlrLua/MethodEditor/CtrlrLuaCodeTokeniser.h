@@ -11,10 +11,10 @@ public:
     int readNextToken(CodeDocument::Iterator& source);
 
     // Modified to accept custom colors
-    CodeEditorComponent::ColourScheme getDefaultColourScheme();
+    static CodeEditorComponent::ColourScheme getDefaultColourScheme();
     static CodeEditorComponent::ColourScheme getCustomColourScheme(const HashMap<String, Colour>& customColors);
-
     static bool isReservedKeyword(const String& token) noexcept;
+    static StringArray getTokenTypeNames();
 
     enum TokenType
     {
@@ -29,10 +29,6 @@ public:
         tokenType_bracket,
         tokenType_punctuation
     };
-
-    // Static method to get token type names
-    static StringArray getTokenTypeNames();
-
     JUCE_LEAK_DETECTOR(CtrlrLuaCodeTokeniser);
 };
 

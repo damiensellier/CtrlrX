@@ -73,7 +73,8 @@ void CtrlrLuaMethodEditor::valueTreePropertyChanged (ValueTree &treeWhosePropert
         || property == Ids::luaMethodEditorBgColour
         || property == Ids::luaMethodEditorLineNumbersBgColour
         || property == Ids::luaMethodEditorLineNumbersColour
-        || property == Ids::luaMethodEditorFontColour)
+        || property == Ids::luaMethodEditorFontColour
+        || property.toString().startsWith("syntaxColor_"))
     {
         for (int i=0; i<methodEditArea->getTabs()->getNumTabs(); i++)
         {
@@ -642,6 +643,10 @@ void CtrlrLuaMethodEditor::createNewTab(CtrlrLuaMethod* method)
 
     CtrlrLuaMethodCodeEditor* methodEditor = new CtrlrLuaMethodCodeEditor(*this, method, sharedSearchTabsValue);
     methodEditor->addKeyListener(this);
+
+    // Apply saved syntax colors to the new editor
+    applySavedSyntaxColors(methodEditor);
+
     methodEditArea->getTabs()->addTab(method->getName(), Colours::white, methodEditor, true, -1);
     methodEditArea->getTabs()->setCurrentTabIndex(methodEditArea->getTabs()->getNumTabs() - 1, true);
     saveSettings(); // save settings
@@ -1236,4 +1241,34 @@ void CtrlrLuaMethodEditor::setOpenSearchTabsEnabled(bool shouldOpen)
 bool CtrlrLuaMethodEditor::getOpenSearchTabsEnabled() const
 {
     return openSearchTabsEnabledState;
+}
+
+void CtrlrLuaMethodEditor::applySavedSyntaxColors(CtrlrLuaMethodCodeEditor* editor)
+{
+    if (!editor || !editor->getCodeComponent()) return;
+
+    // Load saved syntax colors
+    HashMap<String, Colour> savedColors;
+    StringArray tokenTypes = CtrlrLuaCodeTokeniser::getTokenTypeNames();
+
+    for (int i = 0; i < tokenTypes.size(); ++i)
+    {
+        const String& tokenType = tokenTypes[i];
+        String settingKey = "syntaxColor_" + tokenType;
+        var colorVar = componentTree.getProperty(settingKey);
+
+        if (!colorVar.isVoid() && colorVar.toString().isNotEmpty())
+        {
+            Colour savedColor = VAR2COLOUR(colorVar);
+            savedColors.set(tokenType, savedColor);
+        }
+    }
+
+    // Apply the colors if any were saved
+    if (savedColors.size() > 0)
+    {
+        CodeEditorComponent::ColourScheme customScheme = CtrlrLuaCodeTokeniser::getCustomColourScheme(savedColors);
+        editor->getCodeComponent()->setColourScheme(customScheme);
+        DBG("Applied saved syntax colors to new editor");
+    }
 }

@@ -70,7 +70,7 @@ private:
     CodeDocument document;
     ValueTree methodTree;
     CtrlrLuaMethodEditor& owner;
-
+    CodeEditorComponent::ColourScheme currentScheme;
     // Add the hidden toggle and shared value reference
     ScopedPointer<ToggleButton> hiddenSearchTabsToggle;
     juce::Value& sharedSearchTabsValue;

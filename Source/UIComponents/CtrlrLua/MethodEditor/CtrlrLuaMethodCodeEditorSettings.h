@@ -1,4 +1,6 @@
 #include "stdafx.h"
+#include "CtrlrLuaCodeTokeniser.h"
+
 /*
   ==============================================================================
 
@@ -80,7 +82,7 @@ public:
     void populateSyntaxTokenCombo();
     void updateSyntaxColors();
     String getCurrentSelectedTokenType();
-
+    
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     struct ColourItem {
@@ -105,6 +107,9 @@ private:
     ComboBox* bgColour;
     ComboBox* lineNumbersBgColour;
     ComboBox* lineNumbersColour;
+    ComboBox* syntaxTokenType;
+    ComboBox* syntaxTokenColor;
+
     ToggleButton* fontBold;
     ToggleButton* fontItalic;
     ToggleButton* openSearchTabs;
@@ -113,25 +118,38 @@ private:
     Label* label1;
     Label* label2;
     Label* label3;
-    CodeEditorComponent* fontTest;
-    juce::Value& sharedSearchTabsValue;
-
-    // Add these new members for syntax highlighting
-    //ScopedPointer<ComboBox> syntaxTokenType;
-    //ScopedPointer<ComboBox> syntaxTokenColor;
-    //ScopedPointer<Label> syntaxLabel;
-    ComboBox* syntaxTokenType;
-    ComboBox* syntaxTokenColor;
     Label* syntaxLabel;
+    CodeEditorComponent* fontTest;
+
+
+    static CodeEditorComponent::ColourScheme& getSharedScheme();
+
+
     //std::unique_ptr<ComboBox> syntaxTokenType;
     //std::unique_ptr<ComboBox> syntaxTokenColor;
     //std::unique_ptr<Label> syntaxLabel;
     // Storage for custom syntax colors
     HashMap<String, Colour> customSyntaxColors;
-
+    juce::Value& sharedSearchTabsValue;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrLuaMethodCodeEditorSettings);
 };
-
+//void CtrlrLuaMethodCodeEditorSettings::updateSyntaxColors() {
+//    // Update the shared scheme
+//    SharedColorScheme::updateScheme(customSyntaxColors);
+//
+//    // Get reference to the shared scheme (no copying!)
+//    CodeEditorComponent::ColourScheme& sharedScheme = SharedColorScheme::getCurrentScheme();
+//
+//    // Update preview
+//    fontTest->setColourScheme(sharedScheme);
+//
+//    // Update main editor with the same shared reference
+//    GenericCodeEditorComponent* mainEditor = owner.getEditorComponent();
+//    if (mainEditor) {
+//        mainEditor->setColourScheme(sharedScheme);
+//        mainEditor->repaint();
+//    }
+//}
 
 #endif    // __JUCER_HEADER_CTRLRLUAMETHODCODEEDITORSETTINGS_CTRLRLUAMETHODCODEEDITORSETTINGS_FC2CDFB3__
