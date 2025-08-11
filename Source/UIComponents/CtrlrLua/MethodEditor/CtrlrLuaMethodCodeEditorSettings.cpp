@@ -233,6 +233,8 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     addAndMakeVisible(openSearchTabs = new ToggleButton(""));
     //openSearchTabs->setButtonText("Open Search Tabs"); // Corrected to use a string literal
      openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue()); 
+     openSearchTabs->setButtonText(SharedValues::getSearchTabsLabel());
+     openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue());
 
     addAndMakeVisible(resetButton = new TextButton("RESET"));
     resetButton->addListener(this);
@@ -311,7 +313,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     fontTypeface->setText(codeFont.getTypefaceName(), sendNotification);
     codeDocument.replaceAllContent("-- This is a comment\nfunction myFunction(argument)\n\tcall(\"string\")\nend");
 
-    setSize(334, 600);
+    setSize(334, 500);
     updateSyntaxColors();
 }
 
@@ -388,17 +390,12 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     lineNumbersBgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 32, sampleWidth - 40, 24);
     label3->setBounds(marginLeft - 4, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 2 * 32, sampleWidth, 24);
     lineNumbersColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 3 * 24 + 2 * 32, sampleWidth - 40, 24);
-    openSearchTabs->setBounds(marginLeft + 0, marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40, sampleWidth, 24);
-    resetButton->setBounds(marginLeft + sampleWidth / 2 - (sampleWidth / 4 + marginLeft / 2), marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 80, sampleWidth / 2, 24);
-
-    int syntaxY = marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 120;
-
+    int syntaxY = marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40;
     syntaxLabel->setBounds(marginLeft - 4, syntaxY, sampleWidth, 24);
     syntaxTokenType->setBounds(marginLeft, syntaxY + 24, (sampleWidth - 8) / 2, 24);
     syntaxTokenColor->setBounds(marginLeft + (sampleWidth - 8) / 2 + 8, syntaxY + 24, (sampleWidth - 8) / 2 - 40, 24);
-
-    // Adjust reset button position
-    resetButton->setBounds(marginLeft + sampleWidth / 2 - (sampleWidth / 4 + marginLeft / 2), syntaxY + 60, sampleWidth / 2, 24);
+    openSearchTabs->setBounds(marginLeft + 0, syntaxY + 64, sampleWidth, 24);
+    resetButton->setBounds(marginLeft + sampleWidth / 2 - (sampleWidth / 4 + marginLeft / 2), syntaxY + 104, sampleWidth / 2, 24);
 }
 
 
@@ -505,7 +502,11 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
             lineNumbersBgColour->setSelectedId(findColourIndex(Colours::cornflowerblue), dontSendNotification);
             lineNumbersColour->setSelectedId(findColourIndex(Colours::black), dontSendNotification);
 
-            // This is needed to update the UI after a reset
+            customSyntaxColors.clear();
+            clearSyntaxColorSettings();
+            String currentToken = getCurrentSelectedTokenType();
+            updateTokenColorDisplay(currentToken);
+            updateSyntaxColors();
             changeListenerCallback(nullptr);
         }
     }
@@ -674,6 +675,47 @@ void CtrlrLuaMethodCodeEditorSettings::saveSyntaxColorsToSettings()
         DBG("Saving: " + settingKey + " = " + colorValue);
         owner.getComponentTree().setProperty(settingKey, colorValue, nullptr);
     }
+}
+void CtrlrLuaMethodCodeEditorSettings::clearSyntaxColorSettings()
+{
+    // Remove all saved syntax color settings
+    StringArray tokenTypes = CtrlrLuaCodeTokeniser::getTokenTypeNames();
+    for (int i = 0; i < tokenTypes.size(); ++i)
+    {
+        const String& tokenType = tokenTypes[i];
+        String settingKey = "syntaxColor_" + tokenType;
+        owner.getComponentTree().removeProperty(settingKey, nullptr);
+        DBG("Cleared setting: " + settingKey);
+    }
+}
+
+void CtrlrLuaMethodCodeEditorSettings::updateTokenColorDisplay(const String& tokenType)
+{
+    // Show default color for the token type
+    struct DefaultType { const char* name; uint32 colour; };
+    const DefaultType defaultTypes[] = {
+        { "Error",      0xffcc0000 },
+        { "Comment",    0xff008000 },
+        { "Keyword",    0xff0000cc },
+        { "Operator",   0xff225500 },
+        { "Identifier", 0xff000000 },
+        { "Integer",    0xff880000 },
+        { "Float",      0xff885500 },
+        { "String",     0xff990099 },
+        { "Bracket",    0xff000055 },
+        { "Punctuation", 0xff004400 }
+    };
+
+    Colour defaultColor = Colours::black; // fallback
+    for (int i = 0; i < 10; ++i)
+    {
+        if (tokenType == defaultTypes[i].name)
+        {
+            defaultColor = Colour(defaultTypes[i].colour);
+            break;
+        }
+    }
+    syntaxTokenColor->setSelectedId(findColourIndex(defaultColor), dontSendNotification);
 }
 //[/MiscUserCode]
 

@@ -71,7 +71,8 @@ public:
     int findColourIndex(const Colour& colour);
     Colour getColourFromCombo(ComboBox* combo);
     //[/UserMethods]
-
+    void clearSyntaxColorSettings();
+    void updateTokenColorDisplay(const String& tokenType);
     void paint(Graphics& g);
     void resized();
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
