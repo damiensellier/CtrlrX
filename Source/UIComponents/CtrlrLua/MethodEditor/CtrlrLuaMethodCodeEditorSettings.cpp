@@ -231,8 +231,8 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     addAndMakeVisible(fontTest = new CodeEditorComponent(codeDocument, &luaTokeniser));
 
     addAndMakeVisible(openSearchTabs = new ToggleButton(""));
-    openSearchTabs->setButtonText("Open Search Tabs"); // Corrected to use a string literal
-    // openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue()); // This line is likely the source of the crash, as SharedValues might not be ready yet. Let's comment it out.
+    //openSearchTabs->setButtonText("Open Search Tabs"); // Corrected to use a string literal
+     openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue()); 
 
     addAndMakeVisible(resetButton = new TextButton("RESET"));
     resetButton->addListener(this);
@@ -259,6 +259,37 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     populateColourCombo(lineNumbersBgColour);
     populateColourCombo(lineNumbersColour);
 
+    addAndMakeVisible(syntaxLabel = new Label("syntaxLabel", TRANS("Syntax Highlighting:")));
+    syntaxLabel->setFont(Font(14.00f));
+    syntaxLabel->setJustificationType(Justification::centredLeft);
+    syntaxLabel->setEditable(false, false, false);
+
+    addAndMakeVisible(syntaxTokenType = new ComboBox("syntaxTokenType"));
+    syntaxTokenType->setEditableText(false);
+    syntaxTokenType->setJustificationType(Justification::centredLeft);
+    syntaxTokenType->addListener(this);
+
+    addAndMakeVisible(syntaxTokenColor = new ComboBox("syntaxTokenColor"));
+    syntaxTokenColor->setEditableText(false);
+    syntaxTokenColor->setJustificationType(Justification::centredLeft);
+    syntaxTokenColor->addListener(this);
+
+    populateSyntaxTokenCombo();
+    populateColourCombo(syntaxTokenColor);
+
+    // Load saved settings BEFORE setting initial selections
+    loadSyntaxColorsFromSettings();
+
+    // Set initial selection for token type
+    syntaxTokenType->setSelectedId(1, dontSendNotification);
+
+    // Update the color combo to show the color for the initially selected token
+    String initialToken = getCurrentSelectedTokenType();
+    if (customSyntaxColors.contains(initialToken))
+    {
+        Colour currentColor = customSyntaxColors[initialToken];
+        syntaxTokenColor->setSelectedId(findColourIndex(currentColor), dontSendNotification);
+    }
 
     codeFont = owner.getOwner().getCtrlrManagerOwner().getFontManager().getFontFromString(owner.getComponentTree().getProperty(Ids::luaMethodEditorFont, owner.getOwner().getCtrlrManagerOwner().getFontManager().getStringFromFont(Font(owner.getOwner().getCtrlrManagerOwner().getFontManager().getDefaultMonoFontName(), 14.0f, Font::plain))));
     label1->setColour(TextEditor::textColourId, findColour(TextEditor::textColourId));
@@ -280,7 +311,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     fontTypeface->setText(codeFont.getTypefaceName(), sendNotification);
     codeDocument.replaceAllContent("-- This is a comment\nfunction myFunction(argument)\n\tcall(\"string\")\nend");
 
-    setSize(334, 450);
+    setSize(334, 600);
 
 }
 
@@ -300,6 +331,9 @@ CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
     deleteAndZero(fontTest);
     deleteAndZero(openSearchTabs);
     deleteAndZero(resetButton);
+    deleteAndZero(syntaxLabel);
+    deleteAndZero(syntaxTokenType);
+    deleteAndZero(syntaxTokenColor);
 }
 
 //==============================================================================
@@ -324,6 +358,13 @@ void CtrlrLuaMethodCodeEditorSettings::paint(Graphics& g)
     g.fillRect(lineNumColourRect);
     g.setColour(Colours::darkgrey);
     g.drawRect(lineNumColourRect, 1);
+
+    Rectangle<int> syntaxColorRect = syntaxTokenColor->getBounds().withX(syntaxTokenColor->getRight() + 4).withWidth(32);
+    g.setColour(getColourFromCombo(syntaxTokenColor));
+    g.fillRect(syntaxColorRect);
+    g.setColour(Colours::darkgrey);
+    g.drawRect(syntaxColorRect, 1);
+
 }
 
 void CtrlrLuaMethodCodeEditorSettings::resized()
@@ -349,21 +390,83 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     lineNumbersColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 3 * 24 + 2 * 32, sampleWidth - 40, 24);
     openSearchTabs->setBounds(marginLeft + 0, marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40, sampleWidth, 24);
     resetButton->setBounds(marginLeft + sampleWidth / 2 - (sampleWidth / 4 + marginLeft / 2), marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 80, sampleWidth / 2, 24);
+
+    int syntaxY = marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 120;
+
+    syntaxLabel->setBounds(marginLeft - 4, syntaxY, sampleWidth, 24);
+    syntaxTokenType->setBounds(marginLeft, syntaxY + 24, (sampleWidth - 8) / 2, 24);
+    syntaxTokenColor->setBounds(marginLeft + (sampleWidth - 8) / 2 + 8, syntaxY + 24, (sampleWidth - 8) / 2 - 40, 24);
+
+    // Adjust reset button position
+    resetButton->setBounds(marginLeft + sampleWidth / 2 - (sampleWidth / 4 + marginLeft / 2), syntaxY + 60, sampleWidth / 2, 24);
 }
+
 
 void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
 {
+    DBG("ComboBox changed: " + comboBoxThatHasChanged->getName());
     if (comboBoxThatHasChanged == fontTypeface)
     {
-        // existing font typeface handling
         changeListenerCallback(nullptr);
     }
     else if (comboBoxThatHasChanged == bgColour ||
         comboBoxThatHasChanged == lineNumbersBgColour ||
         comboBoxThatHasChanged == lineNumbersColour)
     {
-        // Handle colour combo changes
         changeListenerCallback(nullptr);
+    }
+    else if (comboBoxThatHasChanged == syntaxTokenType)
+    {
+        // When token type changes, update the color combo to show current color for that token
+        String selectedToken = getCurrentSelectedTokenType();
+          
+if (customSyntaxColors.contains(selectedToken))
+        {
+            Colour currentColor = customSyntaxColors[selectedToken];
+            syntaxTokenColor->setSelectedId(findColourIndex(currentColor), dontSendNotification);
+        }
+        else
+        {
+            // Show default color from tokenizer
+            CodeEditorComponent::ColourScheme defaultScheme = luaTokeniser.getDefaultColourScheme();
+            Colour defaultColor = Colours::black; // fallback
+
+            struct DefaultType { const char* name; uint32 colour; };
+            const DefaultType defaultTypes[] = {
+                { "Error",      0xffcc0000 },
+                { "Comment",    0xff008000 },
+                { "Keyword",    0xff0000cc },
+                { "Operator",   0xff225500 },
+                { "Identifier", 0xff000000 },
+                { "Integer",    0xff880000 },
+                { "Float",      0xff885500 },
+                { "String",     0xff990099 },
+                { "Bracket",    0xff000055 },
+                { "Punctuation", 0xff004400 }
+            };
+
+            for (int i = 0; i < 10; ++i)
+            {
+                if (selectedToken == defaultTypes[i].name)
+                {
+                    defaultColor = Colour(defaultTypes[i].colour);
+                    break;
+                }
+            }
+            syntaxTokenColor->setSelectedId(findColourIndex(defaultColor), dontSendNotification);
+        }
+        repaint();
+    }
+    else if (comboBoxThatHasChanged == syntaxTokenColor)
+    {
+        // When color changes, update the custom color for the selected token type
+        String selectedToken = getCurrentSelectedTokenType();
+        Colour selectedColor = getColourFromCombo(syntaxTokenColor);
+
+        customSyntaxColors.set(selectedToken, selectedColor);
+        saveSyntaxColorsToSettings();
+        updateSyntaxColors();
+        repaint();
     }
 }
 
@@ -484,7 +587,96 @@ Colour CtrlrLuaMethodCodeEditorSettings::getColourFromCombo(ComboBox* combo) {
     }
     return Colours::white; // Default fallback
 }
+void CtrlrLuaMethodCodeEditorSettings::populateSyntaxTokenCombo()
+{
+    syntaxTokenType->clear();
+    StringArray tokenTypes = CtrlrLuaCodeTokeniser::getTokenTypeNames();
 
+    for (int i = 0; i < tokenTypes.size(); ++i)
+    {
+        syntaxTokenType->addItem(tokenTypes[i], i + 1);
+    }
+
+    // Select first item by default
+    syntaxTokenType->setSelectedId(1, dontSendNotification);
+}
+
+void CtrlrLuaMethodCodeEditorSettings::updateSyntaxColors()
+{
+    DBG("updateSyntaxColors() called");
+
+    if (fontTest)
+    {
+        DBG("fontTest exists, applying custom color scheme");
+
+        // Create custom color scheme with user settings
+        CodeEditorComponent::ColourScheme customScheme =
+            CtrlrLuaCodeTokeniser::getCustomColourScheme(customSyntaxColors);
+
+        DBG("Custom scheme created, setting on fontTest");
+        fontTest->setColourScheme(customScheme);
+
+        // Force a complete refresh
+        fontTest->repaint();
+        fontTest->resized();
+
+        // Try to force re-tokenization by temporarily changing the content
+        String currentContent = fontTest->getDocument().getAllContent();
+        fontTest->getDocument().replaceAllContent("");
+        fontTest->getDocument().replaceAllContent(currentContent);
+
+        DBG("Color scheme applied to fontTest");
+    }
+    else
+    {
+        DBG("fontTest is null!");
+    }
+}
+
+String CtrlrLuaMethodCodeEditorSettings::getCurrentSelectedTokenType()
+{
+    if (syntaxTokenType->getSelectedId() > 0)
+    {
+        return syntaxTokenType->getText();
+    }
+    return "Error"; // Default fallback
+}
+
+void CtrlrLuaMethodCodeEditorSettings::loadSyntaxColorsFromSettings()
+{
+    StringArray tokenTypes = CtrlrLuaCodeTokeniser::getTokenTypeNames();
+
+    for (int i = 0; i < tokenTypes.size(); ++i)
+    {
+        const String& tokenType = tokenTypes[i];
+        String settingKey = "syntaxColor_" + tokenType;
+        var colorVar = owner.getComponentTree().getProperty(settingKey);
+
+        // Debug print
+        DBG("Loading: " + settingKey + " = " + colorVar.toString());
+
+        if (!colorVar.isVoid() && colorVar.toString().isNotEmpty())
+        {
+            Colour savedColor = VAR2COLOUR(colorVar);
+            customSyntaxColors.set(tokenType, savedColor);
+        }
+    }
+}
+
+void CtrlrLuaMethodCodeEditorSettings::saveSyntaxColorsToSettings()
+{
+    HashMap<String, Colour>::Iterator it(customSyntaxColors);
+    while (it.next())
+    {
+        String settingKey = "syntaxColor_" + it.getKey();
+        String colorValue = it.getValue().toString();
+
+        // Debug print
+        DBG("Saving: " + settingKey + " = " + colorValue);
+
+        owner.getComponentTree().setProperty(settingKey, colorValue, nullptr);
+    }
+}
 //[/MiscUserCode]
 
 

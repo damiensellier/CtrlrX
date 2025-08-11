@@ -75,7 +75,11 @@ public:
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
     void buttonClicked(Button* buttonThatWasClicked);
     void sliderValueChanged(Slider* sliderThatWasMoved);
-
+    void loadSyntaxColorsFromSettings();
+    void saveSyntaxColorsToSettings();
+    void populateSyntaxTokenCombo();
+    void updateSyntaxColors();
+    String getCurrentSelectedTokenType();
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
@@ -111,6 +115,19 @@ private:
     Label* label3;
     CodeEditorComponent* fontTest;
     juce::Value& sharedSearchTabsValue;
+
+    // Add these new members for syntax highlighting
+    //ScopedPointer<ComboBox> syntaxTokenType;
+    //ScopedPointer<ComboBox> syntaxTokenColor;
+    //ScopedPointer<Label> syntaxLabel;
+    ComboBox* syntaxTokenType;
+    ComboBox* syntaxTokenColor;
+    Label* syntaxLabel;
+    //std::unique_ptr<ComboBox> syntaxTokenType;
+    //std::unique_ptr<ComboBox> syntaxTokenColor;
+    //std::unique_ptr<Label> syntaxLabel;
+    // Storage for custom syntax colors
+    HashMap<String, Colour> customSyntaxColors;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrLuaMethodCodeEditorSettings);
