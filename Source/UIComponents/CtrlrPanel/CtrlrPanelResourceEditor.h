@@ -31,6 +31,8 @@ class CtrlrPanelResourceEditor  : public Component,
 		void moveResources();
 		void backgroundClicked (const MouseEvent &e);
 		void showResourceInfo(const int resourceIndex);
+        void lookAndFeelChanged(); // Added v5.6.34.
+
 	private:
 		Array <CtrlrPanelResource*> resources;
 		CtrlrPanelEditor &owner;

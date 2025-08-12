@@ -23,37 +23,21 @@ CtrlrPanelResourceEditor::CtrlrPanelResourceEditor (CtrlrPanelEditor &_owner)
     add->setTooltip (L"Add new resources");
     add->setButtonText (L"Add");
     add->addListener (this);
-    add->setColour(TextButton::buttonColourId, Colour(findColour(TextButton::buttonOnColourId))); // Colour (0xffb2b2b2));
-    add->setColour(TextButton::buttonOnColourId, Colour(findColour(TextButton::buttonOnColourId)));
-    add->setColour(TextButton::textColourOffId, Colour(findColour(TextButton::textColourOffId)));
-    add->setColour(TextButton::textColourOnId, Colour(findColour(TextButton::textColourOnId)));
 
 	addAndMakeVisible (remove = new TextButton (""), -1); // Updated v5.6.33. Z index added. By @dnladoog JG on 4/23/2025
     remove->setTooltip (L"Remove selected resources");
     remove->setButtonText (L"Remove");
     remove->addListener (this);
-    remove->setColour(TextButton::buttonColourId, Colour(findColour(TextButton::buttonOnColourId))); // Colour (0xffb2b2b2));
-    remove->setColour(TextButton::buttonOnColourId, Colour(findColour(TextButton::buttonOnColourId)));
-    remove->setColour(TextButton::textColourOffId, Colour(findColour(TextButton::textColourOffId)));
-    remove->setColour(TextButton::textColourOnId, Colour(findColour(TextButton::textColourOnId)));
 
 	addAndMakeVisible(move = new TextButton(""), -1); // Updated v5.6.33. Z index added. By @dnladoog JG on 4/23/2025
 	move->setTooltip(L"Move resources to panel folder");
 	move->setButtonText(L"Move...");
 	move->addListener(this);
-    move->setColour(TextButton::buttonColourId, Colour(findColour(TextButton::buttonOnColourId))); // Colour (0xffb2b2b2));
-    move->setColour(TextButton::buttonOnColourId, Colour(findColour(TextButton::buttonOnColourId)));
-    move->setColour(TextButton::textColourOffId, Colour(findColour(TextButton::textColourOffId)));
-    move->setColour(TextButton::textColourOnId, Colour(findColour(TextButton::textColourOnId)));
 
 	addAndMakeVisible (reload = new TextButton (""), -1); // Updated v5.6.33. Z index added. By @dnladoog JG on 4/23/2025
     reload->setTooltip (L"Reload all resources");
     reload->setButtonText (L"Reload");
     reload->addListener (this);
-    reload->setColour(TextButton::buttonColourId, Colour(findColour(TextButton::buttonOnColourId))); // Colour (0xffb2b2b2));
-    reload->setColour(TextButton::buttonOnColourId, Colour(findColour(TextButton::buttonOnColourId)));
-    reload->setColour(TextButton::textColourOffId, Colour(findColour(TextButton::textColourOffId)));
-    reload->setColour(TextButton::textColourOnId, Colour(findColour(TextButton::textColourOnId)));
 
 	tableFont = Font(Font::getDefaultSansSerifFontName(), 12.0f, Font::plain);
 	resourceList->setRowHeight (22);
@@ -329,9 +313,11 @@ void CtrlrPanelResourceEditor::showResourceInfo(const int resourceIndex)
 	l->setSize (400, 150);
 	l->setJustificationType (Justification::centred);
 	l->setFont (Font(12.0f));
+    l->setColour(Label::textColourId, findColour(Label::textColourId)); // Added v5.6.34
 	lo.content.set(l, true);
 	lo.componentToCentreAround		= this;
-	//lo.dialogBackgroundColour		= Colours::whitesmoke;
+    // Use the LookAndFeel's DialogWindow background colour ID.
+    lo.dialogBackgroundColour = findColour(DialogWindow::backgroundColourId); // Added v5.6.34
 	lo.dialogTitle					= "Resource information";
 	lo.resizable					= true;
 	lo.useBottomRightCornerResizer	= false;
@@ -464,4 +450,31 @@ void CtrlrPanelResourceEditor::reloadAllResourcesFromSourceFiles()
 void CtrlrPanelResourceEditor::backgroundClicked (const MouseEvent &e)
 {
 	resourceList->deselectAllRows();
+}
+
+void CtrlrPanelResourceEditor::lookAndFeelChanged()
+{
+    // Update the 'add' button's colours
+    add->setColour(TextButton::buttonColourId, findColour(TextButton::buttonOnColourId));
+    add->setColour(TextButton::buttonOnColourId, findColour(TextButton::buttonOnColourId));
+    add->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId));
+    add->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId));
+
+    // Update the 'remove' button's colours
+    remove->setColour(TextButton::buttonColourId, findColour(TextButton::buttonOnColourId));
+    remove->setColour(TextButton::buttonOnColourId, findColour(TextButton::buttonOnColourId));
+    remove->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId));
+    remove->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId));
+
+    // Update the 'move' button's colours
+    move->setColour(TextButton::buttonColourId, findColour(TextButton::buttonOnColourId));
+    move->setColour(TextButton::buttonOnColourId, findColour(TextButton::buttonOnColourId));
+    move->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId));
+    move->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId));
+
+    // Update the 'reload' button's colours
+    reload->setColour(TextButton::buttonColourId, findColour(TextButton::buttonOnColourId));
+    reload->setColour(TextButton::buttonOnColourId, findColour(TextButton::buttonOnColourId));
+    reload->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId));
+    reload->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId));
 }
