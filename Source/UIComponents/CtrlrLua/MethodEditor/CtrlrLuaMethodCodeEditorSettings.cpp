@@ -32,146 +32,90 @@
 //[MiscUserDefs] You can add your own user definitions and misc code here...
 //[/MiscUserDefs]
 const CtrlrLuaMethodCodeEditorSettings::ColourItem CtrlrLuaMethodCodeEditorSettings::availableColours[] = {
-    {"Alice Blue", Colours::aliceblue},
-    {"Antique White", Colours::antiquewhite},
-    {"Aqua", Colours::aqua},
-    {"Aquamarine", Colours::aquamarine},
-    {"Azure", Colours::azure},
-    {"Beige", Colours::beige},
-    {"Bisque", Colours::bisque},
+    // Common colors first
     {"Black", Colours::black},
-    {"Blanched Almond", Colours::blanchedalmond},
+    {"White", Colours::white},
+    {"Grey", Colours::grey},
+    {"Dark Grey", Colours::darkgrey},
+    {"Light Grey", Colours::lightgrey},
+
+    // Primary colors
+    {"Red", Colours::red},
+    {"Green", Colours::green},
     {"Blue", Colours::blue},
-    {"Blue Violet", Colours::blueviolet},
-    {"Brown", Colours::brown},
-    {"Burly Wood", Colours::burlywood},
-    {"Cadet Blue", Colours::cadetblue},
-    {"Chartreuse", Colours::chartreuse},
-    {"Chocolate", Colours::chocolate},
-    {"Coral", Colours::coral},
-    {"Cornflower Blue", Colours::cornflowerblue},
-    {"Cornsilk", Colours::cornsilk},
-    {"Crimson", Colours::crimson},
+    {"Yellow", Colours::yellow},
     {"Cyan", Colours::cyan},
+    {"Magenta", Colours::magenta},
+
+    // Dark variants
+    {"Dark Red", Colours::darkred},
+    {"Dark Green", Colours::darkgreen},
     {"Dark Blue", Colours::darkblue},
     {"Dark Cyan", Colours::darkcyan},
-    {"Dark Goldenrod", Colours::darkgoldenrod},
-    {"Dark Green", Colours::darkgreen},
-    {"Dark Grey", Colours::darkgrey},
-    {"Dark Khaki", Colours::darkkhaki},
     {"Dark Magenta", Colours::darkmagenta},
-    {"Dark Olive Green", Colours::darkolivegreen},
-    {"Dark Orange", Colours::darkorange},
-    {"Dark Orchid", Colours::darkorchid},
-    {"Dark Red", Colours::darkred},
-    {"Dark Salmon", Colours::darksalmon},
-    {"Dark Sea Green", Colours::darkseagreen},
-    {"Dark Slate Blue", Colours::darkslateblue},
-    {"Dark Slate Grey", Colours::darkslategrey},
-    {"Dark Turquoise", Colours::darkturquoise},
-    {"Dark Violet", Colours::darkviolet},
-    {"Deep Pink", Colours::deeppink},
-    {"Deep Sky Blue", Colours::deepskyblue},
-    {"Dim Grey", Colours::dimgrey},
-    {"Dodger Blue", Colours::dodgerblue},
-    {"Firebrick", Colours::firebrick},
-    {"Floral White", Colours::floralwhite},
-    {"Forest Green", Colours::forestgreen},
-    {"Fuchsia", Colours::fuchsia},
-    {"Gainsboro", Colours::gainsboro},
+
+    // Light variants
+    {"Light Blue", Colours::lightblue},
+    {"Light Green", Colours::lightgreen},
+    {"Light Coral", Colours::lightcoral},
+    {"Light Pink", Colours::lightpink},
+    {"Light Yellow", Colours::lightyellow},
+
+    // Popular web colors
+    {"Orange", Colours::orange},
+    {"Purple", Colours::purple},
+    {"Brown", Colours::brown},
+    {"Pink", Colours::pink},
     {"Gold", Colours::gold},
-    {"Goldenrod", Colours::goldenrod},
-    {"Green", Colours::green},
-    {"Green Yellow", Colours::greenyellow},
-    {"Grey", Colours::grey},
-    {"Honeydew", Colours::honeydew},
-    {"Hot Pink", Colours::hotpink},
-    {"Indian Red", Colours::indianred},
+    {"Silver", Colours::silver},
+
+    // Nature colors
+    {"Forest Green", Colours::forestgreen},
+    {"Sea Green", Colours::seagreen},
+    {"Sky Blue", Colours::skyblue},
+    {"Royal Blue", Colours::royalblue},
+    {"Coral", Colours::coral},
+    {"Salmon", Colours::salmon},
+
+    // Distinctive colors
+    {"Crimson", Colours::crimson},
     {"Indigo", Colours::indigo},
-    {"Ivory", Colours::ivory},
+    {"Violet", Colours::violet},
+    {"Turquoise", Colours::turquoise},
+    {"Teal", Colours::teal},
+    {"Maroon", Colours::maroon},
+    {"Navy", Colours::navy},
+    {"Olive", Colours::olive},
+
+    // Warm colors
+    {"Chocolate", Colours::chocolate},
+    {"Sienna", Colours::sienna},
+    {"Peru", Colours::peru},
+    {"Tan", Colours::tan},
+    {"Wheat", Colours::wheat},
+
+    // Cool colors
+    {"Steel Blue", Colours::steelblue},
+    {"Slate Blue", Colours::slateblue},
+    {"Cornflower Blue", Colours::cornflowerblue},
+    {"Dodger Blue", Colours::dodgerblue},
+    {"Deep Sky Blue", Colours::deepskyblue},
+
+    // Specialty colors
+    {"Firebrick", Colours::firebrick},
+    {"Hot Pink", Colours::hotpink},
+    {"Deep Pink", Colours::deeppink},
+    {"Lime Green", Colours::limegreen},
+    {"Yellow Green", Colours::yellowgreen},
+    {"Orange Red", Colours::orangered},
+
+    // Muted colors
+    {"Dim Grey", Colours::dimgrey},
+    {"Slate Grey", Colours::slategrey},
+    {"Gainsboro", Colours::gainsboro},
+    {"Beige", Colours::beige},
     {"Khaki", Colours::khaki},
     {"Lavender", Colours::lavender},
-    {"Lavender Blush", Colours::lavenderblush},
-    {"Lawn Green", Colours::lawngreen},
-    {"Lemon Chiffon", Colours::lemonchiffon},
-    {"Light Blue", Colours::lightblue},
-    {"Light Coral", Colours::lightcoral},
-    {"Light Cyan", Colours::lightcyan},
-    {"Light Goldenrod Yellow", Colours::lightgoldenrodyellow},
-    {"Light Green", Colours::lightgreen},
-    {"Light Grey", Colours::lightgrey},
-    {"Light Pink", Colours::lightpink},
-    {"Light Salmon", Colours::lightsalmon},
-    {"Light Sea Green", Colours::lightseagreen},
-    {"Light Sky Blue", Colours::lightskyblue},
-    {"Light Slate Grey", Colours::lightslategrey},
-    {"Light Steel Blue", Colours::lightsteelblue},
-    {"Light Yellow", Colours::lightyellow},
-    {"Lime", Colours::lime},
-    {"Lime Green", Colours::limegreen},
-    {"Linen", Colours::linen},
-    {"Magenta", Colours::magenta},
-    {"Maroon", Colours::maroon},
-    {"Medium Aquamarine", Colours::mediumaquamarine},
-    {"Medium Blue", Colours::mediumblue},
-    {"Medium Orchid", Colours::mediumorchid},
-    {"Medium Purple", Colours::mediumpurple},
-    {"Medium Sea Green", Colours::mediumseagreen},
-    {"Medium Slate Blue", Colours::mediumslateblue},
-    {"Medium Spring Green", Colours::mediumspringgreen},
-    {"Medium Turquoise", Colours::mediumturquoise},
-    {"Medium Violet Red", Colours::mediumvioletred},
-    {"Midnight Blue", Colours::midnightblue},
-    {"Mint Cream", Colours::mintcream},
-    {"Misty Rose", Colours::mistyrose},
-    {"Moccasin", Colours::moccasin},
-    {"Navajo White", Colours::navajowhite},
-    {"Navy", Colours::navy},
-    {"Old Lace", Colours::oldlace},
-    {"Olive", Colours::olive},
-    {"Olive Drab", Colours::olivedrab},
-    {"Orange", Colours::orange},
-    {"Orange Red", Colours::orangered},
-    {"Orchid", Colours::orchid},
-    {"Pale Goldenrod", Colours::palegoldenrod},
-    {"Pale Green", Colours::palegreen},
-    {"Pale Turquoise", Colours::paleturquoise},
-    {"Pale Violet Red", Colours::palevioletred},
-    {"Papaya Whip", Colours::papayawhip},
-    {"Peach Puff", Colours::peachpuff},
-    {"Peru", Colours::peru},
-    {"Pink", Colours::pink},
-    {"Plum", Colours::plum},
-    {"Powder Blue", Colours::powderblue},
-    {"Purple", Colours::purple},
-    {"Rebecca Purple", Colours::rebeccapurple},
-    {"Red", Colours::red},
-    {"Rosy Brown", Colours::rosybrown},
-    {"Royal Blue", Colours::royalblue},
-    {"Saddle Brown", Colours::saddlebrown},
-    {"Salmon", Colours::salmon},
-    {"Sandy Brown", Colours::sandybrown},
-    {"Sea Green", Colours::seagreen},
-    {"Seashell", Colours::seashell},
-    {"Sienna", Colours::sienna},
-    {"Silver", Colours::silver},
-    {"Sky Blue", Colours::skyblue},
-    {"Slate Blue", Colours::slateblue},
-    {"Slate Grey", Colours::slategrey},
-    {"Snow", Colours::snow},
-    {"Spring Green", Colours::springgreen},
-    {"Steel Blue", Colours::steelblue},
-    {"Tan", Colours::tan},
-    {"Teal", Colours::teal},
-    {"Thistle", Colours::thistle},
-    {"Tomato", Colours::tomato},
-    {"Turquoise", Colours::turquoise},
-    {"Violet", Colours::violet},
-    {"Wheat", Colours::wheat},
-    {"White", Colours::white},
-    {"White Smoke", Colours::whitesmoke},
-    {"Yellow", Colours::yellow},
-    {"Yellow Green", Colours::yellowgreen},
 };
 //==============================================================================
 CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMethodEditor& _owner, juce::Value& sharedSearchTabsValue_)
@@ -571,7 +515,51 @@ void CtrlrLuaMethodCodeEditorSettings::populateColourCombo(ComboBox* combo) {
         combo->addItem(availableColours[i].name, i + 1);
     }
 }
-
+ 
+// THIS CODE ADDS SEPARATORS TO COMBO BUT MAKES THE LIST A BIT LONG
+//void CtrlrLuaMethodCodeEditorSettings::populateColourCombo(ComboBox* combo) {
+//    combo->clear();
+//
+//    // Group 1: Common colors
+//    for (int i = 0; i < 5; ++i) { // First 5 colors from your array
+//        combo->addItem(availableColours[i].name, i + 1);
+//    }
+//
+//    combo->addSeparator();
+//
+//    // Group 2: Primary colors  
+//    for (int i = 5; i < 11; ++i) { // Next 6 colors
+//        combo->addItem(availableColours[i].name, i + 1);
+//    }
+//
+//    combo->addSeparator();
+//
+//    // Group 3: Dark variants
+//    for (int i = 11; i < 16; ++i) {
+//        combo->addItem(availableColours[i].name, i + 1);
+//    }
+//
+//    combo->addSeparator();
+//
+//    // Group 4: Light variants
+//    for (int i = 16; i < 21; ++i) {
+//        combo->addItem(availableColours[i].name, i + 1);
+//    }
+//
+//    combo->addSeparator();
+//
+//    // Group 5: Popular web colors
+//    for (int i = 21; i < 27; ++i) {
+//        combo->addItem(availableColours[i].name, i + 1);
+//    }
+//
+//    combo->addSeparator();
+//
+//    // Add remaining colors without separators, or add more separator groups as needed
+//    for (int i = 27; i < sizeof(availableColours) / sizeof(availableColours[0]); ++i) {
+//        combo->addItem(availableColours[i].name, i + 1);
+//    }
+//}
 int CtrlrLuaMethodCodeEditorSettings::findColourIndex(const Colour& colour) {
     for (int i = 0; i < sizeof(availableColours) / sizeof(availableColours[0]); ++i) {
         if (availableColours[i].colour == colour) {
@@ -595,10 +583,14 @@ void CtrlrLuaMethodCodeEditorSettings::populateSyntaxTokenCombo()
 
     for (int i = 0; i < tokenTypes.size(); ++i)
     {
-        syntaxTokenType->addItem(tokenTypes[i], i + 1);
+        // Skip adding "Error" to the combo box display
+        if (tokenTypes[i] != "Error")
+        {
+            syntaxTokenType->addItem(tokenTypes[i], i + 1);
+        }
     }
 
-    // Select first item by default
+    // Select first item by default (which will now be the first non-Error item)
     syntaxTokenType->setSelectedId(1, dontSendNotification);
 }
 
