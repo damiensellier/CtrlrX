@@ -19,29 +19,41 @@ CtrlrPanelResourceEditor::CtrlrPanelResourceEditor (CtrlrPanelEditor &_owner)
     addAndMakeVisible (resourceList = new TableListBox ("Resource List", this));
     resourceList->setName (L"resourceList");
 
-    addAndMakeVisible (add = new TextButton (L"new button"), -1); // Updated v5.6.33. Z index added. By @dnladoog JG on 4/23/20025
+    addAndMakeVisible (add = new TextButton (L"new button"), -1); // Updated v5.6.33. Z index added. By @dnladoog JG on 4/23/2025
     add->setTooltip (L"Add new resources");
     add->setButtonText (L"Add");
     add->addListener (this);
-    add->setColour (TextButton::buttonColourId, Colour (0xffb2b2b2));
+    add->setColour(TextButton::buttonColourId, Colour(findColour(TextButton::buttonOnColourId))); // Colour (0xffb2b2b2));
+    add->setColour(TextButton::buttonOnColourId, Colour(findColour(TextButton::buttonOnColourId)));
+    add->setColour(TextButton::textColourOffId, Colour(findColour(TextButton::textColourOffId)));
+    add->setColour(TextButton::textColourOnId, Colour(findColour(TextButton::textColourOnId)));
 
-	addAndMakeVisible (remove = new TextButton (""), -1); // Updated v5.6.33. Z index added. By @dnladoog JG on 4/23/20025
+	addAndMakeVisible (remove = new TextButton (""), -1); // Updated v5.6.33. Z index added. By @dnladoog JG on 4/23/2025
     remove->setTooltip (L"Remove selected resources");
     remove->setButtonText (L"Remove");
     remove->addListener (this);
-    remove->setColour (TextButton::buttonColourId, Colour (0xffb2b2b2));
+    remove->setColour(TextButton::buttonColourId, Colour(findColour(TextButton::buttonOnColourId))); // Colour (0xffb2b2b2));
+    remove->setColour(TextButton::buttonOnColourId, Colour(findColour(TextButton::buttonOnColourId)));
+    remove->setColour(TextButton::textColourOffId, Colour(findColour(TextButton::textColourOffId)));
+    remove->setColour(TextButton::textColourOnId, Colour(findColour(TextButton::textColourOnId)));
 
-	addAndMakeVisible(move = new TextButton(""), -1); // Updated v5.6.33. Z index added. By @dnladoog JG on 4/23/20025
+	addAndMakeVisible(move = new TextButton(""), -1); // Updated v5.6.33. Z index added. By @dnladoog JG on 4/23/2025
 	move->setTooltip(L"Move resources to panel folder");
 	move->setButtonText(L"Move...");
 	move->addListener(this);
-	move->setColour(TextButton::buttonColourId, Colour(0xffb2b2b2));
+    move->setColour(TextButton::buttonColourId, Colour(findColour(TextButton::buttonOnColourId))); // Colour (0xffb2b2b2));
+    move->setColour(TextButton::buttonOnColourId, Colour(findColour(TextButton::buttonOnColourId)));
+    move->setColour(TextButton::textColourOffId, Colour(findColour(TextButton::textColourOffId)));
+    move->setColour(TextButton::textColourOnId, Colour(findColour(TextButton::textColourOnId)));
 
-	addAndMakeVisible (reload = new TextButton (""), -1); // Updated v5.6.33. Z index added. By @dnladoog JG on 4/23/20025
+	addAndMakeVisible (reload = new TextButton (""), -1); // Updated v5.6.33. Z index added. By @dnladoog JG on 4/23/2025
     reload->setTooltip (L"Reload all resources");
     reload->setButtonText (L"Reload");
     reload->addListener (this);
-    reload->setColour (TextButton::buttonColourId, Colour (0xffb2b2b2));
+    reload->setColour(TextButton::buttonColourId, Colour(findColour(TextButton::buttonOnColourId))); // Colour (0xffb2b2b2));
+    reload->setColour(TextButton::buttonOnColourId, Colour(findColour(TextButton::buttonOnColourId)));
+    reload->setColour(TextButton::textColourOffId, Colour(findColour(TextButton::textColourOffId)));
+    reload->setColour(TextButton::textColourOnId, Colour(findColour(TextButton::textColourOnId)));
 
 	tableFont = Font(Font::getDefaultSansSerifFontName(), 12.0f, Font::plain);
 	resourceList->setRowHeight (22);
@@ -115,14 +127,35 @@ void CtrlrPanelResourceEditor::paintRowBackground (Graphics& g, int rowNumber, i
 
 void CtrlrPanelResourceEditor::paintCell (Graphics& g, int rowNumber, int columnId, int width, int height, bool rowIsSelected)
 {
-	if (rowIsSelected)
-	{
-		g.setColour (Colours::white);
-	}
-	else
-	{
-		g.setColour (Colours::black);
-	}
+    // Updated v5.6.34. SEE : https://github.com/damiensellier/CtrlrX/issues/147
+    // Draw the background first. The color changes depending on whether the row is selected.
+    if (rowIsSelected)
+    {
+        // For selected rows, use a distinct background color.
+        // Use the dedicated highlight color from the file tree component.
+        g.setColour (findColour(DirectoryContentsDisplayComponent::highlightColourId));
+    }
+    else
+    {
+        // For unselected rows, use the standard background color.
+        g.setColour (findColour(ListBox::backgroundColourId));
+    }
+    g.fillRect (0, 0, width, height);
+
+    // Set the color for the text and other content based on selection.
+    if (rowIsSelected)
+    {
+        // For selected rows, use a text color that contrasts well with the highlight color.
+        // `highlightedTextColourId` is often used for this.
+        g.setColour(findColour(DirectoryContentsDisplayComponent::highlightedTextColourId));
+    }
+    else
+    {
+        // Set the standard text color for unselected rows.
+        g.setColour(findColour(ListBox::textColourId));
+    }
+
+    // Now, the code to draw the content of each column.
 
 	if (columnId == 1)
 	{
