@@ -276,7 +276,8 @@ Array<CtrlrSysexToken> CtrlrSysexProcessor::sysExToTokenArray (const String &for
 			|| tokenToAdd.getType() == ChecksumTechnics // Added v5.6.34.
 			|| tokenToAdd.getType() == ChecksumWaldorfRackAttack)
 		{
-			tokenToAdd.setAdditionalData (ar[i].substring(1,2).getHexValue32());
+			// tokenToAdd.setAdditionalData (ar[i].substring(1,2).getHexValue32());
+			tokenToAdd.setAdditionalData(ar[i].substring(1).trim().getIntValue()); // UPDATED v5.6.34. Thanks to @dnaldoog
 		}
 
 		tokensToReturn.add (tokenToAdd);
