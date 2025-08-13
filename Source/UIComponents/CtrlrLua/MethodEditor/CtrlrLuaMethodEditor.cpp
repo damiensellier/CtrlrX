@@ -81,7 +81,9 @@ void CtrlrLuaMethodEditor::valueTreePropertyChanged (ValueTree &treeWhosePropert
             {
                 ed->setFontAndColour (owner.getCtrlrManagerOwner().getFontManager().getFontFromString (componentTree.getProperty(Ids::luaMethodEditorFont)), VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorBgColour)));
                 
-                ed->setFontAndColour (owner.getCtrlrManagerOwner().getFontManager().getFontFromString (componentTree.getProperty(Ids::luaMethodEditorLineNumbersColour)), VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorLineNumbersBgColour))); // Added v5.6.31.
+                ed->getCodeComponent()->setColour(CodeEditorComponent::lineNumberTextId, VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorLineNumbersColour)));
+                
+                ed->getCodeComponent()->setColour(CodeEditorComponent::lineNumberBackgroundId, VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorLineNumbersBgColour)));
             }
         }
     }
