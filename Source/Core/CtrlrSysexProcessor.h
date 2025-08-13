@@ -25,7 +25,8 @@ class CtrlrSysexProcessor
 		void checksumRolandJp8080(const CtrlrSysexToken token, MidiMessage &m);
 		uint8 getRolandSplit (const int value, const int byteNum);
 		void checksumWaldorfRackAttack(const CtrlrSysexToken token, MidiMessage &m);
-        void checksumTechnics(const CtrlrSysexToken token, MidiMessage &m); // Added v5.6.34. Thanks to @dnaldoog
+		void checksumXor(const CtrlrSysexToken token, MidiMessage &m); // Added v5.6.34. Thanks to @dnaldoog
+		void checksumTechnics(const CtrlrSysexToken token, MidiMessage &m); // Added v5.6.34. Thanks to @dnaldoog
 		int getGlobalIndex(const CtrlrSysexToken token);
 
 		static double getValue(const Array<CtrlrSysexToken> &tokens, const CtrlrMidiMessageEx &message);

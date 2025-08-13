@@ -83,6 +83,7 @@ void CtrlrSysexProcessor::sysExProcessToken (const CtrlrSysexToken token, uint8 
 		case Ignore:
 		case ChecksumRolandJP8080:
 		case ChecksumTechnics:
+		case ChecksumXor:
 		case ChecksumWaldorfRackAttack:
 		case FormulaToken:
 		case LUAToken:
@@ -128,6 +129,10 @@ void CtrlrSysexProcessor::sysexProcessChecksums(const Array<CtrlrSysexToken> &to
         {
             checksumTechnics (tokens.getReference(i), m);
         }
+		if (tokens.getReference(i).getType() == ChecksumXor)
+		{
+			checksumXor(tokens.getReference(i), m);
+		}
     }
 }
 
@@ -277,7 +282,11 @@ Array<CtrlrSysexToken> CtrlrSysexProcessor::sysExToTokenArray (const String &for
 			|| tokenToAdd.getType() == ChecksumWaldorfRackAttack)
 		{
 			// tokenToAdd.setAdditionalData (ar[i].substring(1,2).getHexValue32());
-			tokenToAdd.setAdditionalData(ar[i].substring(1).trim().getIntValue()); // UPDATED v5.6.34. Thanks to @dnaldoog
+			/*
+			This old code was passing a hexString which works up to 9 but if you pass 10 ie z10
+			it will be passed through as 16, so getter is changed to getIntValue()
+			*/
+			tokenToAdd.setAdditionalData(ar[i].substring(1).trim().getIntValue()); // Updated v5.6.34. Thanks to @dnaldoog
 		}
 
 		tokensToReturn.add (tokenToAdd);
@@ -303,6 +312,10 @@ CtrlrSysExFormulaToken CtrlrSysexProcessor::sysExIdentifyToken(const String &s)
 	if (s.startsWith("z"))
 	{
 		return (ChecksumRolandJP8080);
+	}
+	if (s.startsWith("e"))
+	{
+		return (ChecksumXor);
 	}
 	if (s.startsWith("w"))
 	{
@@ -428,6 +441,18 @@ void CtrlrSysexProcessor::checksumRolandJp8080(const CtrlrSysexToken token, Midi
 	}
 	chTotal = ~chTotal & 0x7f; // Invert and mask to 7 bits
 	++chTotal;
+	*(ptr + token.getPosition()) = chTotal;
+}
+
+void CtrlrSysexProcessor::checksumXor(const CtrlrSysexToken token, MidiMessage& m) // Added v5.6.34. Thanks to @dnaldoog
+{
+	const int startByte = token.getPosition() - token.getAdditionalData();
+	uint8 chTotal = 0;
+	uint8* ptr = (uint8*)m.getRawData();
+	for (int i = startByte; i < token.getPosition(); i++)
+	{
+		chTotal ^= *(ptr + i);
+	}
 	*(ptr + token.getPosition()) = chTotal;
 }
 
