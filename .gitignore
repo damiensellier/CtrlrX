@@ -73,6 +73,10 @@ IPCH/                     # Precompiled header cache directory
 # Builds Specific Ignores
 # Ignore the entire Builds folder
 Builds/
+Builds/MacOSX/
+Builds/VisualStudio2017/
+Builds/VisualStudio2019/
+Builds/VisualStudio2022/
 
 # EXCEPTION: Unignore the LinuxMakefile subfolder and all its contents
 !Builds/LinuxMakefile/
