@@ -81,6 +81,10 @@ void CtrlrMIDISettingsDialog::resized()
 
 
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
+
+
+
+
 void CtrlrMIDISettingsDialog::showDialog(CtrlrPanel &_owner)
 {
     DialogWindow::LaunchOptions opts;

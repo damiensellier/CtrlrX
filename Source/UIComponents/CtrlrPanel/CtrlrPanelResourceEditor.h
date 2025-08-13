@@ -41,6 +41,64 @@ class CtrlrPanelResourceEditor  : public Component,
 	    TextButton* add;
 		TextButton* move;
 		TextButton* remove, *reload;
+		Image createThumbnail(const Image& originalImage, int maxSize);
+        String infoMessage;
+        Image thumbnail;
+		bool isFontFile(const File& file);
+		class ImageInfoComponent : public Component
+		{
+		public:
+			ImageInfoComponent(const String& infoText, const Image& thumbnailImg)
+				: infoMessage(infoText), thumbnail(thumbnailImg)
+			{
+			}
+
+			void paint(Graphics& g) override
+			{
+				g.fillAll(Colour(0xfff0f0f0));
+
+				// Draw the info text at the top
+				g.setColour(Colours::black);
+				g.setFont(Font(12.0f));
+
+				int textX = 10;
+				int textY = 10;
+				int textWidth = getWidth() - 20;
+				int textHeight = thumbnail.isNull() ? (getHeight() - 20) : 120; // Reserve space for image if present
+
+				g.drawMultiLineText(infoMessage, textX, textY + 15, textWidth);
+
+				// Draw the thumbnail image underneath the text
+				if (!thumbnail.isNull())
+				{
+					int imageY = textHeight + 20; // Position below text with some margin
+					int imageX = (getWidth() - thumbnail.getWidth()) / 2; // Center the image horizontally
+
+					// Ensure imageX is not negative (in case thumbnail is wider than dialog)
+					if (imageX < 10) imageX = 10;
+
+					g.drawImage(thumbnail, imageX, imageY, thumbnail.getWidth(), thumbnail.getHeight(),
+						0, 0, thumbnail.getWidth(), thumbnail.getHeight());
+
+					// Draw a border around the image
+					g.setColour(Colours::grey);
+					g.drawRect(imageX - 1, imageY - 1, thumbnail.getWidth() + 2, thumbnail.getHeight() + 2);
+
+				}
+			}
+
+			void resized() override
+			{
+				// Component will be resized by the dialog window
+			}
+		private:
+			String infoMessage;
+			Image thumbnail;
+
+        };
+
+        // If you prefer to keep the implementation separate, put this in the .cpp file instead:
+
 	    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrPanelResourceEditor);
 };
 
