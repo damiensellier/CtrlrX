@@ -351,7 +351,7 @@ void CtrlrPanelResourceEditor::showResourceInfo(const int resourceIndex)
 
                     thumbnailImage = Image(Image::ARGB, previewWidth, previewHeight, true);
                     Graphics g(thumbnailImage);
-                    g.fillAll(Colours::white);
+                    g.fillAll(Colours::lightgrey);
 
                     // Draw sample text at different sizes
                     g.setColour(Colours::black);
@@ -481,7 +481,7 @@ void CtrlrPanelResourceEditor::showResourceInfo(const int resourceIndex)
                     // Render SVG to thumbnail image
                     thumbnailImage = Image(Image::ARGB, thumbWidth, thumbHeight, true);
                     Graphics g(thumbnailImage);
-                    g.fillAll(Colours::white);
+                    g.fillAll(Colours::lightgrey);
 
                     // Set transform and draw
                     AffineTransform transform = RectanglePlacement(RectanglePlacement::centred)

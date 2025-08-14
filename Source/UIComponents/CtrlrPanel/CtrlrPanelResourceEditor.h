@@ -97,8 +97,6 @@ class CtrlrPanelResourceEditor  : public Component,
 
         };
 
-        // If you prefer to keep the implementation separate, put this in the .cpp file instead:
-
 	    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrPanelResourceEditor);
 };
 
