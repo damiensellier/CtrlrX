@@ -368,6 +368,8 @@ Tuturial coming soon.
 * **ADDED** Preferences "ctrlrPropertyLineImprovedLegibility" to force B&W text for property pane text entry fields. `CtrlrPropertyComponent.cpp`, `CtrlrIDs.xml`, `CtrlrIDs.h`
 * **FIXED** CtrlrPanel.cpp panelVersionMajor & panelVersionMinor stored as int. `CtrlrPanel.cpp` 
 * **ADDED** Algorithm for Roland checksums. `CtrlrSysexProcessor.cpp` & `.h` `CtrlrMacros.h`, `CtrlrPropertyComponent.cpp`
+* **FIXED** Resource Editor colours follow the general LnF colourScheme. `CtrlrPanelResourceEditor.cpp` & `.h`
+* **ADDED** Resource Editor file preview thumbnail. `CtrlrPanelResourceEditor.cpp` & `.h`
 
 #### Version 5.6.33 | 2025.05.28
 
