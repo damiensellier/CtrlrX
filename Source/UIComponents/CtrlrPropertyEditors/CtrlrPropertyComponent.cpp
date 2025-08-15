@@ -1520,12 +1520,12 @@ void CtrlrSysExEditor::mouseDown (const MouseEvent& e)
 			m.addItem (8193, "Current bank number");
 
 			m.addSectionHeader ("Checksums (tN) t=type N=num bytes to count");
-			m.addItem (13, "Roland Checksum"); // Updated v5.6.34.
-			m.addItem (13, "Yamaha Checksum"); // Added v5.6.34.
-			m.addItem (14, "Waldorf RackAttack Checksum");
-			m.addItem (15, "Technics Checksum"); // Added v5.6.34.
-            m.addItem (17, "XOR Checksum"); // Added v5.6.34.
-			m.addItem (16, "Ignore this byte on input");
+			m.addItem(13, "2's Complement (Roland, Yamaha)"); // Updated v5.6.34.
+			m.addItem(14, "Exclusive OR (XOR) (Akai, Korg, Sequential) "); // Added v5.6.34.
+			m.addItem (15, "Simple Summing (Waldorf, Lexicon, Oberheim)"); // Added v5.6.34.
+			m.addItem (16, "XOR Byte 1 (Technics)"); // Added v5.6.34.
+			m.addItem (17, "1's Complement (E-mu, Korg)"); // Added v5.6.34.
+			m.addItem (18, "Ignore this byte on input");
 			PopupMenu km,lm,mm,nm;
 
 			for (int i=0; i<16; i++)
@@ -1595,20 +1595,23 @@ void CtrlrSysExEditor::mouseDown (const MouseEvent& e)
 				l->setText ("z5", sendNotification);
 				break;
 			case 14:
-				l->setText ("w5", sendNotification);
+				l->setText("X5", sendNotification); // Exclusive OR, Akai, Korg, Sequential
 				break;
 			case 15:
-				l->setText ("tc", sendNotification); // Added v5.6.34
+				l->setText("w5", sendNotification); // Simple Summing, Waldorf, Lexicon, Oberheim
 				break;
 			case 16:
-				l->setText ("ii", sendNotification);
+				l->setText("tc", sendNotification); // Technics Matsushita, XOR Byte 1
 				break;
 			case 17:
-				l->setText ("e5", sendNotification);
+				l->setText("O5", sendNotification); //1s Complement, E-mu, Korg
+				break;
+			case 18:
+				l->setText("ii", sendNotification); // ignore this byte on input
 				break;
 			}
 
-			if (ret >= 20 && ret < 37)
+			if (ret >= 19 && ret < 37)
 			{
 				l->setText ("k"+String::toHexString(ret-20), sendNotification);
 			}

@@ -100,9 +100,10 @@ enum CtrlrSysExFormulaToken
 	Ignore,
 	FormulaToken,
 	LUAToken,
+	ChecksumOnesComplement,
+	ChecksumSummingSimple,
 	ChecksumTechnics,
 	ChecksumXor,
-	ChecksumWaldorfRackAttack,
 	CurrentProgram,
 	CurrentBank,
 	NoToken
