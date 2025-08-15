@@ -3327,6 +3327,12 @@
       <Option compile="0"/>
       <Option link="0"/>
     </Unit>
+    <Unit filename="../../Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodEditorCommandIDs.h">
+      <Option target="Shared Code | Debug"/>
+      <Option target="Shared Code | Release"/>
+      <Option compile="0"/>
+      <Option link="0"/>
+    </Unit>
     <Unit filename="../../Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodEditorConsole.cpp">
       <Option target="Shared Code | Debug"/>
       <Option target="Shared Code | Release"/>

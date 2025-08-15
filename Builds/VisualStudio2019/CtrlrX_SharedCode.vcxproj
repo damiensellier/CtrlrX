@@ -2711,6 +2711,7 @@
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerVars.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditArea.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditor.h"/>
+    <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorCommandIDs.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorConsole.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorTabs.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodFind.h"/>

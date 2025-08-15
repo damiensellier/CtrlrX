@@ -920,6 +920,8 @@
                   file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodEditor.cpp"/>
             <FILE id="GOuGXn" name="CtrlrLuaMethodEditor.h" compile="0" resource="0"
                   file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodEditor.h"/>
+            <FILE id="skDtVG" name="CtrlrLuaMethodEditorCommandIDs.h" compile="0"
+                  resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodEditorCommandIDs.h"/>
             <FILE id="U8p6ed" name="CtrlrLuaMethodEditorConsole.cpp" compile="1"
                   resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodEditorConsole.cpp"/>
             <FILE id="IcOt6d" name="CtrlrLuaMethodEditorConsole.h" compile="0"

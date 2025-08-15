@@ -3,8 +3,7 @@
 #include "CtrlrAbout.h"
 #include "CtrlrPanel/CtrlrPanel.h"
 #include "CtrlrPanel/CtrlrPanelEditor.h"
-#include "ctrlrEditorApplicationcommandsHandlers.cpp" // Added v5.6.34.
-
+#include "CtrlrLua/MethodEditor/CtrlrLuaMethodEditorCommandIDs.h" // Added v5.6.34.
 
 void CtrlrEditor::getAllCommands (Array< CommandID > &commands)
 {

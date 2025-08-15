@@ -4164,6 +4164,9 @@
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditor.h">
       <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorCommandIDs.h">
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorConsole.h">
       <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>

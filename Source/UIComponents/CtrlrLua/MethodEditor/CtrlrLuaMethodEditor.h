@@ -6,6 +6,7 @@
 #include "CtrlrLuaMethodFind.h"
 #include "CtrlrLuaMethodEditArea.h"
 #include "CtrlrValueTreeEditor.h"
+#include "CtrlrLua/MethodEditor/CtrlrLuaMethodEditorCommandIDs.h" // Added v5.6.34.
 
 
 class CtrlrManager;
@@ -13,38 +14,13 @@ class CtrlrLookAndFeel;
 class CtrlrLuaMethodManager;
 class CtrlrLuaMethodCodeEditor;
 
-#define METHOD_NEW                "Add new method"
-#define METHOD_DEL                "Delete method"
+#define METHOD_NEW              "Add new method"
+#define METHOD_DEL              "Delete method"
 #define METHOD_FROM_TEMPLATE    "Replace with template"
-#define METHOD_SAVE                "Save method"
+#define METHOD_SAVE             "Save method"
 #define FIND_AND_REPLACE        "Find and replace"
-#define GROUP_NEW                "Add new group"
+#define GROUP_NEW               "Add new group"
 
-namespace LuaMethodEditorCommandIDs // Added v5.6.34. Refactor of LUA method editor menu bar items. Assign index to LUA method editor menu item functions.
-{
-    enum
-    {
-        fileSave                = 2,
-        fileSaveAndCompile      = 3,
-        fileSaveAndCompileAll   = 4,
-        fileCloseCurrentTab     = 5,
-        fileCloseAllTabs        = 6,
-        fileConvertToFiles      = 7,
-        fileClose               = 1,
-
-        editSearch              = 15,
-        editFindAndReplace      = 16,
-        editDebugger            = 9,
-        editConsole             = 8,
-        editClearOutput         = 17,
-        editPreferences         = 18,
-
-        editSingleLineComment   = 10,
-        editMultiLineComment    = 11,
-        editDuplicateLine       = 12,
-        editGoToLine            = 13,
-    };
-}
 
 class ChildSorter
 {
