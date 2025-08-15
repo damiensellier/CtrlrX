@@ -33,6 +33,8 @@ class CtrlrValueMap
 			@param stringToParseAsMap The string to parse, it will be trim()'ed out of EOLs on the end
 		*/
 		void parseString (const String &stringToParseAsMap);
+		int findUnquotedEquals(const String& line); // Added v5.6.34. Helper for parseString(). Thanks to @dnaldoog
+		String removeQuotes(const String& str); // Added v5.6.34. Helper for parseString(). Thanks to @dnaldoog
 
 		/** @brief Copy contents of another ValueMap to this one, this can't be done via the '=' operator
 

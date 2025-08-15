@@ -370,6 +370,7 @@ Tuturial coming soon.
 * **ADDED** Algorithm for Roland checksums. `CtrlrSysexProcessor.cpp` & `.h` `CtrlrMacros.h`, `CtrlrPropertyComponent.cpp`
 * **FIXED** Resource Editor colours follow the general LnF colourScheme. `CtrlrPanelResourceEditor.cpp` & `.h`
 * **ADDED** Resource Editor file preview thumbnail. `CtrlrPanelResourceEditor.cpp` & `.h`
+* **FIXED** Single quote content in comboBox. `CtrlrValueMap.cpp` & `.h`
 
 #### Version 5.6.33 | 2025.05.28
 
