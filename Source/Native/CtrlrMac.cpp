@@ -58,7 +58,39 @@ const Result CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bo
     // browseForFileToSave(true) to show "cancel | Save" instead of "Cancel | Open" buttons won't work. It will show a filename box (we don't want that) and will force to save a the file with doubled extension such as filename.vst3..vst3
     if (fc->browseForDirectory()) {
         newMe = fc->getResult().getChildFile(File::createLegalFileName(panelToWrite->getProperty(Ids::name).toString() + me.getFileExtension()));
-        if (!me.copyDirectoryTo(newMe)) {
+        
+		// Check if the file already exists and ask for confirmation before overwriting
+        if (newMe.exists()) {
+            // Pass "Cancel" as the first button and "Overwrite" as the second.
+            // This displays them correctly for macOS UI standards.
+            bool overwriteCancelled = AlertWindow::showOkCancelBox(
+                AlertWindow::QuestionIcon,
+                "File Already Exists",
+                "\"" + newMe.getFileName() + "\" already exists. Do you want to overwrite it?",
+                "Cancel",    // <-- This is the first button, returning true
+                "Overwrite", // <-- This is the second button, returning false
+                nullptr
+            );
+
+            // The showOkCancelBox returns true for the first button ("Cancel")
+            // and false for the second button ("Overwrite").
+            // So, if the user clicked "Cancel", overwriteCancelled will be true.
+            if (overwriteCancelled) {
+                logger.log("MAC native, user cancelled the overwrite operation.");
+                return Result::fail("MAC native, user cancelled the export operation.");
+            }
+
+            // If the user clicked "Overwrite", the condition above is false,
+            // and the code continues here.
+            
+            // First, delete the existing bundle.
+            logger.log("MAC native, attempting to delete existing bundle at: " + newMe.getFullPathName());
+            if (!newMe.deleteRecursively()) {
+                return (Result::fail("MAC native, failed to delete existing bundle at: " + newMe.getFullPathName()));
+            }
+        }
+		
+		if (!me.copyDirectoryTo(newMe)) {
             return (Result::fail("MAC native, copyDirectoryTo from \"" + me.getFullPathName() + "\" to \"" + newMe.getFullPathName() + "\" failed"));
             logger.log("MAC native, copyDirectoryTo from \"" + me.getFullPathName() + "\" to \"" + newMe.getFullPathName() + "\" failed");
         }

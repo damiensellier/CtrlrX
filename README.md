@@ -371,6 +371,9 @@ Tuturial coming soon.
 * **FIXED** Resource Editor colours follow the general LnF colourScheme. `CtrlrPanelResourceEditor.cpp` & `.h`
 * **ADDED** Resource Editor file preview thumbnail. `CtrlrPanelResourceEditor.cpp` & `.h`
 * **FIXED** Single quote content in comboBox. `CtrlrValueMap.cpp` & `.h`
+* **ADDED** CtrlrPanelProperties highlighted tab when active. `CtrlrPanelProperties.cpp`
+* **ADDED** alertWindow warning at export when trying to overwrite an existing panel on macOS. `CtrlrMac.cpp`
+
 
 #### Version 5.6.33 | 2025.05.28
 
