@@ -736,25 +736,25 @@ void CtrlrPanelResourceEditor::backgroundClicked (const MouseEvent &e)
 void CtrlrPanelResourceEditor::lookAndFeelChanged()
 {
     // Update the 'add' button's colours
-    add->setColour(TextButton::buttonColourId, findColour(TextButton::buttonOnColourId));
+    add->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
     add->setColour(TextButton::buttonOnColourId, findColour(TextButton::buttonOnColourId));
     add->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId));
     add->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId));
 
     // Update the 'remove' button's colours
-    remove->setColour(TextButton::buttonColourId, findColour(TextButton::buttonOnColourId));
+    remove->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
     remove->setColour(TextButton::buttonOnColourId, findColour(TextButton::buttonOnColourId));
     remove->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId));
     remove->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId));
 
     // Update the 'move' button's colours
-    move->setColour(TextButton::buttonColourId, findColour(TextButton::buttonOnColourId));
+    move->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
     move->setColour(TextButton::buttonOnColourId, findColour(TextButton::buttonOnColourId));
     move->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId));
     move->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId));
 
     // Update the 'reload' button's colours
-    reload->setColour(TextButton::buttonColourId, findColour(TextButton::buttonOnColourId));
+    reload->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
     reload->setColour(TextButton::buttonOnColourId, findColour(TextButton::buttonOnColourId));
     reload->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId));
     reload->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId));
