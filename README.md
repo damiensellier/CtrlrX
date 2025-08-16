@@ -373,6 +373,8 @@ Tuturial coming soon.
 * **FIXED** Single quote content in comboBox. `CtrlrValueMap.cpp` & `.h`
 * **ADDED** CtrlrPanelProperties highlighted tab when active. `CtrlrPanelProperties.cpp`
 * **ADDED** alertWindow warning at export when trying to overwrite an existing panel on macOS. `CtrlrMac.cpp`
+* **UPDATED** Export instance alertWindows won't show up if cancelled by user. `CtrlrMac.cpp`, `CtrlrPanelFileOperations.cpp`
+* **UPDATED** Export instance fileChooser default directory is now set to panelLastSaveDir or falls back to desktop. `CtrlrMac.cpp`
 
 
 #### Version 5.6.33 | 2025.05.28
