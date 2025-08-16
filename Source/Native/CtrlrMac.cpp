@@ -47,10 +47,23 @@ const Result CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bo
                                || typeOS == juce::SystemStats::OperatingSystemType::MacOS_12 //  For macOS Monterey
                                );
 
-    File defaultDirectory = me.getParentDirectory().getChildFile(File::createLegalFileName(panelToWrite->getProperty(Ids::name))).withFileExtension(me.getFileExtension());
-    
+    File panelLastSaveDir = File(owner.getProperty(Ids::panelLastSaveDir));
+
+    // Determine the initial directory for the FileChooser
+    File fcInitialDirectory;
+    if (panelLastSaveDir.exists() && panelLastSaveDir.isDirectory())
+    {
+        // Use the last saved directory if it's a valid directory
+        fcInitialDirectory = panelLastSaveDir;
+    }
+    else
+    {
+        // Fallback to the user's desktop directory if the last saved one is invalid
+        fcInitialDirectory = File::getSpecialLocation(File::userDesktopDirectory);
+    }
+	
     fc = std::make_unique<FileChooser> (CTRLR_NEW_INSTANCE_DIALOG_TITLE,
-                                            me.getParentDirectory().getChildFile(File::createLegalFileName(panelToWrite->getProperty(Ids::name))).withFileExtension(me.getFileExtension()),
+                                            fcInitialDirectory,
                                             me.getFileExtension(),
                                             nativeFileChooser); // panelToWrite->getOwner().getProperty(Ids::ctrlrNativeFileDialogs)); // if vst3, won't work since there's no ctrlr.settings
     
@@ -77,7 +90,8 @@ const Result CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bo
             // So, if the user clicked "Cancel", overwriteCancelled will be true.
             if (overwriteCancelled) {
                 logger.log("MAC native, user cancelled the overwrite operation.");
-                return Result::fail("MAC native, user cancelled the export operation.");
+                return Result::fail("User cancelled the export operation.");
+				// return Result::ok(); // Correctly returns a successful but empty Result object to stop the process silently.
             }
 
             // If the user clicked "Overwrite", the condition above is false,
@@ -95,10 +109,10 @@ const Result CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bo
             logger.log("MAC native, copyDirectoryTo from \"" + me.getFullPathName() + "\" to \"" + newMe.getFullPathName() + "\" failed");
         }
     } else {
-        return (Result::fail("MAC native, browse for directory dialog failed"));
-        logger.log("MAC native, browse for directory dialog failed");
+        return (Result::fail("User cancelled the export operation."));
+		// return Result::ok(); // Correctly returns a successful but empty Result object to stop the process silently.
+        logger.log("MAC native, browse for directory dialog was cancelled by user.");
     }
-    
     
     Result res = setBundleInfo(panelToWrite, newMe); // Bundle Info
     if (!res.wasOk())
