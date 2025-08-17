@@ -116,13 +116,16 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: Extract version from .jucer file
-        # Try to derive version from a jucer file before configuring cmake
+        # Try to derive version from a jucer file that is newer than the VERSION file, before configuring cmake
         run: |
-          if [ -n "`grep -h 'version=.\+Ctrlr' *.jucer`" ]; then
-            grep -h 'version=.\+Ctrlr' *.jucer | sed -E 's/.*version="([^"]*).*/\1/g' | head -n 1 > VERSION
-            echo "Found version:"
-            cat VERSION
-          fi
+            echo "Version"
+          for JUCER_FILE in *.jucer ; do
+            if [ "$JUCER_FILE" -nt "VERSION" -a -n "`grep -h 'version=.\+Ctrlr' $JUCER_FILE`" ]; then
+              grep -h 'version=.\+Ctrlr' $JUCER_FILE | sed -E 's/.*version="([^"]*).*/\1/g' | head -n 1 > VERSION
+              echo "Found in $JUCER_FILE"
+            fi
+          done
+          cat VERSION
       
       - name: Configure
         run: cmake -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ${{ matrix.extra-flags }} .
