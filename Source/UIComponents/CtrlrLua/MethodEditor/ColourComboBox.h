@@ -1,5 +1,6 @@
 #pragma once    
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <CtrlrLog.h>
 
 using namespace juce;
 
@@ -10,7 +11,7 @@ public:
     ColourComboBoxLookAndFeel()
     {
         // Add some debug output
-        DBG("ColourComboBoxLookAndFeel created");
+        _DBG("ColourComboBoxLookAndFeel created");
     }
 
     void drawPopupMenuItem(Graphics& g, const Rectangle<int>& area,
@@ -19,7 +20,7 @@ public:
         const String& shortcutKeyText,
         const Drawable* icon, const Colour* textColour) override
     {
-        DBG("drawPopupMenuItem called for: " + text);
+        _DBG("drawPopupMenuItem called for: " + text);
 
         if (isSeparator)
         {
@@ -90,14 +91,14 @@ public:
     {
         colourNames.add(name);
         colours.add(colour);
-        DBG("Added color mapping: " + name + " -> " + colour.toString());
+        _DBG("Added color mapping: " + name + " -> " + colour.toString());
     }
 
     void clearColours()
     {
         colourNames.clear();
         colours.clear();
-        DBG("Cleared all color mappings");
+        _DBG("Cleared all color mappings");
     }
 
 private:
@@ -121,7 +122,7 @@ public:
         setColour(ComboBox::buttonColourId, defaultLnF.findColour(ComboBox::buttonColourId));
         setColour(ComboBox::arrowColourId, defaultLnF.findColour(ComboBox::arrowColourId));
 
-        DBG("ColourComboBox created with custom LookAndFeel");
+        _DBG("ColourComboBox created with custom LookAndFeel");
     }
 
     ~ColourComboBox()
@@ -139,7 +140,7 @@ public:
         // Update the LookAndFeel with the new color mapping
         customLookAndFeel->addColourMapping(name, colour);
 
-        DBG("Added color item: " + name + " with ID: " + String(itemId));
+        _DBG("Added color item: " + name + " with ID: " + String(itemId));
     }
 
     void clearAllItems()
@@ -177,16 +178,16 @@ public:
     // Debug method to check what's stored
     void debugColors()
     {
-        DBG("=== ColourComboBox Debug Info ===");
-        DBG("Number of items: " + String(getNumItems()));
-        DBG("Number of colours: " + String(colours.size()));
-        DBG("Number of colour names: " + String(colourNames.size()));
+        _DBG("=== ColourComboBox Debug Info ===");
+        _DBG("Number of items: " + String(getNumItems()));
+        _DBG("Number of colours: " + String(colours.size()));
+        _DBG("Number of colour names: " + String(colourNames.size()));
 
         for (int i = 0; i < getNumItems() && i < colours.size(); ++i)
         {
-            DBG("Item " + String(i) + ": " + getItemText(i) + " -> " + colours[i].toString());
+            _DBG("Item " + String(i) + ": " + getItemText(i) + " -> " + colours[i].toString());
         }
-        DBG("=== End Debug Info ===");
+        _DBG("=== End Debug Info ===");
     }
 
 private:
