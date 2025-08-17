@@ -26,7 +26,7 @@ const Result CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bo
     }
     
     File me = File::getSpecialLocation(File::currentApplicationFile);
-	String fileExtension = me.getFileExtension();
+    String fileExtension = me.getFileExtension();
     File newMe;
     MemoryBlock panelExportData, panelResourcesData;
     String error;
