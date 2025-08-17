@@ -15,7 +15,6 @@
         <line choice="app" />
         <line choice="vst3" />
         <line choice="au" />
-        <line choice="clap" />
     </choices-outline>
 
     <choice id="app" visible="true" start_selected="true" title="${PRODUCT_NAME} Standalone">
@@ -28,9 +27,5 @@
 
     <choice id="au" visible="true" start_selected="true" title="${PRODUCT_NAME} AU">
         <pkg-ref id="${BUNDLE_ID}.au.pkg" version="${VERSION}" onConclusion="none">${PRODUCT_NAME}.au.pkg</pkg-ref>
-    </choice>
-
-    <choice id="clap" visible="true" start_selected="true" title="${PRODUCT_NAME} CLAP">
-        <pkg-ref id="${BUNDLE_ID}.clap.pkg" version="${VERSION}" onConclusion="none">${PRODUCT_NAME}.clap.pkg</pkg-ref>
     </choice>
 </installer-gui-script>
