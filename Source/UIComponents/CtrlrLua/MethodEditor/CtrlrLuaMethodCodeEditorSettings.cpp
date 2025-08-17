@@ -21,157 +21,103 @@
 */
 
 //[Headers] You can add your own extra header files here...
+#include "CtrlrLuaMethodCodeEditorSettings.h"
 #include "CtrlrLuaMethodEditor.h"
 #include "CtrlrPanel/CtrlrPanel.h"
 #include "CtrlrManager/CtrlrManager.h"
+
 //[/Headers]
 
-#include "CtrlrLuaMethodCodeEditorSettings.h"
+
 
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...
 //[/MiscUserDefs]
 const CtrlrLuaMethodCodeEditorSettings::ColourItem CtrlrLuaMethodCodeEditorSettings::availableColours[] = {
-    {"Alice Blue", Colours::aliceblue},
-    {"Antique White", Colours::antiquewhite},
-    {"Aqua", Colours::aqua},
-    {"Aquamarine", Colours::aquamarine},
-    {"Azure", Colours::azure},
-    {"Beige", Colours::beige},
-    {"Bisque", Colours::bisque},
+    // Common colors first
     {"Black", Colours::black},
-    {"Blanched Almond", Colours::blanchedalmond},
+    {"White", Colours::white},
+    {"Grey", Colours::grey},
+    {"Dark Grey", Colours::darkgrey},
+    {"Light Grey", Colours::lightgrey},
+
+    // Primary colors
+    {"Red", Colours::red},
+    {"Green", Colours::green},
     {"Blue", Colours::blue},
-    {"Blue Violet", Colours::blueviolet},
-    {"Brown", Colours::brown},
-    {"Burly Wood", Colours::burlywood},
-    {"Cadet Blue", Colours::cadetblue},
-    {"Chartreuse", Colours::chartreuse},
-    {"Chocolate", Colours::chocolate},
-    {"Coral", Colours::coral},
-    {"Cornflower Blue", Colours::cornflowerblue},
-    {"Cornsilk", Colours::cornsilk},
-    {"Crimson", Colours::crimson},
+    {"Yellow", Colours::yellow},
     {"Cyan", Colours::cyan},
+    {"Magenta", Colours::magenta},
+
+    // Dark variants
+    {"Dark Red", Colours::darkred},
+    {"Dark Green", Colours::darkgreen},
     {"Dark Blue", Colours::darkblue},
     {"Dark Cyan", Colours::darkcyan},
-    {"Dark Goldenrod", Colours::darkgoldenrod},
-    {"Dark Green", Colours::darkgreen},
-    {"Dark Grey", Colours::darkgrey},
-    {"Dark Khaki", Colours::darkkhaki},
     {"Dark Magenta", Colours::darkmagenta},
-    {"Dark Olive Green", Colours::darkolivegreen},
-    {"Dark Orange", Colours::darkorange},
-    {"Dark Orchid", Colours::darkorchid},
-    {"Dark Red", Colours::darkred},
-    {"Dark Salmon", Colours::darksalmon},
-    {"Dark Sea Green", Colours::darkseagreen},
-    {"Dark Slate Blue", Colours::darkslateblue},
-    {"Dark Slate Grey", Colours::darkslategrey},
-    {"Dark Turquoise", Colours::darkturquoise},
-    {"Dark Violet", Colours::darkviolet},
-    {"Deep Pink", Colours::deeppink},
-    {"Deep Sky Blue", Colours::deepskyblue},
-    {"Dim Grey", Colours::dimgrey},
-    {"Dodger Blue", Colours::dodgerblue},
-    {"Firebrick", Colours::firebrick},
-    {"Floral White", Colours::floralwhite},
-    {"Forest Green", Colours::forestgreen},
-    {"Fuchsia", Colours::fuchsia},
-    {"Gainsboro", Colours::gainsboro},
+
+    // Light variants
+    {"Light Blue", Colours::lightblue},
+    {"Light Green", Colours::lightgreen},
+    {"Light Coral", Colours::lightcoral},
+    {"Light Pink", Colours::lightpink},
+    {"Light Yellow", Colours::lightyellow},
+
+    // Popular web colors
+    {"Orange", Colours::orange},
+    {"Purple", Colours::purple},
+    {"Brown", Colours::brown},
+    {"Pink", Colours::pink},
     {"Gold", Colours::gold},
-    {"Goldenrod", Colours::goldenrod},
-    {"Green", Colours::green},
-    {"Green Yellow", Colours::greenyellow},
-    {"Grey", Colours::grey},
-    {"Honeydew", Colours::honeydew},
-    {"Hot Pink", Colours::hotpink},
-    {"Indian Red", Colours::indianred},
+    {"Silver", Colours::silver},
+
+    // Nature colors
+    {"Forest Green", Colours::forestgreen},
+    {"Sea Green", Colours::seagreen},
+    {"Sky Blue", Colours::skyblue},
+    {"Royal Blue", Colours::royalblue},
+    {"Coral", Colours::coral},
+    {"Salmon", Colours::salmon},
+
+    // Distinctive colors
+    {"Crimson", Colours::crimson},
     {"Indigo", Colours::indigo},
-    {"Ivory", Colours::ivory},
+    {"Violet", Colours::violet},
+    {"Turquoise", Colours::turquoise},
+    {"Teal", Colours::teal},
+    {"Maroon", Colours::maroon},
+    {"Navy", Colours::navy},
+    {"Olive", Colours::olive},
+
+    // Warm colors
+    {"Chocolate", Colours::chocolate},
+    {"Sienna", Colours::sienna},
+    {"Peru", Colours::peru},
+    {"Tan", Colours::tan},
+    {"Wheat", Colours::wheat},
+
+    // Cool colors
+    {"Steel Blue", Colours::steelblue},
+    {"Slate Blue", Colours::slateblue},
+    {"Cornflower Blue", Colours::cornflowerblue},
+    {"Dodger Blue", Colours::dodgerblue},
+    {"Deep Sky Blue", Colours::deepskyblue},
+
+    // Specialty colors
+    {"Firebrick", Colours::firebrick},
+    {"Hot Pink", Colours::hotpink},
+    {"Deep Pink", Colours::deeppink},
+    {"Lime Green", Colours::limegreen},
+    {"Yellow Green", Colours::yellowgreen},
+    {"Orange Red", Colours::orangered},
+
+    // Muted colors
+    {"Dim Grey", Colours::dimgrey},
+    {"Slate Grey", Colours::slategrey},
+    {"Gainsboro", Colours::gainsboro},
+    {"Beige", Colours::beige},
     {"Khaki", Colours::khaki},
     {"Lavender", Colours::lavender},
-    {"Lavender Blush", Colours::lavenderblush},
-    {"Lawn Green", Colours::lawngreen},
-    {"Lemon Chiffon", Colours::lemonchiffon},
-    {"Light Blue", Colours::lightblue},
-    {"Light Coral", Colours::lightcoral},
-    {"Light Cyan", Colours::lightcyan},
-    {"Light Goldenrod Yellow", Colours::lightgoldenrodyellow},
-    {"Light Green", Colours::lightgreen},
-    {"Light Grey", Colours::lightgrey},
-    {"Light Pink", Colours::lightpink},
-    {"Light Salmon", Colours::lightsalmon},
-    {"Light Sea Green", Colours::lightseagreen},
-    {"Light Sky Blue", Colours::lightskyblue},
-    {"Light Slate Grey", Colours::lightslategrey},
-    {"Light Steel Blue", Colours::lightsteelblue},
-    {"Light Yellow", Colours::lightyellow},
-    {"Lime", Colours::lime},
-    {"Lime Green", Colours::limegreen},
-    {"Linen", Colours::linen},
-    {"Magenta", Colours::magenta},
-    {"Maroon", Colours::maroon},
-    {"Medium Aquamarine", Colours::mediumaquamarine},
-    {"Medium Blue", Colours::mediumblue},
-    {"Medium Orchid", Colours::mediumorchid},
-    {"Medium Purple", Colours::mediumpurple},
-    {"Medium Sea Green", Colours::mediumseagreen},
-    {"Medium Slate Blue", Colours::mediumslateblue},
-    {"Medium Spring Green", Colours::mediumspringgreen},
-    {"Medium Turquoise", Colours::mediumturquoise},
-    {"Medium Violet Red", Colours::mediumvioletred},
-    {"Midnight Blue", Colours::midnightblue},
-    {"Mint Cream", Colours::mintcream},
-    {"Misty Rose", Colours::mistyrose},
-    {"Moccasin", Colours::moccasin},
-    {"Navajo White", Colours::navajowhite},
-    {"Navy", Colours::navy},
-    {"Old Lace", Colours::oldlace},
-    {"Olive", Colours::olive},
-    {"Olive Drab", Colours::olivedrab},
-    {"Orange", Colours::orange},
-    {"Orange Red", Colours::orangered},
-    {"Orchid", Colours::orchid},
-    {"Pale Goldenrod", Colours::palegoldenrod},
-    {"Pale Green", Colours::palegreen},
-    {"Pale Turquoise", Colours::paleturquoise},
-    {"Pale Violet Red", Colours::palevioletred},
-    {"Papaya Whip", Colours::papayawhip},
-    {"Peach Puff", Colours::peachpuff},
-    {"Peru", Colours::peru},
-    {"Pink", Colours::pink},
-    {"Plum", Colours::plum},
-    {"Powder Blue", Colours::powderblue},
-    {"Purple", Colours::purple},
-    {"Rebecca Purple", Colours::rebeccapurple},
-    {"Red", Colours::red},
-    {"Rosy Brown", Colours::rosybrown},
-    {"Royal Blue", Colours::royalblue},
-    {"Saddle Brown", Colours::saddlebrown},
-    {"Salmon", Colours::salmon},
-    {"Sandy Brown", Colours::sandybrown},
-    {"Sea Green", Colours::seagreen},
-    {"Seashell", Colours::seashell},
-    {"Sienna", Colours::sienna},
-    {"Silver", Colours::silver},
-    {"Sky Blue", Colours::skyblue},
-    {"Slate Blue", Colours::slateblue},
-    {"Slate Grey", Colours::slategrey},
-    {"Snow", Colours::snow},
-    {"Spring Green", Colours::springgreen},
-    {"Steel Blue", Colours::steelblue},
-    {"Tan", Colours::tan},
-    {"Teal", Colours::teal},
-    {"Thistle", Colours::thistle},
-    {"Tomato", Colours::tomato},
-    {"Turquoise", Colours::turquoise},
-    {"Violet", Colours::violet},
-    {"Wheat", Colours::wheat},
-    {"White", Colours::white},
-    {"White Smoke", Colours::whitesmoke},
-    {"Yellow", Colours::yellow},
-    {"Yellow Green", Colours::yellowgreen},
 };
 //==============================================================================
 CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMethodEditor& _owner, juce::Value& sharedSearchTabsValue_)
@@ -195,7 +141,8 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     addAndMakeVisible(fontTypeface = new ComboBox(""));
     fontTypeface->setEditableText(false);
     fontTypeface->setJustificationType(Justification::centredLeft);
-    fontTypeface->setTextWhenNothingSelected("");
+    //fontTypeface->setTextWhenNothingSelected ("");
+    fontTypeface->setTextWhenNothingSelected("<Monospaced>"); // Will set default type from Font class
     fontTypeface->setTextWhenNoChoicesAvailable(L"(no choices)");
     fontTypeface->addListener(this);
 
@@ -212,6 +159,10 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     fontSize->setSliderStyle(Slider::IncDecButtons);
     fontSize->setTextBoxStyle(Slider::TextBoxLeft, false, 32, 24);
     fontSize->addListener(this);
+
+    addAndMakeVisible(resetToPreviousButton = new TextButton("Reset Font"));
+    resetToPreviousButton->addListener(this);
+    resetToPreviousButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
 
     addAndMakeVisible(label1 = new Label("new label", TRANS("Editor background:")));
     label1->setFont(Font(14.00f));
@@ -232,34 +183,36 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
 
     addAndMakeVisible(openSearchTabs = new ToggleButton(""));
     //openSearchTabs->setButtonText("Open Search Tabs"); // Corrected to use a string literal
-     openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue()); 
-     openSearchTabs->setButtonText(SharedValues::getSearchTabsLabel());
-     openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue());
+    openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue());
+    openSearchTabs->setButtonText(SharedValues::getSearchTabsLabel());
+    openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue());
 
-    addAndMakeVisible(resetButton = new TextButton("RESET"));
+    addAndMakeVisible(resetButton = new TextButton("RESET")); // Added JG
     resetButton->addListener(this);
-    resetButton->setColour(TextButton::buttonColourId, Colours::cornflowerblue);
+    resetButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId)); // Will follow the main LnF
+    resetButton->setColour(TextButton::buttonOnColourId, findColour(TextButton::buttonOnColourId)); // Will follow the main LnF
+    resetButton->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId)); // Will follow the main LnF
+    resetButton->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId)); // Will follow the main LnF
 
-
-    addAndMakeVisible(bgColour = new ComboBox("bgColour"));
+    addAndMakeVisible(bgColour = new ColourComboBox("bgColour"));
     bgColour->setEditableText(false);
     bgColour->setJustificationType(Justification::centredLeft);
     bgColour->addListener(this);
 
-    addAndMakeVisible(lineNumbersBgColour = new ComboBox("lineNumbersBgColour"));
+    addAndMakeVisible(lineNumbersBgColour = new ColourComboBox("lineNumbersBgColour"));
     lineNumbersBgColour->setEditableText(false);
     lineNumbersBgColour->setJustificationType(Justification::centredLeft);
     lineNumbersBgColour->addListener(this);
 
-    addAndMakeVisible(lineNumbersColour = new ComboBox("lineNumbersColour"));
+    addAndMakeVisible(lineNumbersColour = new ColourComboBox("lineNumbersColour"));
     lineNumbersColour->setEditableText(false);
     lineNumbersColour->setJustificationType(Justification::centredLeft);
     lineNumbersColour->addListener(this);
 
     // Now that the combo boxes exist, populate them
-    populateColourCombo(bgColour);
-    populateColourCombo(lineNumbersBgColour);
-    populateColourCombo(lineNumbersColour);
+    populateColourComboWithThumbnails(static_cast<ColourComboBox*>(bgColour));
+    populateColourComboWithThumbnails(static_cast<ColourComboBox*>(lineNumbersBgColour));
+    populateColourComboWithThumbnails(static_cast<ColourComboBox*>(lineNumbersColour));
 
     addAndMakeVisible(syntaxLabel = new Label("syntaxLabel", TRANS("Syntax Highlighting:")));
     syntaxLabel->setFont(Font(14.00f));
@@ -312,6 +265,8 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     owner.getOwner().getCtrlrManagerOwner().getFontManager().fillCombo(*fontTypeface);
     fontTypeface->setText(codeFont.getTypefaceName(), sendNotification);
     codeDocument.replaceAllContent("-- This is a comment\nfunction myFunction(argument)\n\tcall(\"string\")\nend");
+    previousFont = getFont(); // This captures the initial loaded font
+    resetToPreviousButton->setEnabled(false); // Start disabled
 
     setSize(334, 500);
     updateSyntaxColors();
@@ -336,37 +291,34 @@ CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
     deleteAndZero(syntaxLabel);
     deleteAndZero(syntaxTokenType);
     deleteAndZero(syntaxTokenColor);
+    deleteAndZero(resetToPreviousButton);
 }
 
 //==============================================================================
 void CtrlrLuaMethodCodeEditorSettings::paint(Graphics& g)
 {
-    Rectangle<int> bgColourRect = bgColour->getBounds().withX(bgColour->getRight() + 4).withWidth(32);
-    g.setColour(getColourFromCombo(bgColour));
-    g.fillRect(bgColourRect);
-    g.setColour(Colours::darkgrey);
-    g.drawRect(bgColourRect, 1);
+    // Update the main window's background colour based on the current Look and Feel
+    //g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 
-    // Line numbers background colour preview
-    Rectangle<int> lineNumBgColourRect = lineNumbersBgColour->getBounds().withX(lineNumbersBgColour->getRight() + 4).withWidth(32);
-    g.setColour(getColourFromCombo(lineNumbersBgColour));
-    g.fillRect(lineNumBgColourRect);
-    g.setColour(Colours::darkgrey);
-    g.drawRect(lineNumBgColourRect, 1);
+    //Rectangle<int> bgColourRect = bgColour->getBounds().withX(bgColour->getRight() + 4).withWidth(32);
+    //g.setColour(getColourFromCombo(bgColour));
+    //g.fillRect(bgColourRect);
+    //g.setColour(Colours::darkgrey);
+    //g.drawRect(bgColourRect, 1);
 
-    // Line numbers colour preview
-    Rectangle<int> lineNumColourRect = lineNumbersColour->getBounds().withX(lineNumbersColour->getRight() + 4).withWidth(32);
-    g.setColour(getColourFromCombo(lineNumbersColour));
-    g.fillRect(lineNumColourRect);
-    g.setColour(Colours::darkgrey);
-    g.drawRect(lineNumColourRect, 1);
+    //// Line numbers background colour preview
+    //Rectangle<int> lineNumBgColourRect = lineNumbersBgColour->getBounds().withX(lineNumbersBgColour->getRight() + 4).withWidth(32);
+    //g.setColour(getColourFromCombo(lineNumbersBgColour));
+    //g.fillRect(lineNumBgColourRect);
+    //g.setColour(Colours::darkgrey);
+    //g.drawRect(lineNumBgColourRect, 1);
 
-    Rectangle<int> syntaxColorRect = syntaxTokenColor->getBounds().withX(syntaxTokenColor->getRight() + 4).withWidth(32);
-    g.setColour(getColourFromCombo(syntaxTokenColor));
-    g.fillRect(syntaxColorRect);
-    g.setColour(Colours::darkgrey);
-    g.drawRect(syntaxColorRect, 1);
-
+    //// Line numbers colour preview
+    //Rectangle<int> lineNumColourRect = lineNumbersColour->getBounds().withX(lineNumbersColour->getRight() + 4).withWidth(32);
+    //g.setColour(getColourFromCombo(lineNumbersColour));
+    //g.fillRect(lineNumColourRect);
+    //g.setColour(Colours::darkgrey);
+    //g.drawRect(lineNumColourRect, 1);
 }
 
 void CtrlrLuaMethodCodeEditorSettings::resized()
@@ -398,12 +350,23 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     resetButton->setBounds(marginLeft + sampleWidth / 2 - (sampleWidth / 4 + marginLeft / 2), syntaxY + 104, sampleWidth / 2, 24);
 }
 
-
 void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
 {
-    DBG("ComboBox changed: " + comboBoxThatHasChanged->getName());
     if (comboBoxThatHasChanged == fontTypeface)
     {
+        String newTypefaceName = fontTypeface->getText();
+        String currentTypefaceName = previousFont.getTypefaceName();
+
+        _DBG("Font combo changed from: " + currentTypefaceName + " to: " + newTypefaceName);
+
+        // Only store previous font if this is a real user change (not initial setup)
+        if (newTypefaceName != currentTypefaceName && resetToPreviousButton != nullptr)
+        {
+            // This is a real change - the previous font is what we had before
+            resetToPreviousButton->setEnabled(true);
+            _DBG("Real font change detected. Previous font stored: " + previousFont.getTypefaceName());
+        }
+
         changeListenerCallback(nullptr);
     }
     else if (comboBoxThatHasChanged == bgColour ||
@@ -416,8 +379,8 @@ void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged(ComboBox* comboBoxThatHas
     {
         // When token type changes, update the color combo to show current color for that token
         String selectedToken = getCurrentSelectedTokenType();
-          
-if (customSyntaxColors.contains(selectedToken))
+
+        if (customSyntaxColors.contains(selectedToken))
         {
             Colour currentColor = customSyntaxColors[selectedToken];
             syntaxTokenColor->setSelectedId(findColourIndex(currentColor), dontSendNotification);
@@ -469,17 +432,56 @@ if (customSyntaxColors.contains(selectedToken))
 
 void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicked)
 {
-    if (buttonThatWasClicked == fontBold)
+    if (buttonThatWasClicked == resetToPreviousButton)
     {
+        _DBG("Resetting to previous font settings");
+        _DBG(String("Current font: ") + fontTypeface->getText());
+        _DBG(String("Previous font to restore: ") + previousFont.getTypefaceName());
+
+        if (previousFont.getTypefaceName().isNotEmpty())
+        {
+            // Create font object from current UI state BEFORE changing it
+            Font currentUIFont = Font(fontTypeface->getText(),
+                fontSize->getValue(),
+                (fontBold->getToggleState() ? Font::bold : 0) |
+                (fontItalic->getToggleState() ? Font::italic : 0));
+
+            // Apply the previous font settings
+            fontTypeface->setText(previousFont.getTypefaceName(), dontSendNotification);
+            fontSize->setValue(previousFont.getHeight(), dontSendNotification);
+            fontBold->setToggleState(previousFont.isBold(), dontSendNotification);
+            fontItalic->setToggleState(previousFont.isItalic(), dontSendNotification);
+
+            // Now swap: current becomes previous for next reset
+            previousFont = currentUIFont;
+
+            _DBG(String("Font restored. New previous font: ") + previousFont.getTypefaceName());
+
+            changeListenerCallback(nullptr);
+        }
+    }
+    else if (buttonThatWasClicked == fontBold || buttonThatWasClicked == fontItalic)
+    {
+        // For style changes, store previous state if not already stored
+        if (!resetToPreviousButton->isEnabled())
+        {
+            resetToPreviousButton->setEnabled(true);
+        }
+    }
+    else if (buttonThatWasClicked == fontBold || buttonThatWasClicked == fontItalic)
+    {
+        // For style changes, also enable reset and store previous
+        if (!resetToPreviousButton->isEnabled())
+        {
+            previousFont = getFont(); // Store current before style change
+            resetToPreviousButton->setEnabled(true);
+        }
     }
     else if (buttonThatWasClicked == openSearchTabs)
     {
         bool currentState = openSearchTabs->getToggleState();
         owner.setOpenSearchTabsEnabled(currentState);
         owner.getComponentTree().setProperty(Ids::openSearchTabsState, currentState, nullptr);
-    }
-    else if (buttonThatWasClicked == fontItalic)
-    {
     }
     else if (buttonThatWasClicked == resetButton)
     {
@@ -493,7 +495,9 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
 
         if (result == 1)
         {
-            fontTypeface->setText("Courier New", dontSendNotification);
+            // Store current font before resetting everything
+
+            fontTypeface->setText("<Monospaced>", dontSendNotification);
             fontBold->setToggleState(false, dontSendNotification);
             fontItalic->setToggleState(false, dontSendNotification);
             openSearchTabs->setToggleState(false, dontSendNotification);
@@ -507,6 +511,9 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
             String currentToken = getCurrentSelectedTokenType();
             updateTokenColorDisplay(currentToken);
             updateSyntaxColors();
+            previousFont = getFont();
+            // Enable reset button so user can undo the reset
+            resetToPreviousButton->setEnabled(true);
             changeListenerCallback(nullptr);
         }
     }
@@ -716,6 +723,14 @@ void CtrlrLuaMethodCodeEditorSettings::updateTokenColorDisplay(const String& tok
         }
     }
     syntaxTokenColor->setSelectedId(findColourIndex(defaultColor), dontSendNotification);
+}
+void CtrlrLuaMethodCodeEditorSettings::populateColourComboWithThumbnails(ColourComboBox* combo)
+{
+    combo->clear();
+    for (int i = 0; i < sizeof(availableColours) / sizeof(availableColours[0]); ++i)
+    {
+        combo->addColourItem(availableColours[i].name, availableColours[i].colour, i + 1);
+    }
 }
 //[/MiscUserCode]
 

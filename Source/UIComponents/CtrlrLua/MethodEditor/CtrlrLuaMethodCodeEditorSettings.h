@@ -34,6 +34,8 @@ Copyright 2004 - 6 by Raw Material Software ltd.
 #include "CtrlrWindowManagers/CtrlrPanelWindowManager.h"
 #include "CtrlrLuaCodeTokeniser.h"
 #include "CtrlrPropertyEditors/CtrlrPropertyComponent.h"
+#include "ColourComboBox.h"
+
 class CtrlrLuaMethodEditor;
 //[/Headers]
 
@@ -58,8 +60,6 @@ public:
     CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMethodEditor& _owner, juce::Value& sharedSearchTabsValue_);
     ~CtrlrLuaMethodCodeEditorSettings();
 
-    //==============================================================================
-    //[UserMethods]   -- You can add your own custom methods in this section.
     void changeListenerCallback(ChangeBroadcaster* source);
     const Font getFont();
     const Colour getBgColour();
@@ -70,9 +70,7 @@ public:
     void populateColourCombo(ComboBox* combo);
     int findColourIndex(const Colour& colour);
     Colour getColourFromCombo(ComboBox* combo);
-    //[/UserMethods]
-    void clearSyntaxColorSettings();
-    void updateTokenColorDisplay(const String& tokenType);
+
     void paint(Graphics& g);
     void resized();
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
@@ -83,7 +81,10 @@ public:
     void populateSyntaxTokenCombo();
     void updateSyntaxColors();
     String getCurrentSelectedTokenType();
-    
+    void populateColourComboWithThumbnails(ColourComboBox* combo);
+    void updateTokenColorDisplay(const String& tokenType);
+    void clearSyntaxColorSettings();
+
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     struct ColourItem {
@@ -96,6 +97,7 @@ private:
     CodeDocument codeDocument;
     CtrlrLuaMethodEditor& owner;
     Font codeFont;
+    Font previousFont;
     int marginLeft;
     int marginTop;
     int sampleWidth;
@@ -110,47 +112,23 @@ private:
     ComboBox* lineNumbersColour;
     ComboBox* syntaxTokenType;
     ComboBox* syntaxTokenColor;
-
     ToggleButton* fontBold;
     ToggleButton* fontItalic;
     ToggleButton* openSearchTabs;
     TextButton* resetButton;
+    TextButton* resetToPreviousButton;
     Slider* fontSize;
     Label* label1;
     Label* label2;
     Label* label3;
     Label* syntaxLabel;
     CodeEditorComponent* fontTest;
-
-
     static CodeEditorComponent::ColourScheme& getSharedScheme();
-
-
-    //std::unique_ptr<ComboBox> syntaxTokenType;
-    //std::unique_ptr<ComboBox> syntaxTokenColor;
-    //std::unique_ptr<Label> syntaxLabel;
-    // Storage for custom syntax colors
     HashMap<String, Colour> customSyntaxColors;
     juce::Value& sharedSearchTabsValue;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrLuaMethodCodeEditorSettings);
 };
-//void CtrlrLuaMethodCodeEditorSettings::updateSyntaxColors() {
-//    // Update the shared scheme
-//    SharedColorScheme::updateScheme(customSyntaxColors);
-//
-//    // Get reference to the shared scheme (no copying!)
-//    CodeEditorComponent::ColourScheme& sharedScheme = SharedColorScheme::getCurrentScheme();
-//
-//    // Update preview
-//    fontTest->setColourScheme(sharedScheme);
-//
-//    // Update main editor with the same shared reference
-//    GenericCodeEditorComponent* mainEditor = owner.getEditorComponent();
-//    if (mainEditor) {
-//        mainEditor->setColourScheme(sharedScheme);
-//        mainEditor->repaint();
-//    }
-//}
+
 
 #endif    // __JUCER_HEADER_CTRLRLUAMETHODCODEEDITORSETTINGS_CTRLRLUAMETHODCODEEDITORSETTINGS_FC2CDFB3__
