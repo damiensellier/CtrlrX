@@ -1,9 +1,9 @@
 #!/bin/bash
-projecttag=`git describe --tags --abbrev=0`
-if [ -z "$projecttag" ]; then
-    projecttag="v0.0.1"
-    git rev-parse --short HEAD
-else
-    revisioncount=`git log --oneline "$projecttag".. | wc -l | tr -d ' '`
-    echo "$projecttag.$revisioncount"
-fi
+ROOT=`git rev-parse --show-toplevel`
+
+# get version from file
+V=`cat $ROOT/VERSION`
+
+HASH=`git rev-parse --short HEAD`
+
+echo "$V-$HASH"
