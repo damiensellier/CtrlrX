@@ -71,8 +71,8 @@ void CtrlrLuaMethodEditor::valueTreePropertyChanged (ValueTree &treeWhosePropert
 {
     if (property == Ids::luaMethodEditorFont
         || property == Ids::luaMethodEditorBgColour
-        || property == Ids::luaMethodEditorLineNumbersBgColour
-        || property == Ids::luaMethodEditorLineNumbersColour)
+        || property == Ids::luaMethodEditorLineNumbersColour
+        || property == Ids::luaMethodEditorFontColour)
     {
         for (int i=0; i<methodEditArea->getTabs()->getNumTabs(); i++)
         {
@@ -80,10 +80,14 @@ void CtrlrLuaMethodEditor::valueTreePropertyChanged (ValueTree &treeWhosePropert
             if (ed != nullptr)
             {
                 ed->setFontAndColour (owner.getCtrlrManagerOwner().getFontManager().getFontFromString (componentTree.getProperty(Ids::luaMethodEditorFont)), VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorBgColour)));
-                
+				
                 ed->getCodeComponent()->setColour(CodeEditorComponent::lineNumberTextId, VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorLineNumbersColour)));
-                
+				
                 ed->getCodeComponent()->setColour(CodeEditorComponent::lineNumberBackgroundId, VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorLineNumbersBgColour)));
+				
+                ed->getCodeComponent()->setColour(CodeEditorComponent::defaultTextColourId, VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorFontColour)));
+				
+                //ed->getCodeComponent()->setColour(0x1000440, VAR2COLOUR(componentTree.getProperty(Ids::luaMethodEditorFontColour)));
             }
         }
     }
@@ -703,10 +707,14 @@ const AttributedString CtrlrLuaMethodEditor::getDisplayString(const ValueTree &i
     //Font fSmall = owner.getOwner().getFontManager().getDefaultSmallFont();
 
     // Back to v5.3.198 & 5.3.201
-    Font fNormal = Font(12.0f, Font::plain); // Added v5.6.31
-    Font fMedium = Font(14.0f, Font::plain); // Added v5.6.31
-    Font fSmall = Font(10.0f, Font::plain); // Added v5.6.31
-    Font fSmallItalic = Font(10.0f, Font::italic);
+    // Font fNormal = Font(12.0f, Font::plain)); // Added v5.6.31
+	Font fNormal = Font("<Monospaced>", 12.0f, Font::plain);
+    // Font fMedium = Font(14.0f, Font::plain); // Added v5.6.31
+	Font fMedium = Font("<Monospaced>", 14.0f, Font::plain);
+	//Font fSmall = Font(10.0f, Font::plain); // Added v5.6.31
+    Font fSmall = Font("<Monospaced>", 10.0f, Font::plain); // Added v5.6.31
+    // Font fSmallItalic = Font(10.0f, Font::italic);
+	Font fSmallItalic = Font("<Monospaced>", 10.0f, Font::italic);
     
     if (item.getType () == Ids::luaMethod)
     {

@@ -112,8 +112,8 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
         void searchResultClicked (const String &methodName, const int lineNumber, const int resultPositionStart, const int resultPositionEnd);
         void saveAndCompilAllMethods();
         void convertToFiles();
-        /* Debugger stuff
-        */
+	
+        /* Debugger stuff */
         void insertRawDebuggerOutput(const String &debuggerOutput);
         //void setRawDebuggerOutput(const String &debuggerOutput); JG 1/19/2025
         void setJsonDebuggerOutput(const String &jsonData);
@@ -121,10 +121,17 @@ class CtrlrLuaMethodEditor  : public CtrlrChildWindowContent,
         const String getCurrentDebuggerCommand(const bool clearTheReturnedCommand=true);
         void setOpenSearchTabsEnabled(bool shouldOpen); // used for toggling search closed files
         bool getOpenSearchTabsEnabled() const; // getter
-        JUCE_LEAK_DETECTOR(CtrlrLuaMethodEditor)
 
         bool caseCansitive, findDialogActive;
         String lookInString, searchInString, currentSearchString;
+	
+		/** Returns the current GenericCodeEditorComponent, or nullptr if not available. */
+        GenericCodeEditorComponent* getEditorComponent()
+        {
+            return editorComponent;
+        }
+		
+		JUCE_LEAK_DETECTOR(CtrlrLuaMethodEditor)
 
 private:
         juce::Value sharedSearchTabsValue;
