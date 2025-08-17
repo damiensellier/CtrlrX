@@ -878,6 +878,10 @@
         </GROUP>
         <GROUP id="{5355D100-1F52-E713-97B1-8C429FAEF933}" name="CtrlrLua">
           <GROUP id="{73F280B1-458D-D294-57B5-32E2202505CD}" name="MethodEditor">
+            <FILE id="GAB1Ly" name="ColourComboBox.cpp" compile="1" resource="0"
+                  file="Source/UIComponents/CtrlrLua/MethodEditor/ColourComboBox.cpp"/>
+            <FILE id="kFAvaY" name="ColourComboBox.h" compile="0" resource="0"
+                  file="Source/UIComponents/CtrlrLua/MethodEditor/ColourComboBox.h"/>
             <FILE id="V6oOfp" name="CtrlrLuaCodeTokeniser.cpp" compile="1" resource="0"
                   file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaCodeTokeniser.cpp"/>
             <FILE id="kOqisB" name="CtrlrLuaCodeTokeniser.h" compile="0" resource="0"
