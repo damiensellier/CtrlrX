@@ -189,6 +189,10 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     fontSize->setTextBoxStyle (Slider::TextBoxLeft, false, 32, 24);
     fontSize->addListener (this);
     
+    addAndMakeVisible(resetToPreviousButton = new TextButton("Reset Font"));
+    resetToPreviousButton->addListener(this);
+    resetToPreviousButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
+
     addAndMakeVisible(label1 = new Label("new label", TRANS("Editor background:"))); // Added v.5.6.31
     label1->setFont(Font(14.00f)); // Added v.5.6.31
     label1->setJustificationType(Justification::centredLeft); // Added v.5.6.31
@@ -265,6 +269,8 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     owner.getOwner().getCtrlrManagerOwner().getFontManager().fillCombo(*fontTypeface);
     fontTypeface->setText(codeFont.getTypefaceName(), sendNotification);
     codeDocument.replaceAllContent("-- This is a comment\nfunction myFunction(argument)\n\tcall(\"string\")\nend");
+    previousFont = getFont(); // This captures the initial loaded font
+    resetToPreviousButton->setEnabled(false); // Start disabled
 
     setSize(334, 464);
 }
@@ -328,7 +334,7 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     fontBold->setBounds(marginLeft, marginTop + sampleHeight + 24 + 40, 56, 24);
     fontItalic->setBounds(marginLeft + 64, marginTop + sampleHeight + 24 + 40, 64, 24);
     fontSize->setBounds(marginLeft + 224, marginTop + sampleHeight + 24 + 40, 78, 24);
-	
+    resetToPreviousButton->setBounds(marginLeft + 136, marginTop + sampleHeight + 24 + 40, 80, 24);
     label1->setBounds(marginLeft - 4, marginTop + sampleHeight + 24 + 72, sampleWidth, 24);
     bgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 24, sampleWidth - 40, 24);
 	
@@ -349,31 +355,81 @@ void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged(ComboBox* comboBoxThatHas
 {
     if (comboBoxThatHasChanged == fontTypeface)
     {
-        // existing font typeface handling
+        String newTypefaceName = fontTypeface->getText();
+        String currentTypefaceName = previousFont.getTypefaceName();
+
+        _DBG("Font combo changed from: " + currentTypefaceName + " to: " + newTypefaceName);
+
+        // Only store previous font if this is a real user change (not initial setup)
+        if (newTypefaceName != currentTypefaceName && resetToPreviousButton != nullptr)
+        {
+            // This is a real change - the previous font is what we had before
+            resetToPreviousButton->setEnabled(true);
+            _DBG("Real font change detected. Previous font stored: " + previousFont.getTypefaceName());
+        }
+
         changeListenerCallback(nullptr);
     }
     else if (comboBoxThatHasChanged == bgColour ||
         comboBoxThatHasChanged == lineNumbersBgColour ||
         comboBoxThatHasChanged == lineNumbersColour)
     {
-        // Handle colour combo changes
         changeListenerCallback(nullptr);
     }
 }
 
 void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicked)
 {
-    if (buttonThatWasClicked == fontBold)
+        if (buttonThatWasClicked == resetToPreviousButton)
+        {
+            _DBG("Resetting to previous font settings");
+            _DBG(String("Current font: ") + fontTypeface->getText());
+            _DBG(String("Previous font to restore: ") + previousFont.getTypefaceName());
+
+            if (previousFont.getTypefaceName().isNotEmpty())
+            {
+                // Create font object from current UI state BEFORE changing it
+                Font currentUIFont = Font(fontTypeface->getText(),
+                    fontSize->getValue(),
+                    (fontBold->getToggleState() ? Font::bold : 0) |
+                    (fontItalic->getToggleState() ? Font::italic : 0));
+
+                // Apply the previous font settings
+                fontTypeface->setText(previousFont.getTypefaceName(), dontSendNotification);
+                fontSize->setValue(previousFont.getHeight(), dontSendNotification);
+                fontBold->setToggleState(previousFont.isBold(), dontSendNotification);
+                fontItalic->setToggleState(previousFont.isItalic(), dontSendNotification);
+
+                // Now swap: current becomes previous for next reset
+                previousFont = currentUIFont;
+
+                _DBG(String("Font restored. New previous font: ") + previousFont.getTypefaceName());
+
+                changeListenerCallback(nullptr);
+            }
+        }
+        else if (buttonThatWasClicked == fontBold || buttonThatWasClicked == fontItalic)
+        {
+            // For style changes, store previous state if not already stored
+            if (!resetToPreviousButton->isEnabled())
+            {
+                resetToPreviousButton->setEnabled(true);
+            }
+        }
+    else if (buttonThatWasClicked == fontBold || buttonThatWasClicked == fontItalic)
     {
+        // For style changes, also enable reset and store previous
+        if (!resetToPreviousButton->isEnabled())
+        {
+            previousFont = getFont(); // Store current before style change
+            resetToPreviousButton->setEnabled(true);
+        }
     }
     else if (buttonThatWasClicked == openSearchTabs)
     {
         bool currentState = openSearchTabs->getToggleState();
         owner.setOpenSearchTabsEnabled(currentState);
         owner.getComponentTree().setProperty(Ids::openSearchTabsState, currentState, nullptr);
-    }
-    else if (buttonThatWasClicked == fontItalic)
-    {
     }
     else if (buttonThatWasClicked == resetButton)
     {
@@ -387,7 +443,9 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
 
         if (result == 1)
         {
-            fontTypeface->setText("<Monospaced>", dontSendNotification); // Updated v5.6.34. Was "Courrier New"
+            // Store current font before resetting everything
+
+            fontTypeface->setText("<Monospaced>", dontSendNotification);
             fontBold->setToggleState(false, dontSendNotification);
             fontItalic->setToggleState(false, dontSendNotification);
             openSearchTabs->setToggleState(false, dontSendNotification);
@@ -395,8 +453,10 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
             bgColour->setSelectedId(findColourIndex(Colours::white), dontSendNotification);
             lineNumbersBgColour->setSelectedId(findColourIndex(Colours::cornflowerblue), dontSendNotification);
             lineNumbersColour->setSelectedId(findColourIndex(Colours::black), dontSendNotification);
+            previousFont = getFont();
+            // Enable reset button so user can undo the reset
+            resetToPreviousButton->setEnabled(true);
 
-            // This is needed to update the UI after a reset
             changeListenerCallback(nullptr);
         }
     }
@@ -404,10 +464,20 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
     changeListenerCallback(nullptr);
 }
 
-void CtrlrLuaMethodCodeEditorSettings::sliderValueChanged (Slider* sliderThatWasMoved)
+void CtrlrLuaMethodCodeEditorSettings::sliderValueChanged(Slider* sliderThatWasMoved)
 {
     if (sliderThatWasMoved == fontSize)
     {
+        // For font size changes, enable reset if not already enabled
+        if (!resetToPreviousButton->isEnabled())
+        {
+            // Store font before size change (but with old size)
+            previousFont = Font(fontTypeface->getText(),
+                previousFont.getHeight(),  // Keep the old size
+                (fontBold->getToggleState() ? Font::bold : 0) |
+                (fontItalic->getToggleState() ? Font::italic : 0));
+            resetToPreviousButton->setEnabled(true);
+        }
     }
     changeListenerCallback(nullptr);
 }

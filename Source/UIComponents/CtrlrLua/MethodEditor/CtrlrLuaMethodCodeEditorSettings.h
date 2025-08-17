@@ -50,6 +50,7 @@ private:
     CodeDocument codeDocument;
     CtrlrLuaMethodEditor& owner;
     Font codeFont;
+    Font previousFont;
     int marginLeft;
     int marginTop;
     int sampleWidth;
@@ -64,12 +65,14 @@ private:
     ToggleButton* fontItalic;
     ToggleButton* openSearchTabs;
     TextButton* resetButton;
+    TextButton* resetToPreviousButton;
     Slider* fontSize;
     Label* label1;
     Label* label2;
     Label* label3;
     CodeEditorComponent* fontTest;
     juce::Value& sharedSearchTabsValue;
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrLuaMethodCodeEditorSettings);
 };
