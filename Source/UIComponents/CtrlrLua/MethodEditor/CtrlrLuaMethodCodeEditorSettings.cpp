@@ -221,25 +221,25 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
 	resetButton->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId)); // Will follow the main LnF
 	resetButton->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId)); // Will follow the main LnF
 
-    addAndMakeVisible(bgColour = new ComboBox("bgColour"));
+    addAndMakeVisible(bgColour = new ColourComboBox("bgColour"));
     bgColour->setEditableText(false);
     bgColour->setJustificationType(Justification::centredLeft);
     bgColour->addListener(this);
 
-    addAndMakeVisible(lineNumbersBgColour = new ComboBox("lineNumbersBgColour"));
+    addAndMakeVisible(lineNumbersBgColour = new ColourComboBox("lineNumbersBgColour"));
     lineNumbersBgColour->setEditableText(false);
     lineNumbersBgColour->setJustificationType(Justification::centredLeft);
     lineNumbersBgColour->addListener(this);
 
-    addAndMakeVisible(lineNumbersColour = new ComboBox("lineNumbersColour"));
+    addAndMakeVisible(lineNumbersColour = new ColourComboBox("lineNumbersColour"));
     lineNumbersColour->setEditableText(false);
     lineNumbersColour->setJustificationType(Justification::centredLeft);
     lineNumbersColour->addListener(this);
 
     // Now that the combo boxes exist, populate them
-    populateColourCombo(bgColour);
-    populateColourCombo(lineNumbersBgColour);
-    populateColourCombo(lineNumbersColour);
+    populateColourComboWithThumbnails(static_cast<ColourComboBox*>(bgColour));
+    populateColourComboWithThumbnails(static_cast<ColourComboBox*>(lineNumbersBgColour));
+    populateColourComboWithThumbnails(static_cast<ColourComboBox*>(lineNumbersColour));
 
 
     // codeFont = owner.getOwner().getCtrlrManagerOwner().getFontManager().getFontFromString(owner.getComponentTree().getProperty(Ids::luaMethodEditorFont, owner.getOwner().getCtrlrManagerOwner().getFontManager().getStringFromFont(Font(owner.getOwner().getCtrlrManagerOwner().getFontManager().getDefaultMonoFontName(), 14.0f, Font::plain))));
@@ -296,27 +296,27 @@ CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
 void CtrlrLuaMethodCodeEditorSettings::paint (Graphics& g)
 {
 	// Update the main window's background colour based on the current Look and Feel
-    g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
+    //g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 
-    Rectangle<int> bgColourRect = bgColour->getBounds().withX(bgColour->getRight() + 4).withWidth(32);
-    g.setColour(getColourFromCombo(bgColour));
-    g.fillRect(bgColourRect);
-    g.setColour(Colours::darkgrey);
-    g.drawRect(bgColourRect, 1);
+    //Rectangle<int> bgColourRect = bgColour->getBounds().withX(bgColour->getRight() + 4).withWidth(32);
+    //g.setColour(getColourFromCombo(bgColour));
+    //g.fillRect(bgColourRect);
+    //g.setColour(Colours::darkgrey);
+    //g.drawRect(bgColourRect, 1);
 
-    // Line numbers background colour preview
-    Rectangle<int> lineNumBgColourRect = lineNumbersBgColour->getBounds().withX(lineNumbersBgColour->getRight() + 4).withWidth(32);
-    g.setColour(getColourFromCombo(lineNumbersBgColour));
-    g.fillRect(lineNumBgColourRect);
-    g.setColour(Colours::darkgrey);
-    g.drawRect(lineNumBgColourRect, 1);
+    //// Line numbers background colour preview
+    //Rectangle<int> lineNumBgColourRect = lineNumbersBgColour->getBounds().withX(lineNumbersBgColour->getRight() + 4).withWidth(32);
+    //g.setColour(getColourFromCombo(lineNumbersBgColour));
+    //g.fillRect(lineNumBgColourRect);
+    //g.setColour(Colours::darkgrey);
+    //g.drawRect(lineNumBgColourRect, 1);
 
-    // Line numbers colour preview
-    Rectangle<int> lineNumColourRect = lineNumbersColour->getBounds().withX(lineNumbersColour->getRight() + 4).withWidth(32);
-    g.setColour(getColourFromCombo(lineNumbersColour));
-    g.fillRect(lineNumColourRect);
-    g.setColour(Colours::darkgrey);
-    g.drawRect(lineNumColourRect, 1);
+    //// Line numbers colour preview
+    //Rectangle<int> lineNumColourRect = lineNumbersColour->getBounds().withX(lineNumbersColour->getRight() + 4).withWidth(32);
+    //g.setColour(getColourFromCombo(lineNumbersColour));
+    //g.fillRect(lineNumColourRect);
+    //g.setColour(Colours::darkgrey);
+    //g.drawRect(lineNumColourRect, 1);
 }
 
 void CtrlrLuaMethodCodeEditorSettings::resized()
@@ -547,4 +547,41 @@ Colour CtrlrLuaMethodCodeEditorSettings::getColourFromCombo(ComboBox* combo) {
         return availableColours[selectedId - 1].colour;
     }
     return Colours::white; // Default fallback
+}
+//void CtrlrLuaMethodCodeEditorSettings::setupColourCombos()
+//{
+//    // Replace the existing combo creation with:
+//    addAndMakeVisible(bgColour = new ColourComboBox("bgColour"));
+//    bgColour->setEditableText(false);
+//    bgColour->setJustificationType(Justification::centredLeft);
+//    bgColour->addListener(this);
+//
+//    addAndMakeVisible(lineNumbersBgColour = new ColourComboBox("lineNumbersBgColour"));
+//    lineNumbersBgColour->setEditableText(false);
+//    lineNumbersBgColour->setJustificationType(Justification::centredLeft);
+//    lineNumbersBgColour->addListener(this);
+//
+//    addAndMakeVisible(lineNumbersColour = new ColourComboBox("lineNumbersColour"));
+//    lineNumbersColour->setEditableText(false);
+//    lineNumbersColour->setJustificationType(Justification::centredLeft);
+//    lineNumbersColour->addListener(this);
+//
+//    // Populate with colors and thumbnails
+//    populateColourComboWithThumbnails(static_cast<ColourComboBox*>(bgColour));
+//    populateColourComboWithThumbnails(static_cast<ColourComboBox*>(lineNumbersBgColour));
+//    populateColourComboWithThumbnails(static_cast<ColourComboBox*>(lineNumbersColour));
+//
+//    // Add reset to previous font button
+//    addAndMakeVisible(resetToPreviousButton =new TextButton("Reset Font"));
+//    resetToPreviousButton->addListener(this);
+//    resetToPreviousButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
+//}
+
+void CtrlrLuaMethodCodeEditorSettings::populateColourComboWithThumbnails(ColourComboBox* combo)
+{
+    combo->clear();
+    for (int i = 0; i < sizeof(availableColours) / sizeof(availableColours[0]); ++i)
+    {
+        combo->addColourItem(availableColours[i].name, availableColours[i].colour, i + 1);
+    }
 }

@@ -269,6 +269,7 @@ OBJECTS_SHARED_CODE := \
   $(JUCE_OBJDIR)/CtrlrComponentTypeManager_eb8d7f4f.o \
   $(JUCE_OBJDIR)/CtrlrCustomComponent_8d0e28fd.o \
   $(JUCE_OBJDIR)/CtrlrFilmStripPainter_44309df0.o \
+  $(JUCE_OBJDIR)/ColourComboBox_6ecf3b12.o \
   $(JUCE_OBJDIR)/CtrlrLuaCodeTokeniser_f07b7773.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditor_2dacc3f5.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditorSettings_3cdccab8.o \
@@ -1138,6 +1139,11 @@ $(JUCE_OBJDIR)/CtrlrCustomComponent_8d0e28fd.o: ../../Source/UIComponents/CtrlrC
 $(JUCE_OBJDIR)/CtrlrFilmStripPainter_44309df0.o: ../../Source/UIComponents/CtrlrComponents/CtrlrFilmStripPainter.cpp
 	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
 	@echo "Compiling CtrlrFilmStripPainter.cpp"
+	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_SHARED_CODE) $(JUCE_CFLAGS_SHARED_CODE) -o "$@" -c "$<"
+
+$(JUCE_OBJDIR)/ColourComboBox_6ecf3b12.o: ../../Source/UIComponents/CtrlrLua/MethodEditor/ColourComboBox.cpp
+	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
+	@echo "Compiling ColourComboBox.cpp"
 	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_SHARED_CODE) $(JUCE_CFLAGS_SHARED_CODE) -o "$@" -c "$<"
 
 $(JUCE_OBJDIR)/CtrlrLuaCodeTokeniser_f07b7773.o: ../../Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaCodeTokeniser.cpp

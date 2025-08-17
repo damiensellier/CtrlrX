@@ -7,6 +7,7 @@
 #include "CtrlrWindowManagers/CtrlrPanelWindowManager.h"
 #include "CtrlrLuaCodeTokeniser.h"
 #include "CtrlrPropertyEditors/CtrlrPropertyComponent.h"
+#include "ColourComboBox.h"
 
 class CtrlrLuaMethodEditor;
 
@@ -37,7 +38,8 @@ public:
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
     void buttonClicked(Button* buttonThatWasClicked);
     void sliderValueChanged(Slider* sliderThatWasMoved);
-
+    void setupColourCombos();
+    void populateColourComboWithThumbnails(ColourComboBox* combo);
 
 private:
     struct ColourItem {
