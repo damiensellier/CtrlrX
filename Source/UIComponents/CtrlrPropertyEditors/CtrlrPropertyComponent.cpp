@@ -651,7 +651,7 @@ void CtrlrReadOnlyProperty::refresh()
 						String layerName = layer->getProperty(Ids::uiPanelCanvasLayerName).toString();
 						if (!layerName.isEmpty())
 						{
-							displayValue = layerName + " (" + layerUid.substring(0, 8) + "...)";
+							displayValue = layerName; // +" (" + layerUid.substring(0, 8) + "...)";
 						}
 						else
 						{
@@ -670,9 +670,11 @@ void CtrlrReadOnlyProperty::refresh()
 				}
 			}
 		}
+		value.setTooltip("Component Layer ID: "+layerUid);
 	}
 
 	value.setText(displayValue, dontSendNotification);
+
 }
 
 void CtrlrReadOnlyProperty::resized()

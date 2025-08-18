@@ -200,7 +200,7 @@
   <id name="componentRadioGroupId"                text="Radio group" type="Numeric" min="0" max="8192" int="1" />
   <id name="componentRadioGroupNotifyMidi"        text="Send MIDI from other members of the group" type="Bool"/>
   <id name="componentVisibility"                  text="Is component visible" type="Bool"/>
-  <id name="componentLayerUid"                    text="Component layer ID" type="ReadOnly"/>
+  <id name="componentLayerUid"                    text="Component layer Name" type="ReadOnly"/>
   <id name="componentAlpha"                       text="Component Alpha" type="Numeric" max="255" min="0" int="1" />
   <id name="componentEffect"                      text="Component effect" type="VarNumeric" defaults="@imageEffect"/>
   <id name="componentEffectRadius"                text="Component effect radius" type="Numeric" min="0.5" max="255" int="0.1"/>
