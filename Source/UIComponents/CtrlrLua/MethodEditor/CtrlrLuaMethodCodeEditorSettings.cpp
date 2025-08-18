@@ -461,7 +461,7 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
             if (result == 1)
             {
                 // Reset to defaults
-                fontTypeface->setText("<Monospaced>", dontSendNotification);
+                fontTypeface->setText("Courier New", dontSendNotification);
                 fontBold->setToggleState(false, dontSendNotification);
                 fontItalic->setToggleState(false, dontSendNotification);
                 openSearchTabs->setToggleState(false, dontSendNotification);
@@ -471,6 +471,7 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
                 lineNumbersColour->setSelectedId(findColourIndex(Colours::black), dontSendNotification);
 
                 customSyntaxColors.clear();
+                clearSyntaxColorSettings();
                 String currentToken = getCurrentSelectedTokenType();
                 updateTokenColorDisplay(currentToken);
                 updateSyntaxColors();
