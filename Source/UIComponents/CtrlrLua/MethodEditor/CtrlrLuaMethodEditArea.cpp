@@ -123,7 +123,7 @@ void CtrlrLuaMethodEditArea::mouseDoubleClick (const MouseEvent &e)
 
     const String line = output->getLineAtPosition (output->getTextIndexAt (e.x, e.y)).trim();
 
-    //_DBG(line);
+    _DBG(line); // Added v5.6.34.
 
     if (line.startsWithIgnoreCase("ERROR"))
     {

@@ -892,6 +892,10 @@
                   resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettings.cpp"/>
             <FILE id="Z3BSWj" name="CtrlrLuaMethodCodeEditorSettings.h" compile="0"
                   resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettings.h"/>
+            <FILE id="OTtUEM" name="CtrlrLuaMethodCodeEditorSettingsColourLnF.cpp"
+                  compile="1" resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettingsColourLnF.cpp"/>
+            <FILE id="M8SZ20" name="CtrlrLuaMethodCodeEditorSettingsColourLnF.h"
+                  compile="0" resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettingsColourLnF.h"/>
             <FILE id="c9Wgnl" name="CtrlrLuaMethodDebuggerControls.cpp" compile="1"
                   resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodDebuggerControls.cpp"/>
             <FILE id="dDoOFH" name="CtrlrLuaMethodDebuggerControls.h" compile="0"

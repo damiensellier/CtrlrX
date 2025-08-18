@@ -1,12 +1,14 @@
 #ifndef __JUCER_HEADER_CTRLRLUAMETHODCODEEDITORSETTINGS_CTRLRLUAMETHODCODEEDITORSETTINGS_FC2CDFB3__
 #define __JUCER_HEADER_CTRLRLUAMETHODCODEEDITORSETTINGS_CTRLRLUAMETHODCODEEDITORSETTINGS_FC2CDFB3__
 
+#include "stdafx.h"
+#include "CtrlrLuaCodeTokeniser.h"
 #include "Methods/CtrlrLuaMethod.h"
 #include "CtrlrTextEditor.h"
 #include "CtrlrWindowManagers/CtrlrChildWindowContent.h"
 #include "CtrlrWindowManagers/CtrlrPanelWindowManager.h"
-#include "CtrlrLuaCodeTokeniser.h"
 #include "CtrlrPropertyEditors/CtrlrPropertyComponent.h"
+#include "CtrlrLuaMethodCodeEditorSettingsColourLnF.h"
 
 class CtrlrLuaMethodEditor;
 
@@ -28,18 +30,40 @@ public:
     const Colour getLineNumbersColour();
 
     // Moved these from local functions inside the constructor
-    void populateColourCombo(ComboBox* combo);
+    void populateColourCombo(ColourComboBox* combo);
     int findColourIndex(const Colour& colour);
     Colour getColourFromCombo(ComboBox* combo);
 
-    void paint(Graphics& g);
+	void paint(Graphics& g);
     void resized();
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
     void buttonClicked(Button* buttonThatWasClicked);
     void sliderValueChanged(Slider* sliderThatWasMoved);
+    void loadSyntaxColorsFromSettings();
+    void saveSyntaxColorsToSettings();
+    void populateSyntaxTokenCombo();
+    void updateSyntaxColors();
+    String getCurrentSelectedTokenType();
+    void populateColourComboWithThumbnails(ColourComboBox* combo);
+    void updateTokenColorDisplay(const String& tokenType);
+    void clearSyntaxColorSettings();
 
+    bool hasUnsavedChanges() const;
+    void markAsChanged();
+    void markAsSaved();
+    bool promptToSaveChanges();
+    void applySettings();
+    void closeWindow();
 
+    const char* getDefaultFont() const {
+        return defaultFont;
+    };
+
+	
 private:
+	bool hasChanges;
+    static constexpr const char* defaultFont = "<Monospaced>";
+
     struct ColourItem {
         String name;
         Colour colour;
@@ -50,25 +74,44 @@ private:
     CodeDocument codeDocument;
     CtrlrLuaMethodEditor& owner;
     Font codeFont;
+	Font previousFont;
     int marginLeft;
     int marginTop;
     int sampleWidth;
     int sampleHeight;
-
+	
     Label* label0;
     ComboBox* fontTypeface;
-    ComboBox* bgColour;
-    ComboBox* lineNumbersBgColour;
-    ComboBox* lineNumbersColour;
+    ColourComboBox* bgColour;
+    ColourComboBox* lineNumbersBgColour;
+    ColourComboBox* lineNumbersColour;
+    ComboBox* syntaxTokenType;
+    ColourComboBox* syntaxTokenColor;
     ToggleButton* fontBold;
     ToggleButton* fontItalic;
     ToggleButton* openSearchTabs;
+    TextButton* applyButton;
+    TextButton* cancelButton;
     TextButton* resetButton;
+    TextButton* resetToPreviousButton;
     Slider* fontSize;
     Label* label1;
     Label* label2;
     Label* label3;
+    Label* syntaxLabel;
     CodeEditorComponent* fontTest;
+
+    static CodeEditorComponent::ColourScheme& getSharedScheme();
+    HashMap<String, Colour> customSyntaxColors;
+
+    Font originalFont;
+    Colour originalBgColour;
+    Colour originalLineNumbersBgColour;
+    Colour originalLineNumbersColour;
+    HashMap<String, Colour> originalSyntaxColors;
+    bool originalOpenSearchTabs;
+
+
     juce::Value& sharedSearchTabsValue;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrLuaMethodCodeEditorSettings);

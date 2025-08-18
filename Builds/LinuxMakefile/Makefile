@@ -272,6 +272,7 @@ OBJECTS_SHARED_CODE := \
   $(JUCE_OBJDIR)/CtrlrLuaCodeTokeniser_f07b7773.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditor_2dacc3f5.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditorSettings_3cdccab8.o \
+  $(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditorSettingsColourLnF_21730b8a.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodDebuggerControls_6e517932.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodDebuggerInfo_e4ac56aa.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodDebuggerPrompt_18948aa0.o \
@@ -1153,6 +1154,11 @@ $(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditor_2dacc3f5.o: ../../Source/UIComponents/Ct
 $(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditorSettings_3cdccab8.o: ../../Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettings.cpp
 	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
 	@echo "Compiling CtrlrLuaMethodCodeEditorSettings.cpp"
+	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_SHARED_CODE) $(JUCE_CFLAGS_SHARED_CODE) -o "$@" -c "$<"
+
+$(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditorSettingsColourLnF_21730b8a.o: ../../Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettingsColourLnF.cpp
+	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
+	@echo "Compiling CtrlrLuaMethodCodeEditorSettingsColourLnF.cpp"
 	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_SHARED_CODE) $(JUCE_CFLAGS_SHARED_CODE) -o "$@" -c "$<"
 
 $(JUCE_OBJDIR)/CtrlrLuaMethodDebuggerControls_6e517932.o: ../../Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodDebuggerControls.cpp
