@@ -550,7 +550,7 @@ void CtrlrColourEditorComponent::openColourPicker()
 void CtrlrColourEditorComponent::labelTextChanged(Label* labelThatHasChanged)
 {
 	colour = Colour::fromString(labelThatHasChanged->getText());
-	updateButtonColour(); // Update button when text changes
+	updateLabel();     // This will update both the label appearance AND the button
 	sendChangeMessage();
 }
 void CtrlrColourEditorComponent::setColour(const Colour& newColour, const bool sendChangeMessageNow)
@@ -776,6 +776,7 @@ void CtrlrFileProperty::refresh()
 void CtrlrFileProperty::labelTextChanged (Label* labelThatHasChanged)
 {
 	valueToControl = labelThatHasChanged->getText();
+
 }
 
 CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToControl, CtrlrPanel *_owner)
