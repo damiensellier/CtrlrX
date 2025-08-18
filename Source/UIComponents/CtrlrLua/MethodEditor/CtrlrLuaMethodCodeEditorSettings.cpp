@@ -439,7 +439,35 @@ void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged(ComboBox* comboBoxThatHas
 
 void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicked)
 {
-        if (buttonThatWasClicked == applyButton)
+    if (buttonThatWasClicked == resetToPreviousButton)
+    {
+        _DBG("Resetting to previous font settings");
+        _DBG(String("Current font: ") + fontTypeface->getText());
+        _DBG(String("Previous font to restore: ") + previousFont.getTypefaceName());
+
+        if (previousFont.getTypefaceName().isNotEmpty())
+        {
+            // Create font object from current UI state BEFORE changing it
+            Font currentUIFont = Font(fontTypeface->getText(),
+                fontSize->getValue(),
+                (fontBold->getToggleState() ? Font::bold : 0) |
+                (fontItalic->getToggleState() ? Font::italic : 0));
+
+            // Apply the previous font settings
+            fontTypeface->setText(previousFont.getTypefaceName(), dontSendNotification);
+            fontSize->setValue(previousFont.getHeight(), dontSendNotification);
+            fontBold->setToggleState(previousFont.isBold(), dontSendNotification);
+            fontItalic->setToggleState(previousFont.isItalic(), dontSendNotification);
+
+            // Now swap: current becomes previous for next reset
+            previousFont = currentUIFont;
+
+            _DBG(String("Font restored. New previous font: ") + previousFont.getTypefaceName());
+
+            changeListenerCallback(nullptr);
+        }
+    }
+        else if (buttonThatWasClicked == applyButton)
         {
             applySettings();
         }
@@ -481,34 +509,6 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
 
                 changeListenerCallback(nullptr);
             }
-            else  if (buttonThatWasClicked == resetToPreviousButton)
-    {
-        _DBG("Resetting to previous font settings");
-        _DBG(String("Current font: ") + fontTypeface->getText());
-        _DBG(String("Previous font to restore: ") + previousFont.getTypefaceName());
-
-        if (previousFont.getTypefaceName().isNotEmpty())
-        {
-            // Create font object from current UI state BEFORE changing it
-            Font currentUIFont = Font(fontTypeface->getText(),
-                fontSize->getValue(),
-                (fontBold->getToggleState() ? Font::bold : 0) |
-                (fontItalic->getToggleState() ? Font::italic : 0));
-
-            // Apply the previous font settings
-            fontTypeface->setText(previousFont.getTypefaceName(), dontSendNotification);
-            fontSize->setValue(previousFont.getHeight(), dontSendNotification);
-            fontBold->setToggleState(previousFont.isBold(), dontSendNotification);
-            fontItalic->setToggleState(previousFont.isItalic(), dontSendNotification);
-
-            // Now swap: current becomes previous for next reset
-            previousFont = currentUIFont;
-
-            _DBG(String("Font restored. New previous font: ") + previousFont.getTypefaceName());
-
-            changeListenerCallback(nullptr);
-        }
-    }
     else if (buttonThatWasClicked == fontBold || buttonThatWasClicked == fontItalic)
     {
         // For style changes, also enable reset and store previous
