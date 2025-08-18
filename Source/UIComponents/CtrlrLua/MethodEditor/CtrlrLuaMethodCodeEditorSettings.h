@@ -92,9 +92,15 @@ public:
     void applySettings();
     void closeWindow();
 
+    const char* getDefaultFont() const {
+        return defaultFont;
+    };
+    
+
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     bool hasChanges;
+    static constexpr const char* defaultFont = "<Monospaced>";
     struct ColourItem {
         String name;
         Colour colour;

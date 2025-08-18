@@ -143,7 +143,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     fontTypeface->setEditableText(false);
     fontTypeface->setJustificationType(Justification::centredLeft);
     //fontTypeface->setTextWhenNothingSelected ("");
-    fontTypeface->setTextWhenNothingSelected("<Monospaced>"); // Will set default type from Font class
+    fontTypeface->setTextWhenNothingSelected(getDefaultFont()); // Will set default type from Font class
     fontTypeface->setTextWhenNoChoicesAvailable(L"(no choices)");
     fontTypeface->addListener(this);
 
@@ -461,7 +461,7 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
             if (result == 1)
             {
                 // Reset to defaults
-                fontTypeface->setText("Courier New", dontSendNotification);
+                fontTypeface->setText(getDefaultFont(), dontSendNotification);
                 fontBold->setToggleState(false, dontSendNotification);
                 fontItalic->setToggleState(false, dontSendNotification);
                 openSearchTabs->setToggleState(false, dontSendNotification);
