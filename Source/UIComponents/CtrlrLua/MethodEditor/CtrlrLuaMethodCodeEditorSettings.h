@@ -67,7 +67,7 @@ public:
     const Colour getLineNumbersColour();
 
     // Moved these from local functions inside the constructor
-    void populateColourCombo(ComboBox* combo);
+    void populateColourCombo(ColourComboBox* combo);
     int findColourIndex(const Colour& colour);
     Colour getColourFromCombo(ComboBox* combo);
 
@@ -85,8 +85,16 @@ public:
     void updateTokenColorDisplay(const String& tokenType);
     void clearSyntaxColorSettings();
 
+    bool hasUnsavedChanges() const;
+    void markAsChanged();
+    void markAsSaved();
+    bool promptToSaveChanges();
+    void applySettings();
+    void closeWindow();
+
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
+    bool hasChanges;
     struct ColourItem {
         String name;
         Colour colour;
@@ -107,14 +115,16 @@ private:
     //==============================================================================
     Label* label0;
     ComboBox* fontTypeface;
-    ComboBox* bgColour;
-    ComboBox* lineNumbersBgColour;
-    ComboBox* lineNumbersColour;
+    ColourComboBox* bgColour;
+    ColourComboBox* lineNumbersBgColour;
+    ColourComboBox* lineNumbersColour;
     ComboBox* syntaxTokenType;
-    ComboBox* syntaxTokenColor;
+    ColourComboBox* syntaxTokenColor;
     ToggleButton* fontBold;
     ToggleButton* fontItalic;
     ToggleButton* openSearchTabs;
+    TextButton* applyButton;
+    TextButton* cancelButton;
     TextButton* resetButton;
     TextButton* resetToPreviousButton;
     Slider* fontSize;
@@ -123,8 +133,18 @@ private:
     Label* label3;
     Label* syntaxLabel;
     CodeEditorComponent* fontTest;
+
     static CodeEditorComponent::ColourScheme& getSharedScheme();
     HashMap<String, Colour> customSyntaxColors;
+
+    Font originalFont;
+    Colour originalBgColour;
+    Colour originalLineNumbersBgColour;
+    Colour originalLineNumbersColour;
+    HashMap<String, Colour> originalSyntaxColors;
+    bool originalOpenSearchTabs;
+
+
     juce::Value& sharedSearchTabsValue;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrLuaMethodCodeEditorSettings);

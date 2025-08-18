@@ -93,17 +93,19 @@ void CtrlrEditor::performLuaEditorCommand(const int commandID) // Added v5.6.34.
                 CtrlrDialogWindow::showModalDialog ("Code editor preferences", &s, false, luaMethodEditor);
                 
                 _DBG("Modal dialog returned.");
+                
+                // APPLY BUTTON NOW HANDLES THIS
+                
+                //if (activePanel)
+                //{
+                //    auto& manager = activePanel->getCtrlrManagerOwner();
 
-                if (activePanel)
-                {
-                    auto& manager = activePanel->getCtrlrManagerOwner();
-
-                    luaMethodEditor->getComponentTree().setProperty (Ids::luaMethodEditorFont, manager.getFontManager().getStringFromFont (s.getFont()), nullptr);
-                    luaMethodEditor->getComponentTree().setProperty (Ids::luaMethodEditorBgColour, COLOUR2STR (s.getBgColour()), nullptr);
-                    luaMethodEditor->getComponentTree().setProperty (Ids::luaMethodEditorLineNumbersBgColour, COLOUR2STR(s.getLineNumbersBgColour()), nullptr);
-                    luaMethodEditor->getComponentTree().setProperty (Ids::luaMethodEditorLineNumbersColour, COLOUR2STR(s.getLineNumbersColour()), nullptr);
-                    luaMethodEditor->updateTabs();
-                }
+                //    luaMethodEditor->getComponentTree().setProperty (Ids::luaMethodEditorFont, manager.getFontManager().getStringFromFont (s.getFont()), nullptr);
+                //    luaMethodEditor->getComponentTree().setProperty (Ids::luaMethodEditorBgColour, COLOUR2STR (s.getBgColour()), nullptr);
+                //    luaMethodEditor->getComponentTree().setProperty (Ids::luaMethodEditorLineNumbersBgColour, COLOUR2STR(s.getLineNumbersBgColour()), nullptr);
+                //    luaMethodEditor->getComponentTree().setProperty (Ids::luaMethodEditorLineNumbersColour, COLOUR2STR(s.getLineNumbersColour()), nullptr);
+                //    luaMethodEditor->updateTabs();
+                //}
             }
             else if (commandID == LuaMethodEditorCommandIDs::editSingleLineComment)
             {
@@ -132,10 +134,7 @@ void CtrlrEditor::performLuaEditorCommand(const int commandID) // Added v5.6.34.
             _DBG("luaMethodEditor is a nullptr.");
         }
     }
-    else
-    {
-        _DBG("activePanel is a nullptr.");
-    }
+
 }
 
 bool CtrlrEditor::perform (const InvocationInfo &info) // Updated v5.6.34. Will now perform the different switch case function for all menu including the LUA method editor menu items.

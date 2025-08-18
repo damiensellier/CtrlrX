@@ -131,6 +131,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     lineNumbersColour(0),
     fontTest(0),
     resetButton(0),
+    resetToPreviousButton(0),
     openSearchTabs(0)
 {
     addAndMakeVisible(label0 = new Label("new label", TRANS("Font:")));
@@ -187,13 +188,6 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     openSearchTabs->setButtonText(SharedValues::getSearchTabsLabel());
     openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue());
 
-    addAndMakeVisible(resetButton = new TextButton("RESET")); // Added JG
-    resetButton->addListener(this);
-    resetButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId)); // Will follow the main LnF
-    resetButton->setColour(TextButton::buttonOnColourId, findColour(TextButton::buttonOnColourId)); // Will follow the main LnF
-    resetButton->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId)); // Will follow the main LnF
-    resetButton->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId)); // Will follow the main LnF
-
     addAndMakeVisible(bgColour = new ColourComboBox("bgColour"));
     bgColour->setEditableText(false);
     bgColour->setJustificationType(Justification::centredLeft);
@@ -224,10 +218,26 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     syntaxTokenType->setJustificationType(Justification::centredLeft);
     syntaxTokenType->addListener(this);
 
-    addAndMakeVisible(syntaxTokenColor = new ComboBox("syntaxTokenColor"));
+    addAndMakeVisible(syntaxTokenColor = new ColourComboBox("syntaxTokenColor"));
     syntaxTokenColor->setEditableText(false);
     syntaxTokenColor->setJustificationType(Justification::centredLeft);
     syntaxTokenColor->addListener(this);
+
+    addAndMakeVisible(resetButton = new TextButton("RESET")); // Added JG
+    resetButton->addListener(this);
+    resetButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId)); // Will follow the main LnF
+    resetButton->setColour(TextButton::buttonOnColourId, findColour(TextButton::buttonOnColourId)); // Will follow the main LnF
+    resetButton->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId)); // Will follow the main LnF
+    resetButton->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId)); // Will follow the main LnF
+
+    addAndMakeVisible(applyButton = new TextButton("APPLY"));
+    applyButton->addListener(this);
+    applyButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
+
+    addAndMakeVisible(cancelButton = new TextButton("CANCEL"));
+    cancelButton->addListener(this);
+    cancelButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
+
 
     populateSyntaxTokenCombo();
     populateColourCombo(syntaxTokenColor);
@@ -267,7 +277,11 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMetho
     codeDocument.replaceAllContent("-- This is a comment\nfunction myFunction(argument)\n\tcall(\"string\")\nend");
     previousFont = getFont(); // This captures the initial loaded font
     resetToPreviousButton->setEnabled(false); // Start disabled
-
+    originalFont = getFont();
+    originalBgColour = getBgColour();
+    originalLineNumbersBgColour = getLineNumbersBgColour();
+    originalLineNumbersColour = getLineNumbersColour();
+    originalOpenSearchTabs = openSearchTabs->getToggleState();
     setSize(334, 500);
     updateSyntaxColors();
 }
@@ -297,28 +311,11 @@ CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
 //==============================================================================
 void CtrlrLuaMethodCodeEditorSettings::paint(Graphics& g)
 {
-    // Update the main window's background colour based on the current Look and Feel
-    //g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
+    int syntaxY = marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40;
+    int lineY = syntaxY + 96; // Just above the buttons
 
-    //Rectangle<int> bgColourRect = bgColour->getBounds().withX(bgColour->getRight() + 4).withWidth(32);
-    //g.setColour(getColourFromCombo(bgColour));
-    //g.fillRect(bgColourRect);
-    //g.setColour(Colours::darkgrey);
-    //g.drawRect(bgColourRect, 1);
-
-    //// Line numbers background colour preview
-    //Rectangle<int> lineNumBgColourRect = lineNumbersBgColour->getBounds().withX(lineNumbersBgColour->getRight() + 4).withWidth(32);
-    //g.setColour(getColourFromCombo(lineNumbersBgColour));
-    //g.fillRect(lineNumBgColourRect);
-    //g.setColour(Colours::darkgrey);
-    //g.drawRect(lineNumBgColourRect, 1);
-
-    //// Line numbers colour preview
-    //Rectangle<int> lineNumColourRect = lineNumbersColour->getBounds().withX(lineNumbersColour->getRight() + 4).withWidth(32);
-    //g.setColour(getColourFromCombo(lineNumbersColour));
-    //g.fillRect(lineNumColourRect);
-    //g.setColour(Colours::darkgrey);
-    //g.drawRect(lineNumColourRect, 1);
+    g.setColour(findColour(GroupComponent::outlineColourId));
+    g.drawHorizontalLine(lineY, marginLeft, marginLeft + sampleWidth);
 }
 
 void CtrlrLuaMethodCodeEditorSettings::resized()
@@ -343,12 +340,21 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     lineNumbersBgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 32, sampleWidth - 40, 24);
     label3->setBounds(marginLeft - 4, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 2 * 32, sampleWidth, 24);
     lineNumbersColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 3 * 24 + 2 * 32, sampleWidth - 40, 24);
+
     int syntaxY = marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40;
     syntaxLabel->setBounds(marginLeft - 4, syntaxY, sampleWidth, 24);
     syntaxTokenType->setBounds(marginLeft, syntaxY + 24, (sampleWidth - 8) / 2, 24);
     syntaxTokenColor->setBounds(marginLeft + (sampleWidth - 8) / 2 + 8, syntaxY + 24, (sampleWidth - 8) / 2 - 40, 24);
     openSearchTabs->setBounds(marginLeft + 0, syntaxY + 64, sampleWidth, 24);
-    resetButton->setBounds(marginLeft + sampleWidth / 2 - (sampleWidth / 4 + marginLeft / 2), syntaxY + 104, sampleWidth / 2, 24);
+
+    // Add horizontal line above buttons
+    int buttonY = syntaxY + 104;
+
+    // Position the three buttons in a row: RESET  APPLY  CANCEL
+    int buttonWidth = (sampleWidth - 16) / 3; // Account for spacing between buttons
+    resetButton->setBounds(marginLeft, buttonY, buttonWidth, 24);
+    applyButton->setBounds(marginLeft + buttonWidth + 8, buttonY, buttonWidth, 24);
+    cancelButton->setBounds(marginLeft + 2 * (buttonWidth + 8), buttonY, buttonWidth, 24);
 }
 
 void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
@@ -433,7 +439,48 @@ void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged(ComboBox* comboBoxThatHas
 
 void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicked)
 {
-    if (buttonThatWasClicked == resetToPreviousButton)
+        if (buttonThatWasClicked == applyButton)
+        {
+            applySettings();
+        }
+        else if (buttonThatWasClicked == cancelButton)
+        {
+            closeWindow();
+            return;
+        }
+        else if (buttonThatWasClicked == resetButton)
+        {
+            int result = AlertWindow::showOkCancelBox(
+                AlertWindow::QuestionIcon,
+                "Reset Editor",
+                "Reset Editor to default?",
+                "OK",
+                "Cancel"
+            );
+
+            if (result == 1)
+            {
+                // Reset to defaults
+                fontTypeface->setText("<Monospaced>", dontSendNotification);
+                fontBold->setToggleState(false, dontSendNotification);
+                fontItalic->setToggleState(false, dontSendNotification);
+                openSearchTabs->setToggleState(false, dontSendNotification);
+                fontSize->setValue(14.0f, dontSendNotification);
+                bgColour->setSelectedId(findColourIndex(Colours::white), dontSendNotification);
+                lineNumbersBgColour->setSelectedId(findColourIndex(Colours::cornflowerblue), dontSendNotification);
+                lineNumbersColour->setSelectedId(findColourIndex(Colours::black), dontSendNotification);
+
+                customSyntaxColors.clear();
+                String currentToken = getCurrentSelectedTokenType();
+                updateTokenColorDisplay(currentToken);
+                updateSyntaxColors();
+
+                previousFont = getFont();
+                resetToPreviousButton->setEnabled(true);
+
+                changeListenerCallback(nullptr);
+            }
+            else  if (buttonThatWasClicked == resetToPreviousButton)
     {
         _DBG("Resetting to previous font settings");
         _DBG(String("Current font: ") + fontTypeface->getText());
@@ -463,14 +510,6 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
     }
     else if (buttonThatWasClicked == fontBold || buttonThatWasClicked == fontItalic)
     {
-        // For style changes, store previous state if not already stored
-        if (!resetToPreviousButton->isEnabled())
-        {
-            resetToPreviousButton->setEnabled(true);
-        }
-    }
-    else if (buttonThatWasClicked == fontBold || buttonThatWasClicked == fontItalic)
-    {
         // For style changes, also enable reset and store previous
         if (!resetToPreviousButton->isEnabled())
         {
@@ -484,39 +523,7 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
         owner.setOpenSearchTabsEnabled(currentState);
         owner.getComponentTree().setProperty(Ids::openSearchTabsState, currentState, nullptr);
     }
-    else if (buttonThatWasClicked == resetButton)
-    {
-        int result = AlertWindow::showOkCancelBox(
-            AlertWindow::QuestionIcon,
-            "Reset Editor",
-            "Reset Editor to default?",
-            "OK",
-            "Cancel"
-        );
-
-        if (result == 1)
-        {
-            // Store current font before resetting everything
-
-            fontTypeface->setText("<Monospaced>", dontSendNotification);
-            fontBold->setToggleState(false, dontSendNotification);
-            fontItalic->setToggleState(false, dontSendNotification);
-            openSearchTabs->setToggleState(false, dontSendNotification);
-            fontSize->setValue(14.0f, dontSendNotification);
-            bgColour->setSelectedId(findColourIndex(Colours::white), dontSendNotification);
-            lineNumbersBgColour->setSelectedId(findColourIndex(Colours::cornflowerblue), dontSendNotification);
-            lineNumbersColour->setSelectedId(findColourIndex(Colours::black), dontSendNotification);
-
-            customSyntaxColors.clear();
-            clearSyntaxColorSettings();
-            String currentToken = getCurrentSelectedTokenType();
-            updateTokenColorDisplay(currentToken);
-            updateSyntaxColors();
-            previousFont = getFont();
-            // Enable reset button so user can undo the reset
-            resetToPreviousButton->setEnabled(true);
-            changeListenerCallback(nullptr);
-        }
+    
     }
 
     changeListenerCallback(nullptr);
@@ -535,6 +542,7 @@ void CtrlrLuaMethodCodeEditorSettings::changeListenerCallback(ChangeBroadcaster*
 {
     if (fontTest)
     {
+        // Only update the preview - don't save anything
         fontTest->setColour(CodeEditorComponent::backgroundColourId, getColourFromCombo(bgColour));
         fontTest->setColour(CodeEditorComponent::lineNumberBackgroundId, getColourFromCombo(lineNumbersBgColour));
         fontTest->setColour(CodeEditorComponent::lineNumberTextId, getColourFromCombo(lineNumbersColour));
@@ -573,10 +581,11 @@ const Colour CtrlrLuaMethodCodeEditorSettings::getLineNumbersColour()
     return getColourFromCombo(lineNumbersColour);
 }
 
-void CtrlrLuaMethodCodeEditorSettings::populateColourCombo(ComboBox* combo) {
+void CtrlrLuaMethodCodeEditorSettings::populateColourCombo(ColourComboBox* combo) {
     combo->clear();
     for (int i = 0; i < sizeof(availableColours) / sizeof(availableColours[0]); ++i) {
-        combo->addItem(availableColours[i].name, i + 1);
+        combo->addColourItem(availableColours[i].name, availableColours[i].colour, i + 1);
+
     }
 }
 
@@ -731,6 +740,123 @@ void CtrlrLuaMethodCodeEditorSettings::populateColourComboWithThumbnails(ColourC
     for (int i = 0; i < sizeof(availableColours) / sizeof(availableColours[0]); ++i)
     {
         combo->addColourItem(availableColours[i].name, availableColours[i].colour, i + 1);
+    }
+}
+bool CtrlrLuaMethodCodeEditorSettings::hasUnsavedChanges() const
+{
+    // Font comparison
+    Font currentFont = const_cast<CtrlrLuaMethodCodeEditorSettings*>(this)->getFont();
+    if (currentFont.getTypefaceName() != originalFont.getTypefaceName()) return true;
+    if (currentFont.getHeight() != originalFont.getHeight()) return true;
+    if (currentFont.isBold() != originalFont.isBold()) return true;
+    if (currentFont.isItalic() != originalFont.isItalic()) return true;
+
+    // Color comparisons
+    Colour currentBg = const_cast<CtrlrLuaMethodCodeEditorSettings*>(this)->getBgColour();
+    if (currentBg != originalBgColour) return true;
+
+    Colour currentLineNumBg = const_cast<CtrlrLuaMethodCodeEditorSettings*>(this)->getLineNumbersBgColour();
+    if (currentLineNumBg != originalLineNumbersBgColour) return true;
+
+    Colour currentLineNum = const_cast<CtrlrLuaMethodCodeEditorSettings*>(this)->getLineNumbersColour();
+    if (currentLineNum != originalLineNumbersColour) return true;
+
+    // Toggle comparison
+    if (openSearchTabs->getToggleState() != originalOpenSearchTabs) return true;
+
+    return false;
+}
+
+void CtrlrLuaMethodCodeEditorSettings::markAsChanged()
+{
+    hasChanges = true;
+}
+
+
+void CtrlrLuaMethodCodeEditorSettings::markAsSaved()
+{
+    hasChanges = false;
+    // Update original values
+    originalFont = getFont();
+    originalBgColour = getBgColour();
+    originalLineNumbersBgColour = getLineNumbersBgColour();
+    originalLineNumbersColour = getLineNumbersColour();
+    originalOpenSearchTabs = openSearchTabs->getToggleState();
+}
+
+bool CtrlrLuaMethodCodeEditorSettings::promptToSaveChanges()
+{
+    if (!hasUnsavedChanges())
+        return true; // No changes, safe to close
+
+    int result = AlertWindow::showYesNoCancelBox(
+        AlertWindow::QuestionIcon,
+        "Unsaved Changes",
+        "You have unsaved changes. Do you want to apply them before closing?",
+        "Apply & Close",
+        "Close Without Saving",
+        "Cancel"
+    );
+
+    switch (result)
+    {
+    case 1: // Apply & Close
+        applySettings();
+        return true;
+    case 2: // Close Without Saving
+        return true;
+    case 0: // Cancel
+    default:
+        return false;
+    }
+}
+
+void CtrlrLuaMethodCodeEditorSettings::applySettings()
+{
+    // Save all settings (existing save logic from the close callback)
+    owner.getComponentTree().setProperty(Ids::luaMethodEditorFont,
+        owner.getOwner().getCtrlrManagerOwner().getFontManager().getStringFromFont(getFont()), nullptr);
+
+    owner.getComponentTree().setProperty(Ids::luaMethodEditorBgColour,
+        getBgColour().toString(), nullptr);
+
+    owner.getComponentTree().setProperty(Ids::luaMethodEditorLineNumbersBgColour,
+        getLineNumbersBgColour().toString(), nullptr);
+
+    owner.getComponentTree().setProperty(Ids::luaMethodEditorLineNumbersColour,
+        getLineNumbersColour().toString(), nullptr);
+
+    owner.getComponentTree().setProperty(Ids::openSearchTabsState,
+        openSearchTabs->getToggleState(), nullptr);
+
+    // Save syntax colors
+    saveSyntaxColorsToSettings();
+
+    // Apply to current editor
+    updateSyntaxColors();
+
+    // Mark as saved
+    markAsSaved();
+
+    // Trigger a repaint/refresh of the editor
+    if (CtrlrLuaMethodCodeEditor* currentEditor = owner.getCurrentEditor())
+    {
+        if (currentEditor->getCodeComponent())
+        {
+            currentEditor->getCodeComponent()->repaint();
+        }
+    }
+}
+void CtrlrLuaMethodCodeEditorSettings::closeWindow()
+{
+    // Find the parent window and close it
+    if (DialogWindow* parentWindow = findParentComponentOfClass<DialogWindow>())
+    {
+        parentWindow->closeButtonPressed();
+    }
+    else if (DocumentWindow* parentWindow = findParentComponentOfClass<DocumentWindow>())
+    {
+        parentWindow->closeButtonPressed();
     }
 }
 //[/MiscUserCode]

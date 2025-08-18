@@ -284,6 +284,7 @@ OBJECTS_SHARED_CODE := \
   $(JUCE_OBJDIR)/CtrlrLuaMethodEditorTabs_38c06846.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodFind_27828f4.o \
   $(JUCE_OBJDIR)/CtrlrMethodEditorTabCloseButton_77eee52b.o \
+  $(JUCE_OBJDIR)/SettingsDialogWindow_d55cee4.o \
   $(JUCE_OBJDIR)/CtrlrLuaConsole_ed40c4ae.o \
   $(JUCE_OBJDIR)/CtrlrMIDIBuffer_96c85485.o \
   $(JUCE_OBJDIR)/CtrlrMIDICalculator_478db247.o \
@@ -1214,6 +1215,11 @@ $(JUCE_OBJDIR)/CtrlrLuaMethodFind_27828f4.o: ../../Source/UIComponents/CtrlrLua/
 $(JUCE_OBJDIR)/CtrlrMethodEditorTabCloseButton_77eee52b.o: ../../Source/UIComponents/CtrlrLua/MethodEditor/CtrlrMethodEditorTabCloseButton.cpp
 	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
 	@echo "Compiling CtrlrMethodEditorTabCloseButton.cpp"
+	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_SHARED_CODE) $(JUCE_CFLAGS_SHARED_CODE) -o "$@" -c "$<"
+
+$(JUCE_OBJDIR)/SettingsDialogWindow_d55cee4.o: ../../Source/UIComponents/CtrlrLua/MethodEditor/SettingsDialogWindow.cpp
+	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
+	@echo "Compiling SettingsDialogWindow.cpp"
 	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_SHARED_CODE) $(JUCE_CFLAGS_SHARED_CODE) -o "$@" -c "$<"
 
 $(JUCE_OBJDIR)/CtrlrLuaConsole_ed40c4ae.o: ../../Source/UIComponents/CtrlrLua/CtrlrLuaConsole.cpp
