@@ -102,9 +102,8 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
 	{
         visibleText = identifierDefinition.getProperty ("text").toString();
 	}
-    
 	propertyType = CtrlrIDManager::stringToType(identifierDefinition.getProperty("type"));
-    
+	//_DBG("CtrlrPropertyComponent::getPropertyComponent [POST] propertyType==" + String((int)propertyType) + " visibleText==" + visibleText);
     int propertyLineheightBaseValue = 36; // Declare the variable outside the if-else block. Mandatory for Preference window property lines.
     bool propertyLineImprovedLegibility = false; // Declare the variable outside the if-else block. Mandatory for Preference window property lines.
     
@@ -117,11 +116,8 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
     switch (propertyType)
 	{
 		case CtrlrIDManager::ReadOnly:
-            // preferredHeight = 36;
-            preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.0); // Updated v5.6.33.
-			// return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true)); // valueToControl, maxNumChars, isMultiLine, isReadOnly
-            return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true, propertyLineImprovedLegibility)); // valueToControl, maxNumChars, isMultiLine, isReadOnly, propertyLineImprovedLegibility
-            
+			preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.0);
+			return (new CtrlrReadOnlyProperty(propertyName, propertyElement, identifierDefinition, panel));
 		case CtrlrIDManager::Text:
             // preferredHeight = 36;
             preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.0); // Updated v5.6.33.
@@ -247,7 +243,18 @@ const String CtrlrPropertyComponent::getElementSubType()
 	}
 	else if (propertyElement.getType() == Ids::uiPanelCanvasLayer)
 	{
-		return ("uiPanelCanvasLayer");
+		// Debug: Print all properties of this element
+		_DBG("Layer element properties:");
+		for (int i = 0; i < propertyElement.getNumProperties(); i++)
+		{
+			auto name = propertyElement.getPropertyName(i);
+			auto value = propertyElement.getProperty(name);
+			_DBG("  " + name.toString() + " = " + value.toString());
+		}
+
+		// Then try to get the layer name
+		String layerName = propertyElement.getProperty(Ids::uiPanelCanvasLayerName).toString();
+		return layerName.isEmpty() ? "Unnamed Layer" : layerName;
 	}
 	else
 	{
@@ -603,17 +610,18 @@ void CtrlrColourPropertyComponent::resized()
 
 /** A read-only component **/
 
-CtrlrReadOnlyProperty::CtrlrReadOnlyProperty(const Identifier &_propertyName,
-															const ValueTree &_propertyElement,
-															const ValueTree &identifier,
-															CtrlrPanel *panel,
-															StringArray *possibleChoices,
-															StringArray *possibleValues) : propertyName(_propertyName), propertyElement(_propertyElement)
+CtrlrReadOnlyProperty::CtrlrReadOnlyProperty(const Identifier& _propertyName,
+	const ValueTree& _propertyElement,
+	const ValueTree& identifier,
+	CtrlrPanel* _panel,
+	StringArray* possibleChoices,
+	StringArray* possibleValues)
+	: propertyName(_propertyName), propertyElement(_propertyElement), panel(_panel)
 {
-	addAndMakeVisible (&value);
+	addAndMakeVisible(&value);
 
-    value.setColour(Label::backgroundColourId, findColour(Slider::backgroundColourId).withAlpha(0.5f));
-    value.setColour(Label::outlineColourId, findColour(Slider::textBoxTextColourId).withAlpha(0.5f));
+	value.setColour(Label::backgroundColourId, findColour(Slider::backgroundColourId).withAlpha(0.5f));
+	value.setColour(Label::outlineColourId, findColour(Slider::textBoxTextColourId).withAlpha(0.5f));
 }
 
 CtrlrReadOnlyProperty::~CtrlrReadOnlyProperty()
@@ -622,7 +630,49 @@ CtrlrReadOnlyProperty::~CtrlrReadOnlyProperty()
 
 void CtrlrReadOnlyProperty::refresh()
 {
-	value.setText (propertyElement.getPropertyAsValue(propertyName, 0).toString(), dontSendNotification);
+	String displayValue = propertyElement.getPropertyAsValue(propertyName, 0).toString();
+
+	// Special handling for componentLayerUid - convert hex UID to readable layer name
+	if (propertyName == Ids::componentLayerUid && panel)
+	{
+		String layerUid = displayValue;
+		if (!layerUid.isEmpty())
+		{
+			CtrlrPanelCanvas* canvas = panel->getCanvas();
+			if (canvas)
+			{
+				// Try to find the layer by its UID and get its name
+				// Use the existing getLayer method from CtrlrPanelCanvas
+				for (int i = 0; i < canvas->getNumLayers(); i++)
+				{
+					CtrlrPanelCanvasLayer* layer = canvas->getLayerFromArray(i);
+					if (layer && layer->getProperty(Ids::uiPanelCanvasLayerUid).toString() == layerUid)
+					{
+						String layerName = layer->getProperty(Ids::uiPanelCanvasLayerName).toString();
+						if (!layerName.isEmpty())
+						{
+							displayValue = layerName + " (" + layerUid.substring(0, 8) + "...)";
+						}
+						else
+						{
+							// Fallback: show "Layer N" if no name is set
+							int layerIndex = (int)layer->getProperty(Ids::uiPanelCanvasLayerIndex);
+							displayValue = "Layer " + String(layerIndex) + " (" + layerUid.substring(0, 8) + "...)";
+						}
+						break;
+					}
+				}
+
+				// If we didn't find the layer, show truncated UID
+				if (displayValue == layerUid)
+				{
+					displayValue = "Unknown Layer (" + layerUid.substring(0, 8) + "...)";
+				}
+			}
+		}
+	}
+
+	value.setText(displayValue, dontSendNotification);
 }
 
 void CtrlrReadOnlyProperty::resized()

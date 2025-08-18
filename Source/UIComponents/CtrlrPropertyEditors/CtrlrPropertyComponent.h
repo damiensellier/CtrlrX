@@ -3,6 +3,9 @@
 
 #include "CtrlrIDManager.h"
 #include "CtrlrPanel/CtrlrPanel.h"
+#include "CtrlrPanel/CtrlrPanelCanvas.h"
+#include "CtrlrPanel/CtrlrPanelCanvasLayer.h"
+
 class CtrlrFloatingWindow;
 
 class CtrlrPropertyChild: public ChangeBroadcaster
@@ -205,6 +208,7 @@ class CtrlrReadOnlyProperty : public Component, public CtrlrPropertyChild
 		Label value;
 		ValueTree propertyElement;
 		Identifier propertyName;
+		CtrlrPanel* panel; // used to get the name of the layer, not the useless long id string
 };
 
 class CtrlrExpressionProperty  : public Component,
