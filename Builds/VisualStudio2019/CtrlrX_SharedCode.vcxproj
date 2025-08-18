@@ -428,7 +428,6 @@
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorTabs.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodFind.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrMethodEditorTabCloseButton.cpp"/>
-    <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\SettingsDialogWindow.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\CtrlrLuaConsole.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDIBuffer.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDICalculator.cpp"/>
@@ -2718,7 +2717,6 @@
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorTabs.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodFind.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrMethodEditorTabCloseButton.h"/>
-    <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\SettingsDialogWindow.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\CtrlrLuaConsole.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDIBuffer.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrMIDI\CtrlrMIDICalculator.h"/>

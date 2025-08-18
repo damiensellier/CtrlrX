@@ -161,7 +161,7 @@ public:
         {
             Rectangle<int> bounds = getLocalBounds();
             // Make thumbnail much wider - takes up about 60 pixels from the right
-            Rectangle<int> colorRect = bounds.removeFromRight(60).reduced(3);
+            Rectangle<int> colorRect = bounds.removeFromRight(40).reduced(3);
 
             int selectedIndex = getSelectedItemIndex();
 

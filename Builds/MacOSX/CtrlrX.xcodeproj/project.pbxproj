@@ -43,7 +43,6 @@
 		0E6CA7484FE4F94EA77B648E /* set_package_preload.cpp */ = {isa = PBXBuildFile; fileRef = 270BF048B0BC6E58E4469468; };
 		0F513D85AF5028173942FFE6 /* CtrlrLabel.cpp */ = {isa = PBXBuildFile; fileRef = AD36517D96195725307BBF92; };
 		1400D2A7FCD40B9BF732F4B3 /* CtrlrImage.cpp */ = {isa = PBXBuildFile; fileRef = 9EBD72D954FE619FF673D49A; };
-		15FFF93BDAD61E5B492B45ED /* SettingsDialogWindow.cpp */ = {isa = PBXBuildFile; fileRef = 62FFBD9EFB92CB23B1EEC1DC; };
 		175F3D1384AFC9284D7092CB /* include_juce_gui_basics.mm */ = {isa = PBXBuildFile; fileRef = E9A0EE201CC3976AE18A9E32; };
 		1823667626212E2AA677511E /* libr-bfd.c */ = {isa = PBXBuildFile; fileRef = CD1306996512A494035C90DF; };
 		18D977AAF8D3C5A8A5D43289 /* CtrlrDocumentPanel.cpp */ = {isa = PBXBuildFile; fileRef = 67F6E4993AD555303FA234D2; };
@@ -529,7 +528,6 @@
 		62A1D89EC5176289BA533219 /* LFileListComponent.h */ /* LFileListComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = LFileListComponent.h; path = ../../Source/Lua/JuceClasses/LFileListComponent.h; sourceTree = SOURCE_ROOT; };
 		62AC8FC9FB6D4B4AED056DDF /* juce_data_structures */ /* juce_data_structures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_data_structures; path = ../../JUCE/modules/juce_data_structures; sourceTree = SOURCE_ROOT; };
 		62B1F10067A092D10B7D5FAD /* CtrlrInlineUtilitiesGUI.h */ /* CtrlrInlineUtilitiesGUI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CtrlrInlineUtilitiesGUI.h; path = ../../Source/Core/CtrlrInlineUtilitiesGUI.h; sourceTree = SOURCE_ROOT; };
-		62FFBD9EFB92CB23B1EEC1DC /* SettingsDialogWindow.cpp */ /* SettingsDialogWindow.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = SettingsDialogWindow.cpp; path = ../../Source/UIComponents/CtrlrLua/MethodEditor/SettingsDialogWindow.cpp; sourceTree = SOURCE_ROOT; };
 		634F40A630706BAB838A6397 /* trash.svg */ /* trash.svg */ = {isa = PBXFileReference; lastKnownFileType = file.svg; name = trash.svg; path = ../../Source/Resources/Icons/trash.svg; sourceTree = SOURCE_ROOT; };
 		63964F016C558F761B3872EE /* CtrlrSysexProcessorOwned.h */ /* CtrlrSysexProcessorOwned.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CtrlrSysexProcessorOwned.h; path = ../../Source/Core/CtrlrSysexProcessorOwned.h; sourceTree = SOURCE_ROOT; };
 		645A79C89472FFC0A5E3D73F /* VST */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CtrlrX.vst; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -726,7 +724,6 @@
 		AD417791CDA798BE91F2C64D /* CtrlrLuaFile.cpp */ /* CtrlrLuaFile.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrLuaFile.cpp; path = ../../Source/Lua/Deprecated/CtrlrLuaFile.cpp; sourceTree = SOURCE_ROOT; };
 		AD76C2B57AB57EE965A09372 /* inheritance.cpp */ /* inheritance.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = inheritance.cpp; path = ../../Source/Misc/luabind/src/inheritance.cpp; sourceTree = SOURCE_ROOT; };
 		AD782C7017777F85DB7B8BAE /* CtrlrLuaCodeTokeniserFunctions.h */ /* CtrlrLuaCodeTokeniserFunctions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CtrlrLuaCodeTokeniserFunctions.h; path = ../../Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaCodeTokeniserFunctions.h; sourceTree = SOURCE_ROOT; };
-		ADF09436B8F0FD25F1B44FE5 /* SettingsDialogWindow.h */ /* SettingsDialogWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SettingsDialogWindow.h; path = ../../Source/UIComponents/CtrlrLua/MethodEditor/SettingsDialogWindow.h; sourceTree = SOURCE_ROOT; };
 		ADFEF45B79F54656ECC34693 /* typeid.hpp */ /* typeid.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = typeid.hpp; path = ../../Source/Misc/luabind/luabind/typeid.hpp; sourceTree = SOURCE_ROOT; };
 		AE4A7B6C5C59D70F11F076E3 /* CtrlrStandaloneWindow.cpp */ /* CtrlrStandaloneWindow.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CtrlrStandaloneWindow.cpp; path = ../../Source/Core/StandaloneWrapper/CtrlrStandaloneWindow.cpp; sourceTree = SOURCE_ROOT; };
 		AF060B5F5A0432CC21C445EB /* LURL.h */ /* LURL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = LURL.h; path = ../../Source/Lua/JuceClasses/LURL.h; sourceTree = SOURCE_ROOT; };
@@ -1550,8 +1547,6 @@
 				ED66B88A82938C04815586F5,
 				E1E0ED8B89E62933F8EB23AC,
 				521D39094B26F87E60B37329,
-				62FFBD9EFB92CB23B1EEC1DC,
-				ADF09436B8F0FD25F1B44FE5,
 			);
 			name = MethodEditor;
 			sourceTree = "<group>";
@@ -2734,7 +2729,6 @@
 				F7E697B5CA3B52065B134EFF,
 				9617F2E266C99F24633BBC44,
 				B9827771061A2343DCC3A322,
-				15FFF93BDAD61E5B492B45ED,
 				4A875D1A34781D0276A9501D,
 				99319AFC8B66AFB59B23075F,
 				7EAAA095F979CB59DC51A4E8,

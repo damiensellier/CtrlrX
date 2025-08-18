@@ -940,10 +940,6 @@
                   resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrMethodEditorTabCloseButton.cpp"/>
             <FILE id="Id57q7" name="CtrlrMethodEditorTabCloseButton.h" compile="0"
                   resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrMethodEditorTabCloseButton.h"/>
-            <FILE id="Vk5Fwm" name="SettingsDialogWindow.cpp" compile="1" resource="0"
-                  file="Source/UIComponents/CtrlrLua/MethodEditor/SettingsDialogWindow.cpp"/>
-            <FILE id="bYuMMB" name="SettingsDialogWindow.h" compile="0" resource="0"
-                  file="Source/UIComponents/CtrlrLua/MethodEditor/SettingsDialogWindow.h"/>
           </GROUP>
           <FILE id="DD5Tsm" name="CtrlrLuaConsole.cpp" compile="1" resource="0"
                 file="Source/UIComponents/CtrlrLua/CtrlrLuaConsole.cpp"/>

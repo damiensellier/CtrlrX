@@ -1084,9 +1084,6 @@
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrMethodEditorTabCloseButton.cpp">
       <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\SettingsDialogWindow.cpp">
-      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\CtrlrLuaConsole.cpp">
       <Filter>CtrlrX\Source\UIComponents\CtrlrLua</Filter>
     </ClCompile>
@@ -4183,9 +4180,6 @@
       <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrMethodEditorTabCloseButton.h">
-      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\SettingsDialogWindow.h">
       <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\CtrlrLuaConsole.h">

@@ -3377,16 +3377,6 @@
       <Option compile="0"/>
       <Option link="0"/>
     </Unit>
-    <Unit filename="../../Source/UIComponents/CtrlrLua/MethodEditor/SettingsDialogWindow.cpp">
-      <Option target="Shared Code | Debug"/>
-      <Option target="Shared Code | Release"/>
-    </Unit>
-    <Unit filename="../../Source/UIComponents/CtrlrLua/MethodEditor/SettingsDialogWindow.h">
-      <Option target="Shared Code | Debug"/>
-      <Option target="Shared Code | Release"/>
-      <Option compile="0"/>
-      <Option link="0"/>
-    </Unit>
     <Unit filename="../../Source/UIComponents/CtrlrLua/CtrlrLuaConsole.cpp">
       <Option target="Shared Code | Debug"/>
       <Option target="Shared Code | Release"/>
