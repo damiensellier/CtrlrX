@@ -195,23 +195,28 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     syntaxTokenColor->setJustificationType(Justification::centredLeft);
     syntaxTokenColor->addListener(this);
 
-    addAndMakeVisible(resetButton = new TextButton("RESET")); // Added JG
+    addAndMakeVisible(resetButton = new TextButton("Reset")); // Added JG
     resetButton->addListener(this);
     resetButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId)); // Will follow the main LnF
     resetButton->setColour(TextButton::buttonOnColourId, findColour(TextButton::buttonOnColourId)); // Will follow the main LnF
     resetButton->setColour(TextButton::textColourOffId, findColour(TextButton::textColourOffId)); // Will follow the main LnF
     resetButton->setColour(TextButton::textColourOnId, findColour(TextButton::textColourOnId)); // Will follow the main LnF
 
-    addAndMakeVisible(applyButton = new TextButton("APPLY"));
+	//    addAndMakeVisible(cancelButton = new TextButton("CANCEL"));
+	//    cancelButton->addListener(this);
+	//    cancelButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
+
+    addAndMakeVisible(applyButton = new TextButton("Apply"));
     applyButton->addListener(this);
     applyButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
 
-    addAndMakeVisible(cancelButton = new TextButton("CANCEL"));
-    cancelButton->addListener(this);
-    cancelButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
-
 	populateSyntaxTokenCombo();
     populateColourCombo(syntaxTokenColor);
+
+	// Set a default/fallback colour for the syntax token combo box.
+    // We'll use your existing findColourIndex() function to find the ID of the 'Red' colour.
+	const int defaultColourID = findColourIndex(Colours::red);
+    syntaxTokenColor->setSelectedId(defaultColourID, dontSendNotification);
 
     // Load saved settings BEFORE setting initial selections
     loadSyntaxColorsFromSettings();
@@ -263,30 +268,37 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     originalLineNumbersColour = getLineNumbersColour();
     originalOpenSearchTabs = openSearchTabs->getToggleState();
 	
-    setSize(334, 500);
+    setSize(334, 520);
     updateSyntaxColors();
 }
 
 CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
 {
-    deleteAndZero(label0);
+	deleteAndZero(fontTest);
+	
+	deleteAndZero(label0);
     deleteAndZero(fontTypeface);
     deleteAndZero(fontBold);
     deleteAndZero(fontItalic);
+	deleteAndZero(resetToPreviousButton);
     deleteAndZero(fontSize);
+	
     deleteAndZero(label1);
     deleteAndZero(bgColour);
     deleteAndZero(label2);
     deleteAndZero(lineNumbersBgColour);
     deleteAndZero(label3);
     deleteAndZero(lineNumbersColour);
-    deleteAndZero(fontTest);
-    deleteAndZero(openSearchTabs);
-    deleteAndZero(resetButton);
+	
     deleteAndZero(syntaxLabel);
     deleteAndZero(syntaxTokenType);
     deleteAndZero(syntaxTokenColor);
-    deleteAndZero(resetToPreviousButton);
+	
+    deleteAndZero(openSearchTabs);
+	
+    deleteAndZero(resetButton);
+	// deleteAndZero(cancelButton);
+	deleteAndZero(applyButton);
 }
 
 void CtrlrLuaMethodCodeEditorSettings::paint (Graphics& g)
@@ -294,11 +306,12 @@ void CtrlrLuaMethodCodeEditorSettings::paint (Graphics& g)
 	// Update the main window's background colour based on the current Look and Feel
     g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 
+	// Draw horizontal separator line
     int syntaxY = marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40;
     int lineY = syntaxY + 96; // Just above the buttons
 
-    g.setColour(findColour(GroupComponent::outlineColourId));
-    g.drawHorizontalLine(lineY, marginLeft, marginLeft + sampleWidth);
+    // g.setColour(findColour(GroupComponent::outlineColourId));
+    // g.drawHorizontalLine(lineY, marginLeft, marginLeft + sampleWidth);
 }
 
 void CtrlrLuaMethodCodeEditorSettings::resized()
@@ -311,33 +324,49 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
     if (fontTest != nullptr)
         fontTest->setBounds(marginLeft, marginTop, sampleWidth, sampleHeight);
 	
+	// Font type
     label0->setBounds(marginLeft - 4, marginTop + sampleHeight + 8, sampleWidth, 24);
     fontTypeface->setBounds(marginLeft, marginTop + sampleHeight + 24 + 8, sampleWidth, 24);
+	
+	//Font style
     fontBold->setBounds(marginLeft, marginTop + sampleHeight + 24 + 40, 56, 24);
     fontItalic->setBounds(marginLeft + 64, marginTop + sampleHeight + 24 + 40, 64, 24);
-    fontSize->setBounds(marginLeft + 224, marginTop + sampleHeight + 24 + 40, 78, 24);
+	
+	// Font reset
     resetToPreviousButton->setBounds(marginLeft + 136, marginTop + sampleHeight + 24 + 40, 80, 24);
+	
+	// Font size
+	fontSize->setBounds(marginLeft + 224, marginTop + sampleHeight + 24 + 40, 88, 24);
+	
+	// Editor background
     label1->setBounds(marginLeft - 4, marginTop + sampleHeight + 24 + 72, sampleWidth, 24);
-    bgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 24, sampleWidth - 40, 24);
+    bgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 24, sampleWidth, 24);
+	
+	// Line numbers background
     label2->setBounds(marginLeft - 4, marginTop + sampleHeight + 24 + 72 + 24 + 32, sampleWidth, 24);
-    lineNumbersBgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 32, sampleWidth - 40, 24);
+    lineNumbersBgColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 32, sampleWidth, 24);
+	
+	// Line numbers
     label3->setBounds(marginLeft - 4, marginTop + sampleHeight + 24 + 72 + 2 * 24 + 2 * 32, sampleWidth, 24);
-    lineNumbersColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 3 * 24 + 2 * 32, sampleWidth - 40, 24);
+    lineNumbersColour->setBounds(marginLeft, marginTop + sampleHeight + 24 + 72 + 3 * 24 + 2 * 32, sampleWidth, 24);
 
+	// Highlights
     int syntaxY = marginTop + (sampleHeight + 24 + 72 + 3 * 24 + 2 * 32) + 40;
     syntaxLabel->setBounds(marginLeft - 4, syntaxY, sampleWidth, 24);
     syntaxTokenType->setBounds(marginLeft, syntaxY + 24, (sampleWidth - 8) / 2, 24);
-    syntaxTokenColor->setBounds(marginLeft + (sampleWidth - 8) / 2 + 8, syntaxY + 24, (sampleWidth - 8) / 2 - 40, 24);
-    openSearchTabs->setBounds(marginLeft + 0, syntaxY + 64, sampleWidth, 24);
+    syntaxTokenColor->setBounds(marginLeft + (sampleWidth - 8) / 2 + 8, syntaxY + 24, (sampleWidth - 8) / 2, 24);
+    
+	// Open search tab  check box
+	openSearchTabs->setBounds(marginLeft + 0, syntaxY + 64, sampleWidth, 24);
 
     // Add horizontal line above buttons
     int buttonY = syntaxY + 104;
 
     // Position the three buttons in a row: RESET  APPLY  CANCEL
-    int buttonWidth = (sampleWidth - 16) / 3; // Account for spacing between buttons
-    resetButton->setBounds(marginLeft, buttonY, buttonWidth, 24);
-    cancelButton->setBounds(marginLeft + buttonWidth + 8, buttonY, buttonWidth, 24);
-    applyButton->setBounds(marginLeft + 2 * (buttonWidth + 8), buttonY, buttonWidth, 24); // Cancel/Apply reverted from Johns initial design
+    int buttonWidth = (sampleWidth - 16) / 2; // Account for spacing between buttons
+    resetButton->setBounds(marginLeft, buttonY, (sampleWidth - 8) / 2, 42); // 42px high is the default JUCE buttons height
+    // cancelButton->setBounds(marginLeft + buttonWidth + 8, buttonY, buttonWidth, 24);
+    applyButton->setBounds(marginLeft + (sampleWidth - 8) / 2 + 8, buttonY, (sampleWidth - 8) / 2, 42);
 }
 
 void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged(ComboBox* comboBoxThatHasChanged)
@@ -422,94 +451,93 @@ void CtrlrLuaMethodCodeEditorSettings::comboBoxChanged(ComboBox* comboBoxThatHas
 
 void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicked)
 {
-    if (buttonThatWasClicked == resetToPreviousButton)
-    {
-        _DBG("Resetting to previous font settings");
-        _DBG(String("Current font: ") + fontTypeface->getText());
-        _DBG(String("Previous font to restore: ") + previousFont.getTypefaceName());
-
-        if (previousFont.getTypefaceName().isNotEmpty())
-        {
-            // Create font object from current UI state BEFORE changing it
-            Font currentUIFont = Font(fontTypeface->getText(),
-                fontSize->getValue(),
-                (fontBold->getToggleState() ? Font::bold : 0) |
-                (fontItalic->getToggleState() ? Font::italic : 0));
-
-            // Apply the previous font settings
-            fontTypeface->setText(previousFont.getTypefaceName(), dontSendNotification);
-            fontSize->setValue(previousFont.getHeight(), dontSendNotification);
-            fontBold->setToggleState(previousFont.isBold(), dontSendNotification);
-            fontItalic->setToggleState(previousFont.isItalic(), dontSendNotification);
-
-            // Now swap: current becomes previous for next reset
-            previousFont = currentUIFont;
-
-            _DBG(String("Font restored. New previous font: ") + previousFont.getTypefaceName());
-
-            changeListenerCallback(nullptr);
-        }
-    }
-        else if (buttonThatWasClicked == applyButton)
-        {
-            applySettings();
-        }
-        else if (buttonThatWasClicked == cancelButton)
-        {
-            closeWindow();
-            return;
-        }
-        else if (buttonThatWasClicked == resetButton)
-        {
-            int result = AlertWindow::showOkCancelBox(
-                AlertWindow::QuestionIcon,
-                "Reset Editor",
-                "Reset Editor to default?"
-            );
-
-            if (result == 1)
-            {
-                // Reset to defaults
-				// fontTypeface->setText(getDefaultFont(), dontSendNotification);
-                fontTypeface->setText("Courier New", dontSendNotification);
-                fontBold->setToggleState(false, dontSendNotification);
-                fontItalic->setToggleState(false, dontSendNotification);
-                openSearchTabs->setToggleState(false, dontSendNotification);
-                fontSize->setValue(14.0f, dontSendNotification);
-                bgColour->setSelectedId(findColourIndex(Colours::white), dontSendNotification);
-                lineNumbersBgColour->setSelectedId(findColourIndex(Colours::cornflowerblue), dontSendNotification);
-                lineNumbersColour->setSelectedId(findColourIndex(Colours::black), dontSendNotification);
-
-                customSyntaxColors.clear();
-                clearSyntaxColorSettings();
-                String currentToken = getCurrentSelectedTokenType();
-                updateTokenColorDisplay(currentToken);
-                updateSyntaxColors();
-
-                previousFont = getFont();
-                resetToPreviousButton->setEnabled(true);
-
-                changeListenerCallback(nullptr);
-            }
-    else if (buttonThatWasClicked == fontBold || buttonThatWasClicked == fontItalic)
-    {
-        // For style changes, also enable reset and store previous
-        if (!resetToPreviousButton->isEnabled())
-        {
-            previousFont = getFont(); // Store current before style change
-            resetToPreviousButton->setEnabled(true);
-        }
-    }
-    else if (buttonThatWasClicked == openSearchTabs)
-    {
-        bool currentState = openSearchTabs->getToggleState();
-        owner.setOpenSearchTabsEnabled(currentState);
-        owner.getComponentTree().setProperty(Ids::openSearchTabsState, currentState, nullptr);
-    }
-    
-    }
-
-    changeListenerCallback(nullptr);
+	if (buttonThatWasClicked == resetToPreviousButton)
+	{
+		_DBG("Resetting to previous font settings");
+		_DBG(String("Current font: ") + fontTypeface->getText());
+		_DBG(String("Previous font to restore: ") + previousFont.getTypefaceName());
+		
+		if (previousFont.getTypefaceName().isNotEmpty())
+		{
+			// Create font object from current UI state BEFORE changing it
+			Font currentUIFont = Font(fontTypeface->getText(),
+									  fontSize->getValue(),
+									  (fontBold->getToggleState() ? Font::bold : 0) |
+									  (fontItalic->getToggleState() ? Font::italic : 0));
+			
+			// Apply the previous font settings
+			fontTypeface->setText(previousFont.getTypefaceName(), dontSendNotification);
+			fontSize->setValue(previousFont.getHeight(), dontSendNotification);
+			fontBold->setToggleState(previousFont.isBold(), dontSendNotification);
+			fontItalic->setToggleState(previousFont.isItalic(), dontSendNotification);
+			
+			// Now swap: current becomes previous for next reset
+			previousFont = currentUIFont;
+			
+			_DBG(String("Font restored. New previous font: ") + previousFont.getTypefaceName());
+			
+			changeListenerCallback(nullptr);
+		}
+	}
+	else if (buttonThatWasClicked == applyButton)
+	{
+		applySettings();
+		closeWindow(); // Added to apply and close settings window
+	}
+//	else if (buttonThatWasClicked == cancelButton)
+//	{
+//		closeWindow();
+//	}
+	else if (buttonThatWasClicked == resetButton)
+	{
+		int result = AlertWindow::showOkCancelBox(AlertWindow::QuestionIcon,
+												  "Reset Editor",
+												  "Reset Editor to default?"
+												  );
+		
+		if (result == 1)
+		{
+			// Reset to defaults
+			// fontTypeface->setText(getDefaultFont(), dontSendNotification);
+			fontTypeface->setText("<Monospaced>", dontSendNotification); // "Courrier New" ???
+			fontBold->setToggleState(false, dontSendNotification);
+			fontItalic->setToggleState(false, dontSendNotification);
+			openSearchTabs->setToggleState(false, dontSendNotification);
+			fontSize->setValue(14.0f, dontSendNotification);
+			bgColour->setSelectedId(findColourIndex(Colours::white), dontSendNotification);
+			lineNumbersBgColour->setSelectedId(findColourIndex(Colours::cornflowerblue), dontSendNotification);
+			lineNumbersColour->setSelectedId(findColourIndex(Colours::black), dontSendNotification);
+			
+			customSyntaxColors.clear();
+			clearSyntaxColorSettings();
+			String currentToken = getCurrentSelectedTokenType();
+			updateTokenColorDisplay(currentToken);
+			updateSyntaxColors();
+			
+			previousFont = getFont();
+			resetToPreviousButton->setEnabled(true);
+			changeListenerCallback(nullptr);
+			closeWindow(); // Added to apply and close settings window
+		}
+		else if (buttonThatWasClicked == fontBold || buttonThatWasClicked == fontItalic)
+		{
+			// For style changes, also enable reset and store previous
+			if (!resetToPreviousButton->isEnabled())
+			{
+				previousFont = getFont(); // Store current before style change
+				resetToPreviousButton->setEnabled(true);
+			}
+		}
+		else if (buttonThatWasClicked == openSearchTabs)
+		{
+			bool currentState = openSearchTabs->getToggleState();
+			owner.setOpenSearchTabsEnabled(currentState);
+			owner.getComponentTree().setProperty(Ids::openSearchTabsState, currentState, nullptr);
+		}
+		
+	}
+	
+	changeListenerCallback(nullptr);
 }
 
 void CtrlrLuaMethodCodeEditorSettings::sliderValueChanged (Slider* sliderThatWasMoved)
@@ -567,7 +595,6 @@ void CtrlrLuaMethodCodeEditorSettings::populateColourCombo(ColourComboBox* combo
     combo->clear();
     for (int i = 0; i < sizeof(availableColours) / sizeof(availableColours[0]); ++i) {
         combo->addColourItem(availableColours[i].name, availableColours[i].colour, i + 1);
-
     }
 }
 
@@ -596,7 +623,6 @@ void CtrlrLuaMethodCodeEditorSettings::populateSyntaxTokenCombo()
     {
         syntaxTokenType->addItem(tokenTypes[i], i + 1);
     }
-
     // Select first item by default
     syntaxTokenType->setSelectedId(1, dontSendNotification);
 }
