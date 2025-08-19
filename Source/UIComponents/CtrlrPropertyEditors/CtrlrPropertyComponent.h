@@ -5,6 +5,9 @@
 #include "CtrlrPanel/CtrlrPanel.h"
 #include "CtrlrPanel/CtrlrPanelCanvas.h"
 #include "CtrlrPanel/CtrlrPanelCanvasLayer.h"
+#include <juce_graphics/juce_graphics.h>
+#include <juce_gui_basics/juce_gui_basics.h>
+#include "Ctrlrlog.h"
 
 class CtrlrFloatingWindow;
 
@@ -150,7 +153,7 @@ class CtrlrColourEditorComponent : public Component,
 {
 public:
 	CtrlrColourEditorComponent(ChangeListener* defaultListener = 0);
-	~CtrlrColourEditorComponent() {}
+	~CtrlrColourEditorComponent();
 	void updateLabel();
 	void labelTextChanged(Label* labelThatHasChanged);
 	void resized();
@@ -165,7 +168,8 @@ public:
 
 private:
 	CtrlrColourLabel colourTextInput;
-	TextButton colourPickerButton;  // Add this button
+	DrawableButton* colourPickerButton;
+	Drawable* eyedropperDrawable;
 	Colour colour;
 	bool canResetToDefault;
 
