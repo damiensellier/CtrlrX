@@ -114,8 +114,15 @@ struct CtrlrLuaCodeTokeniserFunctions
         if (c == 'l' || c == 'L' || c == 'u' || c == 'U')
             source.skip();
 
-        if (CharacterFunctions::isLetterOrDigit (source.peekNextChar()))
-            return false;
+		// if (CharacterFunctions::isLetterOrDigit (source.peekNextChar()))
+		//    return false;
+		
+		// New check: if the next character is part of a valid identifier body
+		// but not a standard number suffix, it's an error.
+		if (isIdentifierBody (source.peekNextChar()))
+		{
+			return false;
+		}
 
         return true;
     }
@@ -275,8 +282,17 @@ struct CtrlrLuaCodeTokeniserFunctions
         if (parseOctalLiteral (source))    return CtrlrLuaCodeTokeniser::tokenType_integer;
         source = original;
 
-        if (parseDecimalLiteral (source))  return CtrlrLuaCodeTokeniser::tokenType_integer;
-        source = original;
+        // if (parseDecimalLiteral (source))  return CtrlrLuaCodeTokeniser::tokenType_integer;
+        // source = original;
+		
+		// Corrected logic here: check if parsing a decimal literal succeeds
+		// AND if the suffix is valid.
+		if (parseDecimalLiteral (source))
+		{
+			return CtrlrLuaCodeTokeniser::tokenType_integer;
+		}
+
+		source = original;
 
         return CtrlrLuaCodeTokeniser::tokenType_error;
     }
@@ -512,6 +528,7 @@ struct CtrlrLuaCodeTokeniserFunctions
             break;
 
         case '*':
+		case '/': // missing line for divider
         case '%':
         case '=':
         case '!':
