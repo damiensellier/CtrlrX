@@ -267,7 +267,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     "    if true then\n"
     "        return 123.456\n"
     "    end -- Comment\n"
-    "    local x = 'A string'\n"
+    "    local str = 'A string'\n"
 	"    local op = 1 + 2 * 3 / 4 - 5\n"
     "    local t = {1, 2, 3};\n"
     "    local err = 123_ -- Error\n"

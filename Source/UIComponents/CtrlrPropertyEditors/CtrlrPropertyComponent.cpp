@@ -1997,7 +1997,7 @@ public:
             setColour(Label::textColourId, findColour(Slider::textBoxTextColourId));
         }
 
-        setColour (Label::outlineColourId, findColour (Slider::textBoxOutlineColourId));
+        setColour(Label::outlineColourId, findColour (Slider::textBoxOutlineColourId));
         setColour(Label::backgroundWhenEditingColourId, findColour(Slider::backgroundColourId).withAlpha(0.7f));
         setColour(Label::textWhenEditingColourId, findColour(Label::textWhenEditingColourId).withAlpha(0.7f));
         setColour(Label::outlineWhenEditingColourId, findColour(Slider::textBoxOutlineColourId));
@@ -2011,14 +2011,17 @@ public:
 
         if (useImprovedLegibility) // Uses the member variable
         {
-            textEditor->setColour(juce::TextEditor::backgroundColourId, juce::Colour(0xfffffefa)); // halfwhite
+			textEditor->setColour(juce::TextEditor::backgroundColourId, juce::Colour(0xffffffff)); // white
             textEditor->setColour(juce::TextEditor::textColourId, juce::Colour(0xff000000)); // black
+			textEditor->setColour(juce::TextEditor::highlightColourId, juce::Colour(0xffF5F5F5)); //  CSS WhiteSmoke. Added v5.6.34
+			textEditor->setColour(juce::TextEditor::highlightedTextColourId, juce::Colour(0xff000000)); // black. Added v5.6.34
         }
         else
         {
             textEditor->setColour(juce::TextEditor::backgroundColourId, findColour(juce::Slider::backgroundColourId));
             textEditor->setColour(juce::TextEditor::textColourId, findColour(juce::Slider::textBoxTextColourId));
             textEditor->setColour(juce::TextEditor::highlightColourId, findColour(juce::TextEditor::highlightColourId));
+			textEditor->setColour(juce::TextEditor::highlightedTextColourId, findColour(juce::TextEditor::highlightColourId));
             textEditor->setColour(juce::TextEditor::outlineColourId, findColour(juce::Slider::textBoxOutlineColourId));
         }
 
