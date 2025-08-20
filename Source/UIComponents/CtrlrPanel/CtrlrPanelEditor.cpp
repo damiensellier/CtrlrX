@@ -534,8 +534,6 @@ void CtrlrPanelEditor::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasC
             //    This safely manages the lifetime of the new object.
             lookAndFeel = std::move(newLookAndFeel);
 
-            lookAndFeelChanged();
-
             if (!getProperty(Ids::uiPanelLegacyMode))
             {
                 // ... (your existing color update code)
