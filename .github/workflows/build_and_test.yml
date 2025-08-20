@@ -299,12 +299,22 @@ jobs:
       - name: Get Artifacts
         uses: actions/download-artifact@v4
 
+      - name: Get readme
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            README.md
+            VERSION
+          sparse-checkout-cone-mode: false
+
       - name: Compose release notes
         # Extract the first sub section after '## Changelog' until the next subsection from the README
         run: |
+          set +e  # ignore failures
           echo '![alt text](/Source/Resources/Icons/CtrlrX-README-250x315.png?raw=true "CtrlrX")' > release_notes.txt
           echo -e "\n# CtrlrX - release notes" >> release_notes.txt
           sed '0,/^## Changelog/d; 0,/^##/d; /##/,$d' README.md >> release_notes.txt
+          cat release_notes.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
