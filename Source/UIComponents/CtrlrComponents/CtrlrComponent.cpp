@@ -427,6 +427,22 @@ void CtrlrComponent::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasCh
     {
         componentNameLabel.setFont (getFontManager().getFontFromString (getProperty(Ids::componentLabelFont)));
     }
+    else if (property == Ids::componentLayerUid)
+    {
+        // Get the new layer's UID from the ValueTree
+        const String newLayerUid = getProperty(Ids::componentLayerUid).toString();
+
+        // Find the new layer using its UID
+        CtrlrPanelCanvasLayer* newLayer = owner.getOwnerPanel().getCanvas()->getLayer(newLayerUid);
+
+        // If the new layer exists, move the component to it
+        if (newLayer != nullptr)
+        {
+            // Call the existing function to move the component.
+            // This function already handles all the necessary logic.
+            owner.getOwnerPanel().getCanvas()->assignToLayer(this, newLayer);
+        }
+    }
     else if (property == Ids::componentRectangle)
     {
         setBounds (VAR2RECT(getProperty(property)));

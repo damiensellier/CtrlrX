@@ -1,4 +1,5 @@
 # Operating System & IDE Specific Files
+Builds/
 .DS_Store                 # macOS directory metadata
 Thumbs.db                 # Windows thumbnail cache
 Desktop.ini               # Windows custom folder settings
