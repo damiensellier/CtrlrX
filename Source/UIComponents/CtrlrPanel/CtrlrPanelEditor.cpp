@@ -243,6 +243,7 @@ CtrlrPanelEditor::~CtrlrPanelEditor()
     deleteAndZero(ctrlrPanelProperties);
     deleteAndZero(spacerComponent);
     deleteAndZero(ctrlrPanelViewport);
+    //deleteAndZero(lookAndFeel);
 }
 
 void CtrlrPanelEditor::visibilityChanged()
@@ -515,28 +516,43 @@ void CtrlrPanelEditor::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasC
         }
         else if (property == Ids::uiPanelLookAndFeel)
         {
-            if (lookAndFeel)
-            {
-                getCanvas()->setLookAndFeel(nullptr);
-                delete lookAndFeel.release();
-            }
-            
-            lookAndFeel.reset(getLookAndFeelFromDescription(getProperty(property)));
-            getCanvas()->setLookAndFeel(lookAndFeel.get());
-            
-            setLookAndFeel(getLookAndFeelFromDescription(getProperty(Ids::uiPanelLookAndFeel))); // Updates the current component LookAndFeel : PanelEditor
-            LookAndFeel::setDefaultLookAndFeel(getLookAndFeelFromDescription(getProperty(Ids::uiPanelLookAndFeel))); // Force selected LnF as Default LnF for popups, combobox, alert windows
+            // 1. Create a single new LookAndFeel object and give ownership to a unique_ptr.
+            //    This is the only place we call the function that allocates a new object.
+            auto newLookAndFeel = std::unique_ptr<juce::LookAndFeel>(getLookAndFeelFromDescription(getProperty(property)));
+
+            // 2. Safely check if the pointer is valid. If not, do nothing.
+            if (newLookAndFeel.get() == nullptr)
+                return;
+
+            // 3. Now, set all the necessary LookAndFeel pointers using this ONE new object.
+            //    The .get() method returns the raw pointer without transferring ownership.
+            getCanvas()->setLookAndFeel(newLookAndFeel.get());
+            setLookAndFeel(newLookAndFeel.get());
+            LookAndFeel::setDefaultLookAndFeel(newLookAndFeel.get());
+
+            // 4. Finally, assign the new unique_ptr to the class member.
+            //    This safely manages the lifetime of the new object.
+            lookAndFeel = std::move(newLookAndFeel);
+
             lookAndFeelChanged();
-            
-            if (!getProperty(Ids::uiPanelLegacyMode)) // Added v5.6.30. Protects Legacy panels' BKG Colours when being assigned LnF V3
+
+            if (!getProperty(Ids::uiPanelLegacyMode))
             {
-                setProperty(Ids::uiPanelViewPortBackgroundColour, (String) Component::findColour (ResizableWindow::backgroundColourId).withAlpha(0.7f).toString()); // Update Canvas props
-                setProperty(Ids::uiPanelBackgroundColour, (String) Component::findColour (ResizableWindow::backgroundColourId).toString());
-                setProperty(Ids::uiPanelBackgroundColour1, (String) Component::findColour (ResizableWindow::backgroundColourId).toString());
-                setProperty(Ids::uiPanelBackgroundColour2, (String) Component::findColour (ResizableWindow::backgroundColourId).darker(0.2f).toString());
-                setProperty(Ids::uiPanelTooltipBackgroundColour, (String) Component::findColour (BubbleComponent::backgroundColourId).toString());
-                setProperty(Ids::uiPanelTooltipOutlineColour, (String) Component::findColour (BubbleComponent::outlineColourId).toString());
-                setProperty(Ids::uiPanelTooltipColour, (String) Component::findColour (Label::textColourId).toString());
+                // ... (your existing color update code)
+            }
+
+//            lookAndFeelChanged();
+
+            if (!getProperty(Ids::uiPanelLegacyMode))
+            {
+                // Update colors based on the new valid LookAndFeel.
+                setProperty(Ids::uiPanelViewPortBackgroundColour, (String)Component::findColour(ResizableWindow::backgroundColourId).withAlpha(0.7f).toString());
+                setProperty(Ids::uiPanelBackgroundColour, (String)Component::findColour(ResizableWindow::backgroundColourId).toString());
+                setProperty(Ids::uiPanelBackgroundColour1, (String)Component::findColour(ResizableWindow::backgroundColourId).toString());
+                setProperty(Ids::uiPanelBackgroundColour2, (String)Component::findColour(ResizableWindow::backgroundColourId).darker(0.2f).toString());
+                setProperty(Ids::uiPanelTooltipBackgroundColour, (String)Component::findColour(BubbleComponent::backgroundColourId).toString());
+                setProperty(Ids::uiPanelTooltipOutlineColour, (String)Component::findColour(BubbleComponent::outlineColourId).toString());
+                setProperty(Ids::uiPanelTooltipColour, (String)Component::findColour(Label::textColourId).toString());
             }
             
 //            /** Stores the updated LnF ColourScheme **/

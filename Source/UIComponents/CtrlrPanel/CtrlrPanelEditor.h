@@ -45,7 +45,7 @@ class CtrlrPanelNotifier : public Component,
 class CtrlrPanelEditor  :	public Component,
 							public ValueTree::Listener,
 							public CtrlrLuaObject,
-                            public LookAndFeel_V4
+                            public LookAndFeel_V4 // is this redundant?
 {
 	public:
 		CtrlrPanelEditor (CtrlrPanel &_owner, CtrlrManager &_ctrlrManager, const String &panelName);
@@ -97,7 +97,7 @@ class CtrlrPanelEditor  :	public Component,
 		bool getRestoreState()					{ return (currentRestoreState); }
 		void setRestoreState(const bool _state) { currentRestoreState = _state; }
 		void reloadResources (Array <CtrlrPanelResource*> resourcesThatChanged);
-        void showComponentRuntimeConfig(CtrlrComponent *componentToConfigure);
+        //void showComponentRuntimeConfig(CtrlrComponent *componentToConfigure);
 		void searchForProperty();
         static LookAndFeel* getLookAndFeelFromDescription(const String &lookAndFeelDesc);
         void editModeChanged(const bool isEditMode);
@@ -129,6 +129,6 @@ class CtrlrPanelEditor  :	public Component,
 		WeakReference<CtrlrNotificationCallback> notificationCallback;
 		Component* editorComponentsInEditMode[3];
 		Component* editorComponents[2];
-		std::unique_ptr<LookAndFeel> lookAndFeel;
-        ScopedPointer<LookAndFeel_V4> lfv4;
+		std::unique_ptr<juce::LookAndFeel> lookAndFeel;
+        //LookAndFeel_V4* lfv4;
 };
