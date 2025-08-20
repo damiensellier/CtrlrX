@@ -261,8 +261,8 @@ class CtrlrFontPropertyComponent  : public Component,
 									public ComboBox::Listener,
 									public Button::Listener,
 									public Slider::Listener,
-									public CtrlrPropertyChild,
-									public LookAndFeel_V2
+									public CtrlrPropertyChild
+									//public LookAndFeel_V2
 {
 	public:
 		CtrlrFontPropertyComponent (const Value &_valueToControl, CtrlrPanel *_owner);
@@ -293,6 +293,9 @@ class CtrlrFontPropertyComponent  : public Component,
 		DrawableButton* fontItalic;
 		DrawableButton* fontUnderline;
 		Slider* fontSize,*horizontalScale,*kerning;
+		Label* fontSizeLabel;
+		Label* horizontalScaleLabel;
+		Label* kerningLabel;
 };
 
 class CtrlrLuaMethodProperty  : public Component,
@@ -317,6 +320,7 @@ class CtrlrLuaMethodProperty  : public Component,
 		DrawableButton* editMethodButton;
         DrawableButton* newMethodButton;
         DrawableButton* deleteMethodButton;
+
 };
 
 class CtrlrModulatorListProperty :	public CtrlrPropertyChild,

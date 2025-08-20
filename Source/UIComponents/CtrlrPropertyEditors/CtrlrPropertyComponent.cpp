@@ -896,6 +896,7 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
 	  kerning(0),
 	  horizontalScale(0)
 {
+
     addAndMakeVisible (typeface = new ComboBox (""));
     typeface->setEditableText (false);
     typeface->setJustificationType (Justification::centredLeft);
@@ -915,31 +916,50 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
     fontUnderline->setTooltip (L"Underline");
     fontUnderline->addListener (this);
 
+	// In your constructor, after creating the sliders:
+	addAndMakeVisible(fontSizeLabel = new Label("", "Size"));
+	fontSizeLabel->setFont(Font(10.0f, Font::plain));
+	fontSizeLabel->setJustificationType(Justification::centred);
+	fontSizeLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
+	addAndMakeVisible(horizontalScaleLabel = new Label("", "Scale"));
+	horizontalScaleLabel->setFont(Font(10.0f, Font::plain));
+	horizontalScaleLabel->setJustificationType(Justification::centred);
+	horizontalScaleLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
+	addAndMakeVisible(kerningLabel = new Label("", "Kerning"));
+	kerningLabel->setFont(Font(10.0f, Font::plain));
+	kerningLabel->setJustificationType(Justification::centred);
+	kerningLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
     addAndMakeVisible (fontSize = new Slider (""));
-	fontSize->setLookAndFeel (this);
+	//fontSize->setLookAndFeel (this);
 	fontSize->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
 	fontSize->setTooltip (L"Size");
-    fontSize->setRange (1, 999, 1);
-    fontSize->setSliderStyle (Slider::RotaryVerticalDrag);
-    fontSize->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
+    fontSize->setRange (1, 999, 0.5f);
+    fontSize->setSliderStyle (Slider::IncDecButtons);
+	fontSize->setTextBoxStyle(Slider::TextBoxLeft, false, 34, 16);
+	fontSize->setMouseDragSensitivity(500);
     fontSize->addListener (this);
 
 	addAndMakeVisible (horizontalScale = new Slider (""));
-	horizontalScale->setLookAndFeel (this);
-	horizontalScale->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
+	//horizontalScale->setLookAndFeel (this);
+	horizontalScale->setColour(Slider::IncDecButtons, Component::findColour(TextEditor::textColourId));
 	horizontalScale->setTooltip (L"Horizontal Scale");
     horizontalScale->setRange (0.0, 10.0, 0.01);
-    horizontalScale->setSliderStyle (Slider::RotaryVerticalDrag);
+    horizontalScale->setSliderStyle (Slider::IncDecButtons);
     horizontalScale->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
+	horizontalScale->setMouseDragSensitivity(500);
     horizontalScale->addListener (this);
 
 	addAndMakeVisible (kerning = new Slider (""));
-    kerning->setLookAndFeel (this);
-	kerning->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
+    //kerning->setLookAndFeel (this);
+	kerning->setColour(Slider::IncDecButtons, Component::findColour(TextEditor::textColourId));
 	kerning->setTooltip (L"Extra Kerning");
     kerning->setRange (0.0, 10.0, 0.01);
-    kerning->setSliderStyle (Slider::RotaryVerticalDrag);
+    kerning->setSliderStyle (Slider::IncDecButtons);
     kerning->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
+	kerning->setMouseDragSensitivity(500);
     kerning->addListener (this);
 
 	fontBold->setClickingTogglesState (true);
@@ -963,6 +983,9 @@ CtrlrFontPropertyComponent::~CtrlrFontPropertyComponent()
     deleteAndZero (fontSize);
 	deleteAndZero (kerning);
 	deleteAndZero (horizontalScale);
+	deleteAndZero(fontSizeLabel);
+	deleteAndZero(horizontalScaleLabel);
+	deleteAndZero(kerningLabel);
 }
 
 void CtrlrFontPropertyComponent::resized()
@@ -973,9 +996,36 @@ void CtrlrFontPropertyComponent::resized()
     fontItalic->setBounds ((getWidth() * 0.4f) + (getWidth() * 0.05f),		0, getWidth() * 0.05f,	getHeight());
 	fontUnderline->setBounds ((getWidth() * 0.4f) + 2*(getWidth() * 0.05f), 0, getWidth() * 0.05f,	getHeight());
 
-    fontSize->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f),							0, getWidth() * 0.14f,	getHeight());
-	horizontalScale->setBounds	((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + (getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
-	kerning->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + 2*(getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
+ //   fontSize->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f),							0, getWidth() * 0.14f,	getHeight());
+	//horizontalScale->setBounds	((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + (getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
+	//kerning->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + 2*(getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
+
+	const int labelHeight = 12;
+	const int sliderHeight = getHeight() - labelHeight;
+
+	typeface->setBounds(0, labelHeight, getWidth() * 0.4f, sliderHeight);
+
+	fontBold->setBounds(getWidth() * 0.4f, labelHeight, getWidth() * 0.05f, sliderHeight);
+	fontItalic->setBounds((getWidth() * 0.4f) + (getWidth() * 0.05f), labelHeight, getWidth() * 0.05f, sliderHeight);
+	fontUnderline->setBounds((getWidth() * 0.4f) + 2 * (getWidth() * 0.05f), labelHeight, getWidth() * 0.05f, sliderHeight);
+
+	int startX = (getWidth() * 0.4f) + 3 * (getWidth() * 0.05f);
+
+	// Font Size
+	fontSizeLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
+	fontSize->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
+
+	startX += getWidth() * 0.14f;
+
+	// Horizontal Scale  
+	horizontalScaleLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
+	horizontalScale->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
+
+	startX += getWidth() * 0.14f;
+
+	// Kerning
+	kerningLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
+	kerning->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
 }
 
 void CtrlrFontPropertyComponent::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
