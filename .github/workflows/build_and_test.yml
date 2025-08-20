@@ -296,9 +296,6 @@ jobs:
     needs: build_and_test
 
     steps:
-      - name: Get Artifacts
-        uses: actions/download-artifact@v4
-
       - name: Get readme
         uses: actions/checkout@v4
         with:
@@ -307,6 +304,9 @@ jobs:
             VERSION
           sparse-checkout-cone-mode: false
 
+      - name: Get Artifacts
+        uses: actions/download-artifact@v4
+  
       - name: Compose release notes
         # Extract the first sub section after '## Changelog' until the next subsection from the README
         run: |
