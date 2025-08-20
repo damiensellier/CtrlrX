@@ -2013,15 +2013,15 @@ public:
         {
 			textEditor->setColour(juce::TextEditor::backgroundColourId, juce::Colour(0xffffffff)); // white
             textEditor->setColour(juce::TextEditor::textColourId, juce::Colour(0xff000000)); // black
-			textEditor->setColour(juce::TextEditor::highlightColourId, juce::Colour(0xffF5F5F5)); //  CSS WhiteSmoke. Added v5.6.34
-			textEditor->setColour(juce::TextEditor::highlightedTextColourId, juce::Colour(0xff000000)); // black. Added v5.6.34
+            textEditor->setColour(juce::TextEditor::highlightColourId, juce::Colour(0xffF5F5F5)); //  CSS WhiteSmoke. Added v5.6.34
+            textEditor->setColour(juce::TextEditor::highlightedTextColourId, juce::Colour(0xff000000)); // black. Added v5.6.34
         }
         else
         {
             textEditor->setColour(juce::TextEditor::backgroundColourId, findColour(juce::Slider::backgroundColourId));
             textEditor->setColour(juce::TextEditor::textColourId, findColour(juce::Slider::textBoxTextColourId));
             textEditor->setColour(juce::TextEditor::highlightColourId, findColour(juce::TextEditor::highlightColourId));
-			textEditor->setColour(juce::TextEditor::highlightedTextColourId, findColour(juce::TextEditor::highlightColourId));
+            textEditor->setColour(juce::TextEditor::highlightedTextColourId, findColour(juce::TextEditor::highlightColourId));
             textEditor->setColour(juce::TextEditor::outlineColourId, findColour(juce::Slider::textBoxOutlineColourId));
         }
 
