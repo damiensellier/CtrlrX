@@ -498,10 +498,11 @@ void CtrlrChoicePropertyComponent::changed()
 		valueToControl = combo->getText();
 	}
     
-	if (owner)
-    {
-        sendChangeMessage ();
-    }
+	// CRASH REPORT! According to @dnaldoog , this will cause a crash when user changes L&F in Property Editor
+	//	if (owner)
+	//    {
+	//        sendChangeMessage ();
+	//    }
 }
 
 CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener* defaultListener)

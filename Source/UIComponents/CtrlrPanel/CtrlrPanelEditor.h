@@ -97,7 +97,7 @@ class CtrlrPanelEditor  :	public Component,
 		bool getRestoreState()					{ return (currentRestoreState); }
 		void setRestoreState(const bool _state) { currentRestoreState = _state; }
 		void reloadResources (Array <CtrlrPanelResource*> resourcesThatChanged);
-        void showComponentRuntimeConfig(CtrlrComponent *componentToConfigure);
+        // void showComponentRuntimeConfig(CtrlrComponent *componentToConfigure); // Useless. Related to the WIN crash on LnF switch
 		void searchForProperty();
         static LookAndFeel* getLookAndFeelFromDescription(const String &lookAndFeelDesc);
         void editModeChanged(const bool isEditMode);
@@ -130,5 +130,5 @@ class CtrlrPanelEditor  :	public Component,
 		Component* editorComponentsInEditMode[3];
 		Component* editorComponents[2];
 		std::unique_ptr<LookAndFeel> lookAndFeel;
-        ScopedPointer<LookAndFeel_V4> lfv4;
+        // ScopedPointer<LookAndFeel_V4> lfv4; // Related to the WIN crash on LnF switch
 };
