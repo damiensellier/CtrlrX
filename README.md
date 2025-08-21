@@ -377,8 +377,9 @@ Tuturial coming soon.
 * **UPDATED** Export instance fileChooser default directory is now set to panelLastSaveDir or falls back to desktop. `CtrlrMac.cpp`
 * **FIXED** CtrlrLuaMethodCodeEditorSettings Highlight colours such as Error, comments, operatiors etc. `CtrlrLuaMethodCodeEditorSettings.cpp`, `CtrlrLuaMethodCodeTokeniserFUnctions.h`
 * **UPDATED** CtrlrLuaMethodCodeEditorSettings GUI with a better sample code preview. `CtrlrLuaMethodCodeEditorSettings.cpp`
-* **UPDATED** CtrlrLuaMethodCodeEditorSettings Separated colourChooser from colour field. `CtrlrPropertyComponent.cpp` &`.h`, `CtrlrIDs.xml`
-* **UPDATED** CtrlrLuaMethodCodeEditorSettings Layer selection via comboBox. `CtrlrPropertyComponent.cpp` &`.h`, `CtrlrIDs.xml`
+* **UPDATED** CtrlrPropertyComponent Separated colourChooser from colour field. `CtrlrPropertyComponent.cpp` &`.h`, `CtrlrIDs.xml`
+* **UPDATED** CtrlrPropertyComponent Layer selection via comboBox. `CtrlrPropertyComponent.cpp` &`.h`, `CtrlrIDs.xml`
+* **UPDATED** CtrlrPropertyComponent Font size slider replaced by dec/inc buttons for convenience. `CtrlrPropertyComponent.cpp` &`.h`
 
 #### Version 5.6.33 | 2025.05.28
 

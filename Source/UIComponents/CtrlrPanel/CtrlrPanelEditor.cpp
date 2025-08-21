@@ -533,7 +533,7 @@ void CtrlrPanelEditor::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasC
             //    This safely manages the lifetime of the new object.
             lookAndFeel = std::move(newLookAndFeel);
 
-            lookAndFeelChanged();
+            // lookAndFeelChanged(); // Useless ???
             
             if (!getProperty(Ids::uiPanelLegacyMode)) // Added v5.6.30. Protects Legacy panels' BKG Colours when being assigned LnF V3
             {

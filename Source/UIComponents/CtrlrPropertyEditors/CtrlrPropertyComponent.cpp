@@ -513,7 +513,8 @@ CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener* defaultLi
       <path d="M13.354.646a1.207 1.207 0 0 0-1.708 0L8.5 3.793l-.646-.647a.5.5 0 1 0-.708.708L8.293 5l-7.147 7.146A.5.5 0 0 0 1 12.5v1.793l-.854.853a.5.5 0 1 0 .708.707L1.707 15H3.5a.5.5 0 0 0 .354-.146L11 7.707l1.146 1.147a.5.5 0 0 0 .708-.708l-.647-.646 3.147-3.146a1.207 1.207 0 0 0 0-1.708zM2 12.707l7-7L10.293 7l-7 7H2z"/>
     </svg>
     )";
-    
+	
+    // Add the Label component as a child and make it visible. The parent (this component) now owns it.
     addAndMakeVisible(colourTextInput);
     colourTextInput.setJustificationType(Justification::centred);
     colourTextInput.setFont(colourTextInput.getFont().withStyle(Font::bold));
@@ -530,10 +531,11 @@ CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener* defaultLi
         {
             // Set the drawable color to ensure visibility
             eyedropperDrawable->replaceColour(Colours::slategrey, findColour(TextButton::textColourOffId));
+			
+            /* @dnaldoog Tried various ways of scaling like AffineTransform etc but only ImageOnButtonBackground seems to work*/
+			// SOLUTION : Create the button with a raw pointer and add it as a child. The parent takes ownership here.
             colourPickerButton = new DrawableButton("colourPicker", DrawableButton::ImageOnButtonBackground);
-            /* Tried various ways of scaling like AffineTransform etc but only ImageOnButtonBackground seems to work*/
             colourPickerButton->setImages(eyedropperDrawable);
-            addAndMakeVisible(colourPickerButton);
             colourPickerButton->setTooltip("Choose custom colour");
             colourPickerButton->addListener(this);
         }
@@ -543,11 +545,15 @@ CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener* defaultLi
     if (colourPickerButton == nullptr)
     {
         colourPickerButton = new DrawableButton("colourPicker", DrawableButton::ImageOnButtonBackground);
-        addAndMakeVisible(colourPickerButton);
         colourPickerButton->setButtonText("...");
         colourPickerButton->setTooltip("Open colour picker");
         colourPickerButton->addListener(this);
     }
+	
+	// This is the single, correct place to add the button as a child.
+    // Ownership is transferred here.
+    addAndMakeVisible(colourPickerButton);
+
     // Set initial button appearance
     updateButtonColour();
     
@@ -883,31 +889,50 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
     fontUnderline->setTooltip (L"Underline");
     fontUnderline->addListener (this);
 
+	// In your constructor, after creating the sliders:
+	addAndMakeVisible(fontSizeLabel = new Label("", "Size"));
+	fontSizeLabel->setFont(Font(10.0f, Font::plain));
+	fontSizeLabel->setJustificationType(Justification::centred);
+	fontSizeLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
+	addAndMakeVisible(horizontalScaleLabel = new Label("", "Scale"));
+	horizontalScaleLabel->setFont(Font(10.0f, Font::plain));
+	horizontalScaleLabel->setJustificationType(Justification::centred);
+	horizontalScaleLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
+	addAndMakeVisible(kerningLabel = new Label("", "Kerning"));
+	kerningLabel->setFont(Font(10.0f, Font::plain));
+	kerningLabel->setJustificationType(Justification::centred);
+	kerningLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
     addAndMakeVisible (fontSize = new Slider (""));
-	fontSize->setLookAndFeel (this);
+	//fontSize->setLookAndFeel (this);
 	fontSize->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
 	fontSize->setTooltip (L"Size");
-    fontSize->setRange (1, 999, 1);
-    fontSize->setSliderStyle (Slider::RotaryVerticalDrag);
-    fontSize->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
+    fontSize->setRange (1, 999, 0.5f);
+    fontSize->setSliderStyle (Slider::IncDecButtons);
+	fontSize->setTextBoxStyle(Slider::TextBoxLeft, false, 34, 16);
+	fontSize->setMouseDragSensitivity(500);
     fontSize->addListener (this);
 
 	addAndMakeVisible (horizontalScale = new Slider (""));
-	horizontalScale->setLookAndFeel (this);
-	horizontalScale->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
+	//horizontalScale->setLookAndFeel (this);
+	horizontalScale->setColour(Slider::IncDecButtons, Component::findColour(TextEditor::textColourId));
 	horizontalScale->setTooltip (L"Horizontal Scale");
     horizontalScale->setRange (0.0, 10.0, 0.01);
-    horizontalScale->setSliderStyle (Slider::RotaryVerticalDrag);
+    horizontalScale->setSliderStyle (Slider::IncDecButtons);
     horizontalScale->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
+	horizontalScale->setMouseDragSensitivity(500);
     horizontalScale->addListener (this);
 
 	addAndMakeVisible (kerning = new Slider (""));
-    kerning->setLookAndFeel (this);
-	kerning->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
+    //kerning->setLookAndFeel (this);
+	kerning->setColour(Slider::IncDecButtons, Component::findColour(TextEditor::textColourId));
 	kerning->setTooltip (L"Extra Kerning");
     kerning->setRange (0.0, 10.0, 0.01);
-    kerning->setSliderStyle (Slider::RotaryVerticalDrag);
+    kerning->setSliderStyle (Slider::IncDecButtons);
     kerning->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
+	kerning->setMouseDragSensitivity(500);
     kerning->addListener (this);
 
 	fontBold->setClickingTogglesState (true);
@@ -924,15 +949,29 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
 
 CtrlrFontPropertyComponent::~CtrlrFontPropertyComponent()
 {
+    // Remove listeners first to avoid dangling pointers
+    typeface->removeListener (this);
+    fontBold->removeListener (this);
+    fontItalic->removeListener (this);
+    fontUnderline->removeListener (this);
+    fontSize->removeListener (this);
+    kerning->removeListener (this);
+    horizontalScale->removeListener (this);
+
+    // Then delete the components
     deleteAndZero (typeface);
     deleteAndZero (fontBold);
     deleteAndZero (fontItalic);
     deleteAndZero (fontUnderline);
     deleteAndZero (fontSize);
-	deleteAndZero (kerning);
-	deleteAndZero (horizontalScale);
-}
+    deleteAndZero (kerning);
+    deleteAndZero (horizontalScale);
 
+    // The labels don't have listeners so they are fine to delete
+    deleteAndZero(fontSizeLabel);
+    deleteAndZero(horizontalScaleLabel);
+    deleteAndZero(kerningLabel);
+}
 void CtrlrFontPropertyComponent::resized()
 {
     typeface->setBounds (0, 0, getWidth() * 0.4f, getHeight());
@@ -941,9 +980,40 @@ void CtrlrFontPropertyComponent::resized()
     fontItalic->setBounds ((getWidth() * 0.4f) + (getWidth() * 0.05f),		0, getWidth() * 0.05f,	getHeight());
 	fontUnderline->setBounds ((getWidth() * 0.4f) + 2*(getWidth() * 0.05f), 0, getWidth() * 0.05f,	getHeight());
 
-    fontSize->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f),							0, getWidth() * 0.14f,	getHeight());
-	horizontalScale->setBounds	((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + (getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
-	kerning->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + 2*(getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
+    // fontSize->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f),							0, getWidth() * 0.14f,	getHeight());
+	// horizontalScale->setBounds	((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + (getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
+	// kerning->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + 2*(getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
+	
+	
+	// Updated v5.5.34. Thanks to @dnaldoog . Replace knobs by dec/inc buttons
+	const int labelHeight = 12;
+	const int sliderHeight = getHeight() - labelHeight;
+
+	typeface->setBounds(0, labelHeight, getWidth() * 0.4f, sliderHeight);
+
+	fontBold->setBounds(getWidth() * 0.4f, labelHeight, getWidth() * 0.05f, sliderHeight);
+	fontItalic->setBounds((getWidth() * 0.4f) + (getWidth() * 0.05f), labelHeight, getWidth() * 0.05f, sliderHeight);
+	fontUnderline->setBounds((getWidth() * 0.4f) + 2 * (getWidth() * 0.05f), labelHeight, getWidth() * 0.05f, sliderHeight);
+
+	int startX = (getWidth() * 0.4f) + 3 * (getWidth() * 0.05f);
+
+	// Font Size
+	fontSizeLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
+	fontSize->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
+
+	startX += getWidth() * 0.14f;
+
+	// Horizontal Scale
+	horizontalScaleLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
+	horizontalScale->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
+
+	startX += getWidth() * 0.14f;
+
+	// Kerning
+	kerningLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
+	kerning->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
+	
+	// END Addon by @dnaldoog
 }
 
 void CtrlrFontPropertyComponent::comboBoxChanged (ComboBox* comboBoxThatHasChanged)

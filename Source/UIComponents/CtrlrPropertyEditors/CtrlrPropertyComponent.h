@@ -155,6 +155,7 @@ class CtrlrColourEditorComponent : 	public Component,
 	public:
 		CtrlrColourEditorComponent(ChangeListener *defaultListener=0);
 		~CtrlrColourEditorComponent();
+	
 		void updateLabel();
 		void labelTextChanged (Label *labelThatHasChanged);
 		void resized();
@@ -164,7 +165,7 @@ class CtrlrColourEditorComponent : 	public Component,
 		void refresh() { updateLabel(); }
 		void buttonClicked(Button* buttonThatWasClicked) override; // Added v5.6.34.
 		// void mouseDown (const MouseEvent &e);
-		void changeListenerCallback (ChangeBroadcaster* source);
+		void changeListenerCallback (ChangeBroadcaster* source) override; // Added override
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrColourEditorComponent)
 
@@ -175,7 +176,7 @@ class CtrlrColourEditorComponent : 	public Component,
 		Colour colour;
 		bool canResetToDefault;
 
-		void openColourPicker();  // Add this helper method
+		void openColourPicker(); // Add this helper method
 		void updateButtonColour(); // Helper to update button appearance
 };
 
@@ -184,9 +185,10 @@ class CtrlrColourPropertyComponent : public Component, public ChangeListener, pu
 	public:
 		CtrlrColourPropertyComponent (const Value &_valueToControl);
 		~CtrlrColourPropertyComponent();
-		void refresh();
-		void changeListenerCallback (ChangeBroadcaster* source);
-		void resized();
+	
+		void refresh() override;
+		void changeListenerCallback (ChangeBroadcaster* source) override;
+		void resized() override;
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrColourPropertyComponent)
 
@@ -263,8 +265,8 @@ class CtrlrFontPropertyComponent  : public Component,
 									public ComboBox::Listener,
 									public Button::Listener,
 									public Slider::Listener,
-									public CtrlrPropertyChild,
-									public LookAndFeel_V2
+									public CtrlrPropertyChild
+									// public LookAndFeel_V2
 {
 	public:
 		CtrlrFontPropertyComponent (const Value &_valueToControl, CtrlrPanel *_owner);
@@ -295,6 +297,10 @@ class CtrlrFontPropertyComponent  : public Component,
 		DrawableButton* fontItalic;
 		DrawableButton* fontUnderline;
 		Slider* fontSize,*horizontalScale,*kerning;
+	
+		Label* fontSizeLabel; // Added v5.6.34. Thanks to @dnaldoog
+		Label* horizontalScaleLabel; // Added v5.6.34. Thanks to @dnaldoog
+		Label* kerningLabel; // Added v5.6.34. Thanks to @dnaldoog
 };
 
 class CtrlrLuaMethodProperty  : public Component,
