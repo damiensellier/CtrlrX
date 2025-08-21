@@ -270,33 +270,41 @@ class CtrlrFontPropertyComponent  : public Component,
 {
 	public:
 		CtrlrFontPropertyComponent (const Value &_valueToControl, CtrlrPanel *_owner);
-		~CtrlrFontPropertyComponent();
-		void refresh();
-		Font getFont();
-		void resized();
-		void comboBoxChanged (ComboBox* comboBoxThatHasChanged);
-		void buttonClicked (Button* buttonThatWasClicked);
-		void sliderValueChanged (Slider* sliderThatWasMoved);
-		Label* createSliderTextBox (Slider& slider);
+		~CtrlrFontPropertyComponent() override; // Mark destructor with override
+    void refresh() override; // Mark as override if it overrides a base class method
+    Font getFont();
+    void resized() override; // Mark as override
 
-		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrFontPropertyComponent);
+    // These are listener methods and should be marked override
+    void comboBoxChanged (ComboBox* comboBoxThatHasChanged) override;
+    void buttonClicked (Button* buttonThatWasClicked) override;
+    void sliderValueChanged (Slider* sliderThatWasMoved) override;
 
-		class SliderLabelComp : public Label
-		{
-			public:
-				SliderLabelComp() : Label ("", "") {}
-				void mouseWheelMove (const MouseEvent&, const MouseWheelDetails&) {}
-		};
+    // This function seems to be part of an old LookAndFeel, so it's best to remove it if you're not using it.
+    // Label* createSliderTextBox (Slider& slider);
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrFontPropertyComponent);
+
+    class SliderLabelComp : public Label
+    {
+    public:
+        SliderLabelComp() : Label ("", "") {}
+        void mouseWheelMove (const MouseEvent&, const MouseWheelDetails&) override {} // Mark as override
+    };
 
 	private:
 		Value valueToControl;
 		StringArray choices;
 		CtrlrPanel *owner;
-		ComboBox* typeface;
+	
+		// Pointers for components whose memory will be managed by the parent
+    ComboBox* typeface;
+    ComboBox* fontSizeComboBox; // Replaces the fontSize Slider
 		DrawableButton* fontBold;
 		DrawableButton* fontItalic;
 		DrawableButton* fontUnderline;
-		Slider* fontSize,*horizontalScale,*kerning;
+    Slider* horizontalScale;
+    Slider* kerning;
 	
 		Label* fontSizeLabel; // Added v5.6.34. Thanks to @dnaldoog
 		Label* horizontalScaleLabel; // Added v5.6.34. Thanks to @dnaldoog

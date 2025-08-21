@@ -866,7 +866,7 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
       fontBold (0),
       fontItalic (0),
       fontUnderline (0),
-      fontSize (0),
+      fontSizeComboBox (0),
 	  kerning(0),
 	  horizontalScale(0)
 {
@@ -895,6 +895,17 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
 	fontSizeLabel->setJustificationType(Justification::centred);
 	fontSizeLabel->setColour(Label::textColourId, findColour(Label::textColourId));
 
+	 // Create and add the new ComboBox for font size
+    addAndMakeVisible(fontSizeComboBox = new ComboBox(""));
+    fontSizeComboBox->setEditableText(true); // Allow custom values
+    fontSizeComboBox->addListener(this);
+
+    const int sizes[] = {6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 32, 36, 40, 44, 48, 54, 60, 66, 72, 80, 88, 96};
+    for (int size : sizes)
+    {
+        fontSizeComboBox->addItem(String(size), size);
+    }
+	
 	addAndMakeVisible(horizontalScaleLabel = new Label("", "Scale"));
 	horizontalScaleLabel->setFont(Font(10.0f, Font::plain));
 	horizontalScaleLabel->setJustificationType(Justification::centred);
@@ -904,16 +915,6 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
 	kerningLabel->setFont(Font(10.0f, Font::plain));
 	kerningLabel->setJustificationType(Justification::centred);
 	kerningLabel->setColour(Label::textColourId, findColour(Label::textColourId));
-
-    addAndMakeVisible (fontSize = new Slider (""));
-	//fontSize->setLookAndFeel (this);
-	fontSize->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
-	fontSize->setTooltip (L"Size");
-    fontSize->setRange (1, 999, 0.5f);
-    fontSize->setSliderStyle (Slider::IncDecButtons);
-	fontSize->setTextBoxStyle(Slider::TextBoxLeft, false, 34, 16);
-	fontSize->setMouseDragSensitivity(500);
-    fontSize->addListener (this);
 
 	addAndMakeVisible (horizontalScale = new Slider (""));
 	//horizontalScale->setLookAndFeel (this);
@@ -954,16 +955,20 @@ CtrlrFontPropertyComponent::~CtrlrFontPropertyComponent()
     fontBold->removeListener (this);
     fontItalic->removeListener (this);
     fontUnderline->removeListener (this);
-    fontSize->removeListener (this);
     kerning->removeListener (this);
     horizontalScale->removeListener (this);
+    
+    // Remove listener for the new ComboBox
+    if (fontSizeComboBox) {
+        fontSizeComboBox->removeListener(this);
+    }
 
     // Then delete the components
     deleteAndZero (typeface);
     deleteAndZero (fontBold);
     deleteAndZero (fontItalic);
     deleteAndZero (fontUnderline);
-    deleteAndZero (fontSize);
+    deleteAndZero (fontSizeComboBox); // Delete the new combo box
     deleteAndZero (kerning);
     deleteAndZero (horizontalScale);
 
@@ -972,48 +977,36 @@ CtrlrFontPropertyComponent::~CtrlrFontPropertyComponent()
     deleteAndZero(horizontalScaleLabel);
     deleteAndZero(kerningLabel);
 }
+
 void CtrlrFontPropertyComponent::resized()
 {
-    typeface->setBounds (0, 0, getWidth() * 0.4f, getHeight());
+    // Re-using the logic from your provided code
+    const int labelHeight = 12;
+    const int sliderHeight = getHeight() - labelHeight;
 
-	fontBold->setBounds (getWidth() * 0.4f,									0, getWidth() * 0.05f,	getHeight());
-    fontItalic->setBounds ((getWidth() * 0.4f) + (getWidth() * 0.05f),		0, getWidth() * 0.05f,	getHeight());
-	fontUnderline->setBounds ((getWidth() * 0.4f) + 2*(getWidth() * 0.05f), 0, getWidth() * 0.05f,	getHeight());
+    typeface->setBounds(0, labelHeight, getWidth() * 0.4f, sliderHeight);
 
-    // fontSize->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f),							0, getWidth() * 0.14f,	getHeight());
-	// horizontalScale->setBounds	((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + (getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
-	// kerning->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + 2*(getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
-	
-	
-	// Updated v5.5.34. Thanks to @dnaldoog . Replace knobs by dec/inc buttons
-	const int labelHeight = 12;
-	const int sliderHeight = getHeight() - labelHeight;
+    fontBold->setBounds(getWidth() * 0.4f, labelHeight, getWidth() * 0.05f, sliderHeight);
+    fontItalic->setBounds((getWidth() * 0.4f) + (getWidth() * 0.05f), labelHeight, getWidth() * 0.05f, sliderHeight);
+    fontUnderline->setBounds((getWidth() * 0.4f) + 2 * (getWidth() * 0.05f), labelHeight, getWidth() * 0.05f, sliderHeight);
 
-	typeface->setBounds(0, labelHeight, getWidth() * 0.4f, sliderHeight);
+    int startX = (getWidth() * 0.4f) + 3 * (getWidth() * 0.05f);
 
-	fontBold->setBounds(getWidth() * 0.4f, labelHeight, getWidth() * 0.05f, sliderHeight);
-	fontItalic->setBounds((getWidth() * 0.4f) + (getWidth() * 0.05f), labelHeight, getWidth() * 0.05f, sliderHeight);
-	fontUnderline->setBounds((getWidth() * 0.4f) + 2 * (getWidth() * 0.05f), labelHeight, getWidth() * 0.05f, sliderHeight);
+    // Font Size ComboBox
+    fontSizeLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
+    fontSizeComboBox->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
 
-	int startX = (getWidth() * 0.4f) + 3 * (getWidth() * 0.05f);
+    startX += getWidth() * 0.14f;
 
-	// Font Size
-	fontSizeLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
-	fontSize->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
+    // Horizontal Scale
+    horizontalScaleLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
+    horizontalScale->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
 
-	startX += getWidth() * 0.14f;
+    startX += getWidth() * 0.14f;
 
-	// Horizontal Scale
-	horizontalScaleLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
-	horizontalScale->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
-
-	startX += getWidth() * 0.14f;
-
-	// Kerning
-	kerningLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
-	kerning->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
-	
-	// END Addon by @dnaldoog
+    // Kerning
+    kerningLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
+    kerning->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
 }
 
 void CtrlrFontPropertyComponent::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
@@ -1038,7 +1031,7 @@ void CtrlrFontPropertyComponent::refresh()
 {
 	Font font = owner->getCtrlrManagerOwner().getFontManager().getFontFromString(valueToControl.toString());
 	typeface->setText (font.getTypefaceName(), sendNotification);
-	fontSize->setValue (font.getHeight(), dontSendNotification);
+	//fontSize->setValue (font.getHeight(), dontSendNotification);
 	kerning->setValue(font.getExtraKerningFactor(), dontSendNotification);
 	horizontalScale->setValue(font.getHorizontalScale(), dontSendNotification);
 	fontBold->setToggleState (font.isBold(), sendNotification);
@@ -1048,48 +1041,60 @@ void CtrlrFontPropertyComponent::refresh()
 
 Font CtrlrFontPropertyComponent::getFont()
 {
-	Font font;
+    Font font;
 
-	if (typeface)
-		font.setTypefaceName (typeface->getText());
-	else
-		return (font);
+    if (typeface)
+        font.setTypefaceName (typeface->getText());
+    else
+        return (font);
 
-	font.setHeight (fontSize->getValue());
-	font.setBold (fontBold->getToggleState());
-	font.setItalic (fontItalic->getToggleState());
-	font.setUnderline (fontUnderline->getToggleState());
-	font.setExtraKerningFactor (kerning->getValue());
-	font.setHorizontalScale (horizontalScale->getValue());
-	return (font);
+    // Get the font size from the new ComboBox
+    float newFontSize = 10.0f; // A default value in case of invalid input
+    if (fontSizeComboBox)
+    {
+        // Get the text from the editable ComboBox and convert it to a float.
+        newFontSize = (float) fontSizeComboBox->getText().getFloatValue();
+        // If the conversion fails (e.g., text is not a number), use a default.
+        if (newFontSize <= 0.0f)
+            newFontSize = 10.0f;
+    }
+    font.setHeight (newFontSize);
+    
+    font.setBold (fontBold->getToggleState());
+    font.setItalic (fontItalic->getToggleState());
+    font.setUnderline (fontUnderline->getToggleState());
+    font.setExtraKerningFactor (kerning->getValue());
+    font.setHorizontalScale (horizontalScale->getValue());
+    
+    return font;
 }
 
-Label* CtrlrFontPropertyComponent::createSliderTextBox (Slider& slider)
-{
-    Label* const l = new CtrlrFontPropertyComponent::SliderLabelComp();
-
-	l->setFont (Font(10.0f,Font::bold));
-    l->setJustificationType (Justification::centred);
-
-    l->setColour (Label::textColourId, slider.findColour (Slider::textBoxTextColourId));
-
-    l->setColour (Label::backgroundColourId,
-                  (slider.getSliderStyle() == Slider::LinearBar || slider.getSliderStyle() == Slider::LinearBarVertical)
-                            ? slider.findColour (Slider::textBoxBackgroundColourId) // Colours::transparentBlack
-                            : slider.findColour (Slider::textBoxBackgroundColourId));
-    l->setColour (Label::outlineColourId, slider.findColour (Slider::textBoxOutlineColourId));
-
-    l->setColour (TextEditor::textColourId, slider.findColour (Slider::textBoxTextColourId));
-
-    l->setColour (TextEditor::backgroundColourId,
-                  slider.findColour (Slider::textBoxBackgroundColourId)
-                        .withAlpha ((slider.getSliderStyle() == Slider::LinearBar || slider.getSliderStyle() == Slider::LinearBarVertical)
-                                        ? 0.7f : 1.0f));
-
-    l->setColour (TextEditor::outlineColourId, slider.findColour (Slider::textBoxOutlineColourId));
-
-    return l;
-}
+//Label* CtrlrFontPropertyComponent::createSliderTextBox (Slider& slider)
+//{
+//    Label* const l = new CtrlrFontPropertyComponent::SliderLabelComp();
+//
+//	l->setFont (Font(10.0f,Font::bold));
+//    l->setJustificationType (Justification::centred);
+//
+//    l->setColour (Label::textColourId, slider.findColour (Slider::textBoxTextColourId));
+//
+//    l->setColour (Label::backgroundColourId,
+//                  (slider.getSliderStyle() == Slider::LinearBar || slider.getSliderStyle() == Slider::LinearBarVertical)
+//                            ? slider.findColour (Slider::textBoxBackgroundColourId) // Colours::transparentBlack
+//                            : slider.findColour (Slider::textBoxBackgroundColourId));
+//    l->setColour (Label::outlineColourId, slider.findColour (Slider::textBoxOutlineColourId));
+//
+//    l->setColour (TextEditor::textColourId, slider.findColour (Slider::textBoxTextColourId));
+//
+//    l->setColour (TextEditor::backgroundColourId,
+//                  slider.findColour (Slider::textBoxBackgroundColourId)
+//                        .withAlpha ((slider.getSliderStyle() == Slider::LinearBar || slider.getSliderStyle() == Slider::LinearBarVertical)
+//                                        ? 0.7f : 1.0f));
+//
+//    l->setColour (TextEditor::outlineColourId, slider.findColour (Slider::textBoxOutlineColourId));
+//
+//    return l;
+//}
 
 CtrlrLuaMethodProperty::CtrlrLuaMethodProperty (const Value &_valeToControl, const Identifier &_id, CtrlrPanel *_owner)
     : valeToControl(_valeToControl), owner(_owner), id(_id),
