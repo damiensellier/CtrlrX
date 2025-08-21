@@ -250,5 +250,7 @@ void CtrlrLuaUtils::wrapForLua (lua_State *L)
 			.def("getVersionRevision", &CtrlrLuaUtils::getVersionRevision)
 			.def("getVersionString", &CtrlrLuaUtils::getVersionString)
 			.def("getPi", &CtrlrLuaUtils::getPi)
+			.def("get16bitSigned", &CtrlrLuaUtils::get16bitSigned)
+			.def("get8bitSigned", &CtrlrLuaUtils::get8bitSigned)
 	];
 }

@@ -132,6 +132,18 @@ class CtrlrLuaUtils
         static int getVersionMinor() { return (_STR(ctrlrRevision).fromFirstOccurrenceOf(".", false, true).getIntValue()); }
         static int getVersionRevision() { return (_STR(ctrlrRevision).fromLastOccurrenceOf(".", false, true).getIntValue()); }
         static double getPi() { return (double_Pi); }
+		static int16_t get16bitSigned(uint16_t val) {
+			if (val > 32767) {
+				return val - 65536;
+			}
+			return val;
+		}
+		static int8_t get8bitSigned(uint8_t val) {
+			if (val > 127) {
+				return val - 256;
+			}
+			return val;
+		}
         static String getVersionString() { return (_STR(ctrlrRevision)); }
 		static StringArray getMidiInputDevices();
 		static StringArray getMidiOutputDevices();

@@ -103,8 +103,7 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
         visibleText = identifierDefinition.getProperty ("text").toString();
 	}
 	propertyType = CtrlrIDManager::stringToType(identifierDefinition.getProperty("type"));
-	propertyType = CtrlrIDManager::stringToType(identifierDefinition.getProperty("type"));
-	_DBG("Property Name: " + propertyName.toString() + " | XML Type: " + identifierDefinition.getProperty("type").toString() + " | Mapped Type: " + String(propertyType));
+	//_DBG("Property Name: " + propertyName.toString() + " | XML Type: " + identifierDefinition.getProperty("type").toString() + " | Mapped Type: " + CtrlrIDManager::typeToString(propertyType));
 	if (propertyName == Ids::componentLayerUid)
 	{
 		possibleChoices = new StringArray();
@@ -138,6 +137,7 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
 	{
 		case CtrlrIDManager::ReadOnly:
 			preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.0);
+			_DBG("Property Name: " + propertyName.toString() + " :value = " + valueToControl.toString());
 			return (new CtrlrReadOnlyProperty(propertyName, propertyElement, identifierDefinition, panel));
 		case CtrlrIDManager::Text:
             // preferredHeight = 36;
@@ -525,7 +525,7 @@ CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener* defaultLi
 			/* Tried various ways of scaling like AffineTransform etc but only ImageOnButtonBackground seems to work*/
 			colourPickerButton->setImages(eyedropperDrawable);
 			addAndMakeVisible(colourPickerButton);
-			colourPickerButton->setTooltip("Choose custom colour");
+			//colourPickerButton->setTooltip("Choose custom colour");
 			colourPickerButton->addListener(this);
 		}
 	}
@@ -536,7 +536,7 @@ CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener* defaultLi
 		colourPickerButton = new DrawableButton("colourPicker", DrawableButton::ImageOnButtonBackground);
 		addAndMakeVisible(colourPickerButton);
 		colourPickerButton->setButtonText("...");
-		colourPickerButton->setTooltip("Open colour picker");
+		//colourPickerButton->setTooltip("Open colour picker");
 		colourPickerButton->addListener(this);
 	}
 
@@ -689,51 +689,11 @@ CtrlrReadOnlyProperty::~CtrlrReadOnlyProperty()
 
 void CtrlrReadOnlyProperty::refresh()
 {
-	//String displayValue = propertyElement.getPropertyAsValue(propertyName, 0).toString();
+	// Get the value from the property element and convert it to a string.
+	String displayValue = propertyElement.getPropertyAsValue(propertyName, 0).toString();
 
-	//// Special handling for componentLayerUid - convert hex UID to readable layer name
-	//if (propertyName == Ids::componentLayerUid && panel)
-	//{
-	//	String layerUid = displayValue;
-	//	if (!layerUid.isEmpty())
-	//	{
-	//		CtrlrPanelCanvas* canvas = panel->getCanvas();
-	//		if (canvas)
-	//		{
-	//			// Try to find the layer by its UID and get its name
-	//			// Use the existing getLayer method from CtrlrPanelCanvas
-	//			for (int i = 0; i < canvas->getNumLayers(); i++)
-	//			{
-	//				CtrlrPanelCanvasLayer* layer = canvas->getLayerFromArray(i);
-	//				if (layer && layer->getProperty(Ids::uiPanelCanvasLayerUid).toString() == layerUid)
-	//				{
-	//					String layerName = layer->getProperty(Ids::uiPanelCanvasLayerName).toString();
-	//					if (!layerName.isEmpty())
-	//					{
-	//						displayValue = layerName; // +" (" + layerUid.substring(0, 8) + "...)";
-	//					}
-	//					else
-	//					{
-	//						// Fallback: show "Layer N" if no name is set
-	//						int layerIndex = (int)layer->getProperty(Ids::uiPanelCanvasLayerIndex);
-	//						displayValue = "Layer " + String(layerIndex) + " (" + layerUid.substring(0, 8) + "...)";
-	//					}
-	//					break;
-	//				}
-	//			}
-
-	//			// If we didn't find the layer, show truncated UID
-	//			if (displayValue == layerUid)
-	//			{
-	//				displayValue = "Unknown Layer (" + layerUid.substring(0, 8) + "...)";
-	//			}
-	//		}
-	//	}
-	//	value.setTooltip("Component Layer ID: "+layerUid);
-	//}
-
-	//value.setText(displayValue, dontSendNotification);
-
+	// Set the text of the 'value' Label.
+	value.setText(displayValue, dontSendNotification);
 }
 
 void CtrlrReadOnlyProperty::resized()
@@ -909,15 +869,15 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
     typeface->addListener (this);
 
     addAndMakeVisible (fontBold = gui::createDrawableButton("Bold", BIN2STR(bold_svg)));
-    fontBold->setTooltip (L"Bold");
+  //  fontBold->setTooltip (L"Bold");
     fontBold->addListener (this);
 
     addAndMakeVisible (fontItalic = gui::createDrawableButton("Italic", BIN2STR(italic_svg)));
-    fontItalic->setTooltip (L"Italic");
+  //  fontItalic->setTooltip (L"Italic");
     fontItalic->addListener (this);
 
     addAndMakeVisible (fontUnderline = gui::createDrawableButton("Underline", BIN2STR(underline_svg)));
-    fontUnderline->setTooltip (L"Underline");
+ //   fontUnderline->setTooltip (L"Underline");
     fontUnderline->addListener (this);
 
 	// In your constructor, after creating the sliders:
@@ -939,7 +899,7 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
     addAndMakeVisible (fontSize = new Slider (""));
 	//fontSize->setLookAndFeel (this);
 	fontSize->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
-	fontSize->setTooltip (L"Size");
+	//fontSize->setTooltip (L"Size");
     fontSize->setRange (1, 999, 0.5f);
     fontSize->setSliderStyle (Slider::IncDecButtons);
 	fontSize->setTextBoxStyle(Slider::TextBoxLeft, false, 34, 16);
@@ -949,7 +909,7 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
 	addAndMakeVisible (horizontalScale = new Slider (""));
 	//horizontalScale->setLookAndFeel (this);
 	horizontalScale->setColour(Slider::IncDecButtons, Component::findColour(TextEditor::textColourId));
-	horizontalScale->setTooltip (L"Horizontal Scale");
+	//horizontalScale->setTooltip (L"Horizontal Scale");
     horizontalScale->setRange (0.0, 10.0, 0.01);
     horizontalScale->setSliderStyle (Slider::IncDecButtons);
     horizontalScale->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
@@ -959,7 +919,7 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
 	addAndMakeVisible (kerning = new Slider (""));
     //kerning->setLookAndFeel (this);
 	kerning->setColour(Slider::IncDecButtons, Component::findColour(TextEditor::textColourId));
-	kerning->setTooltip (L"Extra Kerning");
+	//kerning->setTooltip (L"Extra Kerning");
     kerning->setRange (0.0, 10.0, 0.01);
     kerning->setSliderStyle (Slider::IncDecButtons);
     kerning->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
@@ -1557,6 +1517,7 @@ CtrlrSliderPropertyComponent::CtrlrSliderPropertyComponent (const Value &_valueT
     slider.setRange (rangeMin, rangeMax, interval);
     slider.setSliderStyle (Slider::LinearBar);
     slider.getValueObject().referTo (valueToControl);
+
 }
 
 CtrlrSliderPropertyComponent::~CtrlrSliderPropertyComponent()
@@ -1595,6 +1556,7 @@ CtrlrSysExEditor::CtrlrSysExEditor (Value &_val, CtrlrPanel *_owner)
       label (0),
       owner(_owner)
 {
+
     addAndMakeVisible (messageLength = new Slider (L"messageLength"));
     messageLength->setRange (0, 512, 1);
     messageLength->setSliderStyle (Slider::IncDecButtons);
