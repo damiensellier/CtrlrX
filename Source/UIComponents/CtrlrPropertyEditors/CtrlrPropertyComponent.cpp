@@ -906,6 +906,8 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
         fontSizeComboBox->addItem(String(size), size);
     }
 	
+	fontSizeComboBox->setSelectedId(12); // Default font value
+	
 	addAndMakeVisible(horizontalScaleLabel = new Label("", "Scale"));
 	horizontalScaleLabel->setFont(Font(10.0f, Font::plain));
 	horizontalScaleLabel->setJustificationType(Justification::centred);
