@@ -379,7 +379,7 @@ Tuturial coming soon.
 * **UPDATED** CtrlrLuaMethodCodeEditorSettings GUI with a better sample code preview. `CtrlrLuaMethodCodeEditorSettings.cpp`
 * **UPDATED** CtrlrPropertyComponent Separated colourChooser from colour field. `CtrlrPropertyComponent.cpp` &`.h`, `CtrlrIDs.xml`
 * **UPDATED** CtrlrPropertyComponent Layer selection via comboBox. `CtrlrPropertyComponent.cpp` &`.h`, `CtrlrIDs.xml`
-* **UPDATED** CtrlrPropertyComponent Font size slider replaced by dec/inc buttons for convenience. `CtrlrPropertyComponent.cpp` &`.h`
+* **UPDATED** CtrlrPropertyComponent Font size slider replaced by drop-down selector for convenience. `CtrlrPropertyComponent.cpp` &`.h`
 
 #### Version 5.6.33 | 2025.05.28
 
