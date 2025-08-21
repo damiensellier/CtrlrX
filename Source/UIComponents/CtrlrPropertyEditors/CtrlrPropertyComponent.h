@@ -261,6 +261,7 @@ class CtrlrFontPropertyComponent  : public Component,
 									public ComboBox::Listener,
 									public Button::Listener,
 									public Slider::Listener,
+									public Label::Listener,
 									public CtrlrPropertyChild
 									//public LookAndFeel_V2
 {
@@ -274,6 +275,8 @@ class CtrlrFontPropertyComponent  : public Component,
 		void buttonClicked (Button* buttonThatWasClicked);
 		void sliderValueChanged (Slider* sliderThatWasMoved);
 		Label* createSliderTextBox (Slider& slider);
+		void createCustomControls();
+		void labelTextChanged(Label* labelThatHasChanged);
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrFontPropertyComponent);
 
@@ -292,10 +295,26 @@ class CtrlrFontPropertyComponent  : public Component,
 		DrawableButton* fontBold;
 		DrawableButton* fontItalic;
 		DrawableButton* fontUnderline;
-		Slider* fontSize,*horizontalScale,*kerning;
+		// Font Size controls
 		Label* fontSizeLabel;
+		Label* fontSizeValue;
+		TextButton* fontSizeUp;
+		TextButton* fontSizeDown;
+		float currentFontSize;
+
+		// Horizontal Scale controls  
 		Label* horizontalScaleLabel;
+		Label* horizontalScaleValue;
+		TextButton* horizontalScaleUp;
+		TextButton* horizontalScaleDown;
+		float currentHorizontalScale;
+
+		// Kerning controls
 		Label* kerningLabel;
+		Label* kerningValue;
+		TextButton* kerningUp;
+		TextButton* kerningDown;
+		float currentKerning;
 };
 
 class CtrlrLuaMethodProperty  : public Component,

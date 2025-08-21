@@ -888,14 +888,17 @@ void CtrlrFileProperty::labelTextChanged (Label* labelThatHasChanged)
 
 CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToControl, CtrlrPanel *_owner)
     : valueToControl(_valueToControl), owner(_owner),
-      typeface (0),
-      fontBold (0),
-      fontItalic (0),
-      fontUnderline (0),
-      fontSize (0),
-	  kerning(0),
-	  horizontalScale(0)
+	typeface(0),
+	fontBold(0),
+	fontItalic(0),
+	fontUnderline(0),
+	fontSizeLabel(0),
+	fontSizeValue(0),
+	fontSizeUp(0),
+	fontSizeDown(0)
+
 {
+	createCustomControls();
 
     addAndMakeVisible (typeface = new ComboBox (""));
     typeface->setEditableText (false);
@@ -917,50 +920,50 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
     fontUnderline->addListener (this);
 
 	// In your constructor, after creating the sliders:
-	addAndMakeVisible(fontSizeLabel = new Label("", "Size"));
-	fontSizeLabel->setFont(Font(10.0f, Font::plain));
-	fontSizeLabel->setJustificationType(Justification::centred);
-	fontSizeLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+	//addAndMakeVisible(fontSizeLabel = new Label("", "Size"));
+	//fontSizeLabel->setFont(Font(10.0f, Font::plain));
+	//fontSizeLabel->setJustificationType(Justification::centred);
+	//fontSizeLabel->setColour(Label::textColourId, findColour(Label::textColourId));
 
-	addAndMakeVisible(horizontalScaleLabel = new Label("", "Scale"));
-	horizontalScaleLabel->setFont(Font(10.0f, Font::plain));
-	horizontalScaleLabel->setJustificationType(Justification::centred);
-	horizontalScaleLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+	//addAndMakeVisible(horizontalScaleLabel = new Label("", "Scale"));
+	//horizontalScaleLabel->setFont(Font(10.0f, Font::plain));
+	//horizontalScaleLabel->setJustificationType(Justification::centred);
+	//horizontalScaleLabel->setColour(Label::textColourId, findColour(Label::textColourId));
 
-	addAndMakeVisible(kerningLabel = new Label("", "Kerning"));
-	kerningLabel->setFont(Font(10.0f, Font::plain));
-	kerningLabel->setJustificationType(Justification::centred);
-	kerningLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+	//addAndMakeVisible(kerningLabel = new Label("", "Kerning"));
+	//kerningLabel->setFont(Font(10.0f, Font::plain));
+	//kerningLabel->setJustificationType(Justification::centred);
+	//kerningLabel->setColour(Label::textColourId, findColour(Label::textColourId));
 
-    addAndMakeVisible (fontSize = new Slider (""));
-	//fontSize->setLookAndFeel (this);
-	fontSize->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
-	fontSize->setTooltip (L"Size");
-    fontSize->setRange (1, 999, 0.5f);
-    fontSize->setSliderStyle (Slider::IncDecButtons);
-	fontSize->setTextBoxStyle(Slider::TextBoxLeft, false, 34, 16);
-	fontSize->setMouseDragSensitivity(500);
-    fontSize->addListener (this);
+ //   addAndMakeVisible (fontSize = new Slider (""));
+	////fontSize->setLookAndFeel (this);
+	//fontSize->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
+	//fontSize->setTooltip (L"Size");
+ //   fontSize->setRange (1, 999, 0.5f);
+ //   fontSize->setSliderStyle (Slider::IncDecButtons);
+	//fontSize->setTextBoxStyle(Slider::TextBoxLeft, false, 34, 16);
+	//fontSize->setMouseDragSensitivity(500);
+ //   fontSize->addListener (this);
 
-	addAndMakeVisible (horizontalScale = new Slider (""));
-	//horizontalScale->setLookAndFeel (this);
-	horizontalScale->setColour(Slider::IncDecButtons, Component::findColour(TextEditor::textColourId));
-	horizontalScale->setTooltip (L"Horizontal Scale");
-    horizontalScale->setRange (0.0, 10.0, 0.01);
-    horizontalScale->setSliderStyle (Slider::IncDecButtons);
-    horizontalScale->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
-	horizontalScale->setMouseDragSensitivity(500);
-    horizontalScale->addListener (this);
+	//addAndMakeVisible (horizontalScale = new Slider (""));
+	////horizontalScale->setLookAndFeel (this);
+	//horizontalScale->setColour(Slider::IncDecButtons, Component::findColour(TextEditor::textColourId));
+	//horizontalScale->setTooltip (L"Horizontal Scale");
+ //   horizontalScale->setRange (0.0, 10.0, 0.01);
+ //   horizontalScale->setSliderStyle (Slider::IncDecButtons);
+ //   horizontalScale->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
+	//horizontalScale->setMouseDragSensitivity(500);
+ //   horizontalScale->addListener (this);
 
-	addAndMakeVisible (kerning = new Slider (""));
-    //kerning->setLookAndFeel (this);
-	kerning->setColour(Slider::IncDecButtons, Component::findColour(TextEditor::textColourId));
-	kerning->setTooltip (L"Extra Kerning");
-    kerning->setRange (0.0, 10.0, 0.01);
-    kerning->setSliderStyle (Slider::IncDecButtons);
-    kerning->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
-	kerning->setMouseDragSensitivity(500);
-    kerning->addListener (this);
+	//addAndMakeVisible (kerning = new Slider (""));
+ //   //kerning->setLookAndFeel (this);
+	//kerning->setColour(Slider::IncDecButtons, Component::findColour(TextEditor::textColourId));
+	//kerning->setTooltip (L"Extra Kerning");
+ //   kerning->setRange (0.0, 10.0, 0.01);
+ //   kerning->setSliderStyle (Slider::IncDecButtons);
+ //   kerning->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
+	//kerning->setMouseDragSensitivity(500);
+ //   kerning->addListener (this);
 
 	fontBold->setClickingTogglesState (true);
 	fontBold->setMouseCursor (MouseCursor::PointingHandCursor);
@@ -980,65 +983,189 @@ CtrlrFontPropertyComponent::~CtrlrFontPropertyComponent()
     deleteAndZero (fontBold);
     deleteAndZero (fontItalic);
     deleteAndZero (fontUnderline);
-    deleteAndZero (fontSize);
-	deleteAndZero (kerning);
-	deleteAndZero (horizontalScale);
 	deleteAndZero(fontSizeLabel);
+
+	// Horizontal Scale controls  
 	deleteAndZero(horizontalScaleLabel);
+	deleteAndZero(horizontalScaleValue);
+	deleteAndZero(horizontalScaleUp);
+	deleteAndZero(horizontalScaleDown);
+
+	// Kerning controls
 	deleteAndZero(kerningLabel);
+	deleteAndZero(kerningValue);
+	deleteAndZero(kerningUp);
+	deleteAndZero(kerningDown);
+
+}
+
+void CtrlrFontPropertyComponent::createCustomControls()
+{
+	// Initialize values
+	currentFontSize = 12.0f;
+	currentHorizontalScale = 1.0f;
+	currentKerning = 0.0f;
+
+	// Font Size controls
+	addAndMakeVisible(fontSizeLabel = new Label("", "Size"));
+	fontSizeLabel->setFont(Font(10.0f, Font::plain));
+	fontSizeLabel->setJustificationType(Justification::centred);
+	fontSizeLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
+	addAndMakeVisible(fontSizeValue = new Label("", "12"));
+	fontSizeValue->setFont(Font(10.0f, Font::bold));
+	fontSizeValue->setJustificationType(Justification::centred);
+	fontSizeValue->setColour(Label::backgroundColourId, findColour(TextEditor::backgroundColourId));
+	fontSizeValue->setColour(Label::outlineColourId, findColour(TextEditor::outlineColourId));
+	fontSizeValue->setEditable(true, true, false);
+	fontSizeValue->addListener(this);
+
+	addAndMakeVisible(fontSizeUp = new TextButton("+"));
+	fontSizeUp->addListener(this);
+	fontSizeUp->setConnectedEdges(Button::ConnectedOnBottom);
+
+	addAndMakeVisible(fontSizeDown = new TextButton("-"));
+	fontSizeDown->addListener(this);
+	fontSizeDown->setConnectedEdges(Button::ConnectedOnTop);
+
+	// Horizontal Scale controls
+	addAndMakeVisible(horizontalScaleLabel = new Label("", "Scale"));
+	horizontalScaleLabel->setFont(Font(10.0f, Font::plain));
+	horizontalScaleLabel->setJustificationType(Justification::centred);
+	horizontalScaleLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
+	addAndMakeVisible(horizontalScaleValue = new Label("", "1.00"));
+	horizontalScaleValue->setFont(Font(10.0f, Font::bold));
+	horizontalScaleValue->setJustificationType(Justification::centred);
+	horizontalScaleValue->setColour(Label::backgroundColourId, findColour(TextEditor::backgroundColourId));
+	horizontalScaleValue->setColour(Label::outlineColourId, findColour(TextEditor::outlineColourId));
+	horizontalScaleValue->setEditable(true, true, false);
+	horizontalScaleValue->addListener(this);
+
+	addAndMakeVisible(horizontalScaleUp = new TextButton("+"));
+	horizontalScaleUp->addListener(this);
+	horizontalScaleUp->setConnectedEdges(Button::ConnectedOnBottom);
+
+	addAndMakeVisible(horizontalScaleDown = new TextButton("-"));
+	horizontalScaleDown->addListener(this);
+	horizontalScaleDown->setConnectedEdges(Button::ConnectedOnTop);
+
+	// Kerning controls
+	addAndMakeVisible(kerningLabel = new Label("", "Kerning"));
+	kerningLabel->setFont(Font(10.0f, Font::plain));
+	kerningLabel->setJustificationType(Justification::centred);
+	kerningLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
+	addAndMakeVisible(kerningValue = new Label("", "0.00"));
+	kerningValue->setFont(Font(10.0f, Font::bold));
+	kerningValue->setJustificationType(Justification::centred);
+	kerningValue->setColour(Label::backgroundColourId, findColour(TextEditor::backgroundColourId));
+	kerningValue->setColour(Label::outlineColourId, findColour(TextEditor::outlineColourId));
+	kerningValue->setEditable(true, true, false);
+	kerningValue->addListener(this);
+
+	addAndMakeVisible(kerningUp = new TextButton("+"));
+	kerningUp->addListener(this);
+	kerningUp->setConnectedEdges(Button::ConnectedOnBottom);
+
+	addAndMakeVisible(kerningDown = new TextButton("-"));
+	kerningDown->addListener(this);
+	kerningDown->setConnectedEdges(Button::ConnectedOnTop);
 }
 
 void CtrlrFontPropertyComponent::resized()
 {
-    typeface->setBounds (0, 0, getWidth() * 0.4f, getHeight());
+	// Use more reasonable minimum sizes
+	const int labelHeight = 16;        // Increased from 12
+	const int buttonHeight = 20;       // Increased from 12  
+	const int buttonWidth = 28;        // Increased from 20
+	const int minControlHeight = 20;   // Minimum height for usability
 
-	fontBold->setBounds (getWidth() * 0.4f,									0, getWidth() * 0.05f,	getHeight());
-    fontItalic->setBounds ((getWidth() * 0.4f) + (getWidth() * 0.05f),		0, getWidth() * 0.05f,	getHeight());
-	fontUnderline->setBounds ((getWidth() * 0.4f) + 2*(getWidth() * 0.05f), 0, getWidth() * 0.05f,	getHeight());
+	// Calculate available space more safely
+	const int availableHeight = getHeight() - labelHeight;
+	const int controlHeight = jmax(minControlHeight, availableHeight - 2); // 2px padding
 
- //   fontSize->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f),							0, getWidth() * 0.14f,	getHeight());
-	//horizontalScale->setBounds	((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + (getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
-	//kerning->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + 2*(getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
+	// Ensure minimum component dimensions
+	const int minComponentHeight = 48; // Minimum total height
+	//if (getHeight() < minComponentHeight)
+	//{
+		// If component is too small, adjust proportionally
+		const float scale = (float)getHeight() / (float)minComponentHeight;
+		const int scaledLabelHeight = (int)(labelHeight * scale);
+		const int scaledControlHeight = getHeight() - scaledLabelHeight;
+		const int scaledButtonHeight = jmax(12, (int)(buttonHeight * scale));
+		const int scaledButtonWidth = jmax(20, (int)(buttonWidth * scale));
 
-	const int labelHeight = 12;
-	const int sliderHeight = getHeight() - labelHeight;
+		// Layout with scaled dimensions
+		typeface->setBounds(0, scaledLabelHeight, getWidth() * 0.35f, scaledControlHeight);
 
-	typeface->setBounds(0, labelHeight, getWidth() * 0.4f, sliderHeight);
+		// Make toggle buttons wider and properly sized
+		fontBold->setBounds(getWidth() * 0.35f, scaledLabelHeight, getWidth() * 0.05f, scaledControlHeight);
+		fontItalic->setBounds(getWidth() * 0.40f, scaledLabelHeight, getWidth() * 0.05f, scaledControlHeight);
+		fontUnderline->setBounds(getWidth() * 0.45f, scaledLabelHeight, getWidth() * 0.05f, scaledControlHeight);
 
-	fontBold->setBounds(getWidth() * 0.4f, labelHeight, getWidth() * 0.05f, sliderHeight);
-	fontItalic->setBounds((getWidth() * 0.4f) + (getWidth() * 0.05f), labelHeight, getWidth() * 0.05f, sliderHeight);
-	fontUnderline->setBounds((getWidth() * 0.4f) + 2 * (getWidth() * 0.05f), labelHeight, getWidth() * 0.05f, sliderHeight);
+		int startX = getWidth() * 0.50f;
+		int controlWidth = getWidth() * 0.165f; // Slightly smaller to fit better
 
-	int startX = (getWidth() * 0.4f) + 3 * (getWidth() * 0.05f);
+		// Font Size controls
+		fontSizeLabel->setBounds(startX, 0, controlWidth, scaledLabelHeight);
+		fontSizeUp->setBounds(startX + controlWidth - scaledButtonWidth, scaledLabelHeight, scaledButtonWidth, scaledButtonHeight);
+		fontSizeValue->setBounds(startX, scaledLabelHeight + scaledButtonHeight, controlWidth - scaledButtonWidth, scaledControlHeight - (2 * scaledButtonHeight));
+		fontSizeDown->setBounds(startX + controlWidth - scaledButtonWidth, scaledControlHeight - scaledButtonHeight, scaledButtonWidth, scaledButtonHeight);
 
-	// Font Size
-	fontSizeLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
-	fontSize->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
+		startX += controlWidth;
 
-	startX += getWidth() * 0.14f;
+		// Horizontal Scale controls
+		horizontalScaleLabel->setBounds(startX, 0, controlWidth, scaledLabelHeight);
+		horizontalScaleUp->setBounds(startX + controlWidth - scaledButtonWidth, scaledLabelHeight, scaledButtonWidth, scaledButtonHeight);
+		horizontalScaleValue->setBounds(startX, scaledLabelHeight + scaledButtonHeight, controlWidth - scaledButtonWidth, scaledControlHeight - (2 * scaledButtonHeight));
+		horizontalScaleDown->setBounds(startX + controlWidth - scaledButtonWidth, scaledControlHeight - scaledButtonHeight, scaledButtonWidth, scaledButtonHeight);
 
-	// Horizontal Scale  
-	horizontalScaleLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
-	horizontalScale->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
+		startX += controlWidth;
 
-	startX += getWidth() * 0.14f;
+		// Kerning controls
+		kerningLabel->setBounds(startX, 0, controlWidth, scaledLabelHeight);
+		kerningUp->setBounds(startX + controlWidth - scaledButtonWidth, scaledLabelHeight, scaledButtonWidth, scaledButtonHeight);
+		kerningValue->setBounds(startX, scaledLabelHeight + scaledButtonHeight, controlWidth - scaledButtonWidth, scaledControlHeight - (2 * scaledButtonHeight));
+		kerningDown->setBounds(startX + controlWidth - scaledButtonWidth, scaledControlHeight - scaledButtonHeight, scaledButtonWidth, scaledButtonHeight);
+	//}
+	//else
+	//{
+	//	// Normal layout for adequately sized components
+	//	typeface->setBounds(0, labelHeight, getWidth() * 0.35f, controlHeight);
 
-	// Kerning
-	kerningLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
-	kerning->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
-}
+	//	// Make toggle buttons wider and properly sized
+	//	fontBold->setBounds(getWidth() * 0.35f, labelHeight, getWidth() * 0.05f, controlHeight);
+	//	fontItalic->setBounds(getWidth() * 0.40f, labelHeight, getWidth() * 0.05f, controlHeight);
+	//	fontUnderline->setBounds(getWidth() * 0.45f, labelHeight, getWidth() * 0.05f, controlHeight);
 
-void CtrlrFontPropertyComponent::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
-{
-	valueToControl = owner->getCtrlrManagerOwner().getFontManager().getStringFromFont(getFont());
-}
+	//	int startX = getWidth() * 0.50f;
+	//	int controlWidth = getWidth() * 0.165f;
 
-void CtrlrFontPropertyComponent::buttonClicked (Button* buttonThatWasClicked)
-{
-    if (buttonThatWasClicked == fontBold || buttonThatWasClicked == fontItalic || buttonThatWasClicked == fontUnderline)
-    {
-		valueToControl = owner->getCtrlrManagerOwner().getFontManager().getStringFromFont(getFont());
-	}
+	//	// Font Size controls
+	//	fontSizeLabel->setBounds(startX, 0, controlWidth, labelHeight);
+	//	fontSizeUp->setBounds(startX + controlWidth - buttonWidth, labelHeight, buttonWidth, buttonHeight);
+	//	fontSizeValue->setBounds(startX, labelHeight + buttonHeight, controlWidth - buttonWidth, controlHeight - (2 * buttonHeight));
+	//	fontSizeDown->setBounds(startX + controlWidth - buttonWidth, controlHeight - buttonHeight + labelHeight, buttonWidth, buttonHeight);
+
+	//	startX += controlWidth;
+
+	//	// Horizontal Scale controls
+	//	horizontalScaleLabel->setBounds(startX, 0, controlWidth, labelHeight);
+	//	horizontalScaleUp->setBounds(startX + controlWidth - buttonWidth, labelHeight, buttonWidth, buttonHeight);
+	//	horizontalScaleValue->setBounds(startX, labelHeight + buttonHeight, controlWidth - buttonWidth, controlHeight - (2 * buttonHeight));
+	//	horizontalScaleDown->setBounds(startX + controlWidth - buttonWidth, controlHeight - buttonHeight + labelHeight, buttonWidth, buttonHeight);
+
+	//	startX += controlWidth;
+
+	//	// Kerning controls
+	//	kerningLabel->setBounds(startX, 0, controlWidth, labelHeight);
+	//	kerningUp->setBounds(startX + controlWidth - buttonWidth, labelHeight, buttonWidth, buttonHeight);
+	//	kerningValue->setBounds(startX, labelHeight + buttonHeight, controlWidth - buttonWidth, controlHeight - (2 * buttonHeight));
+	//	kerningDown->setBounds(startX + controlWidth - buttonWidth, controlHeight - buttonHeight + labelHeight, buttonWidth, buttonHeight);
+	//}
+
+
 }
 
 void CtrlrFontPropertyComponent::sliderValueChanged (Slider* sliderThatWasMoved)
@@ -1049,31 +1176,37 @@ void CtrlrFontPropertyComponent::sliderValueChanged (Slider* sliderThatWasMoved)
 void CtrlrFontPropertyComponent::refresh()
 {
 	Font font = owner->getCtrlrManagerOwner().getFontManager().getFontFromString(valueToControl.toString());
-	typeface->setText (font.getTypefaceName(), sendNotification);
-	fontSize->setValue (font.getHeight(), dontSendNotification);
-	kerning->setValue(font.getExtraKerningFactor(), dontSendNotification);
-	horizontalScale->setValue(font.getHorizontalScale(), dontSendNotification);
-	fontBold->setToggleState (font.isBold(), sendNotification);
-	fontItalic->setToggleState (font.isItalic(), sendNotification);
-	fontUnderline->setToggleState (font.isUnderlined(), sendNotification);
-}
+	typeface->setText(font.getTypefaceName(), sendNotification);
 
+	// Update the new controls with font values
+	currentFontSize = font.getHeight();
+	fontSizeValue->setText(String(currentFontSize, 0), dontSendNotification);
+
+	currentHorizontalScale = font.getHorizontalScale();
+	horizontalScaleValue->setText(String(currentHorizontalScale, 2), dontSendNotification);
+
+	currentKerning = font.getExtraKerningFactor();
+	kerningValue->setText(String(currentKerning, 2), dontSendNotification);
+
+	fontBold->setToggleState(font.isBold(), sendNotification);
+	fontItalic->setToggleState(font.isItalic(), sendNotification);
+	fontUnderline->setToggleState(font.isUnderlined(), sendNotification);
+}
 Font CtrlrFontPropertyComponent::getFont()
 {
 	Font font;
-
 	if (typeface)
-		font.setTypefaceName (typeface->getText());
+		font.setTypefaceName(typeface->getText());
 	else
-		return (font);
+		return font;
 
-	font.setHeight (fontSize->getValue());
-	font.setBold (fontBold->getToggleState());
-	font.setItalic (fontItalic->getToggleState());
-	font.setUnderline (fontUnderline->getToggleState());
-	font.setExtraKerningFactor (kerning->getValue());
-	font.setHorizontalScale (horizontalScale->getValue());
-	return (font);
+	font.setHeight(currentFontSize);
+	font.setBold(fontBold->getToggleState());
+	font.setItalic(fontItalic->getToggleState());
+	font.setUnderline(fontUnderline->getToggleState());
+	font.setExtraKerningFactor(currentKerning);
+	font.setHorizontalScale(currentHorizontalScale);
+	return font;
 }
 
 Label* CtrlrFontPropertyComponent::createSliderTextBox (Slider& slider)
@@ -1102,6 +1235,25 @@ Label* CtrlrFontPropertyComponent::createSliderTextBox (Slider& slider)
 
     return l;
 }
+void CtrlrFontPropertyComponent::labelTextChanged(Label* labelThatHasChanged)
+{
+	if (labelThatHasChanged == fontSizeValue)
+	{
+		currentFontSize = jlimit(1.0f, 999.0f, labelThatHasChanged->getText().getFloatValue());
+		valueToControl = owner->getCtrlrManagerOwner().getFontManager().getStringFromFont(getFont());
+	}
+	else if (labelThatHasChanged == horizontalScaleValue)
+	{
+		currentHorizontalScale = jlimit(0.01f, 10.0f, labelThatHasChanged->getText().getFloatValue());
+		valueToControl = owner->getCtrlrManagerOwner().getFontManager().getStringFromFont(getFont());
+	}
+	else if (labelThatHasChanged == kerningValue)
+	{
+		currentKerning = jlimit(0.0f, 10.0f, labelThatHasChanged->getText().getFloatValue());
+		valueToControl = owner->getCtrlrManagerOwner().getFontManager().getStringFromFont(getFont());
+	}
+}
+
 
 CtrlrLuaMethodProperty::CtrlrLuaMethodProperty (const Value &_valeToControl, const Identifier &_id, CtrlrPanel *_owner)
     : valeToControl(_valeToControl), owner(_owner), id(_id),
