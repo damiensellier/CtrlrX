@@ -137,7 +137,6 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
 	{
 		case CtrlrIDManager::ReadOnly:
 			preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.0);
-			_DBG("Property Name: " + propertyName.toString() + " :value = " + valueToControl.toString());
 			return (new CtrlrReadOnlyProperty(propertyName, propertyElement, identifierDefinition, panel));
 		case CtrlrIDManager::Text:
             // preferredHeight = 36;
@@ -490,6 +489,7 @@ void CtrlrChoicePropertyComponent::changed()
 	}
 
 	//if (owner) this will cause a crash when user changes L&F in Property Editor
+	// Left here as a reminder
 	//{
 	//	sendChangeMessage();
 	//}
