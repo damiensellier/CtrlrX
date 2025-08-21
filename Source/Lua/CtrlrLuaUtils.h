@@ -133,12 +133,14 @@ class CtrlrLuaUtils
         static int getVersionRevision() { return (_STR(ctrlrRevision).fromLastOccurrenceOf(".", false, true).getIntValue()); }
         static double getPi() { return (double_Pi); }
 		static int16_t get16bitSigned(uint16_t val) {
+			// return a signed 16bit integer from an unsigned 16bit integer
 			if (val > 32767) {
 				return val - 65536;
 			}
 			return val;
 		}
 		static int8_t get8bitSigned(uint8_t val) {
+			// return a signed 8bit integer from an unsigned 8bit integer
 			if (val > 127) {
 				return val - 256;
 			}
