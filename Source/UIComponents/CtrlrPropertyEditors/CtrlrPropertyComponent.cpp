@@ -448,6 +448,10 @@ CtrlrChoicePropertyComponent::CtrlrChoicePropertyComponent (const Value &_valueT
 
 CtrlrChoicePropertyComponent::~CtrlrChoicePropertyComponent()
 {
+	if (combo != nullptr)
+	{
+		combo->removeListener(this);
+	}
 }
 
 void CtrlrChoicePropertyComponent::resized()
@@ -2343,6 +2347,7 @@ CtrlrUnknownPropertyComponent::CtrlrUnknownPropertyComponent(const Identifier &_
 
 CtrlrUnknownPropertyComponent::~CtrlrUnknownPropertyComponent()
 {
+
 }
 
 void CtrlrUnknownPropertyComponent::resized()
