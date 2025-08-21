@@ -40,11 +40,6 @@ CtrlrPanelProperties::CtrlrPanelProperties (CtrlrPanelEditor &_owner)
                              new CtrlrPanelUtilities(owner),
                              true
                              );
-	tabbedComponent->addTab ("Layers",
-                             getLookAndFeel().findColour(TabbedComponent::backgroundColourId), // Updated v5.6.31
-                             new CtrlrPanelUtilities(owner),
-                             true
-                             );
 
     tabbedComponent->getTabbedButtonBar().setColour(TabbedButtonBar::frontTextColourId, findColour(Label::textColourId)); // Added v5.6.31
     tabbedComponent->getTabbedButtonBar().setColour(TabbedButtonBar::tabTextColourId, findColour(Label::textColourId).withAlpha(0.6f)); // Added v5.6.31
