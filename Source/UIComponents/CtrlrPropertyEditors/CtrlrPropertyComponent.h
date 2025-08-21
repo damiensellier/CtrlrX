@@ -3,6 +3,12 @@
 
 #include "CtrlrIDManager.h"
 #include "CtrlrPanel/CtrlrPanel.h"
+#include "CtrlrPanel/CtrlrPanelCanvas.h"
+#include "CtrlrPanel/CtrlrPanelCanvasLayer.h"
+#include <juce_graphics/juce_graphics.h>
+#include <juce_gui_basics/juce_gui_basics.h>
+#include "Ctrlrlog.h"
+
 class CtrlrFloatingWindow;
 
 class CtrlrPropertyChild: public ChangeBroadcaster
@@ -143,11 +149,12 @@ class CtrlrColourLabel : public Label
 class CtrlrColourEditorComponent : 	public Component,
 									public ChangeListener,
 									public ChangeBroadcaster,
-									public Label::Listener
+									public Label::Listener,
+									public Button::Listener  // Add this
 {
 	public:
 		CtrlrColourEditorComponent(ChangeListener *defaultListener=0);
-		~CtrlrColourEditorComponent() { }
+		~CtrlrColourEditorComponent();
 		void updateLabel();
 		void labelTextChanged (Label *labelThatHasChanged);
 		void resized();
@@ -155,73 +162,21 @@ class CtrlrColourEditorComponent : 	public Component,
 		void setColour (const Colour& newColour, const bool sendChangeMessageNow=false);
 		const Colour getColour(){ return (colour); }
 		void refresh() { updateLabel(); }
-		void mouseDown (const MouseEvent &e);
+		void buttonClicked(Button* buttonThatWasClicked) override; // Added v5.6.34.
+		// void mouseDown (const MouseEvent &e);
 		void changeListenerCallback (ChangeBroadcaster* source);
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrColourEditorComponent)
 
 	private:
 		CtrlrColourLabel colourTextInput;
+		DrawableButton* colourPickerButton;
+		Drawable* eyedropperDrawable;
 		Colour colour;
 		bool canResetToDefault;
 
-		class CtrlrColourSelectorComp   : public Component, public Button::Listener
-		{
-			public:
-				CtrlrColourSelectorComp (CtrlrColourEditorComponent* owner_, const bool canResetToDefault) : owner (owner_), defaultButton (0)
-				{
-		            addAndMakeVisible (selector = new ColourSelector());
-					selector->setName ("Colour");
-					selector->setCurrentColour (owner->getColour());
-					selector->addChangeListener (owner);
-					//Desktop::getInstance().addGlobalMouseListener(this);
-
-					if (canResetToDefault)
-					{
-		                addAndMakeVisible (defaultButton = new TextButton ("Reset to Default"));
-						defaultButton->addListener (this);
-					}
-
-					setSize (300,400);
-				}
-
-				~CtrlrColourSelectorComp()
-				{
-		            deleteAllChildren();
-				}
-
-				void mouseDown (const MouseEvent &e)
-				{
-				}
-
-				void resized()
-				{
-		            if (defaultButton != 0)
-					{
-		                selector->setBounds (0, 0, getWidth(), getHeight() - 30);
-						defaultButton->changeWidthToFitText (22);
-						defaultButton->setTopLeftPosition (10, getHeight() - 26);
-					}
-					else
-					{
-		                selector->setBounds (0, 0, getWidth(), getHeight());
-					}
-				}
-
-				void buttonClicked (Button*)
-		        {
-					owner->resetToDefault();
-					owner->refresh();
-					selector->setCurrentColour (owner->getColour());
-				}
-
-				JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrColourSelectorComp)
-		private:
-
-			CtrlrColourEditorComponent* owner;
-			ColourSelector* selector;
-			TextButton* defaultButton;
-		};
+		void openColourPicker();  // Add this helper method
+		void updateButtonColour(); // Helper to update button appearance
 };
 
 class CtrlrColourPropertyComponent : public Component, public ChangeListener, public CtrlrPropertyChild

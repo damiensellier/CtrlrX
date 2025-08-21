@@ -418,8 +418,12 @@ CtrlrChoicePropertyComponent::CtrlrChoicePropertyComponent (const Value &_valueT
 	refresh();
 }
 
-CtrlrChoicePropertyComponent::~CtrlrChoicePropertyComponent()
+CtrlrChoicePropertyComponent::~CtrlrChoicePropertyComponent() // Updated v5.6.34. Prevents crash on Windows when switching global LnF colourScheme
 {
+    if (combo != nullptr)
+    {
+        combo->removeListener(this);
+    }
 }
 
 void CtrlrChoicePropertyComponent::resized()
@@ -436,7 +440,8 @@ void CtrlrChoicePropertyComponent::refresh()
 {
 	if (numeric)
 	{
-		const int i = values.indexOf (valueToControl.toString());
+		// Change this line to use `indexOf` with `var` to find the correct index
+        const int i = values.indexOf(valueToControl.getValue());
 		combo->setSelectedItemIndex (i, sendNotification);
 	}
 	else
@@ -455,75 +460,145 @@ void CtrlrChoicePropertyComponent::changed()
 	{
 		valueToControl = combo->getText();
 	}
-
-	if (owner)
-    {
-        sendChangeMessage ();
-    }
+    
+    // This will cause a crash when user changes L&F in Property Editor
+//	if (owner)
+//    {
+//        sendChangeMessage ();
+//    }
 }
 
-//void CtrlrChoicePropertyComponent::changeListenerCallback (ChangeBroadcaster* source)
-//{
-//}
-
-CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener *defaultListener) : canResetToDefault (true)
+CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener* defaultListener)
+    : canResetToDefault(true), colourPickerButton(nullptr), eyedropperDrawable(nullptr)
 {
-	addAndMakeVisible (&colourTextInput);
-	colourTextInput.setJustificationType (Justification::centred);
-	colourTextInput.setFont (colourTextInput.getFont().withStyle(Font::bold));
-	colourTextInput.setEditable (true, false, false); // single click, double-click, lossOfFocusDiscardsChanges
-	colourTextInput.setAlwaysOnTop (true);
-	colourTextInput.addListener (this);
-	colourTextInput.addMouseListener (this, true);
+    const char* eyedropperSVG = R"(
+    <svg xmlns="http://www.w3.org/2000/svg" width="4" height="4" fill="currentColor" viewBox="0 0 4 4">
+      <path d="M13.354.646a1.207 1.207 0 0 0-1.708 0L8.5 3.793l-.646-.647a.5.5 0 1 0-.708.708L8.293 5l-7.147 7.146A.5.5 0 0 0 1 12.5v1.793l-.854.853a.5.5 0 1 0 .708.707L1.707 15H3.5a.5.5 0 0 0 .354-.146L11 7.707l1.146 1.147a.5.5 0 0 0 .708-.708l-.647-.646 3.147-3.146a1.207 1.207 0 0 0 0-1.708zM2 12.707l7-7L10.293 7l-7 7H2z"/>
+    </svg>
+    )";
+    
+    addAndMakeVisible(colourTextInput);
+    colourTextInput.setJustificationType(Justification::centred);
+    colourTextInput.setFont(colourTextInput.getFont().withStyle(Font::bold));
+    colourTextInput.setEditable(true, false, false);
+    colourTextInput.setAlwaysOnTop(true);
+    colourTextInput.addListener(this);
 
-	if (defaultListener)
-		addChangeListener (defaultListener);
+    // Create and store the drawable
+    std::unique_ptr<XmlElement> svgXml(XmlDocument::parse(eyedropperSVG));
+    if (svgXml != nullptr)
+    {
+        eyedropperDrawable = Drawable::createFromSVG(*svgXml).release();
+        if (eyedropperDrawable != nullptr)
+        {
+            // Set the drawable color to ensure visibility
+            eyedropperDrawable->replaceColour(Colours::slategrey, findColour(TextButton::textColourOffId));
+            colourPickerButton = new DrawableButton("colourPicker", DrawableButton::ImageOnButtonBackground);
+            /* Tried various ways of scaling like AffineTransform etc but only ImageOnButtonBackground seems to work*/
+            colourPickerButton->setImages(eyedropperDrawable);
+            addAndMakeVisible(colourPickerButton);
+            colourPickerButton->setTooltip("Choose custom colour");
+            colourPickerButton->addListener(this);
+        }
+    }
+
+    // If SVG failed, fallback to text button
+    if (colourPickerButton == nullptr)
+    {
+        colourPickerButton = new DrawableButton("colourPicker", DrawableButton::ImageOnButtonBackground);
+        addAndMakeVisible(colourPickerButton);
+        colourPickerButton->setButtonText("...");
+        colourPickerButton->setTooltip("Open colour picker");
+        colourPickerButton->addListener(this);
+    }
+    // Set initial button appearance
+    updateButtonColour();
+    
+    if (defaultListener)
+        addChangeListener(defaultListener);
+}
+
+CtrlrColourEditorComponent::~CtrlrColourEditorComponent()
+{
+    delete colourPickerButton;
+    delete eyedropperDrawable;
 }
 
 void CtrlrColourEditorComponent::updateLabel()
 {
-	colourTextInput.setColour (Label::backgroundColourId, getColour());
-	colourTextInput.setColour (Label::textColourId, getColour().contrasting().darker(0.25f));
-    colourTextInput.setColour (Label::outlineColourId, findColour(ComboBox::outlineColourId));
-	colourTextInput.setText (getColour().toDisplayString (true), dontSendNotification);
+    if (colourPickerButton != nullptr) // Check ptr first
+    {
+    colourTextInput.setColour(Label::backgroundColourId, getColour());
+    colourTextInput.setColour(Label::textColourId, getColour().contrasting().darker(0.25f));
+    colourTextInput.setColour(Label::outlineColourId, findColour(ComboBox::outlineColourId));
+    colourTextInput.setText(getColour().toDisplayString(true), dontSendNotification);
+
+    // Update button color swatch
+    updateButtonColour();
+    }
 }
 
-void CtrlrColourEditorComponent::labelTextChanged (Label *labelThatHasChanged)
+void CtrlrColourEditorComponent::updateButtonColour()
 {
-	colour = Colour::fromString(labelThatHasChanged->getText());
-	sendChangeMessage();
+    if (colourPickerButton != nullptr)
+    {
+        // DrawableButton uses different colour IDs
+        colourPickerButton->setColour(DrawableButton::backgroundColourId, getLookAndFeel().findColour(TextButton::buttonColourId));
+        colourPickerButton->setColour(DrawableButton::backgroundOnColourId, getLookAndFeel().findColour(TextButton::buttonOnColourId));
+        colourPickerButton->repaint();
+    }
 }
 
 void CtrlrColourEditorComponent::resized()
 {
-	colourTextInput.setBounds (0, 0, getWidth(), getHeight());
+    if (colourPickerButton != nullptr)
+    {
+        const int buttonWidth = getHeight(); // Square button
+        colourPickerButton->setBounds(getWidth() - buttonWidth, 0, buttonWidth, getHeight());
+        colourTextInput.setBounds(0, 0, getWidth() - buttonWidth - 2, getHeight());
+    }
 }
 
-void CtrlrColourEditorComponent::setColour (const Colour& newColour, const bool sendChangeMessageNow)
+void CtrlrColourEditorComponent::buttonClicked(Button* buttonThatWasClicked)
 {
-	colour = newColour;
-
-	updateLabel();
-
-	if (sendChangeMessageNow)
-		sendChangeMessage();
+    if (buttonThatWasClicked == colourPickerButton)
+    {
+        openColourPicker();
+    }
 }
 
-void CtrlrColourEditorComponent::mouseDown (const MouseEvent &e)
+void CtrlrColourEditorComponent::openColourPicker()
 {
-    auto colourSelector = std::make_unique<ColourSelector> (ColourSelector::showAlphaChannel
-                                                                | ColourSelector::showColourAtTop
-                                                                | ColourSelector::editableColour
-                                                                | ColourSelector::showSliders
-                                                                | ColourSelector::showColourspace);
+    auto colourSelector = std::make_unique<ColourSelector>(ColourSelector::showAlphaChannel
+                                                           | ColourSelector::showColourAtTop
+                                                           | ColourSelector::editableColour
+                                                           | ColourSelector::showSliders
+                                                           | ColourSelector::showColourspace);
+    
+    colourSelector->setName("background");
+    colourSelector->setCurrentColour(getColour());
+    colourSelector->addChangeListener(this);
+    colourSelector->setColour(ColourSelector::backgroundColourId, Colours::transparentBlack);
+    colourSelector->setSize(300, 400);
+    
+    CallOutBox::launchAsynchronously(std::move(colourSelector),
+                                     colourPickerButton->getScreenBounds(),
+                                     nullptr);
+}
 
-        colourSelector->setName ("background");
-        colourSelector->setCurrentColour(colourTextInput.findColour(Label::backgroundColourId)); // Gets colour from the property box BG
-        colourSelector->addChangeListener (this);
-        colourSelector->setColour (ColourSelector::backgroundColourId, Colours::transparentBlack);
-        colourSelector->setSize (300, 400);
-
-        CallOutBox::launchAsynchronously (std::move (colourSelector), getScreenBounds(), nullptr);
+void CtrlrColourEditorComponent::labelTextChanged(Label* labelThatHasChanged)
+{
+    colour = Colour::fromString(labelThatHasChanged->getText());
+    updateLabel(); // This will update both the label appearance AND the button
+    sendChangeMessage();
+}
+void CtrlrColourEditorComponent::setColour(const Colour& newColour, const bool sendChangeMessageNow)
+{
+    colour = newColour;
+    updateLabel();
+    
+    if (sendChangeMessageNow)
+        sendChangeMessage();
 }
 
 void CtrlrColourEditorComponent::changeListenerCallback (ChangeBroadcaster* source)
