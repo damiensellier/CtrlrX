@@ -105,6 +105,31 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
     
 	propertyType = CtrlrIDManager::stringToType(identifierDefinition.getProperty("type"));
     
+    // Added v5.6.34. Thanks to @dnaldoog
+    _DBG("Property Name: " + propertyName.toString() + " | XML Type: " + identifierDefinition.getProperty("type").toString() + " | Mapped Type: " + String(propertyType));
+    if (propertyName == Ids::componentLayerUid)
+    {
+        possibleChoices = new StringArray();
+        possibleValues = new Array<var>();
+
+        if (panel != nullptr && panel->getCanvas() != nullptr)
+        {
+            CtrlrPanelCanvas* canvas = panel->getCanvas();
+            for (int i = 0; i < canvas->getNumLayers(); i++)
+            {
+                CtrlrPanelCanvasLayer* layer = canvas->getLayerFromArray(i);
+                if (layer != nullptr)
+                {
+                    possibleChoices->add(layer->getProperty(Ids::uiPanelCanvasLayerName).toString());
+                    possibleValues->add(layer->getProperty(Ids::uiPanelCanvasLayerUid).toString());
+                }
+            }
+        }
+    }
+    _DBG("CtrlrPropertyComponent::getPropertyComponent [POST] propertyType==" + String((int)propertyType) + " visibleText==" + visibleText);
+    
+    // END of addon
+    
     int propertyLineheightBaseValue = 36; // Declare the variable outside the if-else block. Mandatory for Preference window property lines.
     bool propertyLineImprovedLegibility = false; // Declare the variable outside the if-else block. Mandatory for Preference window property lines.
     
@@ -120,7 +145,8 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
             // preferredHeight = 36;
             preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.0); // Updated v5.6.33.
 			// return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true)); // valueToControl, maxNumChars, isMultiLine, isReadOnly
-            return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true, propertyLineImprovedLegibility)); // valueToControl, maxNumChars, isMultiLine, isReadOnly, propertyLineImprovedLegibility
+            // return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true, propertyLineImprovedLegibility)); // valueToControl, maxNumChars, isMultiLine, isReadOnly, propertyLineImprovedLegibility
+            return (new CtrlrReadOnlyProperty(propertyName, propertyElement, identifierDefinition, panel)); // Updated v5.6.34. Thanks to @dnaldoog.
             
 		case CtrlrIDManager::Text:
             // preferredHeight = 36;
@@ -245,9 +271,20 @@ const String CtrlrPropertyComponent::getElementSubType()
 	{
 		return ("");
 	}
-	else if (propertyElement.getType() == Ids::uiPanelCanvasLayer)
+	else if (propertyElement.getType() == Ids::uiPanelCanvasLayer) // Updated v5.6.34. Thanks to @dnaldoog.
 	{
-		return ("uiPanelCanvasLayer");
+	    // Debug: Print all properties of this element
+        _DBG("Layer element properties:");
+        for (int i = 0; i < propertyElement.getNumProperties(); i++)
+        {
+            auto name = propertyElement.getPropertyName(i);
+            auto value = propertyElement.getProperty(name);
+            _DBG("  " + name.toString() + " = " + value.toString());
+        }
+
+        // Then try to get the layer name
+        String layerName = propertyElement.getProperty(Ids::uiPanelCanvasLayerName).toString();
+        return layerName.isEmpty() ? "Unnamed Layer" : layerName;
 	}
 	else
 	{
@@ -389,7 +426,7 @@ CtrlrChoicePropertyComponent::CtrlrChoicePropertyComponent (const Value &_valueT
     combo->setTextWhenNoChoicesAvailable (L"(no choices)");
     combo->addListener (this);
 
-	if (_choices != nullptr)
+	if (_choices != nullptr) // FIXED. Thanks to @dnaldoog. Was crashing APP when changing global LnF
 	{
 		choices = *_choices;
 
@@ -461,11 +498,10 @@ void CtrlrChoicePropertyComponent::changed()
 		valueToControl = combo->getText();
 	}
     
-    // This will cause a crash when user changes L&F in Property Editor
-//	if (owner)
-//    {
-//        sendChangeMessage ();
-//    }
+	if (owner)
+    {
+        sendChangeMessage ();
+    }
 }
 
 CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener* defaultListener)
@@ -642,14 +678,15 @@ void CtrlrColourPropertyComponent::resized()
 
 /** A read-only component **/
 
-CtrlrReadOnlyProperty::CtrlrReadOnlyProperty(const Identifier &_propertyName,
-															const ValueTree &_propertyElement,
-															const ValueTree &identifier,
-															CtrlrPanel *panel,
-															StringArray *possibleChoices,
-															StringArray *possibleValues) : propertyName(_propertyName), propertyElement(_propertyElement)
+CtrlrReadOnlyProperty::CtrlrReadOnlyProperty(const Identifier& _propertyName,
+    const ValueTree& _propertyElement,
+    const ValueTree& identifier,
+    CtrlrPanel* _panel,
+    StringArray* possibleChoices,
+    StringArray* possibleValues)
+    : propertyName(_propertyName), propertyElement(_propertyElement), panel(_panel)
 {
-	addAndMakeVisible (&value);
+    addAndMakeVisible(&value);
 
     value.setColour(Label::backgroundColourId, findColour(Slider::backgroundColourId).withAlpha(0.5f));
     value.setColour(Label::outlineColourId, findColour(Slider::textBoxTextColourId).withAlpha(0.5f));
@@ -661,7 +698,6 @@ CtrlrReadOnlyProperty::~CtrlrReadOnlyProperty()
 
 void CtrlrReadOnlyProperty::refresh()
 {
-	value.setText (propertyElement.getPropertyAsValue(propertyName, 0).toString(), dontSendNotification);
 }
 
 void CtrlrReadOnlyProperty::resized()

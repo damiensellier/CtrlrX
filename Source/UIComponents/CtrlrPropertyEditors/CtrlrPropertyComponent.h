@@ -214,6 +214,7 @@ class CtrlrReadOnlyProperty : public Component, public CtrlrPropertyChild
 		Label value;
 		ValueTree propertyElement;
 		Identifier propertyName;
+		CtrlrPanel* panel; // Added v5.6.34. Thanks to @dnaldoog. Used to get the name of the layer, not the useless long id string
 };
 
 class CtrlrExpressionProperty  : public Component,
