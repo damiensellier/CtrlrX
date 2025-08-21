@@ -43,6 +43,8 @@ set(BUNDLE_ID "com.CtrlrX.CtrlrX")
 set(FORMATS Standalone AU VST3)
 
 # For simplicity, the name of the CMake project is also the name of the target
+# CURRENT_VERSION is from the VERSION file and shall contain non-negative integer components, 
+# i.e. <major>[.<minor>[.<patch>[.<tweak>]]]
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
 # JUCE is setup as a submodule in the /JUCE folder
