@@ -67,7 +67,7 @@ public:
     void restoreLayerVisibility();
     bool isLayerIsolationActive() const { return layerIsolationActive; }
     //[/UserMethods]
-
+    void updateAllButtonStates();
     void paint(Graphics& g);
     void resized();
 

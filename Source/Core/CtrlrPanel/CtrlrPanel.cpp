@@ -29,6 +29,7 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner)
 		ctrlrLuaManager(nullptr),
 		currentActionIndex(0),
 		indexOfSavedState(-1)
+
 {
 }
 
@@ -2071,4 +2072,47 @@ void CtrlrPanel::multiMidiReceived(CtrlrMidiMessage &multiMidiMessage)
 {
 	multiMidiQueue.add (multiMidiMessage);
 	triggerAsyncUpdate();
+}
+// In CtrlrPanel.cpp
+
+void CtrlrPanel::saveLayerVisibilityStates()
+{
+	// Clear any previous states
+	layerVisibilityBackup.clear();
+	// Get the canvas from the editor
+	CtrlrPanelCanvas* canvas = getCanvas();
+
+	if (canvas)
+	{
+		// Loop through all layers and save their current visibility state
+		for (int i = 0; i < canvas->getNumLayers(); ++i)
+		{
+			CtrlrPanelCanvasLayer* layer = canvas->getLayerFromArray(i);
+			if (layer)
+			{
+				layerVisibilityBackup.add(layer->getProperty(Ids::uiPanelCanvasLayerVisibility, true));
+			}
+		}
+	}
+}
+
+void CtrlrPanel::restoreLayerVisibilityStates()
+{
+	// Get the canvas from the editor
+	CtrlrPanelCanvas* canvas = getCanvas();
+
+	if (canvas && hasLayerVisibilityStates())
+	{
+		// Loop through layers and restore visibility from the backup
+		for (int i = 0; i < canvas->getNumLayers() && i < layerVisibilityBackup.size(); ++i)
+		{
+			CtrlrPanelCanvasLayer* layer = canvas->getLayerFromArray(i);
+			if (layer)
+			{
+				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, layerVisibilityBackup.getUnchecked(i));
+			}
+		}
+	}
+	// Clear the backup after restoring
+	layerVisibilityBackup.clear();
 }

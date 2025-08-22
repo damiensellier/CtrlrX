@@ -211,6 +211,9 @@ void CtrlrPanelLayerList::moveLayerDown()
 void CtrlrPanelLayerList::refresh()
 {
 	layerList->updateContent();
+	layerList->updateContent();
+	//refresh();
+	updateAllButtonStates();
 }
 
 StringArray CtrlrPanelLayerList::getMenuBarNames()
@@ -365,100 +368,69 @@ void CtrlrPanelLayerList::isolateLayer(int targetLayerIndex)
 	if (!owner.getEditor() || !owner.getEditor()->getCanvas())
 		return;
 
-	// Store current visibility states if not already in isolation mode
-	if (!layerIsolationActive)
-	{
-		originalLayerVisibility.clear();
+	// FIRST: Save the current states BEFORE making any changes
+	owner.saveLayerVisibilityStates();
 
-		// Store all current layer visibility states
-		for (int i = 0; i < getNumRows(); ++i)
-		{
-			CtrlrPanelCanvasLayer* layer = owner.getEditor()->getCanvas()->getLayerFromArray(i);
-			if (layer)
-			{
-				bool isVisible = layer->getProperty(Ids::uiPanelCanvasLayerVisibility);
-				originalLayerVisibility.add(isVisible);
-			}
-			else
-			{
-				originalLayerVisibility.add(true); // Default to visible if layer is null
-			}
-		}
-		layerIsolationActive = true;
-	}
-
-	// Hide all layers AFTER the target layer
+	// THEN: Hide all layers except the target layer
 	for (int i = 0; i < getNumRows(); ++i)
 	{
 		CtrlrPanelCanvasLayer* layer = owner.getEditor()->getCanvas()->getLayerFromArray(i);
 		if (layer)
 		{
-			if (i > targetLayerIndex)
+			if (i == targetLayerIndex)
 			{
-				// Hide layers below (higher index = lower in stack)
-				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, false);
+				// Ensure target layer is visible
+				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, true);
 			}
 			else
 			{
-				// Ensure the target layer AND all layers before it are visible
-				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, true);
+				// Hide all other layers
+				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, false);
 			}
 		}
 	}
+
+	// Update isolation state
+	layerIsolationActive = true;
 
 	// Refresh the list to show updated visibility states
 	refresh();
 
-	// Optional: Show status message
-	_DBG("Layer isolation active - layers below layer " + String(targetLayerIndex) + " are hidden");
+	// Update all button states
+	updateAllButtonStates();
+
+	_DBG("Layer " + String(targetLayerIndex) + " isolated - all other layers hidden");
 }
 
 void CtrlrPanelLayerList::restoreLayerVisibility()
 {
-	if (!layerIsolationActive || !owner.getEditor() || !owner.getEditor()->getCanvas())
-		return;
+	// Use the CtrlrPanel's restore method which has the saved states
+	owner.restoreLayerVisibilityStates();
 
-	// Restore all original visibility states
-	for (int i = 0; i < getNumRows() && i < originalLayerVisibility.size(); ++i)
-	{
-		CtrlrPanelCanvasLayer* layer = owner.getEditor()->getCanvas()->getLayerFromArray(i);
-		if (layer)
-		{
-			layer->setProperty(Ids::uiPanelCanvasLayerVisibility, originalLayerVisibility[i]);
-		}
-	}
-
-	// Clear isolation state
+	// Update local state
 	layerIsolationActive = false;
-	originalLayerVisibility.clear();
 
-	// Refresh the list to show restored visibility states
+	// Refresh the list
 	refresh();
 
-	// Optional: Show status message
-	_DBG("Layer visibility restored to original state");
+	// Update all button states
+	updateAllButtonStates();
+
+	_DBG("Layer visibility restored");
 }
-//[/MiscUserCode]
+
+void CtrlrPanelLayerList::updateAllButtonStates()
+{
+	for (int i = 0; i < getNumRows(); ++i)
+	{
+		if (Component* comp = layerList->getComponentForRowNumber(i))
+		{
+			if (CtrlrPanelLayerListItem* item = dynamic_cast<CtrlrPanelLayerListItem*>(comp))
+			{
+				item->updateButtonStates();
+			}
+		}
+	}
+}
 
 
-//==============================================================================
-#if 0
-/*  -- Jucer information section --
-
-    This is where the Jucer puts all of its metadata, so don't change anything in here!
-
-BEGIN_JUCER_METADATA
-
-<JUCER_COMPONENT documentType="Component" className="CtrlrPanelLayerList" componentName=""
-                 parentClasses="public CtrlrChildWindowContent, public ListBoxModel"
-                 constructorParams="CtrlrPanel &amp;_owner" variableInitialisers="owner(_owner)"
-                 snapPixels="8" snapActive="1" snapShown="1" overlayOpacity="0.330000013"
-                 fixedSize="1" initialWidth="600" initialHeight="400">
-  <BACKGROUND backgroundColour="ffffff"/>
-  <GENERICCOMPONENT name="" id="bf3c104833fd7aa" memberName="layerList" virtualName=""
-                    explicitFocusOrder="0" pos="0 0 0M 0M" class="ListBox" params="&quot;Layer List&quot;, this"/>
-</JUCER_COMPONENT>
-
-END_JUCER_METADATA
-*/
-#endif

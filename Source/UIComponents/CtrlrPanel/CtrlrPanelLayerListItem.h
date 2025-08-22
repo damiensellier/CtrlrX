@@ -25,8 +25,7 @@ public:
     CtrlrPanelCanvasLayer* getLayer() { return (layer); }
     void setRow(const int _rowIndex);
     const int getRow() { return (rowIndex); }
-    //[/UserMethods]
-
+    void updateButtonStates(); 
     void paint(Graphics& g);
     void resized();
     void labelTextChanged(Label* labelThatHasChanged);
@@ -40,17 +39,22 @@ public:
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
+    CtrlrPanelCanvasLayer* layer;
+    CtrlrPanelLayerList& owner;
+    int rowIndex;
+    bool isDragging;
+    Point<int> dragStartPosition;
+    //[/UserVariables]
 
+    //==============================================================================
     Label* layerName;
     ToggleButton* layerVisibility;
     CtrlrColourEditorComponent* layerColour;
     Label* layerIndex;
-    CtrlrPanelCanvasLayer* layer;
-    CtrlrPanelLayerList& owner;
-    int rowIndex;
-    bool isDragging;                    // Add this line
-    Point<int> dragStartPosition;
-    //[/UserVariables]
+
+    // New buttons for isolation
+    TextButton* isolateButton;
+    TextButton* restoreButton;
 
     //==============================================================================
     // (prevent copy constructor and operator= being generated..)
