@@ -5,12 +5,15 @@
 #include "CtrlrPanelLayerList.h"
 #include "CtrlrInlineUtilitiesGUI.h"
 
-CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
+CtrlrPanelLayerListItem::CtrlrPanelLayerListItem(CtrlrPanelLayerList& _owner)
     : layer(0), owner(_owner),
-      layerName (0),
-      layerVisibility (0),
-      layerColour (0),
-      layerIndex (0)
+    layerName(0),
+    layerVisibility(0),
+    layerColour(0),
+    layerIndex(0),
+    rowIndex(0),   
+    isDragging(false)
+
 {
     addAndMakeVisible (layerName = new Label ("",
                                               L"Layer Name"));
@@ -165,7 +168,35 @@ void CtrlrPanelLayerListItem::setRow(const int _rowIndex)
 	rowIndex = _rowIndex;
 }
 //[/MiscUserCode]
+void CtrlrPanelLayerListItem::mouseDrag(const MouseEvent& e)
+{
+    if (!layer)
+        return;
 
+    // Start dragging if we've moved far enough from the initial click
+    if (!isDragging && e.getDistanceFromDragStart() > 5)
+    {
+        isDragging = true;
+
+        // Create a drag image of this component
+        Image dragImage = createComponentSnapshot(getLocalBounds());
+
+        // Start the drag operation with a description containing the row index
+        String dragDescription = "layer_item_" + String(rowIndex);
+
+        // Find the drag container (should be the CtrlrPanelLayerList)
+        DragAndDropContainer* dragContainer = DragAndDropContainer::findParentDragContainerFor(this);
+        if (dragContainer)
+        {
+            dragContainer->startDragging(dragDescription, this, dragImage, true);
+        }
+    }
+}
+
+void CtrlrPanelLayerListItem::mouseUp(const MouseEvent& e)
+{
+    isDragging = false;
+}
 
 //==============================================================================
 #if 0

@@ -36,23 +36,17 @@
 //[/MiscUserDefs]
 
 //==============================================================================
-CtrlrPanelLayerList::CtrlrPanelLayerList (CtrlrPanel &_owner)
-    : owner(_owner),
-      layerList (0)
+CtrlrPanelLayerList::CtrlrPanelLayerList(CtrlrPanel& _owner)
+	: owner(_owner),
+	layerList(0),
+	dropInsertionIndex(-1)  // Add this initialization
 {
-    addAndMakeVisible (layerList = new ListBox ("Layer List", this));
+	addAndMakeVisible(layerList = new ListBox("Layer List", this));
 
+	layerList->setRowHeight(40);
+	layerList->setMultipleSelectionEnabled(false);
 
-    //[UserPreSize]
-	layerList->setRowHeight (40);
-	layerList->setMultipleSelectionEnabled (false);
-    //[/UserPreSize]
-
-    setSize (600, 400);
-
-
-    //[Constructor] You can add your own custom stuff here..
-    //[/Constructor]
+	setSize(600, 400);
 }
 
 CtrlrPanelLayerList::~CtrlrPanelLayerList()
@@ -68,13 +62,15 @@ CtrlrPanelLayerList::~CtrlrPanelLayerList()
 }
 
 //==============================================================================
-void CtrlrPanelLayerList::paint (Graphics& g)
+void CtrlrPanelLayerList::paint(Graphics& g)
 {
-    //[UserPrePaint] Add your own custom painting code here..
-    //[/UserPrePaint]
-
-    //[UserPaint] Add your own custom painting code here..
-    //[/UserPaint]
+	// Draw drop insertion indicator
+	if (dropInsertionIndex >= 0)
+	{
+		g.setColour(Colours::blue);
+		int y = dropInsertionIndex * layerList->getRowHeight();
+		g.fillRect(0, y - 1, getWidth(), 3);
+	}
 }
 
 void CtrlrPanelLayerList::resized()
@@ -252,6 +248,94 @@ void CtrlrPanelLayerList::menuItemSelected(int menuItemID, int topLevelMenuIndex
 	}
 	
 }
+bool CtrlrPanelLayerList::isInterestedInDragSource(const SourceDetails& dragSourceDetails)
+{
+	// We're interested if the drag source contains "layer_item" in the description
+	return dragSourceDetails.description.toString().contains("layer_item");
+}
+
+void CtrlrPanelLayerList::itemDragEnter(const SourceDetails& dragSourceDetails)
+{
+	repaint();
+}
+
+void CtrlrPanelLayerList::itemDragMove(const SourceDetails& dragSourceDetails)
+{
+	// Calculate which row the mouse is over
+	Point<int> localPos = layerList->getLocalPoint(this, dragSourceDetails.localPosition);
+	dropInsertionIndex = localPos.y / layerList->getRowHeight();
+
+	// Clamp to valid range
+	dropInsertionIndex = jmax(0, jmin(dropInsertionIndex, getNumRows() - 1));
+
+	repaint();
+}
+
+void CtrlrPanelLayerList::itemDragExit(const SourceDetails& dragSourceDetails)
+{
+	dropInsertionIndex = -1;
+	repaint();
+}
+
+void CtrlrPanelLayerList::itemDropped(const SourceDetails& dragSourceDetails)
+{
+	if (!isInterestedInDragSource(dragSourceDetails))
+		return;
+
+	// Extract the source row index from the description
+	String desc = dragSourceDetails.description.toString();
+	int sourceRow = desc.getTrailingIntValue();
+
+	// Calculate target position
+	Point<int> localPos = layerList->getLocalPoint(this, dragSourceDetails.localPosition);
+	int targetRow = localPos.y / layerList->getRowHeight();
+	targetRow = jmax(0, jmin(targetRow, getNumRows() - 1));
+
+	if (targetRow != sourceRow && sourceRow >= 0 && sourceRow < getNumRows())
+	{
+		moveLayerToPosition(sourceRow, targetRow);
+	}
+
+	dropInsertionIndex = -1;
+	repaint();
+}
+
+void CtrlrPanelLayerList::moveLayerToPosition(int sourceIndex, int targetIndex)
+{
+	if (owner.getEditor() && owner.getEditor()->getCanvas())
+	{
+		// Get the layer that's being moved
+		CtrlrPanelCanvasLayer* sourceLayer = owner.getEditor()->getCanvas()->getLayerFromArray(sourceIndex);
+
+		if (sourceLayer != nullptr)
+		{
+			// You'll need to implement moveLayerToIndex in your canvas class
+			// For now, we'll use the existing move methods as a fallback
+
+			if (targetIndex < sourceIndex)
+			{
+				// Moving up - call moveLayerUp multiple times
+				for (int i = sourceIndex; i > targetIndex; --i)
+				{
+					owner.getEditor()->getCanvas()->moveLayer(sourceLayer, true); // true = up
+				}
+			}
+			else if (targetIndex > sourceIndex)
+			{
+				// Moving down - call moveLayerDown multiple times  
+				for (int i = sourceIndex; i < targetIndex; ++i)
+				{
+					owner.getEditor()->getCanvas()->moveLayer(sourceLayer, false); // false = down
+				}
+			}
+
+			// Update the list display
+			layerList->updateContent();
+			layerList->selectRow(targetIndex);
+		}
+	}
+}
+
 //[/MiscUserCode]
 
 

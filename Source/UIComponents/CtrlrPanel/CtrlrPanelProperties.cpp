@@ -83,33 +83,39 @@ void CtrlrPanelProperties::paint (Graphics& g)
 //
 //    This creates a chain reaction that can be very inefficient. In many cases, it will cause a soft lock where your application's CPU usage spikes, leading to sluggish performance or a full crash on a busy message queue.
 	
-	for (int i = 0; i < tabbedComponent->getNumTabs(); i++) // Added v5.6.34. Thanks to @dobo365
-    {
-        if (i == tabbedComponent->getTabbedButtonBar().getCurrentTabIndex())
-        {
-            // This is for v3 where the color is forced. Should add an If..then..else checking v4 LnF
-			if (owner.getProperty(Ids::uiPanelLookAndFeel) == "V3")
-			{
-				tabbedComponent->getTabbedButtonBar().setTabBackgroundColour(i, Colour(0xffcccccc));   // Added v5.6.34. Set to light grey. ATTENTION: this is also changing the bottom part. By @dobo365 DB.
-			}
-			// This is for the other LnF versions, mostly v4.
-			else
-			{
-				tabbedComponent->getTabbedButtonBar().setTabBackgroundColour(i, getLookAndFeel().findColour(TabbedComponent::backgroundColourId).contrasting(0.2f));
-			}
-        }
-        else
-        {
-            tabbedComponent->getTabbedButtonBar().setTabBackgroundColour(i, getLookAndFeel().findColour(TabbedComponent::backgroundColourId));
-        }
-    }
+//Moved to updateTabColors()
 }
 
 void CtrlrPanelProperties::resized()
 {
 	ctrlrPanelFindProperty->setBounds(0,0,getWidth() - (int)owner.getOwner().getOwner().getProperty(Ids::ctrlrTabBarDepth),32);
     tabbedComponent->setBounds (0, 32, getWidth() - 0, getHeight() - 32);
+    updateTabColours();
     repaint();
+}
+
+void CtrlrPanelProperties::updateTabColours()
+{
+    for (int i = 0; i < tabbedComponent->getNumTabs(); i++) // Added v5.6.34. Thanks to @dobo365
+    {
+        if (i == tabbedComponent->getTabbedButtonBar().getCurrentTabIndex())
+        {
+            // This is for v3 where the color is forced. Should add an If..then..else checking v4 LnF
+            if (owner.getProperty(Ids::uiPanelLookAndFeel) == "V3")
+            {
+                tabbedComponent->getTabbedButtonBar().setTabBackgroundColour(i, Colour(0xffcccccc));   // Added v5.6.34. Set to light grey. ATTENTION: this is also changing the bottom part. By @dobo365 DB.
+            }
+            // This is for the other LnF versions, mostly v4.
+            else
+            {
+                tabbedComponent->getTabbedButtonBar().setTabBackgroundColour(i, getLookAndFeel().findColour(TabbedComponent::backgroundColourId).contrasting(0.2f));
+            }
+        }
+        else
+        {
+            tabbedComponent->getTabbedButtonBar().setTabBackgroundColour(i, getLookAndFeel().findColour(TabbedComponent::backgroundColourId));
+        }
+    }
 }
 
 void CtrlrPanelProperties::lookAndFeelChanged() // Added v5.6.31
@@ -147,3 +153,4 @@ void CtrlrPanelProperties::layoutChanged()
 		tabbedComponent->setOrientation(TabbedButtonBar::TabsAtRight);
 	}
 }
+
