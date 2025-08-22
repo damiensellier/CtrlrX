@@ -215,7 +215,7 @@ void CtrlrPanelLayerList::refresh()
 
 StringArray CtrlrPanelLayerList::getMenuBarNames()
 {
-	const char* const names[] = { "File", "Edit", "View", nullptr };
+	const char* const names[] = { "File", "Edit", "View", "Help" , nullptr};
 	return StringArray (names);
 }
 
@@ -233,10 +233,17 @@ PopupMenu CtrlrPanelLayerList::getMenuForIndex(int topLevelMenuIndex, const Stri
 		menu.addSectionHeader ("Reposition");
 		menu.addItem (4, "Move up");
 		menu.addItem (5, "Move down");
+
 	}
 	else if (topLevelMenuIndex == 2)
 	{
 		menu.addItem (6, "Refresh view");
+	}
+	else if (topLevelMenuIndex == 3)
+	{
+		menu.addItem (0, "Reorder - Drag and Drop");
+		menu.addItem (0, "Select/Edit - Ctrl+Click");
+		menu.addItem (0, "Restore view - Ctrl+Shift+Click");
 	}
 	return (menu);
 }
