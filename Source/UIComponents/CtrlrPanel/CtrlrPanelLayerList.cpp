@@ -380,23 +380,22 @@ void CtrlrPanelLayerList::isolateLayer(int targetLayerIndex)
 		layerIsolationActive = true;
 	}
 
-	// Hide all layers above the target layer
+	// Hide all layers AFTER the target layer
 	for (int i = 0; i < getNumRows(); ++i)
 	{
 		CtrlrPanelCanvasLayer* layer = owner.getEditor()->getCanvas()->getLayerFromArray(i);
 		if (layer)
 		{
-			if (i < targetLayerIndex)
+			if (i > targetLayerIndex)
 			{
-				// Hide layers above (lower index = higher in stack)
+				// Hide layers below (higher index = lower in stack)
 				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, false);
 			}
-			else if (i == targetLayerIndex)
+			else
 			{
-				// Ensure target layer is visible
+				// Ensure the target layer AND all layers before it are visible
 				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, true);
 			}
-			// Leave layers below unchanged
 		}
 	}
 
@@ -404,7 +403,7 @@ void CtrlrPanelLayerList::isolateLayer(int targetLayerIndex)
 	refresh();
 
 	// Optional: Show status message
-	_DBG("Layer isolation active - layers above layer " + String(targetLayerIndex) + " are hidden");
+	_DBG("Layer isolation active - layers below layer " + String(targetLayerIndex) + " are hidden");
 }
 
 void CtrlrPanelLayerList::restoreLayerVisibility()
