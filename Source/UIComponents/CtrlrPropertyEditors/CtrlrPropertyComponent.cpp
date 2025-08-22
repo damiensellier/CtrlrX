@@ -867,8 +867,8 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
       fontItalic (0),
       fontUnderline (0),
       fontSizeComboBox (0),
-	  kerning(0),
-	  horizontalScale(0)
+	  kerningComboBox(0),
+	  horizontalScaleComboBox(0)
 {
     addAndMakeVisible (typeface = new ComboBox (""));
     typeface->setEditableText (false);
@@ -898,6 +898,7 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
 	 // Create and add the new ComboBox for font size
     addAndMakeVisible(fontSizeComboBox = new ComboBox(""));
     fontSizeComboBox->setEditableText(true); // Allow custom values
+	fontSizeComboBox->setTooltip (L"Font size");
     fontSizeComboBox->addListener(this);
 
     const int sizes[] = { 8, 9, 10, 12, 14, 18, 24, 30, 36, 48, 60, 72};
@@ -918,25 +919,42 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
 	kerningLabel->setJustificationType(Justification::centred);
 	kerningLabel->setColour(Label::textColourId, findColour(Label::textColourId));
 
-	addAndMakeVisible (horizontalScale = new Slider (""));
-	//horizontalScale->setLookAndFeel (this);
-	horizontalScale->setColour(Slider::IncDecButtons, Component::findColour(TextEditor::textColourId));
-	horizontalScale->setTooltip (L"Horizontal Scale");
-    horizontalScale->setRange (0.0, 10.0, 0.01);
-    horizontalScale->setSliderStyle (Slider::IncDecButtons);
-    horizontalScale->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
-	horizontalScale->setMouseDragSensitivity(500);
-    horizontalScale->addListener (this);
+	addAndMakeVisible(horizontalScaleLabel = new Label("", "Scale"));
+    horizontalScaleLabel->setFont(Font(10.0f, Font::plain));
+    horizontalScaleLabel->setJustificationType(Justification::centred);
+    horizontalScaleLabel->setColour(Label::textColourId, findColour(Label::textColourId));
 
-	addAndMakeVisible (kerning = new Slider (""));
-    //kerning->setLookAndFeel (this);
-	kerning->setColour(Slider::IncDecButtons, Component::findColour(TextEditor::textColourId));
-	kerning->setTooltip (L"Extra Kerning");
-    kerning->setRange (0.0, 10.0, 0.01);
-    kerning->setSliderStyle (Slider::IncDecButtons);
-    kerning->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
-	kerning->setMouseDragSensitivity(500);
-    kerning->addListener (this);
+    addAndMakeVisible(horizontalScaleComboBox = new ComboBox(""));
+    horizontalScaleComboBox->setEditableText(true); // Allow custom values
+    horizontalScaleComboBox->addListener(this);
+	
+    // Populate the ComboBox with common horizontal scale values
+    const float scaleValues[] = {0.50f, 0.75f, 0.85f, 0.90f, 1.00f, 1.10f, 1.25f, 1.50f, 2.00f};
+	int nextId = 1; // Also required for kerning comboBox
+    for (float value : scaleValues)
+    {
+        horizontalScaleComboBox->addItem(String(value, 2), nextId++);
+    }
+
+    addAndMakeVisible(kerningLabel = new Label("", "Kerning"));
+    kerningLabel->setFont(Font(10.0f, Font::plain));
+    kerningLabel->setJustificationType(Justification::centred);
+    kerningLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
+    addAndMakeVisible(kerningComboBox = new ComboBox(""));
+    kerningComboBox->setEditableText(true); // Allow custom values
+	kerningComboBox->setTooltip (L"Extra kerning");
+    kerningComboBox->addListener(this);
+
+	// Populate the ComboBox with common kerning values
+	const float kerningValues[] = {0.00f, 0.05f, 0.10f, 0.15f, 0.20f, 0.25f, 0.30f, 0.40f, 0.50f, 0.75f, 1.00f};
+	for (float value : kerningValues)
+	{
+		kerningComboBox->addItem(String(value, 2), nextId++);
+	}
+
+	// Set a default value for the ComboBox
+	kerningComboBox->setSelectedId(1); // 1 corresponds to the first item: 0.00
 
 	fontBold->setClickingTogglesState (true);
 	fontBold->setMouseCursor (MouseCursor::PointingHandCursor);
@@ -957,8 +975,16 @@ CtrlrFontPropertyComponent::~CtrlrFontPropertyComponent()
     fontBold->removeListener (this);
     fontItalic->removeListener (this);
     fontUnderline->removeListener (this);
-    kerning->removeListener (this);
-    horizontalScale->removeListener (this);
+	
+    // Remove listener for the new ComboBox
+    if (kerningComboBox) {
+        kerningComboBox->removeListener(this);
+    }
+	
+    // Remove listener for the new ComboBox
+    if (horizontalScaleComboBox) {
+        horizontalScaleComboBox->removeListener(this);
+    }
     
     // Remove listener for the new ComboBox
     if (fontSizeComboBox) {
@@ -970,9 +996,9 @@ CtrlrFontPropertyComponent::~CtrlrFontPropertyComponent()
     deleteAndZero (fontBold);
     deleteAndZero (fontItalic);
     deleteAndZero (fontUnderline);
-    deleteAndZero (fontSizeComboBox); // Delete the new combo box
-    deleteAndZero (kerning);
-    deleteAndZero (horizontalScale);
+    deleteAndZero (fontSizeComboBox);
+    deleteAndZero (kerningComboBox);
+    deleteAndZero (horizontalScaleComboBox);
 
     // The labels don't have listeners so they are fine to delete
     deleteAndZero(fontSizeLabel);
@@ -985,30 +1011,40 @@ void CtrlrFontPropertyComponent::resized()
     // Re-using the logic from your provided code
     const int labelHeight = 12;
     const int sliderHeight = getHeight() - labelHeight;
+    const int totalWidth = getWidth();
+    
+    // Define the widths for each section.
+    const float typefaceWidth = 0.4f;
+    const float buttonWidth = 0.05f;
+    const float remainingWidth = 1.0f - typefaceWidth - (buttonWidth * 3);
+    const float comboBoxWidth = remainingWidth / 3.0f;
 
-    typeface->setBounds(0, labelHeight, getWidth() * 0.4f, sliderHeight);
+    // Typeface ComboBox
+    typeface->setBounds(0, labelHeight, totalWidth * typefaceWidth, sliderHeight);
 
-    fontBold->setBounds(getWidth() * 0.4f, labelHeight, getWidth() * 0.05f, sliderHeight);
-    fontItalic->setBounds((getWidth() * 0.4f) + (getWidth() * 0.05f), labelHeight, getWidth() * 0.05f, sliderHeight);
-    fontUnderline->setBounds((getWidth() * 0.4f) + 2 * (getWidth() * 0.05f), labelHeight, getWidth() * 0.05f, sliderHeight);
-
-    int startX = (getWidth() * 0.4f) + 3 * (getWidth() * 0.05f);
-
+    // Font Style Buttons
+    fontBold->setBounds(totalWidth * typefaceWidth, labelHeight, totalWidth * buttonWidth, sliderHeight);
+    fontItalic->setBounds(totalWidth * typefaceWidth + (totalWidth * buttonWidth), labelHeight, totalWidth * buttonWidth, sliderHeight);
+    fontUnderline->setBounds(totalWidth * typefaceWidth + 2 * (totalWidth * buttonWidth), labelHeight, totalWidth * buttonWidth, sliderHeight);
+    
+	// Calculate the starting X position for the three ComboBoxes
+    int startX = totalWidth * typefaceWidth + 3 * (totalWidth * buttonWidth);
+    
     // Font Size ComboBox
-    fontSizeLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
-    fontSizeComboBox->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
-
-    startX += getWidth() * 0.14f;
-
-    // Horizontal Scale
-    horizontalScaleLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
-    horizontalScale->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
-
-    startX += getWidth() * 0.14f;
-
-    // Kerning
-    kerningLabel->setBounds(startX, 0, getWidth() * 0.14f, labelHeight);
-    kerning->setBounds(startX, labelHeight, getWidth() * 0.14f, sliderHeight);
+    fontSizeLabel->setBounds(startX, 0, totalWidth * comboBoxWidth, labelHeight);
+    fontSizeComboBox->setBounds(startX, labelHeight, totalWidth * comboBoxWidth, sliderHeight);
+    
+    startX += totalWidth * comboBoxWidth;
+    
+    // Horizontal Scale ComboBox
+    horizontalScaleLabel->setBounds(startX, 0, totalWidth * comboBoxWidth, labelHeight);
+    horizontalScaleComboBox->setBounds(startX, labelHeight, totalWidth * comboBoxWidth, sliderHeight);
+    
+    startX += totalWidth * comboBoxWidth;
+    
+    // Kerning ComboBox
+    kerningLabel->setBounds(startX, 0, totalWidth * comboBoxWidth, labelHeight);
+    kerningComboBox->setBounds(startX, labelHeight, totalWidth * comboBoxWidth, sliderHeight);
 }
 
 void CtrlrFontPropertyComponent::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
@@ -1033,9 +1069,11 @@ void CtrlrFontPropertyComponent::refresh()
 {
 	Font font = owner->getCtrlrManagerOwner().getFontManager().getFontFromString(valueToControl.toString());
 	typeface->setText (font.getTypefaceName(), sendNotification);
+	
 	fontSizeComboBox->setText(String(font.getHeight()), dontSendNotification); // This is the updated line to use the new ComboBox
-	kerning->setValue(font.getExtraKerningFactor(), dontSendNotification);
-	horizontalScale->setValue(font.getHorizontalScale(), dontSendNotification);
+    kerningComboBox->setText(String(font.getExtraKerningFactor(), 2), dontSendNotification); // This is the updated line to use the new ComboBox
+    horizontalScaleComboBox->setText(String(font.getHorizontalScale(), 2), dontSendNotification); // This is the updated line to use the new ComboBox
+
 	fontBold->setToggleState (font.isBold(), sendNotification);
 	fontItalic->setToggleState (font.isItalic(), sendNotification);
 	fontUnderline->setToggleState (font.isUnderlined(), sendNotification);
@@ -1062,11 +1100,25 @@ Font CtrlrFontPropertyComponent::getFont()
     }
     font.setHeight (newFontSize);
     
+	// Get the kerning value from the new ComboBox
+	float newKerningValue = 0.0f;
+	if (kerningComboBox)
+	{
+		newKerningValue = kerningComboBox->getText().getFloatValue();
+	}
+	font.setExtraKerningFactor(newKerningValue);
+	
+	// Get the horizontal scale value from the new ComboBox
+    float newHorizontalScaleValue = 1.0f;
+    if (horizontalScaleComboBox)
+    {
+        newHorizontalScaleValue = horizontalScaleComboBox->getText().getFloatValue();
+    }
+    font.setHorizontalScale(newHorizontalScaleValue);
+	
     font.setBold (fontBold->getToggleState());
     font.setItalic (fontItalic->getToggleState());
     font.setUnderline (fontUnderline->getToggleState());
-    font.setExtraKerningFactor (kerning->getValue());
-    font.setHorizontalScale (horizontalScale->getValue());
     
     return font;
 }

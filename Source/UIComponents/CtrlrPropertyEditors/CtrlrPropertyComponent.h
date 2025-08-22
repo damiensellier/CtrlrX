@@ -298,14 +298,14 @@ class CtrlrFontPropertyComponent  : public Component,
 		CtrlrPanel *owner;
 	
 		// Pointers for components whose memory will be managed by the parent
-    ComboBox* typeface;
-    ComboBox* fontSizeComboBox; // Replaces the fontSize Slider
+		ComboBox* typeface;
+		ComboBox* fontSizeComboBox; // Replaces the Slider
+		ComboBox* horizontalScaleComboBox; // Replaces the Slider
+		ComboBox* kerningComboBox; // Replaces the Slider
 		DrawableButton* fontBold;
 		DrawableButton* fontItalic;
 		DrawableButton* fontUnderline;
-    Slider* horizontalScale;
-    Slider* kerning;
-	
+
 		Label* fontSizeLabel; // Added v5.6.34. Thanks to @dnaldoog
 		Label* horizontalScaleLabel; // Added v5.6.34. Thanks to @dnaldoog
 		Label* kerningLabel; // Added v5.6.34. Thanks to @dnaldoog

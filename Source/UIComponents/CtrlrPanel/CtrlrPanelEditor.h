@@ -45,7 +45,8 @@ class CtrlrPanelNotifier : public Component,
 class CtrlrPanelEditor  :	public Component,
 							public ValueTree::Listener,
 							public CtrlrLuaObject,
-                            public LookAndFeel_V4
+                            public LookAndFeel_V4,
+                            public juce::ChangeListener // Add this line
 {
 	public:
 		CtrlrPanelEditor (CtrlrPanel &_owner, CtrlrManager &_ctrlrManager, const String &panelName);
@@ -89,7 +90,7 @@ class CtrlrPanelEditor  :	public Component,
     
         void notify(const String &notification, CtrlrNotificationCallback *callback, const CtrlrNotificationType ctrlrNotificationType = NotifyInformation);  // Added back v5.6.31 for file management bottom notification bar
         void notificationClicked(const MouseEvent e); // Added back v5.6.31 for file management bottom notification bar
-        void changeListenerCallback (ChangeBroadcaster *source); // Added back v5.6.31 for file management bottom notification bar
+        void changeListenerCallback (ChangeBroadcaster *source) override; // Updated v5.6.34. Required override. Added back v5.6.31 for file management bottom notification bar.
     
 		void setAllCombosDisabled();
 		void setAllCombosEnabled();

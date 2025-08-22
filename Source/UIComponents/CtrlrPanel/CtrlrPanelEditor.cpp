@@ -233,7 +233,7 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
 
 CtrlrPanelEditor::~CtrlrPanelEditor()
 {
-    //componentAnimator.removeChangeListener (this); // NOT WORKING Added back v5.6.31 for file management bottom notification bar
+    componentAnimator.removeChangeListener (this); // Updated v5.6.34. NOW WORKING with ChangeListener added as class member in the .h file . Was NOT WORKING in 5.6.31. Added back v5.6.31 for file management bottom notification bar.
     // setLookAndFeel(nullptr); // Updated v5.6.30. reset LnF to global LnF from Preferences when closing panel
     getPanelEditorTree().removeListener(this);
     owner.getPanelTree().removeListener(this);

@@ -378,8 +378,9 @@ Tuturial coming soon.
 * **FIXED** CtrlrLuaMethodCodeEditorSettings Highlight colours such as Error, comments, operatiors etc. `CtrlrLuaMethodCodeEditorSettings.cpp`, `CtrlrLuaMethodCodeTokeniserFUnctions.h`
 * **UPDATED** CtrlrLuaMethodCodeEditorSettings GUI with a better sample code preview. `CtrlrLuaMethodCodeEditorSettings.cpp`
 * **UPDATED** CtrlrPropertyComponent Separated colourChooser from colour field. `CtrlrPropertyComponent.cpp` &`.h`, `CtrlrIDs.xml`
-* **UPDATED** CtrlrPropertyComponent Layer selection via comboBox. `CtrlrPropertyComponent.cpp` &`.h`, `CtrlrIDs.xml`
-* **UPDATED** CtrlrPropertyComponent Font size slider replaced by drop-down selector for convenience. `CtrlrPropertyComponent.cpp` &`.h`
+* **UPDATED** CtrlrPropertyComponent Layer selection via comboBox. `CtrlrPropertyComponent.cpp` & `.h`, `CtrlrIDs.xml`
+* **UPDATED** CtrlrPropertyComponent Font size, kerning & horizontal-scale sliders replaced by drop-down selector for convenience. `CtrlrPropertyComponent.cpp` &`.h`
+* **FIXED** CtrlrX crashing or freezing when closing while the notify bar was visible. `CtrlrPanelEditor.cpp` & `.h`
 
 #### Version 5.6.33 | 2025.05.28
 
