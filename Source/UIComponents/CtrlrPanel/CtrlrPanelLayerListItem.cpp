@@ -91,16 +91,44 @@ void CtrlrPanelLayerListItem::paint (Graphics& g)
     }
 }
 
-void CtrlrPanelLayerListItem::resized()
-{
-    layerName->setBounds(48, 4, proportionOfWidth(0.35f), 12);  // Made narrower to fit buttons
-    layerVisibility->setBounds(8, 4, 32, 32);
-    layerColour->setBounds(48, 16, getWidth() - 200, 16);  // Made narrower to fit buttons
-    layerIndex->setBounds(getWidth() - 150, getHeight() - 16, 14, 16);
+//void CtrlrPanelLayerListItem::resized()
+//{
+//    layerName->setBounds(48, 4, proportionOfWidth(0.35f), 12);  // Made narrower to fit buttons
+//    layerVisibility->setBounds(8, 4, 32, 32);
+//    layerColour->setBounds(48, 16, getWidth() - 200, 16);  // Made narrower to fit buttons
+//    layerIndex->setBounds(getWidth() - 150, getHeight() - 16, 14, 16);
+//
+//    // Position the buttons on the right
+//    restoreButton->setBounds(getWidth() - 130, 4, 60, 14);
+//    isolateButton->setBounds(getWidth() - 130, 20, 60, 14);
+//}
+    // Define some constants for consistent spacing
+void CtrlrPanelLayerListItem::resized(){
 
-    // Position the buttons on the right
-    restoreButton->setBounds(getWidth() - 130, 4, 60, 14);
-    isolateButton->setBounds(getWidth() - 130, 20, 60, 14);
+const int buttonWidth = 60;
+const int buttonHeight = 16;
+const int colourChooserWidth = 80; // A smaller, fixed width for the color chooser
+const int padding = 4;
+
+// Position the visibility toggle button (left side)
+layerVisibility->setBounds(padding, padding, 32, 32);
+
+// Position the layer name label next to the visibility toggle
+layerName->setBounds(layerVisibility->getRight() + padding, padding, proportionOfWidth(0.35f), 12);
+
+// Position the color chooser next to the layer name label, making it a fixed, smaller size
+layerColour->setBounds(layerName->getRight() + padding, 16, colourChooserWidth, 16);
+
+// Position the layer index label on the far right
+layerIndex->setBounds(getWidth() - (padding + 14), getHeight() - 16, 14, 16);
+
+// Position the buttons side-by-side on the right, adjusting for padding
+const int buttonsRightEdge = getWidth() - padding;
+const int restoreButtonLeft = buttonsRightEdge - buttonWidth;
+const int isolateButtonLeft = restoreButtonLeft - buttonWidth - padding;
+
+isolateButton->setBounds(isolateButtonLeft, (getHeight() - buttonHeight) / 2, buttonWidth, buttonHeight);
+restoreButton->setBounds(restoreButtonLeft, (getHeight() - buttonHeight) / 2, buttonWidth, buttonHeight);
 }
 
 void CtrlrPanelLayerListItem::labelTextChanged (Label* labelThatHasChanged)
