@@ -71,13 +71,23 @@ CtrlrPanelLayerListItem::~CtrlrPanelLayerListItem()
 //==============================================================================
 void CtrlrPanelLayerListItem::paint (Graphics& g)
 {
-    //[UserPrePaint] Add your own custom painting code here..
     g.setColour(Colours::black);
     g.drawLine(0, getHeight(), getWidth(), getHeight(), 1.0f);
-    //[/UserPrePaint]
 
-    //[UserPaint] Add your own custom painting code here..
-    //[/UserPaint]
+    // Show if this layer is part of an isolation
+    if (owner.isLayerIsolationActive())
+    {
+        // Highlight the item differently when isolation is active
+        g.setColour(Colours::orange.withAlpha(0.1f));
+        g.fillRect(getLocalBounds().reduced(1));
+    }
+
+    // Optional: Add visual feedback when dragging
+    if (isDragging)
+    {
+        g.setColour(Colours::blue.withAlpha(0.3f));
+        g.fillRect(getLocalBounds());
+    }
 }
 
 void CtrlrPanelLayerListItem::resized()
@@ -128,17 +138,32 @@ void CtrlrPanelLayerListItem::buttonClicked (Button* buttonThatWasClicked)
     //[/UserbuttonClicked_Post]
 }
 
-void CtrlrPanelLayerListItem::mouseDown (const MouseEvent& e)
+void CtrlrPanelLayerListItem::mouseDown(const MouseEvent& e)
 {
-    //[UserCode_mouseDown] -- Add your code here...
-	if (layer)
-	{
-		owner.setSelectedRow (rowIndex);
-	}
-    //[/UserCode_mouseDown]
+    if (layer)
+    {
+        owner.setSelectedRow(rowIndex);
+
+        // Handle Ctrl+Shift+Click - restore layer visibility
+        if (e.mods.isCtrlDown() && e.mods.isShiftDown())
+        {
+            owner.restoreLayerVisibility();
+            _DBG("Ctrl+Shift+Click: Restoring layer visibility");
+            return; // Don't start drag operation
+        }
+        // Handle Ctrl+Click - isolate this layer
+        else if (e.mods.isCtrlDown())
+        {
+            owner.isolateLayer(rowIndex);
+            _DBG("Ctrl+Click: Isolating layer " + String(rowIndex));
+            return; // Don't start drag operation
+        }
+
+        // Store the drag start position (only for normal clicks)
+        dragStartPosition = e.getPosition();
+        isDragging = false;
+    }
 }
-
-
 
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 void CtrlrPanelLayerListItem::setLayer (CtrlrPanelCanvasLayer *_layer)

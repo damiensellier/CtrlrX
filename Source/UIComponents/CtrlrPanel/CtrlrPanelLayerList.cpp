@@ -39,7 +39,8 @@
 CtrlrPanelLayerList::CtrlrPanelLayerList(CtrlrPanel& _owner)
 	: owner(_owner),
 	layerList(0),
-	dropInsertionIndex(-1)  // Add this initialization
+	dropInsertionIndex(-1),
+	layerIsolationActive(false)
 {
 	addAndMakeVisible(layerList = new ListBox("Layer List", this));
 
@@ -70,6 +71,23 @@ void CtrlrPanelLayerList::paint(Graphics& g)
 		g.setColour(Colours::blue);
 		int y = dropInsertionIndex * layerList->getRowHeight();
 		g.fillRect(0, y - 1, getWidth(), 3);
+	}
+	if (dropInsertionIndex >= 0)
+	{
+		g.setColour(Colours::blue);
+		int y = dropInsertionIndex * layerList->getRowHeight();
+		g.fillRect(0, y - 1, getWidth(), 3);
+	}
+
+	// Draw isolation indicator
+	if (layerIsolationActive)
+	{
+		g.setColour(Colours::orange.withAlpha(0.3f));
+		g.fillRect(2, 2, getWidth() - 4, 20);
+
+		g.setColour(Colours::orange.darker());
+		g.setFont(Font(11.0f, Font::bold));
+		g.drawText("LAYER ISOLATION ACTIVE", 5, 2, getWidth() - 10, 20, Justification::centredLeft);
 	}
 }
 
@@ -335,7 +353,85 @@ void CtrlrPanelLayerList::moveLayerToPosition(int sourceIndex, int targetIndex)
 		}
 	}
 }
+void CtrlrPanelLayerList::isolateLayer(int targetLayerIndex)
+{
+	if (!owner.getEditor() || !owner.getEditor()->getCanvas())
+		return;
 
+	// Store current visibility states if not already in isolation mode
+	if (!layerIsolationActive)
+	{
+		originalLayerVisibility.clear();
+
+		// Store all current layer visibility states
+		for (int i = 0; i < getNumRows(); ++i)
+		{
+			CtrlrPanelCanvasLayer* layer = owner.getEditor()->getCanvas()->getLayerFromArray(i);
+			if (layer)
+			{
+				bool isVisible = layer->getProperty(Ids::uiPanelCanvasLayerVisibility);
+				originalLayerVisibility.add(isVisible);
+			}
+			else
+			{
+				originalLayerVisibility.add(true); // Default to visible if layer is null
+			}
+		}
+		layerIsolationActive = true;
+	}
+
+	// Hide all layers above the target layer
+	for (int i = 0; i < getNumRows(); ++i)
+	{
+		CtrlrPanelCanvasLayer* layer = owner.getEditor()->getCanvas()->getLayerFromArray(i);
+		if (layer)
+		{
+			if (i < targetLayerIndex)
+			{
+				// Hide layers above (lower index = higher in stack)
+				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, false);
+			}
+			else if (i == targetLayerIndex)
+			{
+				// Ensure target layer is visible
+				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, true);
+			}
+			// Leave layers below unchanged
+		}
+	}
+
+	// Refresh the list to show updated visibility states
+	refresh();
+
+	// Optional: Show status message
+	_DBG("Layer isolation active - layers above layer " + String(targetLayerIndex) + " are hidden");
+}
+
+void CtrlrPanelLayerList::restoreLayerVisibility()
+{
+	if (!layerIsolationActive || !owner.getEditor() || !owner.getEditor()->getCanvas())
+		return;
+
+	// Restore all original visibility states
+	for (int i = 0; i < getNumRows() && i < originalLayerVisibility.size(); ++i)
+	{
+		CtrlrPanelCanvasLayer* layer = owner.getEditor()->getCanvas()->getLayerFromArray(i);
+		if (layer)
+		{
+			layer->setProperty(Ids::uiPanelCanvasLayerVisibility, originalLayerVisibility[i]);
+		}
+	}
+
+	// Clear isolation state
+	layerIsolationActive = false;
+	originalLayerVisibility.clear();
+
+	// Refresh the list to show restored visibility states
+	refresh();
+
+	// Optional: Show status message
+	_DBG("Layer visibility restored to original state");
+}
 //[/MiscUserCode]
 
 

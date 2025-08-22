@@ -17,6 +17,8 @@
 #include "JuceHeader.h"
 #include "CtrlrWindowManagers/CtrlrChildWindowContent.h"
 #include "CtrlrWindowManagers/CtrlrPanelWindowManager.h"
+#include "CtrlrPanelCanvasLayer.h"
+
 class CtrlrPanel;
 //[/Headers]
 //==============================================================================
@@ -61,6 +63,9 @@ public:
     void itemDragExit(const SourceDetails& dragSourceDetails) override;
     void itemDragMove(const SourceDetails& dragSourceDetails) override;
     void moveLayerToPosition(int sourceIndex, int targetIndex);
+    void isolateLayer(int layerIndex);
+    void restoreLayerVisibility();
+    bool isLayerIsolationActive() const { return layerIsolationActive; }
     //[/UserMethods]
 
     void paint(Graphics& g);
@@ -73,6 +78,9 @@ private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     CtrlrPanel& owner;
     int dropInsertionIndex;
+    // Layer isolation state
+    bool layerIsolationActive;
+    Array<bool> originalLayerVisibility;  // Store original visibility states
     //[/UserVariables]
 
     //==============================================================================
