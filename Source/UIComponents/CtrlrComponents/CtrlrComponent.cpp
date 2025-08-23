@@ -238,6 +238,22 @@ void CtrlrComponent::mouseExit (const MouseEvent &e)
     }
 }
 
+void CtrlrComponent::focusGained (FocusChangeType cause) // Added v5.6.34
+{
+    _DBG("CtrlrComponent focusGained! Name: " + getName() + ", Cause: " + String(cause));
+    Component::focusGained(cause); // IMPORTANT: Call the base class method!
+    // Add any CtrlrComponent specific focus logic here if needed
+    repaint(); // Generally a good idea to repaint on focus change for visual feedback
+}
+
+void CtrlrComponent::focusLost (FocusChangeType cause) // Added v5.6.34
+{
+    _DBG("CtrlrComponent focusLost! Name: " + getName() + ", Cause: " + String(cause));
+    Component::focusLost(cause); // IMPORTANT: Call the base class method!
+    // Add any CtrlrComponent specific focus lost logic here if needed
+    repaint(); // Generally a good idea to repaint on focus change for visual feedback
+}
+
 int CtrlrComponent::snapDim(int dim)
 {
     if (snapDimSize <= 0)
@@ -410,6 +426,22 @@ void CtrlrComponent::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasCh
     else if (property == Ids::componentLabelFont)
     {
         componentNameLabel.setFont (getFontManager().getFontFromString (getProperty(Ids::componentLabelFont)));
+    }
+    else if (property == Ids::componentLayerUid)
+    {
+        // Get the new layer's UID from the ValueTree
+        const String newLayerUid = getProperty(Ids::componentLayerUid).toString();
+
+        // Find the new layer using its UID
+        CtrlrPanelCanvasLayer* newLayer = owner.getOwnerPanel().getCanvas()->getLayer(newLayerUid);
+
+        // If the new layer exists, move the component to it
+        if (newLayer != nullptr)
+        {
+            // Call the existing function to move the component.
+            // This function already handles all the necessary logic.
+            owner.getOwnerPanel().getCanvas()->assignToLayer(this, newLayer);
+        }
     }
     else if (property == Ids::componentRectangle)
     {

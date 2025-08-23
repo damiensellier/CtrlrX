@@ -87,7 +87,7 @@ void CtrlrDocumentPanel::activeDocumentChanged()
 }
 
 
-void CtrlrDocumentPanel::buttonClicked (Button *button)
+void CtrlrDocumentPanel::buttonClicked (Button *button) // Updated v5.6.34. Get the appropriate index panel from the close tab index.
 {
     int index = (int)button->getProperties().getWithDefault("index", -1);
     TabbedComponent *tc = getCurrentTabbedComponent();
@@ -98,9 +98,16 @@ void CtrlrDocumentPanel::buttonClicked (Button *button)
 
         if (ed != nullptr)
         {
-            if (AlertWindow::showYesNoCancelBox (AlertWindow::QuestionIcon, "Close panel", "Are you sure you want to close this panel [" + ed->getName() + "]", "Yes", "No", "Cancel", this) == 1)
+            // Get the actual CtrlrPanel associated with this editor 'ed'
+            CtrlrPanel* panelToClose = owner.getPanelForEditor(ed);
+
+            if (panelToClose != nullptr)
             {
-                owner.removePanel(ed);
+                // Call canClose on the CtrlrPanel instance related to the close button
+                if (panelToClose->canClose(true))
+                {
+                    owner.removePanel(ed);
+                }
             }
         }
     }
@@ -205,7 +212,7 @@ void CtrlrDocumentPanelCloseButton::paintButton (Graphics& g, bool isMouseOverBu
         //g.setColour (Colour(findColour(TextButton::buttonOnColourId)).brighter(0.4)); // v.5.2.198
         //g.setColour (Colour (0xdfe7e7e8)); // Added v5.6.30
         //g.setColour (Colours::red); // Added v5.6.31 by GoodWeather
-        g.setColour (findColour(TextButton::buttonOnColourId));; // Added v5.6.31
+        g.setColour (findColour(TextButton::buttonOnColourId)); // Added v5.6.31
         
         g.fillRoundedRectangle((float) (proportionOfWidth (0.0500f)),
                                (float) (proportionOfHeight (0.0500f)),

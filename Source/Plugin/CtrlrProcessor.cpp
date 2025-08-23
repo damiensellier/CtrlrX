@@ -4,6 +4,7 @@
 #include "CtrlrApplicationWindow/CtrlrEditor.h"
 #include "CtrlrManager/CtrlrManager.h"
 #include "CtrlrProcessorEditorForLive.h"
+#include "CtrlrMacros.h"
 #include "CtrlrLog.h"
 #include "CtrlrPanel/CtrlrPanelMIDIInputThread.h"
 #include "CtrlrPanel/CtrlrPanel.h"
@@ -15,7 +16,7 @@ CtrlrProcessor::CtrlrProcessor() :
                                     #ifndef JucePlugin_PreferredChannelConfigurations
                                     AudioProcessor (BusesProperties()
                                         #if ! JucePlugin_IsMidiEffect
-                                        //#if ! JucePlugin_IsSynth // Removed v5.6.32. Was disabling all Inputs
+                                        //#if ! JucePlugin_IsSynth // Removed v5.6.32. Was disabling all required Inputs for Audio Channel Insert FX Mode
                                                     .withInput  ("Input",  AudioChannelSet::stereo(), true)
                                         //#endif
                                                     .withOutput ("Output", AudioChannelSet::stereo(), true)
@@ -24,7 +25,8 @@ CtrlrProcessor::CtrlrProcessor() :
                                         #endif
 
                                     overridesTree (Ids::ctrlrOverrides),
-                                    ctrlrManager (nullptr)
+                                    ctrlrManager (nullptr),
+                                    ctrlrLog (nullptr) // Added v5.6.34. Could be useful
 {
 	_DBG("CtrlrProcessor::ctor");
 
@@ -45,7 +47,14 @@ CtrlrProcessor::CtrlrProcessor() :
 		}
 	}
 
-	ctrlrLog				= new CtrlrLog(overridesTree.getProperty (Ids::ctrlrLogToFile));
+    #if JUCE_DEBUG // Added v5.6.34. Will show the debug log. Was set to (false) by default from the CtrlrManager property ctrlrLogToFile.
+    // If we are in a Debug build, force logging ON
+        ctrlrLog                = new CtrlrLog(true);
+    #else
+    // If we are in any other build (like Release), force logging OFF
+        ctrlrLog                = new CtrlrLog(overridesTree.getProperty (Ids::ctrlrLogToFile));
+    #endif
+    
 	ctrlrManager			= new CtrlrManager(this, *ctrlrLog);
 
 	if (!ctrlrManager->initEmbeddedInstance())
@@ -64,11 +73,35 @@ CtrlrProcessor::CtrlrProcessor() :
 	}
 }
 
-CtrlrProcessor::~CtrlrProcessor()
+CtrlrProcessor::~CtrlrProcessor() // Updated v5.6.34. Prevents AAX from crashing when deleting the plugin from the instrument track insert slot.
 {
-#ifdef JUCE_MAC // Updated v5.5.31. was JUCE_OSX
-	MessageManager::getInstance()->runDispatchLoopUntil((int)overridesTree.getProperty(Ids::ctrlrShutdownDelay)); // Updated v5.6.31. Not sure if it's useful anyway
-#endif
+    // ***** CRITICAL AAX-SPECIFIC WORKAROUND *****
+    // This entire block is excluded for AAX builds because:
+    // 1. The MessageManager::runDispatchLoopUntil() call causes crashes on AAX plugin removal.
+    //    (Confirmed even when property exists and has a default value).
+    // 2. Explicitly deleting ctrlrLog (if it were done here) caused crashes on AAX plugin startup scan.
+    // The safest approach for AAX is to do minimal work for these components in the destructor.
+    #ifndef JucePlugin_Build_AAX
+        // For all plugin formats *EXCEPT* AAX:
+        // Perform explicit deletion for the raw pointer (ctrlrLog).
+        // ScopedPointer (ctrlrManager) will handle its own deletion automatically.
+        if (ctrlrLog != nullptr)
+        {
+            delete ctrlrLog;
+            ctrlrLog = nullptr;
+        }
+
+        #ifdef JUCE_MAC
+            // This line was causing crashes on AAX removal, so it's excluded for AAX by the #ifndef above.
+            // It remains here for other macOS builds if it's considered necessary for them. Mainly for panels with timer process handled in the background and delayed saveState() process.
+            MessageManager::getInstance()->runDispatchLoopUntil((int)overridesTree.getProperty(Ids::ctrlrShutdownDelay));
+        #endif
+    #else
+        // For JUCE_AAX builds:
+        // We ensure raw pointers are nullified without deletion to avoid crashes during scan/removal.
+        // ScopedPointer will still automatically delete its content (ctrlrManager) when the CtrlrProcessor object is destroyed.
+        ctrlrLog = nullptr;
+    #endif
 }
 
 
@@ -83,7 +116,7 @@ const String CtrlrProcessor::getName() const
     }
 	else
     {
-		return ("Ctrlr");
+		return ("CtrlrX"); // Updated v5.5.34
     }
 }
 
@@ -98,26 +131,73 @@ void CtrlrProcessor::releaseResources()
 {
 }
 
-void CtrlrProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
+//void CtrlrProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages) // Deprecated v5.6.34
+//{
+//    // _DBG("processBlock MIDI: NumEvents=" + String(midiMessages.getNumEvents()) + ", IsEmpty=" + (midiMessages.isEmpty() ? "true" : "false"));
+//    AudioPlayHead::CurrentPositionInfo info;
+//    if (getPlayHead())
+//    {
+//        getPlayHead()->getCurrentPosition(info);
+//    }
+//
+//    if (midiMessages.getNumEvents() > 0)
+//    {
+//        processPanels(midiMessages, info);
+//    }
+//
+//
+//    midiCollector.removeNextBlockOfMessages (midiMessages, (buffer.getNumSamples() > 0) ? buffer.getNumSamples() : 1);
+//    MidiBuffer::Iterator i(midiMessages);
+//    while (i.getNextEvent(logResult, logSamplePos))
+//    _MOUT("VST OUTPUT", logResult, logSamplePos);
+//}
+
+
+void CtrlrProcessor::processBlock (juce::AudioSampleBuffer& buffer, juce::MidiBuffer& midiMessages) // Updated v5.6.34
 {
+    // _DBG("processBlock MIDI: NumEvents=" + String(midiMessages.getNumEvents()) + ", IsEmpty=" + (midiMessages.isEmpty() ? "true" : "false"));
+    
+    // 1. Clear audio buffer
+    buffer.clear();
+
+    // 2. Get playhead info (optional)
     AudioPlayHead::CurrentPositionInfo info;
     if (getPlayHead())
     {
         getPlayHead()->getCurrentPosition(info);
     }
 
+    // 3. Add incoming host MIDI to your collector via your custom function
+    // This will now apply the 0-timestamp workaround inside addMidiToOutputQueue (const MidiBuffer &buffer)
+    if (midiMessages.getNumEvents() > 0) // Only process if there are events
+    {
+        addMidiToOutputQueue (midiMessages);
+    }
+
+    // 4. Call processPanels with the raw host input (as you had it)
     if (midiMessages.getNumEvents() > 0)
     {
         processPanels(midiMessages, info);
     }
-    
 
-    midiCollector.removeNextBlockOfMessages (midiMessages, (buffer.getNumSamples() > 0) ? buffer.getNumSamples() : 1);
+    // 5. Clear the incoming midiMessages buffer for output
+    midiMessages.clear();
+
+    // 6. Get MIDI messages from the collector for output
+    // (This part of midiCollector should still work as intended for output)
+    midiCollector.removeNextBlockOfMessages (midiMessages, buffer.getNumSamples());
+
+    // 7. Log outgoing MIDI (if enabled and declared locally)
+    /*
     MidiBuffer::Iterator i(midiMessages);
+    juce::MidiMessage logResult;
+    int logSamplePos;
     while (i.getNextEvent(logResult, logSamplePos))
-    _MOUT("VST OUTPUT", logResult, logSamplePos);
+    {
+        _MOUT("VST OUTPUT", logResult, logSamplePos);
+    }
+    */
 }
-
 
 //==============================================================================
 
@@ -338,16 +418,37 @@ void CtrlrProcessor::addMidiToOutputQueue (const MidiMessage &m)
 	midiCollector.addMessageToQueue (m);
 }
 
-void CtrlrProcessor::addMidiToOutputQueue (const MidiBuffer &buffer)
-{
-	MidiBuffer::Iterator i(buffer);
-	MidiMessage m;
-	int time;
+//void CtrlrProcessor::addMidiToOutputQueue (const MidiBuffer &buffer)
+//{
+//	MidiBuffer::Iterator i(buffer);
+//	MidiMessage m;
+//	int time;
+//
+//	while (i.getNextEvent (m, time))
+//	{
+//		midiCollector.addMessageToQueue (m);
+//	}
+//}
 
-	while (i.getNextEvent (m, time))
-	{
-		midiCollector.addMessageToQueue (m);
-	}
+void CtrlrProcessor::addMidiToOutputQueue (const MidiBuffer &buffer) // Updated v5.6.34
+{
+    MidiBuffer::Iterator i(buffer);
+    MidiMessage m;
+    int time;
+
+    while (i.getNextEvent (m, time))
+    {
+        // WORKAROUND FOR JASSERT IN JUCE'S INTERNAL MidiMessageCollector::addMessageToQueue
+        // If the message is at sample position 0, we temporarily shift it to 1
+        // to bypass the strict jassert.
+        if (time == 0)
+            time = 1;
+
+        // Use the only available method, applying the corrected 'time'
+        // JUCE's addMessageToQueue *expects* the message's timestamp to be set.
+        m.setTimeStamp(time); // Set the timestamp of the MidiMessage itself
+        midiCollector.addMessageToQueue (m);
+    }
 }
 
 //==============================================================================
@@ -403,26 +504,55 @@ void CtrlrProcessor::activePanelChanged()
 	sendChangeMessage();
 }
 
-
-bool CtrlrProcessor::useWrapper()
+bool CtrlrProcessor::useWrapper() // Updated v5.6.34. JUCE 6.0.8 has option "plugin requires keyboard focus" and the keyboard focus is handled better with VST3 than VST2 so Live Wrapper seems useless nowadays.
 {
-	if (JUCEApplication::isStandaloneApp())
-	{
-		return (false);
-	}
+    File debugLog = File::getSpecialLocation(File::currentApplicationFile);
+    String fileExt = debugLog.getFileExtension();
+    // PluginLoggerVst3 logger(debugLog); // Create logger instance
+    // logger.log("CtrlrX source fileExtension is :" + fileExt);
+    
+    if (JUCEApplication::isStandaloneApp())
+    {
+        return (false);
+    }
 
-	if (((SystemStats::getOperatingSystemType() & SystemStats::Windows) != 0) && host.isAbletonLive())
-	{
-		if (hasProperty(Ids::ctrlrUseEditorWrapper))
-		{
-			return ((bool)getProperty(Ids::ctrlrUseEditorWrapper));
-		}
-		else
-		{
-			return (true);
-		}
-	}
-	return (false);
+    // Logic for Windows + Ableton Live
+    if (((SystemStats::getOperatingSystemType() & SystemStats::Windows) != 0) && host.isAbletonLive())
+    {
+        // logger.log("useWrapper(): Running on Windows in Ableton Live.");
+        
+        if (fileExt ==".vst3") // Check if the currently loaded plugin format is VST3
+        {
+            // logger.log("useWrapper(): Detected VST3 on Windows Live. Forcing native editor (no wrapper) for testing.");
+            return (false); // Force native VST3 editor on Windows for testing
+        }
+        
+        else if (fileExt ==".dll") // Check if the currently loaded plugin format is VST (VST2)
+        {
+            // If it's a VST2 plugin, the original developer's logic suggests using the wrapper. We'll keep this behavior for VST2.
+            // logger.log("useWrapper(): Detected VST2 on Windows Live. Using wrapper as per original developer's notes.");
+            
+            // if (hasProperty(Ids::ctrlrUseEditorWrapper))
+            // {
+            //     return ((bool)getProperty(Ids::ctrlrUseEditorWrapper));
+            // }
+            // else
+            // {
+            //     return (true); // Default to true for VST2 on Windows Live
+            // }
+            
+            return (true); // Hard coded default to true for VST2 on Windows Live. Condition based on property ctrlrUseEditorWrapper bypassed.
+        }
+    }
+    // Keep the macOS logic as it was, the wrapper is useless on macOS.
+    else if (((SystemStats::getOperatingSystemType() & SystemStats::MacOSX) != 0) && host.isAbletonLive())
+    {
+        return (false); // Default to false for macOS
+    }
+    
+    // Default to false for all other cases (other DAWs, other OSes, or unhandled plugin types)
+    // logger.log("useWrapper(): Not Ableton Live on Windows, or unhandled plugin type. Returning false (no wrapper).");
+    return (false);
 }
 
 AudioProcessorEditor* CtrlrProcessor::createEditor()
@@ -466,11 +596,21 @@ void CtrlrProcessor::setStateInformation (const XmlElement *xmlState)
 		AlertWindow::showMessageBox (AlertWindow::WarningIcon, "Ctrlr v5", "Ctrl+R key is pressed, resetting to defaults");
 		return;
 	}
+    
+    if (xmlState)
+    {
+        _DBG("CtrlrProcessor::setStateInformation - xmlState is valid. About to call ctrlrManager->restoreState.");
 
-	if (xmlState)
-	{
-		ctrlrManager->restoreState (*xmlState);
-	}
+        // This will call your logMessage, which internally checks 'fileLogger'.
+        if (CtrlrLog::ctrlrLog != nullptr)
+        {
+            CtrlrLog::ctrlrLog->logMessage("--- TEST: Direct Log from setStateInformation ---", CtrlrLog::Debug);
+        }
+        // The AAX Plugin hanging problem when initiating is subsequent to this line
+        ctrlrManager->restoreState (*xmlState);
+
+        _DBG("CtrlrProcessor::setStateInformation - ctrlrManager->restoreState returned. Check for further execution.");
+    }
 }
 
 //==============================================================================

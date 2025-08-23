@@ -296,46 +296,19 @@ void CtrlrButton::setToggleState(const bool toggleState, const bool sendChangeMe
 }
 
 
-LookAndFeel *CtrlrButton::getLookAndFeelFromComponentProperty(const String &lookAndFeelComponentProperty)
+LookAndFeel *CtrlrButton::getLookAndFeelFromComponentProperty(const String &lookAndFeelComponentProperty) // Updated v5.6.34
 {
     if (lookAndFeelComponentProperty == "Default")
-    // Leave empty to get L&F from Global Property
-    if (lookAndFeelComponentProperty == "V4 Light")
-        return new LookAndFeel_V4(LookAndFeel_V4::getLightColourScheme());
-    if (lookAndFeelComponentProperty == "V4 Grey")
-        return new LookAndFeel_V4(LookAndFeel_V4::getGreyColourScheme());
-    if (lookAndFeelComponentProperty == "V4 Dark")
-        return new LookAndFeel_V4(LookAndFeel_V4::getDarkColourScheme());
-    if (lookAndFeelComponentProperty == "V4 Midnight")
-        return new LookAndFeel_V4(LookAndFeel_V4::getMidnightColourScheme());
-    if (lookAndFeelComponentProperty == "V4 JetBlack")
-        return new LookAndFeel_V4(LookAndFeel_V4::getJetBlackColourScheme());
-    if (lookAndFeelComponentProperty == "V4 YamDX")
-        return new LookAndFeel_V4(LookAndFeel_V4::getYamDxColourScheme());
-    if (lookAndFeelComponentProperty == "V4 AkAPC")
-        return new LookAndFeel_V4(LookAndFeel_V4::getAkApcColourScheme());
-    if (lookAndFeelComponentProperty == "V4 AkMPC")
-        return new LookAndFeel_V4(LookAndFeel_V4::getAkMpcColourScheme());
-    if (lookAndFeelComponentProperty == "V4 LexiBlue")
-        return new LookAndFeel_V4(LookAndFeel_V4::getLexiBlueColourScheme());
-    if (lookAndFeelComponentProperty == "V4 KurzGreen")
-        return new LookAndFeel_V4(LookAndFeel_V4::getKurzGreenColourScheme());
-    if (lookAndFeelComponentProperty == "V4 KorGrey")
-        return new LookAndFeel_V4(LookAndFeel_V4::getKorGreyColourScheme());
-    if (lookAndFeelComponentProperty == "V4 KorGold")
-        return new LookAndFeel_V4(LookAndFeel_V4::getKorGoldColourScheme());
-    if (lookAndFeelComponentProperty == "V4 ArturOrange")
-        return new LookAndFeel_V4(LookAndFeel_V4::getArturOrangeColourScheme());
-    if (lookAndFeelComponentProperty == "V4 AiraGreen")
-        return new LookAndFeel_V4(LookAndFeel_V4::getAiraGreenColourScheme());
-    if (lookAndFeelComponentProperty == "V3")
-        return new LookAndFeel_V3();
-    if (lookAndFeelComponentProperty == "V2")
-        return new LookAndFeel_V2();
-    if (lookAndFeelComponentProperty == "V1")
-        return new LookAndFeel_V1();
-    
-    return (nullptr);
+    {
+        // This case still means "use the default LookAndFeel (which might be the global one)"
+        // so returning nullptr is appropriate if that's the desired behavior.
+        return nullptr;
+    }
+
+    // Call your new generic factory function
+    // We pass 'false' for the second argument here, as 'Default' is handled separately
+    // and an unknown string should likely result in nullptr to fall back to the global L&F.
+    return gui::createLookAndFeelFromDescription(lookAndFeelComponentProperty, false);
 }
 
 void CtrlrButton::resetLookAndFeelOverrides()

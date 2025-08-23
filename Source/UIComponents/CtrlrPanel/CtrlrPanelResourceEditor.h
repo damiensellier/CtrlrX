@@ -5,6 +5,9 @@
 class CtrlrPanelEditor;
 class CtrlrPanelResourceManager;
 
+// Forward declaration of the nested class to improve compilation times.
+class ImageInfoComponent; // Added v5.6.34. Thanks to @dnaldoog
+
 class CtrlrPanelResourceEditor  : public Component,
                                   public TableListBoxModel,
 								  public Button::Listener
@@ -31,6 +34,8 @@ class CtrlrPanelResourceEditor  : public Component,
 		void moveResources();
 		void backgroundClicked (const MouseEvent &e);
 		void showResourceInfo(const int resourceIndex);
+        void lookAndFeelChanged(); // Added v5.6.34.
+
 	private:
 		Array <CtrlrPanelResource*> resources;
 		CtrlrPanelEditor &owner;
@@ -41,8 +46,14 @@ class CtrlrPanelResourceEditor  : public Component,
 	    TextButton* add;
 		TextButton* move;
 		TextButton* remove, *reload;
+
+	    // Declarations for ImageInfoComponent helper functions
+		Image createThumbnail(const Image& originalImage, int maxSize);
+		String infoMessage;
+		Image thumbnail;
+		bool isFontFile(const File& file);
+	
 	    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrPanelResourceEditor);
 };
-
 
 #endif

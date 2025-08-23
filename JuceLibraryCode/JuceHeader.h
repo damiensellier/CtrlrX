@@ -27,6 +27,7 @@
 #include <juce_graphics/juce_graphics.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_gui_extra/juce_gui_extra.h>
+#include <juce_product_unlocking/juce_product_unlocking.h>
 
 #include "BinaryData.h"
 
@@ -50,7 +51,7 @@ namespace ProjectInfo
 {
     const char* const  projectName    = "CtrlrX";
     const char* const  companyName    = "CtrlrX";
-    const char* const  versionString  = "5.6.33";
-    const int          versionNumber  = 0x50621;
+    const char* const  versionString  = "5.6.34";
+    const int          versionNumber  = 0x50622;
 }
 #endif

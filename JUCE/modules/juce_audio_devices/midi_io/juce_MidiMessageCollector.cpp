@@ -56,7 +56,7 @@ void MidiMessageCollector::addMessageToQueue (const MidiMessage& message)
 
     // the messages that come in here need to be time-stamped correctly - see MidiInput
     // for details of what the number should be.
-    jassert (message.getTimeStamp() != 0);
+    // jassert (message.getTimeStamp() != 0); // Commented 5.6.34. For debugging, this was flooding the buffer on any MIDI input from host
 
     auto sampleNumber = (int) ((message.getTimeStamp() - 0.001 * lastCallbackTime) * sampleRate);
 

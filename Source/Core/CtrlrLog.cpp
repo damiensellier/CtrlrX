@@ -31,17 +31,25 @@ void CtrlrLog::setLogToFile (const bool _logToFile)
 {
 	logToFile = _logToFile;
 
-	if (logToFile)
-	{
-		Logger::writeToLog ("CtrlrLog::setLogToFile: " + File::getSpecialLocation(File::currentApplicationFile).withFileExtension(".log").getFullPathName());
-		if (fileLogger)
-		{
-			deleteAndZero (fileLogger);
-		}
-		fileLogger = new FileLogger (File::getSpecialLocation(File::currentApplicationFile).withFileExtension(".log"), "Ctrlr debug log");
-
-		Logger::setCurrentLogger (fileLogger);
-	}
+    if (logToFile)
+    {
+        // Define the log file path to the user's Desktop
+        // It will be named "CtrlrX_DBG.log" directly on your Desktop
+        File logFile = File::getSpecialLocation(File::userDesktopDirectory).getChildFile("CtrlrX_DBG.log");
+        
+        // This line logs the correct path you INTEND to use.
+        Logger::writeToLog ("CtrlrLog::setLogToFile: " + logFile.getFullPathName());
+        
+        if (fileLogger)
+        {
+            deleteAndZero (fileLogger);
+        }
+        
+        // --- CRITICAL FIX HERE: Pass the 'logFile' variable, not a new path ---
+        fileLogger = new FileLogger (logFile, "Ctrlr debug log");
+        
+        Logger::setCurrentLogger (fileLogger);
+    }
 	else
 	{
 		if (fileLogger)
@@ -73,12 +81,23 @@ void CtrlrLog::logMessage (const String &message)
 
 void CtrlrLog::logMessage (const String &message, const LogLevel level)
 {
-	Logger::outputDebugString (message);
+	
+    Logger::outputDebugString (message);
 
 	CtrlrLogMessage m;
 	m.level		= level;
 	m.message	= message.trim();
 	m.time		= Time::getCurrentTime();
+    
+    // --- NEW DIRECT TEST LINE FOR FILELOGGER ---
+    // This will write the raw message directly to the fileLogger,
+    // bypassing formatMessage() and ensuring we see if the message itself is the problem.
+    if (fileLogger)
+    {
+        // We add a distinctive prefix and ensure a newline for easy visibility.
+        fileLogger->logMessage("[RAW FILE LOG TEST] " + message + "\n");
+    }
+    // --- END NEW DIRECT TEST LINE ---
 
 	if (fileLogger)
 	{

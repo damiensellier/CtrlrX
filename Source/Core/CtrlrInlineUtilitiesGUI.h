@@ -2,6 +2,7 @@
 #define CTRLR_INLINE_UTILITIES_GUI
 
 #include "CtrlrMacros.h"
+#include <juce_gui_basics/juce_gui_basics.h> // Make sure this is included for LookAndFeel_V4
 
 namespace gui {
 
@@ -74,40 +75,31 @@ namespace gui {
         g.strokePath(outline, PathStrokeType(1.0f));
     }
 
-    static LookAndFeel_V4::ColourScheme colourSchemeFromProperty(const var &property)
-    {
-        if (property =="Light")
-            return LookAndFeel_V4::getLightColourScheme();
-        if (property == "Grey")
-            return LookAndFeel_V4::getGreyColourScheme();
-        if (property == "Dark")
-            return LookAndFeel_V4::getDarkColourScheme();
-        if (property == "Midnight")
-            return LookAndFeel_V4::getMidnightColourScheme();
-        if (property == "JetBlack")
-            return LookAndFeel_V4::getJetBlackColourScheme();
-        if (property == "YamDX")
-            return LookAndFeel_V4::getYamDxColourScheme();
-        if (property == "YamDX")
-            return LookAndFeel_V4::getYamDxColourScheme();
-        if (property == "AkAPC")
-            return LookAndFeel_V4::getAkApcColourScheme();
-        if (property == "AkMPC")
-            return LookAndFeel_V4::getAkMpcColourScheme();
-        if (property == "LexiBlue")
-            return LookAndFeel_V4::getLexiBlueColourScheme();
-        if (property == "KurzGreen")
-            return LookAndFeel_V4::getKurzGreenColourScheme();
-        if (property == "KorGrey")
-            return LookAndFeel_V4::getKorGreyColourScheme();
-        if (property == "KorGold")
-            return LookAndFeel_V4::getKorGoldColourScheme();
-        if (property == "ArturOrange")
-            return LookAndFeel_V4::getArturOrangeColourScheme();
-        if (property == "AiraGreen")
-            return LookAndFeel_V4::getAiraGreenColourScheme();
-        
-        return LookAndFeel_V4::getLightColourScheme();
-    }
+    // static LookAndFeel_V4::ColourScheme colourSchemeFromProperty(const var &property) {} // Updated v5.6.34. Moved to CtrlrInlineUtilitiesGUI.cpp
+
+    // Declare your custom ColourScheme getter functions
+    juce::LookAndFeel_V4::ColourScheme getJetBlackColourScheme();
+    juce::LookAndFeel_V4::ColourScheme getYamDxColourScheme();
+    juce::LookAndFeel_V4::ColourScheme getAkApcColourScheme();
+    juce::LookAndFeel_V4::ColourScheme getAkMpcColourScheme();
+    juce::LookAndFeel_V4::ColourScheme getLexiBlueColourScheme();
+    juce::LookAndFeel_V4::ColourScheme getKurzGreenColourScheme();
+    juce::LookAndFeel_V4::ColourScheme getKorGreyColourScheme();
+    juce::LookAndFeel_V4::ColourScheme getKorGoldColourScheme();
+    juce::LookAndFeel_V4::ColourScheme getArturOrangeColourScheme();
+    juce::LookAndFeel_V4::ColourScheme getAiraGreenColourScheme();
+
+    // Your existing colourSchemeFromProperty function
+    juce::LookAndFeel_V4::ColourScheme colourSchemeFromProperty(const juce::var &property);
+
+    // The central LookAndFeel factory function
+    // Keep the optional 'colourSchemeProperty' parameter, it's not directly used here but the signature is fine.
+    juce::LookAndFeel* createLookAndFeelFromDescription(const juce::String& description,
+                                                        const juce::var& colourSchemeProperty = juce::var(),
+                                                        bool returnDefaultV4ForUnknown = true);
+
+    // Your existing colourSchemeFromProperty function (can now call createLookAndFeelFromDescription if it uses properties
+    // that map directly to the names used in createLookAndFeelFromDescription)
+    juce::LookAndFeel_V4::ColourScheme colourSchemeFromProperty(const juce::var &property);
 }
 #endif

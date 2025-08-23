@@ -50,38 +50,40 @@ public:
 
     //==============================================================================
     //[UserMethods]     -- You can add your own custom methods in this section.
-	CtrlrLuaMethodEditorTabs *getTabs();
-	TabbedComponent *getLowerTabs();
-	void insertOutput(const String &textToInsert, const Colour what);
-	void insertOutput(const AttributedString stringToInsert);
-	void showFindDialog();
-	void showDebuggerTab();
-	void showConsoleTab();
-	void findNextMatch();
-	void replaceNextMatch();
-	void closeTabWithMethod(const ValueTree &item);
-	void messageLogged (CtrlrLog::CtrlrLogMessage message);
-	void mouseDoubleClick (const MouseEvent &e);
-	bool keyPressed (const KeyPress &key, Component *event);
-	void setActiveOutputTab();
-	CtrlrLuaMethodDebuggerPrompt *getLuaDebuggerPrompt(const bool activateDebuggerNow=false);
+    CtrlrLuaMethodEditorTabs *getTabs();
+    TabbedComponent *getLowerTabs();
+    void insertOutput(const String &textToInsert, const Colour what);
+    void insertOutput(const AttributedString stringToInsert);
+    void showFindDialog();
+    void showDebuggerTab();
+    void showConsoleTab();
+    void findNextMatch();
+    void replaceNextMatch();
+    void closeTabWithMethod(const ValueTree &item);
+    void messageLogged (CtrlrLog::CtrlrLogMessage message);
+    void mouseDoubleClick (const MouseEvent &e);
+    bool keyPressed (const KeyPress &key, Component *event);
+    void setActiveOutputTab();
+    CtrlrLuaMethodDebuggerPrompt *getLuaDebuggerPrompt(const bool activateDebuggerNow=false);
     void clearOutputText();
-	//[/UserMethods]
+    //[/UserMethods]
 
     void paint (Graphics& g);
     void resized();
-
+    juce::Value& getSharedSearchTabsValue() { return sharedSearchTabsValue; }
 
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
-	CtrlrLuaMethodEditor &owner;
-	StretchableLayoutManager layoutManager;
-	StretchableLayoutResizerBar *resizer;
-	CtrlrTextEditor *output;
-	CtrlrLuaMethodFind *find;
-	CtrlrLuaMethodDebuggerPrompt *debuggerPrompt;
-	CtrlrLuaConsole *luaConsole;
+    CtrlrLuaMethodEditor &owner;
+    juce::Value sharedSearchTabsValue;
+    StretchableLayoutManager layoutManager;
+    StretchableLayoutResizerBar *resizer;
+    CtrlrTextEditor *output;
+    CtrlrLuaMethodFind *find;
+    CtrlrLuaMethodDebuggerPrompt *debuggerPrompt;
+    CtrlrLuaConsole *luaConsole;
+    juce::Value searchTabsValue; // This will be shared between toggles
     //[/UserVariables]
 
     //==============================================================================

@@ -64,8 +64,10 @@ CtrlrLabel::CtrlrLabel (CtrlrModulator &owner)
 	setProperty (Ids::uiLabelText, "Label text");
 	setProperty (Ids::uiLabelDisplaysAllValues, false);
 	setProperty (Ids::uiLabelDisplayFormat, "%n(%N) = %v(%h)");
-	setProperty (Ids::uiLabelInputHighlightTextColour, (String)findColour(Label::textWhenEditingColourId).toString()); // 0xffffffff
-	setProperty (Ids::uiLabelInputHighlightColour, (String)findColour(Label::backgroundWhenEditingColourId).toString()); // 0xff0000ff
+	// setProperty (Ids::uiLabelInputHighlightTextColour, (String)findColour(Label::textWhenEditingColourId).toString()); // Was causing assert stops when loading in debug mode
+	// setProperty (Ids::uiLabelInputHighlightColour, (String)findColour(Label::backgroundWhenEditingColourId).toString()); // Was causing assert stops when loading in debug mode
+	setProperty (Ids::uiLabelInputHighlightTextColour, "0xffffffff"); // 0xffffffff
+	setProperty (Ids::uiLabelInputHighlightColour, "0xff0000ff"); // 0xff0000ff
 	setProperty (Ids::uiLabelEditOnSingleClick, false);
 	setProperty (Ids::uiLabelEditOnDoubleClick, false);
 	setProperty (Ids::uiLabelEditFocusDiscardsChanges, true);

@@ -180,6 +180,9 @@
   <id name="panelShowDialogs"				text="Show dialogs during panel lifetime" type="Bool" />
   <id name="panelMessageTime"               text="How long messages should appear on screen (ms)"  type="Numeric" min="0" max="100000" />
   <id name="panelLastSaveDir"               text="Directory last used for panel save" type="Text" />
+  <id name="panelExportPublicKey"           text="Registration Public key" type="Text" />
+  <id name="panelExportPrivateKey"          text="Registration Private key" type="Text" />
+  <id name="panelExportServerAuthURL"       text="Registration server url" type="Text" />
 
   <!-- Generic component properties -->
   <id name="componentRectangle"                   text="Component position and size" type="Text"/>
@@ -197,7 +200,7 @@
   <id name="componentRadioGroupId"                text="Radio group" type="Numeric" min="0" max="8192" int="1" />
   <id name="componentRadioGroupNotifyMidi"        text="Send MIDI from other members of the group" type="Bool"/>
   <id name="componentVisibility"                  text="Is component visible" type="Bool"/>
-  <id name="componentLayerUid"                    text="Component layer ID" type="ReadOnly"/>
+  <id name="componentLayerUid"                    text="Component layer Name" type="VarNumeric"/>
   <id name="componentAlpha"                       text="Component Alpha" type="Numeric" max="255" min="0" int="1" />
   <id name="componentEffect"                      text="Component effect" type="VarNumeric" defaults="@imageEffect"/>
   <id name="componentEffectRadius"                text="Component effect radius" type="Numeric" min="0.5" max="255" int="0.1"/>
@@ -468,6 +471,8 @@
   <id name="uiMidiKeyboardBaseOctaveKeyPress"     text="Key press for middle octave"  type="Numeric"  min="0" max="10"  int="1" />
   <id name="uiMidiKeyboardOctaveFroMiddleC"       text="Octave number for middle C"    type="Numeric"  min="-10" max="10"  int="1" />
   <id name="uiMidiKeyboardMapToNoteNumber"        text="Map modulator value to note number instead of velocity" type="Bool" />
+  <id name="uiMidiKeyboardOctaveKeyDown"          text="Key for octave down"     type="Text"/>
+  <id name="uiMidiKeyboardOctaveKeyUp"            text="Key for octave up"       type="Text"/>
 
   <!-- Tabs -->
   <id name="uiTabsNumberOfTabs" text="Number of tabs" type="Numeric" min="1" max="64" int="1"/>
@@ -741,7 +746,7 @@
   <id name="ctrlrWarningInBootstrapState"     text="Run modulator valueChange LUA callback in Bootstrap state" type="Bool" />
   <id name="ctrlrLuaDebug"                    text="Enable LUA debugging" type="Bool" />
   <id name="ctrlrShutdownDelay"               text="Plugin shutdown delay" type="Numeric" min="0" max="10000" int="1" />
-  <id name="ctrlrUseEditorWrapper"            text="Use the Editor Wrapper for VST plugins" type="Bool"/>
+  <id name="ctrlrUseEditorWrapper"            text="Wrap the VST2.4 plugin on Ableton Live for Windows" type="Bool"/>
   <id name="ctrlrVersionSeparator"            text="Version field separator" type="Text"/>
   <id name="ctrlrVersionCompressed"           text="Save versioned panels compressed" type="Bool"/>
   <id name="ctrlrVstFile"                     text="VST File" type="FileProperty" />
@@ -812,6 +817,7 @@
   <id name="ctrlrFontSizeBaseValue"             text="Base value for all font sizes (won't affect panel UI)" type="Numeric" min="6.0" max="128.0" int="0.1"/>
   <id name="ctrlrTabBarDepth"                   text="Depth of all tab bars" type="Numeric" min="6" max="128" int="1"/>
   <id name="ctrlrPropertyLineheightBaseValue"   text="Base value for property line height" type="Numeric" min="24" max="72" int="1"/>
+  <id name="ctrlrPropertyLineImprovedLegibility"   text="Improve legibility of property fields" type="Bool"/>
 
   <!-- LUA callbacks -->
   <id name="luaManagerMethods"                text="luaManagerMethods"                                    type="Text" />

@@ -29,6 +29,7 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner)
 		ctrlrLuaManager(nullptr),
 		currentActionIndex(0),
 		indexOfSavedState(-1)
+
 {
 }
 
@@ -95,7 +96,7 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
         setProperty (Ids::panelExportResourceEncryption, 1); // Added v5.6.33. Helps with debugging crash at export on Apple Silicon
         setProperty (Ids::panelExportDelayBtwSteps, 1); // Added v5.6.33. Helps with debugging crash at export on Apple Silicon
         // For VST2 & VST3
-        if (fileExtension == ".vst3" || fileExtension == ".vst") {
+        if (fileExtension == ".vst3" || fileExtension == ".vst" || fileExtension == ".aaxplugin") { // Updated v5.6.34. AAX added
             setProperty (Ids::panelReplaceVst3PluginIds, 1); // Added v5.6.32
         }
         setProperty (Ids::panelExportCodesign, 1); // Added v5.6.33. Helps with debugging crash at export on Apple Silicon
@@ -114,31 +115,42 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
     }
     setProperty (Ids::panelPlugType, "Instrument|Synth"); // Added v5.6.32
 
+    // Store the public key string (modulus,exponent) in a property.
+    // This is the key your plugin will use to verify the server's signature.
+    setProperty (Ids::panelExportPublicKey, "");
+
+    // Set the server URL property
+    // This could also be a development server URL that changes for release
+    setProperty (Ids::panelExportServerAuthURL, "https://localhost:8000/auth/authenticate"); // Example local dev server URL
+    
     setProperty (Ids::panelMidiSnapshotAfterLoad, false);
     setProperty (Ids::panelMidiSnapshotAfterProgramChange, false);
     setProperty (Ids::panelMidiSnapshotDelay, 10);
     setProperty (Ids::panelMidiSnapshotShowProgress, false);
-    setProperty (Ids::panelMidiInputChannelDevice, 1);
     setProperty (Ids::panelMidiInputDevice, COMBO_NONE_ITEM);
-    setProperty (Ids::panelMidiControllerChannelDevice, 1);
+    setProperty (Ids::panelMidiInputChannelDevice, 1);
     setProperty (Ids::panelMidiControllerDevice, COMBO_NONE_ITEM);
-    setProperty (Ids::panelMidiOutputChannelDevice, 1);
+    setProperty (Ids::panelMidiControllerChannelDevice, 1);
     setProperty (Ids::panelMidiOutputDevice, COMBO_NONE_ITEM);
+    setProperty (Ids::panelMidiOutputChannelDevice, 1);
 
-    setProperty (Ids::panelMidiInputFromHost, false);
-    setProperty (Ids::panelMidiInputChannelHost, 1);
-    setProperty (Ids::panelMidiOutputToHost, false);
-    setProperty (Ids::panelMidiOutputChannelHost, 1);
-
-    setProperty (Ids::panelMidiThruH2H, false);
-    setProperty (Ids::panelMidiThruH2HChannelize, false);
-    setProperty (Ids::panelMidiThruH2D, false);
-    setProperty (Ids::panelMidiThruH2DChannelize, false);
+    if(!JUCEApplication::isStandaloneApp()) // Added v5.6.34. Set CtrlrX to receive THE MIDI IN MESSAGES from the HOST MIDI IN on ALL Channels.
+    {
+        setProperty (Ids::panelMidiInputFromHost, true);
+        setProperty (Ids::panelMidiInputChannelHost, 0);
+        setProperty (Ids::panelMidiInputFromHostCompare, true);
+        setProperty (Ids::panelMidiOutputToHost, false);
+        setProperty (Ids::panelMidiOutputChannelHost, 1);
+        setProperty (Ids::panelMidiThruH2H, false);
+        setProperty (Ids::panelMidiThruH2HChannelize, false);
+        setProperty (Ids::panelMidiThruH2D, false);
+        setProperty (Ids::panelMidiThruH2DChannelize, false);
+        setProperty (Ids::panelMidiThruD2H, false);
+        setProperty (Ids::panelMidiThruD2HChannelize, false);
+    }
     setProperty (Ids::panelMidiThruD2D, false);
     setProperty (Ids::panelMidiThruD2DChannelize, false);
-    setProperty (Ids::panelMidiThruD2H, false);
-    setProperty (Ids::panelMidiThruD2HChannelize, false);
-    setProperty (Ids::panelMidiRealtimeIgnore, true);
+    setProperty (Ids::panelMidiRealtimeIgnore, false); // Updated v5.6.34. Was (true). Useless and does not make any sense to ignore MIDI IN Messages by default. Ref: void CtrlrPanelMIDIInputThread::handleMIDIFromDevice (const MidiMessage &message)
     setProperty (Ids::panelMidiInputThreadPriority, 7);
     setProperty (Ids::panelMidiProgram, 0);
     setProperty (Ids::panelMidiBankLsb, 0);
@@ -203,7 +215,7 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
 //    setProperty (Ids::ctrlrMenuBarHighlightColour, Colour(HIGHLIGHT_COLOUR).toString());
 //    setProperty (Ids::ctrlrMenuBarFont, owner.getFontManager().getStringFromFont (Font (18.0f)));
 
-    setProperty (Ids::ctrlrUseEditorWrapper, false);
+    // setProperty (Ids::ctrlrUseEditorWrapper, false); // Removed v5.6.34. Conditions hard coded for the wrapper with Ableton Live on Windows
     
     owner.addChangeListener (this);
     midiMessageCollector.reset (SAMPLERATE);
@@ -597,6 +609,32 @@ void CtrlrPanel::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChange
 			ctrlrPanelEditor->setProperty (Ids::name, getProperty(Ids::name));
 		}
 	}
+    if (property == Ids::panelVersionMajor || property == Ids::panelVersionMinor) // Added v5.6.34. Force storing values as int to valueTree.
+    {
+        // Get the value that was *just set* (which is now stored in the tree).
+        // This value might be 5.0 if JUCE promoted it to a double.
+        juce::var currentValue = getProperty(property);
+
+        // Convert it to an integer. This truncates any decimal part (e.g., 5.0 -> 5).
+        int intValueToStore = static_cast<int>(currentValue);
+
+        // IMPORTANT: Only re-set the property if the integer version is different from
+        //            what's currently stored as a 'raw' var, or if its type implies
+        //            it's currently a double when it should be an int.
+        //            This prevents an infinite loop of property change notifications
+        //            if the ValueTree somehow sees setting 5 as different from 5.0.
+        //
+        // A robust check: if the var is currently a double, or if it's an int but
+        //                 the stored int isn't what we expect (shouldn't happen with this logic).
+        if (currentValue.isDouble() || (currentValue.isInt() && static_cast<int>(currentValue) != intValueToStore))
+        {
+            // Set the property back, explicitly providing an int to juce::var.
+            // Pass nullptr for the UndoManager if you're not using one here.
+            // If you are using an UndoManager, pass it: getUndoManager() or your specific manager.
+            setProperty(property, juce::var(intValueToStore), false);
+        }
+        return; // Handled this property, no need to check other conditions below.
+    }
     else if (property == Ids::panelCertificateMacSelectId) // Added v5.6.32. Returns the MAC certificate ID from the popupMenu
     {
         if (getRestoreState()) // Prevent showing up the popupMenu on load
@@ -2034,4 +2072,47 @@ void CtrlrPanel::multiMidiReceived(CtrlrMidiMessage &multiMidiMessage)
 {
 	multiMidiQueue.add (multiMidiMessage);
 	triggerAsyncUpdate();
+}
+// In CtrlrPanel.cpp
+
+void CtrlrPanel::saveLayerVisibilityStates()
+{
+	// Clear any previous states
+	layerVisibilityBackup.clear();
+	// Get the canvas from the editor
+	CtrlrPanelCanvas* canvas = getCanvas();
+
+	if (canvas)
+	{
+		// Loop through all layers and save their current visibility state
+		for (int i = 0; i < canvas->getNumLayers(); ++i)
+		{
+			CtrlrPanelCanvasLayer* layer = canvas->getLayerFromArray(i);
+			if (layer)
+			{
+				layerVisibilityBackup.add(layer->getProperty(Ids::uiPanelCanvasLayerVisibility, true));
+			}
+		}
+	}
+}
+
+void CtrlrPanel::restoreLayerVisibilityStates()
+{
+	// Get the canvas from the editor
+	CtrlrPanelCanvas* canvas = getCanvas();
+
+	if (canvas && hasLayerVisibilityStates())
+	{
+		// Loop through layers and restore visibility from the backup
+		for (int i = 0; i < canvas->getNumLayers() && i < layerVisibilityBackup.size(); ++i)
+		{
+			CtrlrPanelCanvasLayer* layer = canvas->getLayerFromArray(i);
+			if (layer)
+			{
+				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, layerVisibilityBackup.getUnchecked(i));
+			}
+		}
+	}
+	// Clear the backup after restoring
+	layerVisibilityBackup.clear();
 }

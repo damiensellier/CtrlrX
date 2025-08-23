@@ -6,6 +6,8 @@
 #include "juce_PluginHostType.h"
 #include "boost/bind.hpp"
 #include "boost/function.hpp"
+#include "CtrlrMacros.h"
+#include "CtrlrLog.h"
 
 #include <fstream> // Added v5.6.33. Required for vst3 logger
 
@@ -57,7 +59,7 @@ class CtrlrProcessor : public AudioProcessor, public ChangeBroadcaster
 
 		void processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages) override;
     
-		AudioProcessorEditor* createEditor();
+		AudioProcessorEditor* createEditor() override;
 		bool useWrapper();
     
         bool hasEditor() const override;
@@ -171,7 +173,13 @@ class CtrlrProcessor : public AudioProcessor, public ChangeBroadcaster
 class PluginLoggerVst3 { // Added v5.6.32
 public:
     PluginLoggerVst3(const juce::File& pluginExecutableFile) {
-        logFile = pluginExecutableFile.getParentDirectory().getChildFile("CtrlrX_vst3_debug_log.txt");
+        String fileExt = pluginExecutableFile.getFileExtension();
+        if (fileExt == ".exe") {
+            logFile = pluginExecutableFile.getParentDirectory().getChildFile("CtrlrX_debug_log.txt");
+        }
+        else {
+            logFile = File::getSpecialLocation(File::userDesktopDirectory).getChildFile("CtrlrX_debug_log.txt"); // VST3 folder is read only unless admin
+        }
         if (!logFile.exists()) {
             logFile.create();
         }

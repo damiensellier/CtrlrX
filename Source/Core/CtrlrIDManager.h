@@ -66,7 +66,10 @@ class CtrlrIDManager
 		const String getVendorForId (const MemoryBlock &vendorId);
 		const String getVendorForId (const String &vendorId);
 		ValueTree getVendorTree();
+
 		JUCE_LEAK_DETECTOR(CtrlrIDManager);
+
+
 
 	private:
 		ValueTree ctrlrIdTree;

@@ -45,7 +45,7 @@
 
 #define JUCE_USE_DARK_SPLASH_SCREEN 1
 
-#define JUCE_PROJUCER_VERSION 0x60103
+#define JUCE_PROJUCER_VERSION 0x60008
 
 //==============================================================================
 #define JUCE_MODULE_AVAILABLE_juce_audio_basics             1
@@ -61,6 +61,7 @@
 #define JUCE_MODULE_AVAILABLE_juce_graphics                 1
 #define JUCE_MODULE_AVAILABLE_juce_gui_basics               1
 #define JUCE_MODULE_AVAILABLE_juce_gui_extra                1
+#define JUCE_MODULE_AVAILABLE_juce_product_unlocking        1
 
 #define JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED 1
 

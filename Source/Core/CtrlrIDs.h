@@ -237,6 +237,9 @@ namespace Ids
     DECLARE_ID (panelCertificateWinSelectPath); // Added v5.6.32
     DECLARE_ID (panelCertificateWinPath); // Added v5.6.32
     DECLARE_ID (panelCertificateWinPassCode); // Added v5.6.32
+    DECLARE_ID (panelExportPublicKey); // Added v5.6.34
+    DECLARE_ID (panelExportPrivateKey); // Added v5.6.34
+    DECLARE_ID (panelExportServerAuthURL); // Added v5.6.34
     
     DECLARE_ID (panelModulatorListColumns);
     DECLARE_ID (panelModulatorListCsvDelimiter);
@@ -505,6 +508,8 @@ namespace Ids
     DECLARE_ID (uiMidiKeyboardBaseOctaveKeyPress);
     DECLARE_ID (uiMidiKeyboardOctaveFroMiddleC);
     DECLARE_ID (uiMidiKeyboardMapToNoteNumber);
+    DECLARE_ID (uiMidiKeyboardOctaveKeyDown); // Added v5.6.34
+    DECLARE_ID (uiMidiKeyboardOctaveKeyUp); // Added v5.6.34
     
     DECLARE_ID (uiTabsNumberOfTabs);
     DECLARE_ID (uiTabsOrientation);
@@ -823,6 +828,7 @@ namespace Ids
     DECLARE_ID (ctrlrPrivateKey);
     DECLARE_ID (ctrlrFontSizeBaseValue);
     DECLARE_ID (ctrlrPropertyLineheightBaseValue); // Added v5.6.33
+    DECLARE_ID (ctrlrPropertyLineImprovedLegibility); // Added v5.6.34
     DECLARE_ID (ctrlrScrollbarThickness);
     DECLARE_ID (ctrlrLegacyMode);
     DECLARE_ID (ctrlrColourScheme);
@@ -836,6 +842,7 @@ namespace Ids
     DECLARE_ID (luaMethodEditorBgColour);
     DECLARE_ID (luaMethodEditorLineNumbersBgColour); // Added v5.6.31
     DECLARE_ID (luaMethodEditorLineNumbersColour); // Added v5.6.31
+	DECLARE_ID (luaMethodEditorFontColour); // Added v5.6.34. Editor font colour
     DECLARE_ID (luaMethodGroup);
     DECLARE_ID (luaMethodCode);
     DECLARE_ID (luaMethodSource);
@@ -844,6 +851,8 @@ namespace Ids
     DECLARE_ID (luaMethod);
     DECLARE_ID (luaManager);
     DECLARE_ID (luaMethodValid);
+    
+    DECLARE_ID (openSearchTabsState); // Added v5.6.34
     
     DECLARE_ID (luaModulatorValueChange);
     DECLARE_ID (luaModulatorComponentChange);

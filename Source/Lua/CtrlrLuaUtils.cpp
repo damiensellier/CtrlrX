@@ -206,8 +206,14 @@ String CtrlrLuaUtils::askForTextInputWindow (const String title, const String me
 	w.addTextEditor ("userInput", initialInputContent,  onScreenLabel, isPassword);
 	w.addButton (button1Text, 1);
 	w.addButton (button2Text, 0);
-	w.runModalLoop();
-	return (w.getTextEditorContents("userInput"));
+	if (w.runModalLoop() == 1) // Updated v5.6.34. Thanks to @dobo365
+	{
+		return (w.getTextEditorContents("userInput"));
+	}
+	else
+	{
+		return ("-1");
+	}
 }
 
 StringArray CtrlrLuaUtils::getMidiInputDevices()
@@ -244,5 +250,7 @@ void CtrlrLuaUtils::wrapForLua (lua_State *L)
 			.def("getVersionRevision", &CtrlrLuaUtils::getVersionRevision)
 			.def("getVersionString", &CtrlrLuaUtils::getVersionString)
 			.def("getPi", &CtrlrLuaUtils::getPi)
+			.def("get16bitSigned", &CtrlrLuaUtils::get16bitSigned)
+			.def("get8bitSigned", &CtrlrLuaUtils::get8bitSigned)
 	];
 }

@@ -181,62 +181,31 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
         setProperty(Ids::uiPanelLookAndFeel, "V4");
         
         // Requires passing the colourScheme to the property uiPanelLookAndFeel from ctrlrColourScheme
-        if (ed.getProperty(Ids::ctrlrColourScheme) == "Light")
+        // Updated v5.6.34. For a generic method schemeName Property--> schemeName. Get the current colour scheme name from the property
+        juce::String schemeName = ed.getProperty (Ids::ctrlrColourScheme).toString();
+        
+        // <fallback for empty instances without any colourscheme yet defined
+        if (schemeName.isEmpty())
         {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 Light");
+            schemeName = "Light";
         }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "Grey")
+        
+        // Determine the LookAndFeel description string
+        juce::String lookAndFeelDesc;
+        
+        if (schemeName.startsWith ("V4 "))
         {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 Grey");
+            // If it already has "V4 ", use it as is
+            lookAndFeelDesc = schemeName;
         }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "Dark")
+        else
         {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 Dark");
+            // Otherwise, prepend "V4 " (e.g., "Light" becomes "V4 Light")
+            lookAndFeelDesc = "V4 " + schemeName;
         }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "Midnight")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 Midnight");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "V4 JetBlack")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 JetBlack");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "YamDX")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 YamDX");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "AkAPC")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 AkAPC");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "AkMPC")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 AkMPC");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "LexiBlue")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 LexiBlue");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "KurzGreen")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 KurzGreen");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "KorGrey")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 KorGrey");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "KorGold")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 KorGold");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "ArturOrange")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 ArturOrange");
-        }
-        else if (ed.getProperty(Ids::ctrlrColourScheme) == "AiraGreen")
-        {
-            setProperty(Ids::uiPanelLookAndFeel, "V4 AiraGreen");
-        }
+        
+        // Set the uiPanelLookAndFeel property with the determined string
+        setProperty (Ids::uiPanelLookAndFeel, lookAndFeelDesc);
     }
     
     //setProperty(Ids::uiPanelLegacyMode, false);
@@ -274,6 +243,7 @@ CtrlrPanelEditor::~CtrlrPanelEditor()
     deleteAndZero(ctrlrPanelProperties);
     deleteAndZero(spacerComponent);
     deleteAndZero(ctrlrPanelViewport);
+    //deleteAndZero(lookAndFeel);
 }
 
 void CtrlrPanelEditor::visibilityChanged()
@@ -546,28 +516,41 @@ void CtrlrPanelEditor::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasC
         }
         else if (property == Ids::uiPanelLookAndFeel)
         {
-            if (lookAndFeel)
+            // 1. Create a single new LookAndFeel object and give ownership to a unique_ptr.
+            //    This is the only place we call the function that allocates a new object.
+            auto newLookAndFeel = std::unique_ptr<juce::LookAndFeel>(getLookAndFeelFromDescription(getProperty(property)));
+
+            // 2. Safely check if the pointer is valid. If not, do nothing.
+            if (newLookAndFeel.get() == nullptr)
+                return;
+
+            // 3. Now, set all the necessary LookAndFeel pointers using this ONE new object.
+            //    The .get() method returns the raw pointer without transferring ownership.
+            getCanvas()->setLookAndFeel(newLookAndFeel.get());
+            setLookAndFeel(newLookAndFeel.get());
+            LookAndFeel::setDefaultLookAndFeel(newLookAndFeel.get());
+
+            // 4. Finally, assign the new unique_ptr to the class member.
+            //    This safely manages the lifetime of the new object.
+            lookAndFeel = std::move(newLookAndFeel);
+
+            if (!getProperty(Ids::uiPanelLegacyMode))
             {
-                getCanvas()->setLookAndFeel(nullptr);
-                delete lookAndFeel.release();
+                // ... (your existing color update code)
             }
-            
-            lookAndFeel.reset(getLookAndFeelFromDescription(getProperty(property)));
-            getCanvas()->setLookAndFeel(lookAndFeel.get());
-            
-            setLookAndFeel(getLookAndFeelFromDescription(getProperty(Ids::uiPanelLookAndFeel))); // Updates the current component LookAndFeel : PanelEditor
-            LookAndFeel::setDefaultLookAndFeel(getLookAndFeelFromDescription(getProperty(Ids::uiPanelLookAndFeel))); // Force selected LnF as Default LnF for popups, combobox, alert windows
-            lookAndFeelChanged();
-            
-            if (!getProperty(Ids::uiPanelLegacyMode)) // Added v5.6.30. Protects Legacy panels' BKG Colours when being assigned LnF V3
+
+//            lookAndFeelChanged();
+
+            if (!getProperty(Ids::uiPanelLegacyMode))
             {
-                setProperty(Ids::uiPanelViewPortBackgroundColour, (String) Component::findColour (ResizableWindow::backgroundColourId).withAlpha(0.7f).toString()); // Update Canvas props
-                setProperty(Ids::uiPanelBackgroundColour, (String) Component::findColour (ResizableWindow::backgroundColourId).toString());
-                setProperty(Ids::uiPanelBackgroundColour1, (String) Component::findColour (ResizableWindow::backgroundColourId).toString());
-                setProperty(Ids::uiPanelBackgroundColour2, (String) Component::findColour (ResizableWindow::backgroundColourId).darker(0.2f).toString());
-                setProperty(Ids::uiPanelTooltipBackgroundColour, (String) Component::findColour (BubbleComponent::backgroundColourId).toString());
-                setProperty(Ids::uiPanelTooltipOutlineColour, (String) Component::findColour (BubbleComponent::outlineColourId).toString());
-                setProperty(Ids::uiPanelTooltipColour, (String) Component::findColour (Label::textColourId).toString());
+                // Update colors based on the new valid LookAndFeel.
+                setProperty(Ids::uiPanelViewPortBackgroundColour, (String)Component::findColour(ResizableWindow::backgroundColourId).withAlpha(0.7f).toString());
+                setProperty(Ids::uiPanelBackgroundColour, (String)Component::findColour(ResizableWindow::backgroundColourId).toString());
+                setProperty(Ids::uiPanelBackgroundColour1, (String)Component::findColour(ResizableWindow::backgroundColourId).toString());
+                setProperty(Ids::uiPanelBackgroundColour2, (String)Component::findColour(ResizableWindow::backgroundColourId).darker(0.2f).toString());
+                setProperty(Ids::uiPanelTooltipBackgroundColour, (String)Component::findColour(BubbleComponent::backgroundColourId).toString());
+                setProperty(Ids::uiPanelTooltipOutlineColour, (String)Component::findColour(BubbleComponent::outlineColourId).toString());
+                setProperty(Ids::uiPanelTooltipColour, (String)Component::findColour(Label::textColourId).toString());
             }
             
 //            /** Stores the updated LnF ColourScheme **/
@@ -641,45 +624,21 @@ void CtrlrPanelEditor::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasC
     }
 }
 
-
-LookAndFeel *CtrlrPanelEditor::getLookAndFeelFromDescription(const String &lookAndFeelDesc)
+juce::LookAndFeel *CtrlrPanelEditor::getLookAndFeelFromDescription(const juce::String &lookAndFeelDesc) // Added v5.6.34
 {
-    if (lookAndFeelDesc == "V4" || lookAndFeelDesc == "V4 Light")
-        return new LookAndFeel_V4(LookAndFeel_V4::getLightColourScheme());
-    if (lookAndFeelDesc == "V4 Grey")
-        return new LookAndFeel_V4(LookAndFeel_V4::getGreyColourScheme());
-    if (lookAndFeelDesc == "V4 Dark")
-        return new LookAndFeel_V4(LookAndFeel_V4::getDarkColourScheme());
-    if (lookAndFeelDesc == "V4 Midnight")
-        return new LookAndFeel_V4(LookAndFeel_V4::getMidnightColourScheme());
-    if (lookAndFeelDesc == "V4 JetBlack")
-        return new LookAndFeel_V4(LookAndFeel_V4::getJetBlackColourScheme());
-    if (lookAndFeelDesc == "V4 YamDX")
-        return new LookAndFeel_V4(LookAndFeel_V4::getYamDxColourScheme());
-    if (lookAndFeelDesc == "V4 AkAPC")
-        return new LookAndFeel_V4(LookAndFeel_V4::getAkApcColourScheme());
-    if (lookAndFeelDesc == "V4 AkMPC")
-        return new LookAndFeel_V4(LookAndFeel_V4::getAkMpcColourScheme());
-    if (lookAndFeelDesc == "V4 LexiBlue")
-        return new LookAndFeel_V4(LookAndFeel_V4::getLexiBlueColourScheme());
-    if (lookAndFeelDesc == "V4 KurzGreen")
-        return new LookAndFeel_V4(LookAndFeel_V4::getKurzGreenColourScheme());
-    if (lookAndFeelDesc == "V4 KorGrey")
-        return new LookAndFeel_V4(LookAndFeel_V4::getKorGreyColourScheme());
-    if (lookAndFeelDesc == "V4 KorGold")
-        return new LookAndFeel_V4(LookAndFeel_V4::getKorGoldColourScheme());
-    if (lookAndFeelDesc == "V4 ArturOrange")
-        return new LookAndFeel_V4(LookAndFeel_V4::getArturOrangeColourScheme());
-    if (lookAndFeelDesc == "V4 AiraGreen")
-        return new LookAndFeel_V4(LookAndFeel_V4::getAiraGreenColourScheme());
-    if (lookAndFeelDesc == "V3")
-        return new LookAndFeel_V3();
-    if (lookAndFeelDesc == "V2")
-        return new LookAndFeel_V2();
-    if (lookAndFeelDesc == "V1")
-        return new LookAndFeel_V1();
-    
-    return (nullptr);
+    // If "Default" has a special meaning for CtrlrPanelEditor, handle it here.
+    // Otherwise, you can just directly call the generic function.
+    if (lookAndFeelDesc == "Default")
+    {
+        return nullptr; // Or whatever "Default" means for this specific component
+                        // e.g., return new juce::LookAndFeel_V4();
+    }
+
+    // Now, simply call your centralized function!
+    // The second argument `true` means if the `lookAndFeelDesc` doesn't match
+    // any known scheme, it will return a new LookAndFeel_V4 with the LightColourScheme.
+    // If you prefer it to return nullptr in unknown cases, change it to `false`.
+    return gui::createLookAndFeelFromDescription(lookAndFeelDesc, true);
 }
 
 const var &CtrlrPanelEditor::getProperty(const Identifier &name) const
@@ -793,4 +752,19 @@ void CtrlrPanelEditor::reloadResources(Array<CtrlrPanelResource *> resourcesThat
 
 void CtrlrPanelEditor::searchForProperty()
 {
+}
+
+bool CtrlrPanelEditor::luaEditorExistsAndIsFocused() // Added v5.6.34. Required to pass keypress to the LUA method manager for menu items. Handles the focus gain/loss.
+{
+    // We use the public getContent() method on the window manager.
+    // This will return a pointer to the component inside the Lua editor window.
+    juce::Component* luaEditorContent = owner.getPanelWindowManager().getContent(CtrlrPanelWindowManager::LuaMethodEditor);
+
+    // Now we check if the content component exists and has keyboard focus.
+    if (luaEditorContent != nullptr && luaEditorContent->hasKeyboardFocus(true))
+    {
+        return true;
+    }
+
+    return false;
 }

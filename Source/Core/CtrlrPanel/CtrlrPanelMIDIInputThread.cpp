@@ -107,13 +107,29 @@ void CtrlrPanelMIDIInputThread::handleMIDIFromDevice (const MidiMessage &message
 
 void CtrlrPanelMIDIInputThread::handleMIDIFromHost(MidiBuffer &buffer)
 {
-	{
-		const ScopedWriteLock sl(lock);
-		/* last event time is in samples, not event numbers you dumbass */
-		hostInputBuffer.addEvents (buffer, 0, buffer.getLastEventTime() + 1, 1);
-	}
+    // PROBLEM 2 FIX: Ensure ScopedWriteLock is applied to ALL paths that modify hostInputBuffer
+    const ScopedWriteLock sl(lock);
 
-	notify();
+//    #ifdef JucePlugin_Build_AAX
+//        // This code runs ONLY when building for AAX.
+//        // PROBLEM 1 FIX: Use the actual samplePosition from the MidiBuffer::Event
+//        for (const auto& msg : buffer)
+//        {
+//            hostInputBuffer.addEvent(msg.getMessage(), msg.samplePosition);
+//        }
+//    #else
+//        // This code runs for ALL other formats (VST, AU, Standalone).
+//        // This line generally works well for copying the entire buffer with correct relative timings.
+//        // If buffer.getLastEventTime() + 1 effectively represents the block size, this is fine.
+//        // Alternatively, for a full copy of all events in the buffer up to its last sample:
+//        // hostInputBuffer.addEvents (buffer, 0, buffer.getNumSamples(), 0);
+//        hostInputBuffer.addEvents (buffer, 0, buffer.getLastEventTime() + 1, 1);
+//    #endif
+
+     hostInputBuffer.addEvents (buffer, 0, buffer.getLastEventTime() + 1, 1);
+
+    // The notify() call is correctly outside the #ifdef/#else, so it's always called.
+    notify();
 }
 
 void CtrlrPanelMIDIInputThread::closeInputDevice()

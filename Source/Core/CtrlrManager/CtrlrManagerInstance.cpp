@@ -19,7 +19,13 @@ void CtrlrManager::setEmbeddedDefaults()
 
 	ctrlrProperties.reset(new CtrlrProperties (*this));
 
-	setProperty (Ids::ctrlrLogToFile, false);
+    #if JUCE_DEBUG // Added v5.6.34. Will show the debug log.
+    // If we are in a Debug build, force logging ON
+    setProperty (Ids::ctrlrLogToFile, true);
+    #else
+    // If we are in any other build (like Release), force logging OFF by default.
+    setProperty (Ids::ctrlrLogToFile, false);
+    #endif
     setProperty (Ids::ctrlrWarningInBootstrapState, false); // Added v5.6.32
 	setProperty (Ids::ctrlrLuaDebug, false);
 	setProperty (Ids::ctrlrVersionSeparator, "_");
@@ -36,7 +42,8 @@ void CtrlrManager::setEmbeddedDefaults()
     setProperty (Ids::ctrlrMenuBarHeight, 24); // Added v5.6.31
     setProperty (Ids::ctrlrTabBarDepth, 24); // Added v5.6.31
     setProperty (Ids::ctrlrPropertyLineheightBaseValue, 36); // Added v5.6.33.
-    setProperty (Ids::ctrlrUseEditorWrapper, (bool)ctrlrPlayerInstanceTree.hasProperty(Ids::ctrlrUseEditorWrapper) ? (bool)ctrlrPlayerInstanceTree.getProperty(Ids::ctrlrUseEditorWrapper) : true);
+    setProperty (Ids::ctrlrPropertyLineImprovedLegibility, false); // Added v5.6.34.
+    // setProperty (Ids::ctrlrUseEditorWrapper, (bool)ctrlrPlayerInstanceTree.hasProperty(Ids::ctrlrUseEditorWrapper) ? (bool)ctrlrPlayerInstanceTree.getProperty(Ids::ctrlrUseEditorWrapper) : true); // Removed v5.6.34. Conditions hard coded for the wrapper with Ableton Live on Windows
     setProperty (Ids::uiLuaConsoleInputRemoveAfterRun, true);
      
     // Added v5.6.31
@@ -169,11 +176,17 @@ const String CtrlrManager::getInstanceNameForHost() const
 {
 	if (getInstanceMode() == InstanceSingle || getInstanceMode() == InstanceSingleRestriced)
 	{
-		return (ctrlrPlayerInstanceTree.getProperty(Ids::name).toString() + "|" + ctrlrPlayerInstanceTree.getProperty(Ids::panelAuthorName).toString());
+        #ifdef JucePlugin_Build_AAX
+            // This code runs ONLY when building for AAX.
+            return (ctrlrPlayerInstanceTree.getProperty(Ids::name).toString());
+        #else
+            // This code runs for ALL other formats (VST, AU, Standalone).
+            return (ctrlrPlayerInstanceTree.getProperty(Ids::name).toString() + " | " + ctrlrPlayerInstanceTree.getProperty(Ids::panelAuthorName).toString()); // Updated v5.6.34.
+        #endif
 	}
 	else
 	{
-		return ("Ctrlr|Instigator");
+		return ("CtrlrX"); // Updated v5.6.34. Default Plugin Name
 	}
 }
 
@@ -185,7 +198,7 @@ const String CtrlrManager::getInstanceName() const
 	}
 	else
 	{
-		return ("Ctrlr");
+		return ("CtrlrX");
 	}
 }
 

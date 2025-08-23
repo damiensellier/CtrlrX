@@ -68,5 +68,8 @@
 #include "LBorderSize.h"
 #include "LGlobalFunctions.h"
 #include "LAsyncUpdater.h"
+#include "LRSAKey.h" // Added v5.6.34
+#include "LMachineIDUtilities.h" // Added v5.6.34
+#include "LOnlineUnlockStatus.h" // Added v5.6.34
 
 #endif

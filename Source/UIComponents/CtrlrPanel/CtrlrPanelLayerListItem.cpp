@@ -5,86 +5,121 @@
 #include "CtrlrPanelLayerList.h"
 #include "CtrlrInlineUtilitiesGUI.h"
 
-CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
+CtrlrPanelLayerListItem::CtrlrPanelLayerListItem(CtrlrPanelLayerList& _owner)
     : layer(0), owner(_owner),
-      layerName (0),
-      layerVisibility (0),
-      layerColour (0),
-      layerIndex (0)
+    layerName(0),
+    layerVisibility(0),
+    layerColour(0),
+    layerIndex(0),
+    isolateButton(0),
+    restoreButton(0),
+    isDragging(false)
 {
-    addAndMakeVisible (layerName = new Label ("",
-                                              L"Layer Name"));
-    layerName->setFont (Font (12.0000f, Font::plain));
-    layerName->setJustificationType (Justification::centredLeft);
-    layerName->setEditable (true, true, false);
-    layerName->setColour (TextEditor::textColourId, Colours::black);
-    layerName->setColour (TextEditor::backgroundColourId, Colour (0x0));
-    layerName->addListener (this);
+    // Your existing component creation code...
+    addAndMakeVisible(layerName = new Label("", L"Layer Name"));
+    layerName->setFont(Font(12.0000f, Font::plain));
+    layerName->setJustificationType(Justification::centredLeft);
+    layerName->setEditable(true, true, false);
+    layerName->setColour(TextEditor::textColourId, Colours::black);
+    layerName->setColour(TextEditor::backgroundColourId, Colour(0x0));
+    layerName->addListener(this);
 
-    addAndMakeVisible (layerVisibility = new ToggleButton(""));
-    layerVisibility->addListener (this);
+    addAndMakeVisible(layerVisibility = new ToggleButton(""));
+    layerVisibility->addListener(this);
 
-    addAndMakeVisible (layerColour = new CtrlrColourEditorComponent (this));
-    addAndMakeVisible (layerIndex = new Label (L"layerIndex",
-                                               L"2"));
-    layerIndex->setFont (Font (12.0000f, Font::plain));
-    layerIndex->setJustificationType (Justification::centred);
-    layerIndex->setEditable (false, false, false);
-    layerIndex->setColour (TextEditor::textColourId, Colours::black);
-    layerIndex->setColour (TextEditor::backgroundColourId, Colour (0x0));
+    addAndMakeVisible(layerColour = new CtrlrColourEditorComponent(this));
+    addAndMakeVisible(layerIndex = new Label(L"layerIndex", L"2"));
+    layerIndex->setFont(Font(12.0000f, Font::plain));
+    layerIndex->setJustificationType(Justification::centred);
+    layerIndex->setEditable(false, false, false);
+    layerIndex->setColour(TextEditor::textColourId, Colours::black);
+    layerIndex->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
+    // Add the new buttons
+    addAndMakeVisible(isolateButton = new TextButton("Isolate"));
+    isolateButton->setButtonText("Isolate");
+    isolateButton->addListener(this);
+    isolateButton->setColour(TextButton::buttonColourId, Colours::lightblue);
+    isolateButton->setColour(TextButton::textColourOffId, Colours::black);
 
-    //[UserPreSize]
-	layerName->addMouseListener (this, true);
-	layerVisibility->addMouseListener (this, true);
-	layerColour->addMouseListener (this, true);
-	layerIndex->addMouseListener (this, true);
+    addAndMakeVisible(restoreButton = new TextButton("Restore"));
+    restoreButton->setButtonText("Restore");
+    restoreButton->addListener(this);
+    restoreButton->setColour(TextButton::buttonColourId, Colours::lightgreen);
+    restoreButton->setColour(TextButton::textColourOffId, Colours::black);
+	restoreButton->setVisible(false); //  hidden but keeping code in case you prefer to use it later, restore is now a menu item.
 
-	layerVisibility->setMouseCursor (MouseCursor::PointingHandCursor);
-    //[/UserPreSize]
+    // Add mouse listeners for existing components
+    layerName->addMouseListener(this, true);
+    layerVisibility->addMouseListener(this, true);
+    layerColour->addMouseListener(this, true);
+    layerIndex->addMouseListener(this, true);
 
-    setSize (355, 40);
+    layerVisibility->setMouseCursor(MouseCursor::PointingHandCursor);
 
-
-    //[Constructor] You can add your own custom stuff here..
-    //[/Constructor]
+    setSize(355, 40);
 }
 
 CtrlrPanelLayerListItem::~CtrlrPanelLayerListItem()
 {
-    //[Destructor_pre]. You can add your own custom destruction code here..
-    //[/Destructor_pre]
-
-    deleteAndZero (layerName);
-    deleteAndZero (layerVisibility);
-    deleteAndZero (layerColour);
-    deleteAndZero (layerIndex);
-
-
-    //[Destructor]. You can add your own custom destruction code here..
-    //[/Destructor]
+    deleteAndZero(layerName);
+    deleteAndZero(layerVisibility);
+    deleteAndZero(layerColour);
+    deleteAndZero(layerIndex);
+    deleteAndZero(isolateButton);
+    deleteAndZero(restoreButton);
 }
 
 //==============================================================================
 void CtrlrPanelLayerListItem::paint (Graphics& g)
 {
-    //[UserPrePaint] Add your own custom painting code here..
     g.setColour(Colours::black);
     g.drawLine(0, getHeight(), getWidth(), getHeight(), 1.0f);
-    //[/UserPrePaint]
 
-    //[UserPaint] Add your own custom painting code here..
-    //[/UserPaint]
+    // Show if this layer is part of an isolation
+    if (owner.isLayerIsolationActive())
+    {
+        // Highlight the item differently when isolation is active
+        g.setColour(Colours::orange.withAlpha(0.1f));
+        g.fillRect(getLocalBounds().reduced(1));
+    }
+
+    // Optional: Add visual feedback when dragging
+    if (isDragging)
+    {
+        g.setColour(Colours::blue.withAlpha(0.3f));
+        g.fillRect(getLocalBounds());
+    }
 }
 
-void CtrlrPanelLayerListItem::resized()
-{
-    layerName->setBounds (48, 4, proportionOfWidth (0.5183f), 12);
-    layerVisibility->setBounds (8, 4, 32, 32);
-    layerColour->setBounds (48, 16, getWidth() - 144, 16);
-    layerIndex->setBounds (getWidth() - 83, getHeight() - 16, 14, 16);
-    //[UserResized] Add your own custom resize handling here..
-    //[/UserResized]
+void CtrlrPanelLayerListItem::resized(){
+
+const int buttonWidth = 60;
+const int buttonHeight = 16;
+const int colourChooserWidth = 80; // A smaller, fixed width for the color chooser
+const int padding = 4;
+const int pushLeft = 40;
+const int totalButtonAreaWidth = buttonWidth * 2 + padding; // Total width for both buttons but now only used by the isolate button
+
+// Position the visibility toggle button (left side)
+layerVisibility->setBounds(padding, padding, 32, 32);
+
+// Position the layer name label next to the visibility toggle
+layerName->setBounds(layerVisibility->getRight() + padding, padding, proportionOfWidth(0.35f), 12);
+
+// Position the color chooser next to the layer name label, making it a fixed, smaller size
+layerColour->setBounds(layerName->getRight() + padding, 16, colourChooserWidth, 16);
+
+// Position the layer index label on the far right
+layerIndex->setBounds(getWidth() - (padding + 14), getHeight() - 16, 14, 16);
+
+// Position the buttons side-by-side on the right, adjusting for padding
+const int buttonsRightEdge = getWidth() - padding;
+const int restoreButtonLeft = buttonsRightEdge - buttonWidth;
+const int isolateButtonLeft = restoreButtonLeft - buttonWidth - padding;
+
+isolateButton->setBounds(getWidth() - totalButtonAreaWidth-pushLeft, (getHeight() - buttonHeight) / 2, totalButtonAreaWidth, buttonHeight);
+//restoreButton->setBounds(restoreButtonLeft, (getHeight() - buttonHeight) / 2, buttonWidth, buttonHeight);
 }
 
 void CtrlrPanelLayerListItem::labelTextChanged (Label* labelThatHasChanged)
@@ -106,49 +141,76 @@ void CtrlrPanelLayerListItem::labelTextChanged (Label* labelThatHasChanged)
     //[/UserlabelTextChanged_Post]
 }
 
-void CtrlrPanelLayerListItem::buttonClicked (Button* buttonThatWasClicked)
+void CtrlrPanelLayerListItem::buttonClicked(Button* buttonThatWasClicked)
 {
-    //[UserbuttonClicked_Pre]
-    //[/UserbuttonClicked_Pre]
-
     if (buttonThatWasClicked == layerVisibility)
     {
-        //[UserButtonCode_layerVisibility] -- add your button handler code here..
-		if (layer)
-		{
-			layer->setProperty (Ids::uiPanelCanvasLayerVisibility, layerVisibility->getToggleState());
-		}
-        //[/UserButtonCode_layerVisibility]
+        if (layer)
+        {
+            layer->setProperty(Ids::uiPanelCanvasLayerVisibility, layerVisibility->getToggleState());
+        }
     }
-
-    //[UserbuttonClicked_Post]
-    //[/UserbuttonClicked_Post]
+    else if (buttonThatWasClicked == isolateButton)
+    {
+        if (layer)
+        {
+            owner.isolateLayer(rowIndex);
+            updateButtonStates();
+        }
+    }
+    else if (buttonThatWasClicked == restoreButton)
+    {
+        owner.restoreLayerVisibility();
+        updateButtonStates();
+    }
 }
 
-void CtrlrPanelLayerListItem::mouseDown (const MouseEvent& e)
+void CtrlrPanelLayerListItem::updateButtonStates()
 {
-    //[UserCode_mouseDown] -- Add your code here...
-	if (layer)
-	{
-		owner.setSelectedRow (rowIndex);
-	}
-    //[/UserCode_mouseDown]
+    bool hasBackup = owner.getOwner().hasLayerVisibilityStates();
+
+    isolateButton->setEnabled(!hasBackup);  // Can only isolate if no backup exists
+    restoreButton->setEnabled(hasBackup);   // Can only restore if backup exists
+
+    // Visual feedback
+    if (hasBackup)
+    {
+        isolateButton->setColour(TextButton::buttonColourId, Colours::grey);
+        restoreButton->setColour(TextButton::buttonColourId, Colours::orange);
+    }
+    else
+    {
+        isolateButton->setColour(TextButton::buttonColourId, Colours::lightblue);
+        restoreButton->setColour(TextButton::buttonColourId, Colours::grey);
+    }
 }
 
-
-
-//[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
-void CtrlrPanelLayerListItem::setLayer (CtrlrPanelCanvasLayer *_layer)
+void CtrlrPanelLayerListItem::mouseDown(const MouseEvent& e)
 {
-	if (_layer == nullptr)
-		return;
+    if (layer)
+    {
+        owner.setSelectedRow(rowIndex);
 
-	layer = _layer;
+        // Store the drag start position for drag and drop
+        dragStartPosition = e.getPosition();
+        isDragging = false;
+    }
+}
 
-	layerName->setText (layer->getProperty(Ids::uiPanelCanvasLayerName), dontSendNotification);
-	layerVisibility->setToggleState (layer->getProperty(Ids::uiPanelCanvasLayerVisibility), sendNotification);
-	layerColour->setColour (VAR2COLOUR(layer->getProperty(Ids::uiPanelCanvasLayerColour)), false);
-	layerIndex->setText (layer->getProperty(Ids::uiPanelCanvasLayerIndex).toString(), dontSendNotification);
+void CtrlrPanelLayerListItem::setLayer(CtrlrPanelCanvasLayer* _layer)
+{
+    if (_layer == nullptr)
+        return;
+
+    layer = _layer;
+
+    layerName->setText(layer->getProperty(Ids::uiPanelCanvasLayerName), dontSendNotification);
+    layerVisibility->setToggleState(layer->getProperty(Ids::uiPanelCanvasLayerVisibility), sendNotification);
+    layerColour->setColour(VAR2COLOUR(layer->getProperty(Ids::uiPanelCanvasLayerColour)), false);
+    layerIndex->setText(layer->getProperty(Ids::uiPanelCanvasLayerIndex).toString(), dontSendNotification);
+
+    // Update button states when layer is set
+    updateButtonStates();
 }
 
 void CtrlrPanelLayerListItem::changeListenerCallback (ChangeBroadcaster* source)
@@ -165,7 +227,35 @@ void CtrlrPanelLayerListItem::setRow(const int _rowIndex)
 	rowIndex = _rowIndex;
 }
 //[/MiscUserCode]
+void CtrlrPanelLayerListItem::mouseDrag(const MouseEvent& e)
+{
+    if (!layer)
+        return;
 
+    // Start dragging if we've moved far enough from the initial click
+    if (!isDragging && e.getDistanceFromDragStart() > 5)
+    {
+        isDragging = true;
+
+        // Create a drag image of this component
+        Image dragImage = createComponentSnapshot(getLocalBounds());
+
+        // Start the drag operation with a description containing the row index
+        String dragDescription = "layer_item_" + String(rowIndex);
+
+        // Find the drag container (should be the CtrlrPanelLayerList)
+        DragAndDropContainer* dragContainer = DragAndDropContainer::findParentDragContainerFor(this);
+        if (dragContainer)
+        {
+            dragContainer->startDragging(dragDescription, this, dragImage, true);
+        }
+    }
+}
+
+void CtrlrPanelLayerListItem::mouseUp(const MouseEvent& e)
+{
+    isDragging = false;
+}
 
 //==============================================================================
 #if 0
