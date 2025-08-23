@@ -807,44 +807,10 @@ void LTimer::wrapForLua(lua_State* L)
 		];
 }
 
-<<<<<<< HEAD
-void LURL::wrapForLua (lua_State *L) // Updated v5.6.34. Required for Online Registration
-=======
 void LURL::wrapForLua(lua_State* L)
->>>>>>> origin/master
 {
-    using namespace luabind;
+	using namespace luabind;
 
-<<<<<<< HEAD
-    module(L)
-    [
-        class_<URL>("URL")
-            .def(constructor<const String &>())
-            //.def("toString", &URL::toString)
-            .def("toString", (juce::String (juce::URL::*)() const) &juce::URL::toString) // Updated v5.6.34.
-            .def("isWellFormed", &URL::isWellFormed)
-            .def("getDomain", &URL::getDomain)
-            .def("getSubPath", &URL::getSubPath)
-            .def("getScheme", &URL::getScheme)
-            .def("withNewSubPath", &URL::withNewSubPath)
-            // Correct static_cast for withParameter (assuming the String, String overload)
-            .def("withParameter", (URL (URL::*)(const String &, const String &) const) &URL::withParameter)
-            .def("withFileToUpload", &URL::withFileToUpload)
-            .def("withPOSTData", (URL (URL::*)(const String &) const) &URL::withPOSTData)
-            .def("withPOSTData", (URL (URL::*)(const MemoryBlock &) const) &URL::withPOSTData)
-            .def("getPostData", &URL::getPostData)
-            .def("launchInDefaultBrowser", &URL::launchInDefaultBrowser)
-            .def("isProbablyAWebsiteURL", &URL::isProbablyAWebsiteURL)
-            .def("isProbablyAnEmailAddress", &URL::isProbablyAnEmailAddress)
-            // Correct static_cast for readEntireTextStream (assuming the bool overload, which is common for POST/GET)
-            .def("readEntireTextStream", (String (URL::*)(bool) const) &URL::readEntireTextStream)
-            // If you also use the version that takes email/password/timeout/extraHeaders, you'd need another .def:
-            // .def("readEntireTextStreamComplex", (String (URL::*)(bool, String, String, int, String) const) &URL::readEntireTextStream)
-            .def("readEntireBinaryStream", &URL::readEntireBinaryStream)
-            .def("addEscapeChars", &URL::addEscapeChars)
-            .def("removeEscapeChars", &URL::removeEscapeChars)
-    ];
-=======
 	module(L)
 		[
 			class_<URL>("URL")
@@ -869,7 +835,6 @@ void LURL::wrapForLua(lua_State* L)
 				.def("addEscapeChars", &URL::addEscapeChars)
 				.def("removeEscapeChars", &URL::removeEscapeChars)
 		];
->>>>>>> origin/master
 }
 
 void LValue::wrapForLua(lua_State* L)
@@ -972,22 +937,6 @@ namespace LXmlJuce6Factories
 		return nullptr;
 	}
 
-<<<<<<< HEAD
-namespace LXmlJuce6Factories // Added v5.6.34. Thanks to @dnaldoog
-/*Convert std::unique_ptr to raw pointer for luabind*/
-{
-	static XmlElement* parseXMLData(const String& xmlData)
-	{
-		std::unique_ptr<XmlElement> doc = XmlDocument::parse(xmlData);
-		if (doc)
-		{
-			return doc.release(); // Transfer ownership to Lua
-		}
-		return nullptr;
-	}
-	
-=======
->>>>>>> origin/master
 	static XmlElement* parseXMLFile(const File& fileToParse)
 	{
 		std::unique_ptr<XmlElement> doc = XmlDocument::parse(fileToParse);
@@ -997,99 +946,18 @@ namespace LXmlJuce6Factories // Added v5.6.34. Thanks to @dnaldoog
 		}
 		return nullptr;
 	}
-<<<<<<< HEAD
-	
-=======
 
->>>>>>> origin/master
 	static XmlElement* safeGetDocumentElement(XmlDocument& doc)
 	{
 		std::unique_ptr<XmlElement> element = doc.getDocumentElement();
 		return element ? element.release() : nullptr;
 	}
 }
-<<<<<<< HEAD
-
-void LXmlElement::wrapForLua (lua_State *L)
-=======
 void LXmlElement::wrapForLua(lua_State* L)
->>>>>>> origin/master
 {
 	using namespace luabind;
 
 	module(L)
-<<<<<<< HEAD
-    [
-		class_<XmlElement>("XmlElement")
-			.def(constructor<const String &>())
-			.def(constructor<const XmlElement &>())
-			.def(constructor<const char *>())
-			.def("isEquivalentTo", &XmlElement::isEquivalentTo)
-			.def("createDocument", &XmlElement::createDocument)
-			.def("writeToStream", &XmlElement::writeToStream)
-			.def("writeToFile", &XmlElement::writeToFile)
-			.def("getTagName", &XmlElement::getTagName)
-			.def("getNamespace", &XmlElement::getNamespace)
-			.def("getTagNameWithoutNamespace", &XmlElement::getTagNameWithoutNamespace)
-			.def("hasTagName", &XmlElement::hasTagName)
-			.def("hasTagNameIgnoringNamespace", &XmlElement::hasTagNameIgnoringNamespace)
-			.def("getNumAttributes", &XmlElement::getNumAttributes)
-			.def("getAttributeName", &XmlElement::getAttributeName)
-			.def("getAttributeValue", &XmlElement::getAttributeValue)
-			.def("hasAttribute", &XmlElement::hasAttribute)
-			.def("getStringAttribute", (const String &(XmlElement::*)(StringRef) const) &XmlElement::getStringAttribute)
-			.def("getStringAttribute", (String (XmlElement::*)(StringRef, const String &) const) &XmlElement::getStringAttribute)
-			.def("compareAttribute", &XmlElement::compareAttribute)
-			.def("getIntAttribute", &XmlElement::getIntAttribute)
-			.def("getDoubleAttribute", &XmlElement::getDoubleAttribute)
-			.def("getBoolAttribute", &XmlElement::getBoolAttribute)
-			.def("setAttribute", (void (XmlElement::*)(const Identifier &, const String &)) &XmlElement::setAttribute)
-			.def("setAttribute", (void (XmlElement::*)(const Identifier &, int)) &XmlElement::setAttribute)
-			.def("setAttribute", (void (XmlElement::*)(const Identifier &, double)) &XmlElement::setAttribute)
-			.def("removeAttribute", &XmlElement::removeAttribute)
-			.def("removeAllAttributes", &XmlElement::removeAllAttributes)
-			.def("getFirstChildElement", &XmlElement::getFirstChildElement)
-			.def("getNextElement", &XmlElement::getNextElement)
-			.def("getNextElementWithTagName", &XmlElement::getNextElementWithTagName)
-			.def("getNumChildElements", &XmlElement::getNumChildElements)
-			.def("getChildElement", &XmlElement::getChildElement)
-			.def("getChildByName", &XmlElement::getChildByName)
-			.def("getChildByAttribute", &XmlElement::getChildByAttribute)
-			.def("addChildElement", &XmlElement::addChildElement)
-			.def("insertChildElement", &XmlElement::insertChildElement)
-			.def("prependChildElement", &XmlElement::prependChildElement)
-			.def("createNewChildElement", &XmlElement::createNewChildElement)
-			.def("replaceChildElement", &XmlElement::replaceChildElement)
-			.def("removeChildElement", &XmlElement::removeChildElement)
-			.def("deleteAllChildElements", &XmlElement::deleteAllChildElements)
-			.def("deleteAllChildElementsWithTagName", &XmlElement::deleteAllChildElementsWithTagName)
-			.def("containsChildElement", &XmlElement::containsChildElement)
-			.def("findParentElementOf", &XmlElement::findParentElementOf)
-			.def("isTextElement", &XmlElement::isTextElement)
-			.def("getText", &XmlElement::getText)
-			.def("setText", &XmlElement::setText)
-			.def("getAllSubText", &XmlElement::getAllSubText)
-			.def("getChildElementAllSubText", &XmlElement::getChildElementAllSubText)
-			.def("addTextElement", &XmlElement::addTextElement)
-			.def("deleteAllTextElements", &XmlElement::deleteAllTextElements)
-			.def("getChildElementAllSubText", &XmlElement::getChildElementAllSubText)
-            .scope[
-                def("createTextElement", &XmlElement::createTextElement)
-            ]
-        ,
-        class_<XmlDocument>("XmlDocument")
-            .def(constructor<const String &>())
-            .def(constructor<const File &>())
-            //.def("getDocumentElement", &XmlDocument::getDocumentElement)
-            .def("getLastParseError", &XmlDocument::getLastParseError)
-            .def("setInputSource", &XmlDocument::setInputSource)
-            .def("setEmptyTextElementsIgnored", &XmlDocument::setEmptyTextElementsIgnored)
-            .scope[ // Updated v5.6.34. Thanks to @dnaldoog
-                def("parseXML", LXmlJuce6Factories::parseXMLFile),
-                def("parseXML", LXmlJuce6Factories::parseXMLData)
-            ]
-    ];
-=======
 		[
 			class_<XmlElement>("XmlElement")
 				.def(constructor<const String&>())
@@ -1163,7 +1031,6 @@ void LXmlElement::wrapForLua(lua_State* L)
 					def("parseXML", LXmlJuce6Factories::parseXMLData)
 				]
 		];
->>>>>>> origin/master
 }
 
 void LZipEntry::wrapForLua(lua_State* L)
@@ -1217,29 +1084,12 @@ void LZipFile::wrapForLua(lua_State* L) // Updated v5.6.34. Thanks to @dnaldoog
 }
 
 
-<<<<<<< HEAD
-void LInputStream::wrapForLua (lua_State *L) // Updated v5.6.34. Thanks to @dnaldoog. https://github.com/damiensellier/CtrlrX/pull/116
-=======
 void LInputStream::wrapForLua(lua_State* L)
->>>>>>> origin/master
 {
 	using namespace luabind;
 
 	module(L)
-<<<<<<< HEAD
-        [
-            class_<InputStream>("InputStream")
-                .def("readEntireStreamAsString", &InputStream::readEntireStreamAsString)
-                .def("readIntoMemoryBlock", (size_t(InputStream::*)(MemoryBlock&, ssize_t)) & InputStream::readIntoMemoryBlock)
-                .def("getTotalLength", &InputStream::getTotalLength)
-                .def("getPosition", &InputStream::getPosition)
-                .def("setPosition", &InputStream::setPosition)
-                .def("isExhausted", &InputStream::isExhausted)
-        ];
-}
-=======
 		[
 			class_<InputStream>("InputStream")
 		];
 }
->>>>>>> origin/master
