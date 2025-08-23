@@ -261,10 +261,14 @@ void CtrlrPanelLayerListItem::mouseDrag(const MouseEvent& e)
         // Create a drag image of this component
         Image dragImage = createComponentSnapshot(getLocalBounds());
 
-        // Start the drag operation with a description containing the row index
-        String dragDescription = "layer_item_" + String(rowIndex);
+        // IMPORTANT: Use the visual row index, not the actual layer index
+        // The visual row is what the user sees and drags
+        int totalLayers = owner.getNumRows();
+        int visualRow = totalLayers - 1 - rowIndex;  // Convert actual index to visual row
 
-        // Find the drag container (should be the CtrlrPanelLayerList)
+        String dragDescription = "layer_item_" + String(visualRow);
+
+        // Find the drag container
         DragAndDropContainer* dragContainer = DragAndDropContainer::findParentDragContainerFor(this);
         if (dragContainer)
         {

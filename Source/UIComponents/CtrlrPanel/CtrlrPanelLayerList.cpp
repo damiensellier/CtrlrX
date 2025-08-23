@@ -309,10 +309,13 @@ void CtrlrPanelLayerList::itemDragMove(const SourceDetails& dragSourceDetails)
 {
 	// Calculate which row the mouse is over
 	Point<int> localPos = layerList->getLocalPoint(this, dragSourceDetails.localPosition);
-	dropInsertionIndex = localPos.y / layerList->getRowHeight();
+	int visualRow = localPos.y / layerList->getRowHeight();
 
 	// Clamp to valid range
-	dropInsertionIndex = jmax(0, jmin(dropInsertionIndex, getNumRows() - 1));
+	visualRow = jmax(0, jmin(visualRow, getNumRows() - 1));
+
+	// Store the visual row (we'll convert to actual layer index later)
+	dropInsertionIndex = visualRow;
 
 	repaint();
 }
@@ -330,54 +333,59 @@ void CtrlrPanelLayerList::itemDropped(const SourceDetails& dragSourceDetails)
 
 	// Extract the source row index from the description
 	String desc = dragSourceDetails.description.toString();
-	int sourceRow = desc.getTrailingIntValue();
+	int sourceVisualRow = desc.getTrailingIntValue();
 
 	// Calculate target position
 	Point<int> localPos = layerList->getLocalPoint(this, dragSourceDetails.localPosition);
-	int targetRow = localPos.y / layerList->getRowHeight();
-	targetRow = jmax(0, jmin(targetRow, getNumRows() - 1));
+	int targetVisualRow = localPos.y / layerList->getRowHeight();
+	targetVisualRow = jmax(0, jmin(targetVisualRow, getNumRows() - 1));
 
-	if (targetRow != sourceRow && sourceRow >= 0 && sourceRow < getNumRows())
+	if (targetVisualRow != sourceVisualRow && sourceVisualRow >= 0 && sourceVisualRow < getNumRows())
 	{
-		moveLayerToPosition(sourceRow, targetRow);
+		// Convert visual rows to actual layer indices
+		int totalLayers = getNumRows();
+		int sourceActualIndex = totalLayers - 1 - sourceVisualRow;
+		int targetActualIndex = totalLayers - 1 - targetVisualRow;
+
+		moveLayerToPosition(sourceActualIndex, targetActualIndex);
 	}
 
 	dropInsertionIndex = -1;
 	repaint();
 }
-
-void CtrlrPanelLayerList::moveLayerToPosition(int sourceIndex, int targetIndex)
+void CtrlrPanelLayerList::moveLayerToPosition(int sourceActualIndex, int targetActualIndex)
 {
 	if (owner.getEditor() && owner.getEditor()->getCanvas())
 	{
 		// Get the layer that's being moved
-		CtrlrPanelCanvasLayer* sourceLayer = owner.getEditor()->getCanvas()->getLayerFromArray(sourceIndex);
+		CtrlrPanelCanvasLayer* sourceLayer = owner.getEditor()->getCanvas()->getLayerFromArray(sourceActualIndex);
 
 		if (sourceLayer != nullptr)
 		{
-			// You'll need to implement moveLayerToIndex in your canvas class
-			// For now, we'll use the existing move methods as a fallback
-
-			if (targetIndex < sourceIndex)
+			if (targetActualIndex < sourceActualIndex)
 			{
-				// Moving up - call moveLayerUp multiple times
-				for (int i = sourceIndex; i > targetIndex; --i)
+				// Moving to lower actual index (higher in visual list) - call moveLayerUp
+				for (int i = sourceActualIndex; i > targetActualIndex; --i)
 				{
-					owner.getEditor()->getCanvas()->moveLayer(sourceLayer, true); // true = up
+					owner.getEditor()->getCanvas()->moveLayer(sourceLayer, true); // true = up in actual array
 				}
 			}
-			else if (targetIndex > sourceIndex)
+			else if (targetActualIndex > sourceActualIndex)
 			{
-				// Moving down - call moveLayerDown multiple times  
-				for (int i = sourceIndex; i < targetIndex; ++i)
+				// Moving to higher actual index (lower in visual list) - call moveLayerDown  
+				for (int i = sourceActualIndex; i < targetActualIndex; ++i)
 				{
-					owner.getEditor()->getCanvas()->moveLayer(sourceLayer, false); // false = down
+					owner.getEditor()->getCanvas()->moveLayer(sourceLayer, false); // false = down in actual array
 				}
 			}
 
-			// Update the list display
+			// Update the list display and select the new visual position
 			layerList->updateContent();
-			layerList->selectRow(targetIndex);
+
+			// Convert the target actual index back to visual row for selection
+			int totalLayers = getNumRows();
+			int targetVisualRow = totalLayers - 1 - targetActualIndex;
+			layerList->selectRow(targetVisualRow);
 		}
 	}
 }
