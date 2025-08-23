@@ -35,25 +35,27 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem(CtrlrPanelLayerList& _owner)
     layerIndex->setColour(TextEditor::textColourId, Colours::black);
     layerIndex->setColour(TextEditor::backgroundColourId, Colour(0x0));
 
-    // Add the new buttons
-    addAndMakeVisible(isolateButton = new TextButton("Isolate"));
-    isolateButton->setButtonText("Isolate");
+    addAndMakeVisible(isolateButton = new TextButton("Edit"));
+    isolateButton->setButtonText("Edit");
     isolateButton->addListener(this);
-    isolateButton->setColour(TextButton::buttonColourId, Colours::lightblue);
+    isolateButton->setColour(TextButton::buttonColourId, Colours::lightblue);  // Initial light blue
     isolateButton->setColour(TextButton::textColourOffId, Colours::black);
 
     addAndMakeVisible(restoreButton = new TextButton("Restore"));
     restoreButton->setButtonText("Restore");
     restoreButton->addListener(this);
-    restoreButton->setColour(TextButton::buttonColourId, Colours::lightgreen);
-    restoreButton->setColour(TextButton::textColourOffId, Colours::black);
-	restoreButton->setVisible(false); //  hidden but keeping code in case you prefer to use it later, restore is now a menu item.
+    restoreButton->setColour(TextButton::buttonColourId, Colours::green);
+    restoreButton->setColour(TextButton::textColourOffId, Colours::white);
+    restoreButton->setVisible(false);
 
     // Add mouse listeners for existing components
     layerName->addMouseListener(this, true);
     layerVisibility->addMouseListener(this, true);
     layerColour->addMouseListener(this, true);
     layerIndex->addMouseListener(this, true);
+
+    addAndMakeVisible(dragIcon = new DragIconComponent());
+    dragIcon->addMouseListener(this, true);
 
     layerVisibility->setMouseCursor(MouseCursor::PointingHandCursor);
 
@@ -68,10 +70,11 @@ CtrlrPanelLayerListItem::~CtrlrPanelLayerListItem()
     deleteAndZero(layerIndex);
     deleteAndZero(isolateButton);
     deleteAndZero(restoreButton);
+    deleteAndZero(dragIcon);
 }
 
 //==============================================================================
-void CtrlrPanelLayerListItem::paint (Graphics& g)
+void CtrlrPanelLayerListItem::paint(Graphics& g)
 {
     g.setColour(Colours::black);
     g.drawLine(0, getHeight(), getWidth(), getHeight(), 1.0f);
@@ -92,37 +95,45 @@ void CtrlrPanelLayerListItem::paint (Graphics& g)
     }
 }
 
-void CtrlrPanelLayerListItem::resized(){
+void CtrlrPanelLayerListItem::resized()
+{
+    const int buttonWidth = 60;
+    const int buttonHeight = 16;
+    const int colourChooserWidth = 80;
+    const int padding = 4;
+    const int pushLeft = 40;
+    const int dragIconWidth = 16;
+    
+    // Position the drag icon at the leftmost position (if you're using it)
+    if (dragIcon)
+    {
+        dragIcon->setBounds(padding, (getHeight() - dragIconWidth) / 2, dragIconWidth, dragIconWidth);
+    }
 
-const int buttonWidth = 60;
-const int buttonHeight = 16;
-const int colourChooserWidth = 80; // A smaller, fixed width for the color chooser
-const int padding = 4;
-const int pushLeft = 40;
-const int totalButtonAreaWidth = buttonWidth * 2 + padding; // Total width for both buttons but now only used by the isolate button
+    // Adjust other components
+    int leftOffset = (dragIcon ? dragIcon->getRight() : 0) + padding;
 
-// Position the visibility toggle button (left side)
-layerVisibility->setBounds(padding, padding, 32, 32);
+    // Position the visibility toggle button
+    layerVisibility->setBounds(leftOffset, padding, 32, 32);
 
-// Position the layer name label next to the visibility toggle
-layerName->setBounds(layerVisibility->getRight() + padding, padding, proportionOfWidth(0.35f), 12);
+    // Position the layer name label
+    layerName->setBounds(layerVisibility->getRight() + padding, padding, proportionOfWidth(0.35f), 12);
 
-// Position the color chooser next to the layer name label, making it a fixed, smaller size
-layerColour->setBounds(layerName->getRight() + padding, 16, colourChooserWidth, 16);
+    // Position the color chooser
+    layerColour->setBounds(layerName->getRight() + padding, 16, colourChooserWidth, 16);
 
-// Position the layer index label on the far right
-layerIndex->setBounds(getWidth() - (padding + 14), getHeight() - 16, 14, 16);
+    // Position the layer index label
+    layerIndex->setBounds(getWidth() - (padding + 14), getHeight() - 16, 14, 16);
 
-// Position the buttons side-by-side on the right, adjusting for padding
-const int buttonsRightEdge = getWidth() - padding;
-const int restoreButtonLeft = buttonsRightEdge - buttonWidth;
-const int isolateButtonLeft = restoreButtonLeft - buttonWidth - padding;
-
-isolateButton->setBounds(getWidth() - totalButtonAreaWidth-pushLeft, (getHeight() - buttonHeight) / 2, totalButtonAreaWidth, buttonHeight);
-//restoreButton->setBounds(restoreButtonLeft, (getHeight() - buttonHeight) / 2, buttonWidth, buttonHeight);
+    // Position BOTH buttons in the SAME location (they swap visibility)
+    const int buttonLeft = getWidth() - buttonWidth - pushLeft;
+    const int buttonTop = (getHeight() - buttonHeight) / 2;
+    
+    isolateButton->setBounds(buttonLeft, buttonTop, buttonWidth, buttonHeight);
+    restoreButton->setBounds(buttonLeft, buttonTop, buttonWidth, buttonHeight);  // Same position!
 }
 
-void CtrlrPanelLayerListItem::labelTextChanged (Label* labelThatHasChanged)
+void CtrlrPanelLayerListItem::labelTextChanged(Label* labelThatHasChanged)
 {
     //[UserlabelTextChanged_Pre]
     //[/UserlabelTextChanged_Pre]
@@ -130,10 +141,10 @@ void CtrlrPanelLayerListItem::labelTextChanged (Label* labelThatHasChanged)
     if (labelThatHasChanged == layerName)
     {
         //[UserLabelCode_layerName] -- add your label text handling code here..
-		if (layer)
-		{
-			layer->setProperty (Ids::uiPanelCanvasLayerName, layerName->getText());
-		}
+        if (layer)
+        {
+            layer->setProperty(Ids::uiPanelCanvasLayerName, layerName->getText());
+        }
         //[/UserLabelCode_layerName]
     }
 
@@ -154,12 +165,20 @@ void CtrlrPanelLayerListItem::buttonClicked(Button* buttonThatWasClicked)
     {
         if (layer)
         {
+            // When Edit is clicked, turn it red briefly, then isolate
+            isolateButton->setColour(TextButton::buttonColourId, Colours::red);
+            isolateButton->setColour(TextButton::textColourOffId, Colours::white);
+
+            // Perform the isolation
             owner.isolateLayer(rowIndex);
+
+            // Update button states (this will hide Edit and show Restore)
             updateButtonStates();
         }
     }
     else if (buttonThatWasClicked == restoreButton)
     {
+        // Restore visibility and update button states
         owner.restoreLayerVisibility();
         updateButtonStates();
     }
@@ -167,21 +186,23 @@ void CtrlrPanelLayerListItem::buttonClicked(Button* buttonThatWasClicked)
 
 void CtrlrPanelLayerListItem::updateButtonStates()
 {
-    bool hasBackup = owner.getOwner().hasLayerVisibilityStates();
+    // Check if THIS specific layer is the one that was isolated
+    bool isThisLayerIsolated = owner.isLayerIsolated(rowIndex);
 
-    isolateButton->setEnabled(!hasBackup);  // Can only isolate if no backup exists
-    restoreButton->setEnabled(hasBackup);   // Can only restore if backup exists
-
-    // Visual feedback
-    if (hasBackup)
+    if (isThisLayerIsolated)
     {
-        isolateButton->setColour(TextButton::buttonColourId, Colours::grey);
-        restoreButton->setColour(TextButton::buttonColourId, Colours::orange);
+        // Only THIS layer shows Restore button
+        isolateButton->setVisible(false);
+        restoreButton->setVisible(true);
     }
     else
     {
+        // All other layers show Edit button (light blue)
+        isolateButton->setVisible(true);
+        isolateButton->setButtonText("Edit");
         isolateButton->setColour(TextButton::buttonColourId, Colours::lightblue);
-        restoreButton->setColour(TextButton::buttonColourId, Colours::grey);
+        isolateButton->setColour(TextButton::textColourOffId, Colours::black);
+        restoreButton->setVisible(false);
     }
 }
 
@@ -213,18 +234,18 @@ void CtrlrPanelLayerListItem::setLayer(CtrlrPanelCanvasLayer* _layer)
     updateButtonStates();
 }
 
-void CtrlrPanelLayerListItem::changeListenerCallback (ChangeBroadcaster* source)
+void CtrlrPanelLayerListItem::changeListenerCallback(ChangeBroadcaster* source)
 {
-	if (layer)
-	{
-		layer->setProperty (Ids::uiPanelCanvasLayerColour, layerColour->getColour().toString());
+    if (layer)
+    {
+        layer->setProperty(Ids::uiPanelCanvasLayerColour, layerColour->getColour().toString());
         layerColour->updateLabel();
-	}
+    }
 }
 
 void CtrlrPanelLayerListItem::setRow(const int _rowIndex)
 {
-	rowIndex = _rowIndex;
+    rowIndex = _rowIndex;
 }
 //[/MiscUserCode]
 void CtrlrPanelLayerListItem::mouseDrag(const MouseEvent& e)

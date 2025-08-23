@@ -40,7 +40,8 @@ CtrlrPanelLayerList::CtrlrPanelLayerList(CtrlrPanel& _owner)
 	: owner(_owner),
 	layerList(0),
 	dropInsertionIndex(-1),
-	layerIsolationActive(false)
+	layerIsolationActive(false),
+	isolatedLayerIndex(-1)
 {
 	addAndMakeVisible(layerList = new ListBox("Layer List", this));
 
@@ -366,6 +367,9 @@ void CtrlrPanelLayerList::isolateLayer(int targetLayerIndex)
 	// FIRST: Save the current states BEFORE making any changes
 	owner.saveLayerVisibilityStates();
 
+	// Remember which layer was isolated
+	isolatedLayerIndex = targetLayerIndex;
+
 	// THEN: Hide all layers except the target layer
 	for (int i = 0; i < getNumRows(); ++i)
 	{
@@ -374,43 +378,30 @@ void CtrlrPanelLayerList::isolateLayer(int targetLayerIndex)
 		{
 			if (i == targetLayerIndex)
 			{
-				// Ensure target layer is visible
 				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, true);
 			}
 			else
 			{
-				// Hide all other layers
 				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, false);
 			}
 		}
 	}
 
-	// Update isolation state
 	layerIsolationActive = true;
-
-	// Refresh the list to show updated visibility states
 	refresh();
-
-	// Update all button states
 	updateAllButtonStates();
 
 	_DBG("Layer " + String(targetLayerIndex) + " isolated - all other layers hidden");
 }
 
+// Update the restoreLayerVisibility method:
 void CtrlrPanelLayerList::restoreLayerVisibility()
 {
-	// Use the CtrlrPanel's restore method which has the saved states
 	owner.restoreLayerVisibilityStates();
-
-	// Update local state
 	layerIsolationActive = false;
-
-	// Refresh the list
+	isolatedLayerIndex = -1;  // Reset - no layer is isolated anymore
 	refresh();
-
-	// Update all button states
 	updateAllButtonStates();
-
 	_DBG("Layer visibility restored");
 }
 
@@ -427,5 +418,8 @@ void CtrlrPanelLayerList::updateAllButtonStates()
 		}
 	}
 }
-
+bool CtrlrPanelLayerList::isLayerIsolated(int layerIndex) const
+{
+	return (isolatedLayerIndex == layerIndex && owner.hasLayerVisibilityStates());
+}
 

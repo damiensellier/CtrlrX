@@ -70,7 +70,7 @@ public:
     void updateAllButtonStates();
     void paint(Graphics& g);
     void resized();
-
+    bool isLayerIsolated(int layerIndex) const;
     //==============================================================================
     JUCE_LEAK_DETECTOR(CtrlrPanelLayerList)
 
@@ -80,6 +80,7 @@ private:
     int dropInsertionIndex;
     // Layer isolation state
     bool layerIsolationActive;
+    int isolatedLayerIndex;
     Array<bool> originalLayerVisibility;  // Store original visibility states
     //[/UserVariables]
 
