@@ -2072,3 +2072,45 @@ void CtrlrPanel::multiMidiReceived(CtrlrMidiMessage &multiMidiMessage)
 	multiMidiQueue.add (multiMidiMessage);
 	triggerAsyncUpdate();
 }
+
+void CtrlrPanel::saveLayerVisibilityStates() // Added v5.6.34. Thanks to @dnaldoog. Required for layer management
+{
+	// Clear any previous states
+	layerVisibilityBackup.clear();
+	// Get the canvas from the editor
+	CtrlrPanelCanvas* canvas = getCanvas();
+
+	if (canvas)
+	{
+		// Loop through all layers and save their current visibility state
+		for (int i = 0; i < canvas->getNumLayers(); ++i)
+		{
+			CtrlrPanelCanvasLayer* layer = canvas->getLayerFromArray(i);
+			if (layer)
+			{
+				layerVisibilityBackup.add(layer->getProperty(Ids::uiPanelCanvasLayerVisibility, true));
+			}
+		}
+	}
+}
+
+void CtrlrPanel::restoreLayerVisibilityStates() // Added v5.6.34. Thanks to @dnaldoog. Required for layer management
+{
+	// Get the canvas from the editor
+	CtrlrPanelCanvas* canvas = getCanvas();
+
+	if (canvas && hasLayerVisibilityStates())
+	{
+		// Loop through layers and restore visibility from the backup
+		for (int i = 0; i < canvas->getNumLayers() && i < layerVisibilityBackup.size(); ++i)
+		{
+			CtrlrPanelCanvasLayer* layer = canvas->getLayerFromArray(i);
+			if (layer)
+			{
+				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, layerVisibilityBackup.getUnchecked(i));
+			}
+		}
+	}
+	// Clear the backup after restoring
+	layerVisibilityBackup.clear();
+}

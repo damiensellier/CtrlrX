@@ -16,6 +16,7 @@
 #include "CtrlrPanelResourceManager.h"
 #include "CtrlrPanelUndoManager.h"
 #include "CtrlrPanelSchemeMigration.h"
+#include "CtrlrPanel/CtrlrPanelCanvasLayer.h" // Added v5.6.34
 
 typedef WeakReference <CtrlrModulator>					ModulatorReference;
 typedef WeakReference <CtrlrComponent>					ComponentReference;
@@ -85,6 +86,9 @@ class CtrlrPanel:	public ValueTree::Listener,
 		void valueTreeChildRemoved (ValueTree& /*parentTree*/, ValueTree& /*childWhichHasBeenRemoved*/, int){}
 		void valueTreeChildOrderChanged (ValueTree& /*parentTreeWhoseChildrenHaveMoved*/, int, int){}
 
+		void saveLayerVisibilityStates(); // Added v5.6.34
+		void restoreLayerVisibilityStates(); // Added v5.6.34
+	
 		const String getUniqueModulatorName(const String &proposedName);
 		const Array <CtrlrModulator*> getModulatorsByUIType(const Identifier &typeToFilter);
 		const Array <CtrlrModulator*> getModulatorsByMidiType(const CtrlrMidiMessageType typeToFilter);
@@ -322,6 +326,9 @@ class CtrlrPanel:	public ValueTree::Listener,
 		int getPanelInstanceVersionInt();
         const String getPanelInstanceName();
         const String getPanelInstanceManufacturer();
+	
+		juce::Array<juce::var> layerVisibilityBackup; // Added v5.6.34
+		bool hasLayerVisibilityStates() const { return layerVisibilityBackup.size() > 0; }; // Added v5.6.34
 
 		WeakReference<CtrlrPanel>::Master masterReference;
 		friend class WeakReference<CtrlrPanel>;

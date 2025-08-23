@@ -26,4 +26,5 @@ private:
     CtrlrPanelProperties (const CtrlrPanelProperties&);
 	std::unique_ptr<CtrlrPanelFindProperty> ctrlrPanelFindProperty;
 	const CtrlrPanelProperties& operator= (const CtrlrPanelProperties&);
+	void updateTabColours(); // Added v5.6.34
 };

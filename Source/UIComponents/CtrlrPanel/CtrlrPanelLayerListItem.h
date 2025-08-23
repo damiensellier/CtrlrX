@@ -6,6 +6,26 @@ class CtrlrPanelCanvas;
 class CtrlrPanelLayerList;
 class CtrlrPanelCanvasLayer;
 class CtrlrColourEditorComponent;
+class CtrlrPanelLayerListItem;
+
+class CtrlrPanelLayerListItem;
+
+class DragIconComponent : public Component
+{
+public:
+    DragIconComponent(CtrlrPanelLayerListItem* parentItem); // Declaration
+
+    void paint(Graphics& g) override; // Declarations
+    void mouseEnter(const MouseEvent&) override;
+    void mouseDown(const MouseEvent& e) override;
+    void mouseDrag(const MouseEvent& e) override;
+    void mouseUp(const MouseEvent& e) override;
+
+private:
+    CtrlrPanelLayerListItem* parent;
+    const char* dragDropIcon;
+};
+
 
 class CtrlrPanelLayerListItem  : public Component,
                                  public ChangeListener,
@@ -13,47 +33,51 @@ class CtrlrPanelLayerListItem  : public Component,
 								 public Button::Listener
 {
 public:
-    //==============================================================================
     CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner);
     ~CtrlrPanelLayerListItem();
 
-    //==============================================================================
-    //[UserMethods]     -- You can add your own custom methods in this section.
 	void setLayer(CtrlrPanelCanvasLayer *_layer);
 	void changeListenerCallback (ChangeBroadcaster* source);
 	CtrlrPanelCanvasLayer *getLayer() { return (layer); }
+	
+    void handleDragIconMouseDown(const MouseEvent& e);
+    void handleDragIconMouseDrag(const MouseEvent& e);
+    void handleDragIconMouseUp(const MouseEvent& e);
+
 	void setRow(const int _rowIndex);
 	const int getRow() { return (rowIndex); }
-    //[/UserMethods]
+
+	void updateButtonStates();
 
     void paint (Graphics& g);
     void resized();
     void labelTextChanged (Label* labelThatHasChanged);
     void buttonClicked (Button* buttonThatWasClicked);
     void mouseDown (const MouseEvent& e);
+	void mouseDrag(const MouseEvent& e);
+    void mouseUp(const MouseEvent& e);
 
-
-
-    //==============================================================================
     JUCE_LEAK_DETECTOR(CtrlrPanelLayerListItem)
 
 private:
-    //[UserVariables]   -- You can add your own custom variables in this section.
 	CtrlrPanelCanvasLayer *layer;
 	CtrlrPanelLayerList &owner;
 	int rowIndex;
-    //[/UserVariables]
+	
+	bool isDragging;
+    Point<int> dragStartPosition;
 
-    //==============================================================================
     Label* layerName;
     ToggleButton* layerVisibility;
     CtrlrColourEditorComponent* layerColour;
     Label* layerIndex;
 
-
-    //==============================================================================
-    // (prevent copy constructor and operator= being generated..)
-    CtrlrPanelLayerListItem (const CtrlrPanelLayerListItem&);
+    TextButton* isolateButton;
+    TextButton* restoreButton;
+    bool dragStartedFromIcon;        // Add this line if missing
+    DragIconComponent* dragIcon;     // This is correct
+	
+	CtrlrPanelLayerListItem (const CtrlrPanelLayerListItem&);
     const CtrlrPanelLayerListItem& operator= (const CtrlrPanelLayerListItem&);
 };
 
