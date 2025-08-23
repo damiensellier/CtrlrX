@@ -115,15 +115,20 @@ void CtrlrPanelLayerList::paintListBoxItem (int rowNumber, Graphics& g, int widt
     }
 }
 
-Component* CtrlrPanelLayerList::refreshComponentForRow (int rowNumber, bool isRowSelected, Component* existingComponentToUpdate)
+Component* CtrlrPanelLayerList::refreshComponentForRow(int rowNumber, bool isRowSelected, Component* existingComponentToUpdate)
 {
-	CtrlrPanelLayerListItem* itemInfo = (CtrlrPanelLayerListItem*) existingComponentToUpdate;
+	CtrlrPanelLayerListItem* itemInfo = (CtrlrPanelLayerListItem*)existingComponentToUpdate;
 
 	if (itemInfo == 0)
-		itemInfo = new CtrlrPanelLayerListItem (*this);
+		itemInfo = new CtrlrPanelLayerListItem(*this);
 
-	itemInfo->setRow (rowNumber);
-	itemInfo->setLayer (owner.getEditor()->getCanvas()->getLayerFromArray(rowNumber));
+	// Calculate the actual layer index (reverse the order)
+	int totalLayers = owner.getEditor()->getCanvas()->getNumLayers();
+	int actualLayerIndex = totalLayers - 1 - rowNumber;  // Reverse the index
+
+	itemInfo->setRow(actualLayerIndex);  // Use the actual layer index for the row
+	itemInfo->setLayer(owner.getEditor()->getCanvas()->getLayerFromArray(actualLayerIndex));
+
 	return itemInfo;
 }
 
@@ -153,8 +158,13 @@ void CtrlrPanelLayerList::addLayer()
 void CtrlrPanelLayerList::removeLayer()
 {
 	const int selectedRow = layerList->getSelectedRow();
-	CtrlrPanelLayerListItem *item = dynamic_cast <CtrlrPanelLayerListItem*> (layerList->getComponentForRowNumber (selectedRow));
-	CtrlrPanelCanvasLayer *layer = 0;
+
+	// Convert visual row to actual layer index
+	int totalLayers = getNumRows();
+	int actualLayerIndex = totalLayers - 1 - selectedRow;
+
+	CtrlrPanelLayerListItem* item = dynamic_cast<CtrlrPanelLayerListItem*>(layerList->getComponentForRowNumber(selectedRow));
+	CtrlrPanelCanvasLayer* layer = 0;
 	if (item != nullptr)
 	{
 		layer = item->getLayer();
@@ -166,47 +176,59 @@ void CtrlrPanelLayerList::removeLayer()
 	}
 	layerList->updateContent();
 }
-
 void CtrlrPanelLayerList::moveLayerUp()
 {
 	const int selectedRow = layerList->getSelectedRow();
-	CtrlrPanelLayerListItem *item = dynamic_cast <CtrlrPanelLayerListItem*> (layerList->getComponentForRowNumber (selectedRow));
-	CtrlrPanelCanvasLayer *layer = 0;
+
+	// Convert visual row to actual layer index
+	int totalLayers = getNumRows();
+	int actualLayerIndex = totalLayers - 1 - selectedRow;
+
+	CtrlrPanelLayerListItem* item = dynamic_cast<CtrlrPanelLayerListItem*>(layerList->getComponentForRowNumber(selectedRow));
+	CtrlrPanelCanvasLayer* layer = 0;
 	if (item != nullptr)
 	{
 		layer = item->getLayer();
 	}
 
-	if (selectedRow-1 < 0)
+	if (selectedRow - 1 < 0)  // Can't move top visual row up
 		return;
 
 	if (owner.getEditor())
 	{
-		owner.getEditor()->getCanvas()->moveLayer(layer);
+		// In reversed view: visual "up" = actual "down" in the array
+		owner.getEditor()->getCanvas()->moveLayer(layer, false);  // false = down in actual array
 	}
 	layerList->updateContent();
-	layerList->selectRow (selectedRow-1);
+	layerList->selectRow(selectedRow - 1);
 }
+
 
 void CtrlrPanelLayerList::moveLayerDown()
 {
 	const int selectedRow = layerList->getSelectedRow();
-	CtrlrPanelLayerListItem *item = dynamic_cast <CtrlrPanelLayerListItem*> (layerList->getComponentForRowNumber (selectedRow));
-	CtrlrPanelCanvasLayer *layer = 0;
+
+	// Convert visual row to actual layer index  
+	int totalLayers = getNumRows();
+	int actualLayerIndex = totalLayers - 1 - selectedRow;
+
+	CtrlrPanelLayerListItem* item = dynamic_cast<CtrlrPanelLayerListItem*>(layerList->getComponentForRowNumber(selectedRow));
+	CtrlrPanelCanvasLayer* layer = 0;
 	if (item != nullptr)
 	{
 		layer = item->getLayer();
 	}
 
-	if (selectedRow+1 >= getNumRows())
+	if (selectedRow + 1 >= getNumRows())  // Can't move bottom visual row down
 		return;
 
 	if (owner.getEditor())
 	{
-		owner.getEditor()->getCanvas()->moveLayer(layer,false);
+		// In reversed view: visual "down" = actual "up" in the array
+		owner.getEditor()->getCanvas()->moveLayer(layer, true);  // true = up in actual array
 	}
 	layerList->updateContent();
-	layerList->selectRow (selectedRow+1);
+	layerList->selectRow(selectedRow + 1);
 }
 
 void CtrlrPanelLayerList::refresh()
