@@ -47,6 +47,7 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem(CtrlrPanelLayerList& _owner)
     restoreButton->addListener(this);
     restoreButton->setColour(TextButton::buttonColourId, Colours::lightgreen);
     restoreButton->setColour(TextButton::textColourOffId, Colours::black);
+	restoreButton->setVisible(false); //  hidden but keeping code in case you prefer to use it later, restore is now a menu item.
 
     // Add mouse listeners for existing components
     layerName->addMouseListener(this, true);
@@ -91,24 +92,14 @@ void CtrlrPanelLayerListItem::paint (Graphics& g)
     }
 }
 
-//void CtrlrPanelLayerListItem::resized()
-//{
-//    layerName->setBounds(48, 4, proportionOfWidth(0.35f), 12);  // Made narrower to fit buttons
-//    layerVisibility->setBounds(8, 4, 32, 32);
-//    layerColour->setBounds(48, 16, getWidth() - 200, 16);  // Made narrower to fit buttons
-//    layerIndex->setBounds(getWidth() - 150, getHeight() - 16, 14, 16);
-//
-//    // Position the buttons on the right
-//    restoreButton->setBounds(getWidth() - 130, 4, 60, 14);
-//    isolateButton->setBounds(getWidth() - 130, 20, 60, 14);
-//}
-    // Define some constants for consistent spacing
 void CtrlrPanelLayerListItem::resized(){
 
 const int buttonWidth = 60;
 const int buttonHeight = 16;
 const int colourChooserWidth = 80; // A smaller, fixed width for the color chooser
 const int padding = 4;
+const int pushLeft = 40;
+const int totalButtonAreaWidth = buttonWidth * 2 + padding; // Total width for both buttons but now only used by the isolate button
 
 // Position the visibility toggle button (left side)
 layerVisibility->setBounds(padding, padding, 32, 32);
@@ -127,8 +118,8 @@ const int buttonsRightEdge = getWidth() - padding;
 const int restoreButtonLeft = buttonsRightEdge - buttonWidth;
 const int isolateButtonLeft = restoreButtonLeft - buttonWidth - padding;
 
-isolateButton->setBounds(isolateButtonLeft, (getHeight() - buttonHeight) / 2, buttonWidth, buttonHeight);
-restoreButton->setBounds(restoreButtonLeft, (getHeight() - buttonHeight) / 2, buttonWidth, buttonHeight);
+isolateButton->setBounds(getWidth() - totalButtonAreaWidth-pushLeft, (getHeight() - buttonHeight) / 2, totalButtonAreaWidth, buttonHeight);
+//restoreButton->setBounds(restoreButtonLeft, (getHeight() - buttonHeight) / 2, buttonWidth, buttonHeight);
 }
 
 void CtrlrPanelLayerListItem::labelTextChanged (Label* labelThatHasChanged)

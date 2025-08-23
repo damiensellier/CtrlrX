@@ -240,7 +240,7 @@ PopupMenu CtrlrPanelLayerList::getMenuForIndex(int topLevelMenuIndex, const Stri
 	}
 	else if (topLevelMenuIndex == 2)
 	{
-		menu.addItem (6, "Refresh view");
+		menu.addItem (6, "Restore view");
 	}
 	return (menu);
 }
@@ -261,7 +261,8 @@ void CtrlrPanelLayerList::menuItemSelected(int menuItemID, int topLevelMenuIndex
 	if (topLevelMenuIndex == 2)
 	{
 		if (menuItemID == 6)
-			refresh();
+		restoreLayerVisibility();
+		updateAllButtonStates();
 	}
 	if (topLevelMenuIndex == 0 && menuItemID==1)
 	{
