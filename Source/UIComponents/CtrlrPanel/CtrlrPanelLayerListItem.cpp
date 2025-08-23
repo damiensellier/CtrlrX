@@ -13,9 +13,12 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem(CtrlrPanelLayerList& _owner)
     layerIndex(0),
     isolateButton(0),
     restoreButton(0),
+    dragStartedFromIcon(false),
+    dragIcon(0),
     isDragging(false)
 {
-    // Your existing component creation code...
+    addAndMakeVisible(dragIcon = new DragIconComponent(this));
+
     addAndMakeVisible(layerName = new Label("", L"Layer Name"));
     layerName->setFont(Font(12.0000f, Font::plain));
     layerName->setJustificationType(Justification::centredLeft);
@@ -53,9 +56,6 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem(CtrlrPanelLayerList& _owner)
     layerVisibility->addMouseListener(this, true);
     layerColour->addMouseListener(this, true);
     layerIndex->addMouseListener(this, true);
-
-    addAndMakeVisible(dragIcon = new DragIconComponent());
-    dragIcon->addMouseListener(this, true);
 
     layerVisibility->setMouseCursor(MouseCursor::PointingHandCursor);
 
@@ -103,18 +103,25 @@ void CtrlrPanelLayerListItem::resized()
     const int padding = 4;
     const int pushLeft = 40;
     const int dragIconWidth = 16;
-    
-    // Position the drag icon at the leftmost position (if you're using it)
+    const int dragIconHeight = 16;
+
+    // Position the drag icon correctly
     if (dragIcon)
     {
-        dragIcon->setBounds(padding, (getHeight() - dragIconWidth) / 2, dragIconWidth, dragIconWidth);
+        dragIcon->setBounds(padding, (getHeight() - dragIconHeight) / 2, dragIconWidth, dragIconHeight);
+    }
+    else {
+        _DBG("dragIcon is null");
     }
 
     // Adjust other components
-    int leftOffset = (dragIcon ? dragIcon->getRight() : 0) + padding;
+    int leftOffset = padding;
+    if (dragIcon) {
+        leftOffset = dragIcon->getRight();
+    }
 
     // Position the visibility toggle button
-    layerVisibility->setBounds(leftOffset, padding, 32, 32);
+    layerVisibility->setBounds(leftOffset+dragIconWidth, padding, 32, 32);
 
     // Position the layer name label
     layerName->setBounds(layerVisibility->getRight() + padding, padding, proportionOfWidth(0.35f), 12);
@@ -205,16 +212,21 @@ void CtrlrPanelLayerListItem::updateButtonStates()
         restoreButton->setVisible(false);
     }
 }
-
 void CtrlrPanelLayerListItem::mouseDown(const MouseEvent& e)
 {
     if (layer)
     {
-        owner.setSelectedRow(rowIndex);
+        // Only handle selection if NOT clicking on drag icon
+        // (drag icon handles its own events now)
+        if (!dragIcon || !dragIcon->getBounds().contains(e.getPosition()))
+        {
+            int totalLayers = owner.getNumRows();
+            int visualRow = totalLayers - 1 - rowIndex;
+            owner.setSelectedRow(visualRow);
+        }
 
-        // Store the drag start position for drag and drop
-        dragStartPosition = e.getPosition();
-        isDragging = false;
+        // Reset drag flags for non-drag-icon interactions
+        dragStartedFromIcon = false;
     }
 }
 
@@ -250,7 +262,57 @@ void CtrlrPanelLayerListItem::setRow(const int _rowIndex)
 //[/MiscUserCode]
 void CtrlrPanelLayerListItem::mouseDrag(const MouseEvent& e)
 {
-    if (!layer)
+    //if (!layer || !dragStartedFromIcon)  // Only drag if started from icon
+    //    return;
+
+    //// Start dragging if we've moved far enough from the initial click
+    //if (!isDragging && e.getDistanceFromDragStart() > 5)
+    //{
+    //    isDragging = true;
+
+    //    // Create a drag image of this component
+    //    Image dragImage = createComponentSnapshot(getLocalBounds());
+
+    //    // Use the visual row index for drag description
+    //    int totalLayers = owner.getNumRows();
+    //    int visualRow = totalLayers - 1 - rowIndex;
+
+    //    String dragDescription = "layer_item_" + String(visualRow);
+
+    //    // Find the drag container
+    //    DragAndDropContainer* dragContainer = DragAndDropContainer::findParentDragContainerFor(this);
+    //    if (dragContainer)
+    //    {
+    //        dragContainer->startDragging(dragDescription, this, dragImage, true);
+    //    }
+    //}
+}
+
+void CtrlrPanelLayerListItem::mouseUp(const MouseEvent& e)
+{
+    isDragging = false;
+    dragStartedFromIcon = false;  // Reset the flag
+}
+
+void CtrlrPanelLayerListItem::handleDragIconMouseDown(const MouseEvent& e)
+{
+    if (layer)
+    {
+        // Convert actual layer index to visual row for selection
+        int totalLayers = owner.getNumRows();
+        int visualRow = totalLayers - 1 - rowIndex;
+        owner.setSelectedRow(visualRow);
+
+        // Set up for dragging
+        dragStartPosition = e.getPosition();
+        isDragging = false;
+        dragStartedFromIcon = true;
+    }
+}
+
+void CtrlrPanelLayerListItem::handleDragIconMouseDrag(const MouseEvent& e)
+{
+    if (!layer || !dragStartedFromIcon)
         return;
 
     // Start dragging if we've moved far enough from the initial click
@@ -261,10 +323,9 @@ void CtrlrPanelLayerListItem::mouseDrag(const MouseEvent& e)
         // Create a drag image of this component
         Image dragImage = createComponentSnapshot(getLocalBounds());
 
-        // IMPORTANT: Use the visual row index, not the actual layer index
-        // The visual row is what the user sees and drags
+        // Use the visual row index for drag description
         int totalLayers = owner.getNumRows();
-        int visualRow = totalLayers - 1 - rowIndex;  // Convert actual index to visual row
+        int visualRow = totalLayers - 1 - rowIndex;
 
         String dragDescription = "layer_item_" + String(visualRow);
 
@@ -277,11 +338,59 @@ void CtrlrPanelLayerListItem::mouseDrag(const MouseEvent& e)
     }
 }
 
-void CtrlrPanelLayerListItem::mouseUp(const MouseEvent& e)
+void CtrlrPanelLayerListItem::handleDragIconMouseUp(const MouseEvent& e)
 {
     isDragging = false;
+    dragStartedFromIcon = false;
 }
 
+DragIconComponent::DragIconComponent(CtrlrPanelLayerListItem* parentItem) : parent(parentItem)
+{
+    setMouseCursor(MouseCursor::DraggingHandCursor);
+
+    dragDropIcon = R"(
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+<path d="M470.6 566.6L566.6 470.6C575.8 461.4 578.5 447.7 573.5 435.7C568.5 423.7 556.9 416 544 416L480 416L480 96C480 78.3 465.7 64 448 64C430.3 64 416 78.3 416 96L416 416L352 416C339.1 416 327.4 423.8 322.4 435.8C317.4 447.8 320.2 461.5 329.3 470.7L425.3 566.7C437.8 579.2 458.1 579.2 470.6 566.7zM214.6 73.4C202.1 60.9 181.8 60.9 169.3 73.4L73.3 169.4C64.1 178.6 61.4 192.3 66.4 204.3C71.4 216.3 83.1 224 96 224L160 224L160 544C160 561.7 174.3 576 192 576C209.7 576 224 561.7 224 544L224 224L288 224C300.9 224 312.6 216.2 317.6 204.2C322.6 192.2 319.8 178.5 310.7 169.3L214.7 73.3z"/></svg>
+    )";
+}
+
+void DragIconComponent::paint(Graphics& g)
+{
+    std::unique_ptr<Drawable> icon = Drawable::createFromImageData(dragDropIcon, strlen(dragDropIcon));
+    if (icon)
+    {
+        icon->drawWithin(g, getLocalBounds().toFloat(), RectanglePlacement::centred, 1.0f);
+    }
+}
+
+void DragIconComponent::mouseEnter(const MouseEvent&)
+{
+    setMouseCursor(MouseCursor::DraggingHandCursor);
+}
+
+void DragIconComponent::mouseDown(const MouseEvent& e)
+{
+    if (parent)
+    {
+        parent->handleDragIconMouseDown(e.getEventRelativeTo(parent));
+    }
+}
+
+void DragIconComponent::mouseDrag(const MouseEvent& e)
+{
+    if (parent)
+    {
+        parent->handleDragIconMouseDrag(e.getEventRelativeTo(parent));
+    }
+}
+
+void DragIconComponent::mouseUp(const MouseEvent& e)
+{
+    if (parent)
+    {
+        parent->handleDragIconMouseUp(e.getEventRelativeTo(parent));
+    }
+}
 //==============================================================================
 #if 0
 /*  -- Jucer information section --
