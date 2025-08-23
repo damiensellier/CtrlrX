@@ -545,8 +545,8 @@ CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener* defaultLi
     if (colourPickerButton == nullptr)
     {
         colourPickerButton = new DrawableButton("colourPicker", DrawableButton::ImageOnButtonBackground);
-        colourPickerButton->setButtonText("...");
-        colourPickerButton->setTooltip("Open colour picker");
+        // colourPickerButton->setButtonText("...");
+        // colourPickerButton->setTooltip("Open colour picker");
         colourPickerButton->addListener(this);
     }
 	
@@ -705,6 +705,10 @@ CtrlrReadOnlyProperty::~CtrlrReadOnlyProperty()
 
 void CtrlrReadOnlyProperty::refresh()
 {
+	// Get the value from the property element and convert it to a string.
+	String displayValue = propertyElement.getPropertyAsValue(propertyName, 0).toString(); // Added v5.6.34. Thanks to @dnaldoog
+	// Set the text of the 'value' Label.
+	value.setText(displayValue, dontSendNotification); // Added v5.6.34. Thanks to @dnaldoog
 }
 
 void CtrlrReadOnlyProperty::resized()

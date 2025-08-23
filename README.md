@@ -340,7 +340,7 @@ Tuturial coming soon.
 
 ## Changelog
 
-#### Version 5.6.34 | 2025.08.19
+#### Version 5.6.34 | 2025.08.23
 
 * **NEW** ProTools AAX plugin support (requires AAX SDK 2.8+ and codesigning via PACE)
 * **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
@@ -381,6 +381,7 @@ Tuturial coming soon.
 * **UPDATED** CtrlrPropertyComponent Layer selection via comboBox. `CtrlrPropertyComponent.cpp` & `.h`, `CtrlrIDs.xml`
 * **UPDATED** CtrlrPropertyComponent Font size, kerning & horizontal-scale sliders replaced by drop-down selector for convenience. `CtrlrPropertyComponent.cpp` &`.h`
 * **FIXED** CtrlrX crashing or freezing when closing while the notify bar was visible. `CtrlrPanelEditor.cpp` & `.h`
+* **UPDATED** Utils get16bitSigned() & get16bitSigned() funtions bind to LUA. `CtrlrLuaUtils.cpp` & `.h`
 
 #### Version 5.6.33 | 2025.05.28
 
