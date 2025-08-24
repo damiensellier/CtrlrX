@@ -10,67 +10,172 @@
 #include "CtrlrPanelLayerList.h"
 
 //==============================================================================
+// CtrlrPanelLayerListHeader Implementation
+//==============================================================================
+CtrlrPanelLayerListHeader::CtrlrPanelLayerListHeader()
+{
+    addAndMakeVisible(indexHeader);
+    indexHeader.setText("z-index", juce::dontSendNotification);
+    indexHeader.setJustificationType(juce::Justification::centred);
+    indexHeader.setFont(juce::Font(12.0f, juce::Font::plain));
+	
+	addAndMakeVisible(reorderHeader);
+	reorderHeader.setText("Reorder", juce::dontSendNotification);
+	reorderHeader.setJustificationType(juce::Justification::centred);
+	reorderHeader.setFont(juce::Font(12.0f, juce::Font::plain));
+    
+    addAndMakeVisible(visibilityHeader);
+    visibilityHeader.setText("Visiblity", juce::dontSendNotification);
+    visibilityHeader.setJustificationType(juce::Justification::centred);
+    visibilityHeader.setFont(juce::Font(12.0f, juce::Font::plain));
+    
+    addAndMakeVisible(nameHeader);
+    nameHeader.setText("Name", juce::dontSendNotification);
+    nameHeader.setJustificationType(juce::Justification::centred);
+    nameHeader.setFont(juce::Font(12.0f, juce::Font::plain));
+
+    addAndMakeVisible(colourHeader);
+    colourHeader.setText("Colour", juce::dontSendNotification);
+    colourHeader.setJustificationType(juce::Justification::centred);
+    colourHeader.setFont(juce::Font(12.0f, juce::Font::plain));
+    
+    addAndMakeVisible(editHeader);
+    editHeader.setText("Edit View", juce::dontSendNotification);
+    editHeader.setJustificationType(juce::Justification::centred);
+    editHeader.setFont(juce::Font(12.0f, juce::Font::plain));
+
+}
+
+CtrlrPanelLayerListHeader::~CtrlrPanelLayerListHeader() {}
+
+void CtrlrPanelLayerListHeader::resized()
+{
+    // The proportions must add up to 1.0
+	const float layerIndexProportion = 0.07f;
+	const float dragIconProportion = 0.07f;
+	const float visibilityProportion = 0.07f;
+	const float layerNameProportion = 0.33f;
+	const float layerColourProportion = 0.23f;
+	const float buttonProportion = 0.23f;
+    
+    float x = 0.0f;
+    const float totalWidth = getWidth();
+
+    // Position elements in the new order
+    // 1. Layer Index
+    float layerIndexWidth = totalWidth * layerIndexProportion;
+    indexHeader.setBounds(x, 0, layerIndexWidth, getHeight());
+    x += layerIndexWidth;
+
+    // 2. Drag Icon (Reorder)
+    float dragIconWidth = totalWidth * dragIconProportion;
+    reorderHeader.setBounds(x, 0, dragIconWidth, getHeight());
+    x += dragIconWidth;
+    
+    // 3. Visibility
+    float visibilityWidth = totalWidth * visibilityProportion;
+    visibilityHeader.setBounds(x, 0, visibilityWidth, getHeight());
+    x += visibilityWidth;
+    
+    // 4. Layer Name
+    float layerNameWidth = totalWidth * layerNameProportion;
+    nameHeader.setBounds(x, 0, layerNameWidth, getHeight());
+    x += layerNameWidth;
+    
+    // 5. Layer Colour
+    float colourChooserWidth = totalWidth * layerColourProportion;
+    colourHeader.setBounds(x, 0, colourChooserWidth, getHeight());
+    x += colourChooserWidth;
+    
+    // 6. Action Buttons
+    float buttonWidth = totalWidth * buttonProportion;
+    editHeader.setBounds(x, 0, buttonWidth, getHeight());
+    x += buttonWidth;
+    
+    // Update separator positions
+    separatorPositions.clear();
+    separatorPositions.add(static_cast<int>(indexHeader.getRight()));
+    separatorPositions.add(static_cast<int>(reorderHeader.getRight()));
+    separatorPositions.add(static_cast<int>(visibilityHeader.getRight()));
+    separatorPositions.add(static_cast<int>(nameHeader.getRight()));
+    separatorPositions.add(static_cast<int>(colourHeader.getRight()));
+}
+
+void CtrlrPanelLayerListHeader::paint (juce::Graphics& g)
+{
+    g.setColour (juce::Colours::lightgrey);
+
+    for (int pos : separatorPositions)
+    {
+        g.drawLine (pos, 0, pos, getHeight(), 1.0f);
+    }
+}
+
+//==============================================================================
+// CtrlrPanelLayerList Implementation
+//==============================================================================
 CtrlrPanelLayerList::CtrlrPanelLayerList (CtrlrPanel &_owner)
     : owner(_owner),
-      layerList (0)
+      dropInsertionIndex(-1),
+      layerIsolationActive(false),
+      isolatedLayerIndex(-1),
+      layerList(std::make_unique<juce::ListBox>("Layer List", this)),
+      headerComponent(std::make_unique<CtrlrPanelLayerListHeader>())
 {
-    addAndMakeVisible (layerList = new ListBox ("Layer List", this));
+    // Explicitly call the methods from the base class that provides them
+    CtrlrChildWindowContent::addAndMakeVisible(*headerComponent);
+    CtrlrChildWindowContent::addAndMakeVisible(*layerList);
+    
+    // Explicitly call the setSize method from the base class
+    CtrlrChildWindowContent::setSize(600, 400);
 
-
-    //[UserPreSize]
-	layerList->setRowHeight (40);
-	layerList->setMultipleSelectionEnabled (false);
-    //[/UserPreSize]
-
-    setSize (600, 400);
-
-
-    //[Constructor] You can add your own custom stuff here..
-    //[/Constructor]
+    layerList->setRowHeight(40);
+    layerList->setMultipleSelectionEnabled(false);
 }
 
-CtrlrPanelLayerList::~CtrlrPanelLayerList()
-{
-    deleteAndZero (layerList);
-}
+CtrlrPanelLayerList::~CtrlrPanelLayerList() {}
 
 //==============================================================================
 void CtrlrPanelLayerList::paint (Graphics& g)
 {
-	// Draw drop insertion indicator
-	if (dropInsertionIndex >= 0)
-	{
-		g.setColour(Colours::blue);
-		int y = dropInsertionIndex * layerList->getRowHeight();
-		g.fillRect(0, y - 1, getWidth(), 3);
-	}
-	if (dropInsertionIndex >= 0)
-	{
-		g.setColour(Colours::blue);
-		int y = dropInsertionIndex * layerList->getRowHeight();
-		g.fillRect(0, y - 1, getWidth(), 3);
-	}
+    // Draw drop insertion indicator
+    if (dropInsertionIndex >= 0)
+    {
+        g.setColour(Colours::blue);
+        int y = dropInsertionIndex * layerList->getRowHeight() + headerComponent->getHeight();
+        
+        // Explicitly call the getWidth() method from the CtrlrChildWindowContent base class
+        g.fillRect(0, y - 1, CtrlrChildWindowContent::getWidth(), 3);
+    }
+    
+    // Draw isolation indicator
+    if (layerIsolationActive)
+    {
+        g.setColour(Colours::orange.withAlpha(0.3f));
+        g.fillRect(2, headerComponent->getHeight() + 2, CtrlrChildWindowContent::getWidth() - 4, 20);
 
-	// Draw isolation indicator
-	if (layerIsolationActive)
-	{
-		g.setColour(Colours::orange.withAlpha(0.3f));
-		g.fillRect(2, 2, getWidth() - 4, 20);
-
-		g.setColour(Colours::orange.darker());
-		g.setFont(Font(11.0f, Font::bold));
-		g.drawText("LAYER ISOLATION ACTIVE", 5, 2, getWidth() - 10, 20, Justification::centredLeft);
-	}
+        g.setColour(Colours::orange.darker());
+        g.setFont(Font(11.0f, Font::bold));
+        g.drawText("LAYER ISOLATION ACTIVE", 5, headerComponent->getHeight() + 2, CtrlrChildWindowContent::getWidth() - 10, 20, Justification::centredLeft);
+    }
 }
 
 void CtrlrPanelLayerList::resized()
 {
-    layerList->setBounds (0, 0, getWidth() - 0, getHeight() - 0);
+    const int headerHeight = 30;
+
+    // Set bounds for the header component
+    if (headerComponent)
+    {
+        // Explicitly call getWidth() from the base class
+        headerComponent->setBounds(0, 0, CtrlrChildWindowContent::getWidth(), headerHeight);
+    }
+    
+    // Set bounds for the list below the header
+    // Explicitly call getWidth() and getHeight() from the base class
+    layerList->setBounds(0, headerHeight, CtrlrChildWindowContent::getWidth(), CtrlrChildWindowContent::getHeight() - headerHeight);
 }
 
-
-
-//[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 int CtrlrPanelLayerList::getNumRows()
 {
 	return (owner.getEditor()->getCanvas()->getNumLayers());
@@ -80,7 +185,7 @@ void CtrlrPanelLayerList::paintListBoxItem (int rowNumber, Graphics& g, int widt
 {
     if (rowIsSelected)
     {
-        gui::drawSelectionRectangle (g, width, height);
+		// gui::drawSelectionRectangle (g, width, height); // Update v5.6.34. Won't highlight the selected list item
     }
 }
 
@@ -269,56 +374,65 @@ bool CtrlrPanelLayerList::isInterestedInDragSource(const SourceDetails& dragSour
 
 void CtrlrPanelLayerList::itemDragEnter(const SourceDetails& dragSourceDetails)
 {
-	repaint();
+    CtrlrChildWindowContent::repaint();
 }
 
 void CtrlrPanelLayerList::itemDragMove(const SourceDetails& dragSourceDetails)
 {
-	// Calculate which row the mouse is over
-	Point<int> localPos = layerList->getLocalPoint(this, dragSourceDetails.localPosition);
-	int visualRow = localPos.y / layerList->getRowHeight();
+    // Get the mouse position relative to the ListBox's content area
+    Point<int> localPos = layerList->getLocalPoint(static_cast<CtrlrChildWindowContent*>(this), dragSourceDetails.localPosition);
+    
+    // Correct for the header row
+    int yPosRelativeToListBox = localPos.y - headerComponent->getHeight();
+    
+    // Calculate which row the mouse is over
+    int visualRow = yPosRelativeToListBox / layerList->getRowHeight();
 
-	// Clamp to valid range
-	visualRow = jmax(0, jmin(visualRow, getNumRows() - 1));
+    // Clamp to valid range
+    visualRow = jmax(0, jmin(visualRow, getNumRows() - 1));
 
-	// Store the visual row (we'll convert to actual layer index later)
-	dropInsertionIndex = visualRow;
+    // Store the visual row (we'll convert to actual layer index later)
+    dropInsertionIndex = visualRow;
 
-	repaint();
+    CtrlrChildWindowContent::repaint();
 }
 
 void CtrlrPanelLayerList::itemDragExit(const SourceDetails& dragSourceDetails)
 {
-	dropInsertionIndex = -1;
-	repaint();
+    dropInsertionIndex = -1;
+    CtrlrChildWindowContent::repaint();
 }
 
 void CtrlrPanelLayerList::itemDropped(const SourceDetails& dragSourceDetails)
 {
-	if (!isInterestedInDragSource(dragSourceDetails))
-		return;
+    if (!isInterestedInDragSource(dragSourceDetails))
+        return;
 
-	// Extract the source row index from the description
-	String desc = dragSourceDetails.description.toString();
-	int sourceVisualRow = desc.getTrailingIntValue();
+    // Extract the source row index from the description
+    String desc = dragSourceDetails.description.toString();
+    int sourceVisualRow = desc.getTrailingIntValue();
 
-	// Calculate target position
-	Point<int> localPos = layerList->getLocalPoint(this, dragSourceDetails.localPosition);
-	int targetVisualRow = localPos.y / layerList->getRowHeight();
-	targetVisualRow = jmax(0, jmin(targetVisualRow, getNumRows() - 1));
+    // Calculate target position relative to the ListBox
+    Point<int> localPos = layerList->getLocalPoint(static_cast<CtrlrChildWindowContent*>(this), dragSourceDetails.localPosition);
 
-	if (targetVisualRow != sourceVisualRow && sourceVisualRow >= 0 && sourceVisualRow < getNumRows())
-	{
-		// Convert visual rows to actual layer indices
-		int totalLayers = getNumRows();
-		int sourceActualIndex = totalLayers - 1 - sourceVisualRow;
-		int targetActualIndex = totalLayers - 1 - targetVisualRow;
+    // Correct for the header row
+    int yPosRelativeToListBox = localPos.y - headerComponent->getHeight();
+    
+    int targetVisualRow = yPosRelativeToListBox / layerList->getRowHeight();
+    targetVisualRow = jmax(0, jmin(targetVisualRow, getNumRows() - 1));
 
-		moveLayerToPosition(sourceActualIndex, targetActualIndex);
-	}
+    if (targetVisualRow != sourceVisualRow && sourceVisualRow >= 0 && sourceVisualRow < getNumRows())
+    {
+        // Convert visual rows to actual layer indices
+        int totalLayers = getNumRows();
+        int sourceActualIndex = totalLayers - 1 - sourceVisualRow;
+        int targetActualIndex = totalLayers - 1 - targetVisualRow;
 
-	dropInsertionIndex = -1;
-	repaint();
+        moveLayerToPosition(sourceActualIndex, targetActualIndex);
+    }
+
+    dropInsertionIndex = -1;
+    CtrlrChildWindowContent::repaint();
 }
 void CtrlrPanelLayerList::moveLayerToPosition(int sourceActualIndex, int targetActualIndex)
 {

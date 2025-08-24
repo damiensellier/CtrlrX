@@ -17,6 +17,15 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
       dragIcon(0),
       isDragging(false)
 {
+    addAndMakeVisible (layerColour = new CtrlrColourEditorComponent (this));
+    addAndMakeVisible (layerIndex = new Label (L"layerIndex",
+                                               L"2"));
+    layerIndex->setFont (Font (12.0000f, Font::plain));
+    layerIndex->setJustificationType (Justification::centred);
+    layerIndex->setEditable (false, false, false);
+    layerIndex->setColour (TextEditor::textColourId, Colours::black);
+    layerIndex->setColour (TextEditor::backgroundColourId, Colour (0x0));
+	
 	addAndMakeVisible(dragIcon = new DragIconComponent(this));
 	
 	addAndMakeVisible (layerName = new Label ("",
@@ -31,20 +40,11 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
     addAndMakeVisible (layerVisibility = new ToggleButton(""));
     layerVisibility->addListener (this);
 
-    addAndMakeVisible (layerColour = new CtrlrColourEditorComponent (this));
-    addAndMakeVisible (layerIndex = new Label (L"layerIndex",
-                                               L"2"));
-    layerIndex->setFont (Font (12.0000f, Font::plain));
-    layerIndex->setJustificationType (Justification::centred);
-    layerIndex->setEditable (false, false, false);
-    layerIndex->setColour (TextEditor::textColourId, Colours::black);
-    layerIndex->setColour (TextEditor::backgroundColourId, Colour (0x0));
-
     addAndMakeVisible(isolateButton = new TextButton("Edit"));
     isolateButton->setButtonText("Edit");
     isolateButton->addListener(this);
-    isolateButton->setColour(TextButton::buttonColourId, Colours::lightblue);  // Initial light blue
-    isolateButton->setColour(TextButton::textColourOffId, Colours::black);
+    isolateButton->setColour(TextButton::buttonColourId, findColour(juce::TextButton::buttonOnColourId));
+    isolateButton->setColour(TextButton::textColourOffId, findColour(juce::TextButton::textColourOffId));
 
     addAndMakeVisible(restoreButton = new TextButton("Restore"));
     restoreButton->setButtonText("Restore");
@@ -54,10 +54,10 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
     restoreButton->setVisible(false);
 
     // Add mouse listeners for existing components
-	layerName->addMouseListener (this, true);
-	layerVisibility->addMouseListener (this, true);
-	layerColour->addMouseListener (this, true);
 	layerIndex->addMouseListener (this, true);
+	layerVisibility->addMouseListener (this, true);
+	layerName->addMouseListener (this, true);
+	layerColour->addMouseListener (this, true);
 
 	layerVisibility->setMouseCursor (MouseCursor::PointingHandCursor);
 
@@ -71,14 +71,19 @@ CtrlrPanelLayerListItem::~CtrlrPanelLayerListItem()
     deleteAndZero (layerVisibility);
     deleteAndZero (layerColour);
     deleteAndZero (layerIndex);
-	deleteAndZero(isolateButton);
-    deleteAndZero(restoreButton);
-    deleteAndZero(dragIcon);
+	deleteAndZero (isolateButton);
+    deleteAndZero (restoreButton);
+    deleteAndZero (dragIcon);
 }
 
 //==============================================================================
 void CtrlrPanelLayerListItem::paint (Graphics& g)
 {
+    // Add this line to ensure a consistent background color
+    g.setColour(Colours::white);
+    g.fillRect(getLocalBounds());
+
+    // The rest of your existing paint code follows
     g.setColour(Colours::black);
     g.drawLine(0, getHeight(), getWidth(), getHeight(), 1.0f);
 
@@ -93,54 +98,76 @@ void CtrlrPanelLayerListItem::paint (Graphics& g)
     // Optional: Add visual feedback when dragging
     if (isDragging)
     {
-        g.setColour(Colours::blue.withAlpha(0.3f));
+		g.setColour(getLookAndFeel().findColour(juce::TextButton::buttonOnColourId).withAlpha(0.3f));
         g.fillRect(getLocalBounds());
     }
 }
 
 void CtrlrPanelLayerListItem::resized()
 {
-    const int buttonWidth = 60;
-    const int buttonHeight = 16;
-    const int colourChooserWidth = 80;
-    const int padding = 4;
-    const int pushLeft = 40;
-    const int dragIconWidth = 16;
-    const int dragIconHeight = 16;
+    const int padding = 10;
+    const int componentHeight = getHeight() - (padding * 2);
+	const int totalHeight = getHeight();
 
-    // Position the drag icon correctly
-    if (dragIcon)
-    {
-        dragIcon->setBounds(padding, (getHeight() - dragIconHeight) / 2, dragIconWidth, dragIconHeight);
-    }
-    else {
-        _DBG("dragIcon is null");
-    }
+    // These proportions are taken directly from the header to ensure alignment
+    const float layerIndexProportion = 0.07f;
+    const float dragIconProportion = 0.07f;
+    const float visibilityProportion = 0.07f;
+    const float layerNameProportion = 0.33f;
+    const float layerColourProportion = 0.23f;
+    const float buttonProportion = 0.23f;
 
-    // Adjust other components
-    int leftOffset = padding;
+    const float totalWidth = getWidth();
+    float x = 0.0f; // Start at 0, no padding
+
+    // 1. Layer Index
+    float layerIndexWidth = totalWidth * layerIndexProportion;
+    layerIndex->setBounds(x, (getHeight() - componentHeight) / 2, layerIndexWidth, componentHeight);
+    x += layerIndexWidth;
+
+    // 2. Drag Icon (Reorder)
+    float dragIconWidth = totalWidth * dragIconProportion;
     if (dragIcon) {
-        leftOffset = dragIcon->getRight();
+        dragIcon->setBounds(x, (getHeight() - componentHeight) / 2, dragIconWidth, componentHeight);
+        x += dragIconWidth;
     }
 
-    // Position the visibility toggle button
-    layerVisibility->setBounds(leftOffset+dragIconWidth, padding, 32, 32);
+	// 3. Visibility Toggle
+	float visibilityWidth = totalWidth * visibilityProportion;
+	// float checkboxSize = jmin(visibilityWidth, (float)componentHeight); // don't know why but the checkbox is cropped on the right side ???
+	int checkboxSize = 32;
+	float checkboxX = x + (visibilityWidth - checkboxSize) / 2.0f;
+	float checkboxY = (totalHeight - checkboxSize) / 2.0f;
+	layerVisibility->setBounds((int)checkboxX, (int)checkboxY, (int)checkboxSize, (int)checkboxSize);
+	x += visibilityWidth;
 
-    // Position the layer name label
-    layerName->setBounds(layerVisibility->getRight() + padding, padding, proportionOfWidth(0.35f), 12);
+    // 4. Layer Name (with padding)
+    const int layerNamePadding = 5;
+    float layerNameWidth = totalWidth * layerNameProportion;
+    layerName->setBounds(x + layerNamePadding, (totalHeight - componentHeight) / 2, layerNameWidth - layerNamePadding, componentHeight);
+    x += layerNameWidth;
 
-    // Position the color chooser
-    layerColour->setBounds(layerName->getRight() + padding, 16, colourChooserWidth, 16);
+	// 5. Layer Colour Chooser (with padding)
+    float colourChooserWidth = totalWidth * layerColourProportion;
+    const int colourPadding = 5;
+    float paddedColourWidth = colourChooserWidth - (2 * colourPadding);
+    float paddedColourX = x + colourPadding;
+    layerColour->setBounds((int)paddedColourX, (totalHeight - componentHeight) / 2, (int)paddedColourWidth, componentHeight);
+    x += colourChooserWidth;
 
-    // Position the layer index label
-    layerIndex->setBounds(getWidth() - (padding + 14), getHeight() - 16, 14, 16);
-
-    // Position BOTH buttons in the SAME location (they swap visibility)
-    const int buttonLeft = getWidth() - buttonWidth - pushLeft;
-    const int buttonTop = (getHeight() - buttonHeight) / 2;
-    
-    isolateButton->setBounds(buttonLeft, buttonTop, buttonWidth, buttonHeight);
-    restoreButton->setBounds(buttonLeft, buttonTop, buttonWidth, buttonHeight);  // Same position!
+    // 6. Action Buttons (occupying the same position with padding)
+    float buttonColumnWidth = totalWidth * buttonProportion;
+    if (isolateButton && restoreButton) {
+        const int buttonPadding = 5;
+        float paddedButtonWidth = buttonColumnWidth - (2 * buttonPadding);
+        float paddedButtonX = x + buttonPadding;
+        const int buttonTop = (totalHeight - componentHeight) / 2;
+        
+        // Both buttons are given the exact same bounds
+        isolateButton->setBounds((int)paddedButtonX, buttonTop, (int)paddedButtonWidth, componentHeight);
+        restoreButton->setBounds((int)paddedButtonX, buttonTop, (int)paddedButtonWidth, componentHeight);
+    }
+    x += buttonColumnWidth;
 }
 
 void CtrlrPanelLayerListItem::labelTextChanged (Label* labelThatHasChanged)
@@ -308,7 +335,11 @@ void CtrlrPanelLayerListItem::handleDragIconMouseDrag(const MouseEvent& e)
         DragAndDropContainer* dragContainer = DragAndDropContainer::findParentDragContainerFor(this);
         if (dragContainer)
         {
-            dragContainer->startDragging(dragDescription, this, dragImage, true);
+            // Correct the startDragging call with the hotspot parameter
+            // The hotspot is the top-left corner of the drag image,
+            // which will align to the mouse cursor's position.
+            Point<int> hotspot(0, 0);
+            dragContainer->startDragging(dragDescription, this, dragImage, true, &hotspot, nullptr);
         }
     }
 }
