@@ -81,9 +81,7 @@ public:
     
     bool isLayerIsolated(int layerIndex) const;
 
-    JUCE_LEAK_DETECTOR(CtrlrPanelLayerList)
-
-private:
+ private:
     CtrlrPanel& owner;
     
     int dropInsertionIndex;

@@ -1089,6 +1089,10 @@
               file="Source/UIComponents/CtrlrValueTreeEditor.h"/>
       </GROUP>
     </GROUP>
+    <FILE id="CjELIi" name="CtrlrPanelEditorIcons.cpp" compile="1" resource="0"
+          file="Source/UIComponents/CtrlrPanel/CtrlrPanelEditorIcons.cpp"/>
+    <FILE id="uj1Evz" name="CtrlrPanelEditorIcons.h" compile="0" resource="0"
+          file="Source/UIComponents/CtrlrPanel/CtrlrPanelEditorIcons.h"/>
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" extraDefs="JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1 BOOST_BIND_GLOBAL_PLACEHOLDERS=1"
