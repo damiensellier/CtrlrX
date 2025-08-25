@@ -7,15 +7,15 @@ class CtrlrGroup;
 
 class CtrlrGroupContentComponent : public GroupComponent
 {
-	public:
-		CtrlrGroupContentComponent(CtrlrGroup &_owner);
-		~CtrlrGroupContentComponent();
-		void customLookAndFeelChanged(LookAndFeelBase *customLookAndFeel = nullptr);
+public:
+	CtrlrGroupContentComponent(CtrlrGroup& _owner);
+	~CtrlrGroupContentComponent();
+	void customLookAndFeelChanged(LookAndFeelBase* customLookAndFeel = nullptr);
 
-        JUCE_LEAK_DETECTOR(CtrlrGroupContentComponent)
+	JUCE_LEAK_DETECTOR(CtrlrGroupContentComponent)
 
-	private:
-		CtrlrGroup &owner;
+private:
+	CtrlrGroup& owner;
 };
 //[/Headers]
 
@@ -23,21 +23,21 @@ class CtrlrGroupContentComponent : public GroupComponent
 
 //==============================================================================
 /**
-                                                                    //[Comments]
-    An auto-generated component, created by the Jucer.
+																	//[Comments]
+	An auto-generated component, created by the Jucer.
 
-    Describe your class and how it works here!
-                                                                    //[/Comments]
+	Describe your class and how it works here!
+																	//[/Comments]
 */
-class CtrlrGroup  : public CtrlrComponent, public DragAndDropTarget, public CtrlrGrouppingComponent
+class CtrlrGroup : public CtrlrComponent, public DragAndDropTarget, public CtrlrGrouppingComponent
 {
 public:
-    //==============================================================================
-    CtrlrGroup (CtrlrModulator &owner);
-    ~CtrlrGroup();
+	//==============================================================================
+	CtrlrGroup(CtrlrModulator& owner);
+	~CtrlrGroup();
 
-    //==============================================================================
-    //[UserMethods]     -- You can add your own custom methods in this section.
+	//==============================================================================
+	//[UserMethods]     -- You can add your own custom methods in this section.
 	enum GradientType
 	{
 		None,
@@ -47,48 +47,48 @@ public:
 	};
 
 	const Array<Font> getFontList();
-	static const GradientType gradientFromString(const String &str);
-	static const Justification justificationFromString(const String &str);
-	void setComponentValue (const double newValue, const bool sendChangeMessage=false);
+	static const GradientType gradientFromString(const String& str);
+	static const Justification justificationFromString(const String& str);
+	void setComponentValue(const double newValue, const bool sendChangeMessage = false);
 	double getComponentValue();
 	int getComponentMidiValue();
 	double getComponentMaxValue();
 	const String getComponentText();
-	void setComponentText (const String &componentText);
-	void valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChanged, const Identifier &property);
-	void valueTreeChildrenChanged (ValueTree &treeWhoseChildHasChanged){}
-	void valueTreeParentChanged (ValueTree &treeWhoseParentHasChanged){}
-	void valueTreeChildAdded (ValueTree& parentTree, ValueTree& childWhichHasBeenAdded){}
-    void valueTreeChildRemoved (ValueTree& parentTree, ValueTree& childWhichHasBeenRemoved, int){}
-	void valueTreeChildOrderChanged (ValueTree& parentTreeWhoseChildrenHaveMoved, int, int){}
-	void setOwned (CtrlrComponent *componentToOwn, const int subIndexInGroup = 0, const bool shouldOwnThisComponent = true);
+	void setComponentText(const String& componentText);
+	void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property);
+	void valueTreeChildrenChanged(ValueTree& treeWhoseChildHasChanged) {}
+	void valueTreeParentChanged(ValueTree& treeWhoseParentHasChanged) {}
+	void valueTreeChildAdded(ValueTree& parentTree, ValueTree& childWhichHasBeenAdded) {}
+	void valueTreeChildRemoved(ValueTree& parentTree, ValueTree& childWhichHasBeenRemoved, int) {}
+	void valueTreeChildOrderChanged(ValueTree& parentTreeWhoseChildrenHaveMoved, int, int) {}
+	void setOwned(CtrlrComponent* componentToOwn, const int subIndexInGroup = 0, const bool shouldOwnThisComponent = true);
 	void canvasStateRestored();
 	const Array<int> getResourceList();
-	void modulatorNameChanged (const String &newName);
-	bool isInterestedInDragSource (const SourceDetails &dragSourceDetails);
-	void itemDropped (const SourceDetails &dragSourceDetails);
-	void itemDragExit (const SourceDetails &dragSourceDetails);
-	void itemDragEnter (const SourceDetails &dragSourceDetails);
-	bool isOwned(CtrlrComponent *componentToCheck);
+	void modulatorNameChanged(const String& newName);
+	bool isInterestedInDragSource(const SourceDetails& dragSourceDetails);
+	void itemDropped(const SourceDetails& dragSourceDetails);
+	void itemDragExit(const SourceDetails& dragSourceDetails);
+	void itemDragEnter(const SourceDetails& dragSourceDetails);
+	bool isOwned(CtrlrComponent* componentToCheck);
 	Array <CtrlrComponent*> getOwnedChildren();
 	void reloadResources(Array <CtrlrPanelResource*> resourcesThatChanged);
 	void setResource();
-	void customLookAndFeelChanged(LookAndFeelBase *customLookAndFeel = nullptr);
-    static LookAndFeel* getLookAndFeelFromComponentProperty(const String &lookAndFeelComponentProperty);
-    void resetLookAndFeelOverrides();
-    void updatePropertiesPanel();
-	static void wrapForLua (lua_State *L);
-    //[/UserMethods]
+	void customLookAndFeelChanged(LookAndFeelBase* customLookAndFeel = nullptr);
+	static LookAndFeel* getLookAndFeelFromComponentProperty(const String& lookAndFeelComponentProperty);
+	void resetLookAndFeelOverrides();
+	void updatePropertiesPanel();
+	static void wrapForLua(lua_State* L);
+	//[/UserMethods]
 
-    void paint (Graphics& g);
-    void resized();
+	void paint(Graphics& g);
+	void resized();
 
 
-    //==============================================================================
-    juce_UseDebuggingNewOperator
+	//==============================================================================
+	juce_UseDebuggingNewOperator
 
 private:
-    //[UserVariables]   -- You can add your own custom variables in this section.
+	//[UserVariables]   -- You can add your own custom variables in this section.
 	Array <int> values;
 	GradientType outlineGradient, backgroundGradient;
 	Colour outlineColour1, outlineColour2, backgroundColour1, backgroundColour2;
@@ -97,15 +97,15 @@ private:
 	int textMargin;
 	Image groupBackgroundImage;
 	CtrlrGroupContentComponent content;
-    //[/UserVariables]
+	//[/UserVariables]
 
-    //==============================================================================
-    Label* label;
+	//==============================================================================
+	juce::ScopedPointer<Label> label;
 
-    //==============================================================================
-    // (prevent copy constructor and operator= being generated..)
-    CtrlrGroup (const CtrlrGroup&);
-    const CtrlrGroup& operator= (const CtrlrGroup&);
+	//==============================================================================
+	// (prevent copy constructor and operator= being generated..)
+	CtrlrGroup(const CtrlrGroup&);
+	const CtrlrGroup& operator= (const CtrlrGroup&);
 };
 
 

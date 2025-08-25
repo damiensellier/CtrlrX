@@ -34,43 +34,43 @@
 //[/MiscUserDefs]
 
 //==============================================================================
-CtrlrImage::CtrlrImage (CtrlrModulator &owner)
-    : CtrlrComponent(owner)
+CtrlrImage::CtrlrImage(CtrlrModulator& owner)
+	: CtrlrComponent(owner)
 {
 
-    //[UserPreSize]
-	owner.setProperty (Ids::modulatorIsStatic, true);
-	owner.setProperty (Ids::modulatorVstExported, false);
+	//[UserPreSize]
+	owner.setProperty(Ids::modulatorIsStatic, true);
+	owner.setProperty(Ids::modulatorVstExported, false);
 
-	setProperty (Ids::uiImageResource, "");
-	componentTree.addListener (this);
-    //[/UserPreSize]
+	setProperty(Ids::uiImageResource, "");
+	componentTree.addListener(this);
+	//[/UserPreSize]
 
-    setSize (128, 128);
+	setSize(128, 128);
 
-    //[Constructor] You can add your own custom stuff here..
-    //[/Constructor]
+	//[Constructor] You can add your own custom stuff here..
+	//[/Constructor]
 }
 
 CtrlrImage::~CtrlrImage()
 {
-    //[Destructor_pre]. You can add your own custom destruction code here..
-    //[/Destructor_pre]
+	//[Destructor_pre]. You can add your own custom destruction code here..
+	//[/Destructor_pre]
 
 
 
-    //[Destructor]. You can add your own custom destruction code here..
-    //[/Destructor]
+	//[Destructor]. You can add your own custom destruction code here..
+	//[/Destructor]
 }
 
 //==============================================================================
-void CtrlrImage::paint (Graphics& g)
+void CtrlrImage::paint(Graphics& g)
 {
 	if (!currentImage.isValid())
 	{
-		g.setColour (Colours::red);
-		g.setFont (Font (15.0000f, Font::bold));
-		g.drawFittedText ("Invalid Resource", 0, 0, getWidth(), getHeight(), Justification::left, 2);
+		g.setColour(Colours::red);
+		g.setFont(Font(15.0000f, Font::bold));
+		g.drawFittedText("Invalid Resource", 0, 0, getWidth(), getHeight(), Justification::left, 2);
 	}
 	else
 	{
@@ -79,15 +79,15 @@ void CtrlrImage::paint (Graphics& g)
 	}
 
 	CtrlrComponent::resized();
-	CtrlrComponent::paint (g);
+	CtrlrComponent::paint(g);
 }
 
 void CtrlrImage::resized()
 {
-    //[UserResized] Add your own custom resize handling here..
+	//[UserResized] Add your own custom resize handling here..
 	if (restoreStateInProgress)
 		return;
-    //[/UserResized]
+	//[/UserResized]
 }
 
 
@@ -108,11 +108,11 @@ int CtrlrImage::getComponentMidiValue()
 	return (1);
 }
 
-void CtrlrImage::setComponentValue (const double newValue, const bool sendChangeMessage)
+void CtrlrImage::setComponentValue(const double newValue, const bool sendChangeMessage)
 {
 }
 
-void CtrlrImage::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChanged, const Identifier &property)
+void CtrlrImage::valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property)
 {
 	if (property == Ids::uiImageResource)
 	{
@@ -128,24 +128,24 @@ void CtrlrImage::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChange
 
 void CtrlrImage::resetSize()
 {
-	setSize (currentImage.getWidth(), currentImage.getHeight());
+	setSize(currentImage.getWidth(), currentImage.getHeight());
 }
 
-void CtrlrImage::restoreState (const ValueTree &savedState)
+void CtrlrImage::restoreState(const ValueTree& savedState)
 {
 	CtrlrComponent::restoreState(savedState);
 }
 
 void CtrlrImage::setResource()
 {
-	currentImage = owner.getOwnerPanel().getResourceManager().getResourceAsImage (getProperty(Ids::uiImageResource));
+	currentImage = owner.getOwnerPanel().getResourceManager().getResourceAsImage(getProperty(Ids::uiImageResource));
 	repaint();
 	resized();
 }
 
 void CtrlrImage::reloadResources(Array <CtrlrPanelResource*> resourcesThatChanged)
 {
-	for (int i=0; i<resourcesThatChanged.size(); i++)
+	for (int i = 0; i < resourcesThatChanged.size(); i++)
 	{
 		if (resourcesThatChanged[i]->getName() == getProperty(Ids::uiImageResource).toString())
 		{
@@ -160,15 +160,15 @@ void CtrlrImage::reloadResources(Array <CtrlrPanelResource*> resourcesThatChange
 #if 0
 /*  -- Jucer information section --
 
-    This is where the Jucer puts all of its metadata, so don't change anything in here!
+	This is where the Jucer puts all of its metadata, so don't change anything in here!
 
 BEGIN_JUCER_METADATA
 
 <JUCER_COMPONENT documentType="Component" className="CtrlrImage" componentName=""
-                 parentClasses="public CtrlrComponent" constructorParams="CtrlrModulator &amp;owner"
-                 variableInitialisers="CtrlrComponent(owner)" snapPixels="8" snapActive="1"
-                 snapShown="1" overlayOpacity="0.330000013" fixedSize="1" initialWidth="128"
-                 initialHeight="128">
+				 parentClasses="public CtrlrComponent" constructorParams="CtrlrModulator &amp;owner"
+				 variableInitialisers="CtrlrComponent(owner)" snapPixels="8" snapActive="1"
+				 snapShown="1" overlayOpacity="0.330000013" fixedSize="1" initialWidth="128"
+				 initialHeight="128">
   <BACKGROUND backgroundColour="ffffff"/>
 </JUCER_COMPONENT>
 

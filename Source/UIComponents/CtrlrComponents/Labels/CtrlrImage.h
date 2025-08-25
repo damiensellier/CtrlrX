@@ -36,35 +36,35 @@
     Describe your class and how it works here!
                                                                     //[/Comments]
 */
-class CtrlrImage  : public CtrlrComponent
+class CtrlrImage : public CtrlrComponent
 {
 public:
     //==============================================================================
-    CtrlrImage (CtrlrModulator &owner);
+    CtrlrImage(CtrlrModulator& owner);
     ~CtrlrImage();
 
     //==============================================================================
     //[UserMethods]     -- You can add your own custom methods in this section.
-	void setComponentValue (const double newValue, const bool sendChangeMessage=false);
-	double getComponentValue();
-	int getComponentMidiValue();
-	double getComponentMaxValue();
+    void setComponentValue(const double newValue, const bool sendChangeMessage = false);
+    double getComponentValue();
+    int getComponentMidiValue();
+    double getComponentMaxValue();
 
-	const Array<int> getResourceList();
-	void resetSize();
-	void valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChanged, const Identifier &property);
-	void valueTreeChildrenChanged (ValueTree &treeWhoseChildHasChanged){}
-	void valueTreeParentChanged (ValueTree &treeWhoseParentHasChanged){}
-	void valueTreeChildAdded (ValueTree& parentTree, ValueTree& childWhichHasBeenAdded){}
-    void valueTreeChildRemoved (ValueTree& parentTree, ValueTree& childWhichHasBeenRemoved, int){}
-	void valueTreeChildOrderChanged (ValueTree& parentTreeWhoseChildrenHaveMoved, int, int){}
-	void restoreState (const ValueTree &savedState);
-	void reloadResources(Array <CtrlrPanelResource*> resourcesThatChanged);
-	void setResource();
-	void customLookAndFeelChanged(LookAndFeelBase *customLookAndFeel = nullptr) {}
+    const Array<int> getResourceList();
+    void resetSize();
+    void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property);
+    void valueTreeChildrenChanged(ValueTree& treeWhoseChildHasChanged) {}
+    void valueTreeParentChanged(ValueTree& treeWhoseParentHasChanged) {}
+    void valueTreeChildAdded(ValueTree& parentTree, ValueTree& childWhichHasBeenAdded) {}
+    void valueTreeChildRemoved(ValueTree& parentTree, ValueTree& childWhichHasBeenRemoved, int) {}
+    void valueTreeChildOrderChanged(ValueTree& parentTreeWhoseChildrenHaveMoved, int, int) {}
+    void restoreState(const ValueTree& savedState);
+    void reloadResources(Array <CtrlrPanelResource*> resourcesThatChanged);
+    void setResource();
+    void customLookAndFeelChanged(LookAndFeelBase* customLookAndFeel = nullptr) {}
     //[/UserMethods]
 
-    void paint (Graphics& g);
+    void paint(Graphics& g);
     void resized();
 
 
@@ -73,9 +73,9 @@ public:
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
-	Array <int> values;
-	Image currentImage;
-	String resourceName;
+    Array <int> values;
+    Image currentImage;
+    String resourceName;
     //[/UserVariables]
 
     //==============================================================================
@@ -83,7 +83,7 @@ private:
 
     //==============================================================================
     // (prevent copy constructor and operator= being generated..)
-    CtrlrImage (const CtrlrImage&);
+    CtrlrImage(const CtrlrImage&);
     const CtrlrImage& operator= (const CtrlrImage&);
 };
 

@@ -12,15 +12,15 @@
 
 class CtrlrLuaMethodEditor;
 
-class CtrlrLuaMethodCodeEditorSettings  : public Component,
-                                          public ChangeListener,
-                                          public ComboBox::Listener,
-                                          public Button::Listener,
-                                          public Slider::Listener
+class CtrlrLuaMethodCodeEditorSettings : public Component,
+    public ChangeListener,
+    public ComboBox::Listener,
+    public Button::Listener,
+    public Slider::Listener
 {
 public:
 
-    CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMethodEditor &_owner, juce::Value& sharedSearchTabsValue_);
+    CtrlrLuaMethodCodeEditorSettings(CtrlrLuaMethodEditor& _owner, juce::Value& sharedSearchTabsValue_);
     ~CtrlrLuaMethodCodeEditorSettings();
 
     void changeListenerCallback(ChangeBroadcaster* source);
@@ -34,7 +34,7 @@ public:
     int findColourIndex(const Colour& colour);
     Colour getColourFromCombo(ComboBox* combo);
 
-	void paint(Graphics& g);
+    void paint(Graphics& g);
     void resized();
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
     void buttonClicked(Button* buttonThatWasClicked);
@@ -59,9 +59,9 @@ public:
         return defaultFont;
     };
 
-	
+
 private:
-	bool hasChanges;
+    bool hasChanges;
     static constexpr const char* defaultFont = "<Monospaced>";
 
     struct ColourItem {
@@ -74,13 +74,17 @@ private:
     CodeDocument codeDocument;
     CtrlrLuaMethodEditor& owner;
     Font codeFont;
-	Font previousFont;
+    Font previousFont;
     int marginLeft;
     int marginTop;
     int sampleWidth;
     int sampleHeight;
-	
-    Label* label0;
+
+    ScopedPointer<Label> label0;
+    ScopedPointer<Label> label1;
+    ScopedPointer<Label> label2;
+    ScopedPointer<Label> label3;
+    ScopedPointer<Label> syntaxLabel;
     ComboBox* fontTypeface;
     ColourComboBox* bgColour;
     ColourComboBox* lineNumbersBgColour;
@@ -95,10 +99,7 @@ private:
     TextButton* resetButton;
     TextButton* resetToPreviousButton;
     Slider* fontSize;
-    Label* label1;
-    Label* label2;
-    Label* label3;
-    Label* syntaxLabel;
+
     CodeEditorComponent* fontTest;
 
     static CodeEditorComponent::ColourScheme& getSharedScheme();
