@@ -17,8 +17,7 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
       dragIcon(0),
       isDragging(false)
 {
-    addAndMakeVisible (layerColour = new CtrlrColourEditorComponent (this));
-    addAndMakeVisible (layerIndex = new Label (L"layerIndex",
+	addAndMakeVisible (layerIndex = new Label (L"layerIndex",
                                                L"2"));
     layerIndex->setFont (Font (12.0000f, Font::plain));
     layerIndex->setJustificationType (Justification::centred);
@@ -27,6 +26,9 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
     layerIndex->setColour (TextEditor::backgroundColourId, Colour (0x0));
 	
 	addAndMakeVisible(dragIcon = new DragIconComponent(this));
+	
+    addAndMakeVisible (layerVisibility = new ToggleButton(""));
+    layerVisibility->addListener (this);
 	
 	addAndMakeVisible (layerName = new Label ("",
                                               L"Layer Name"));
@@ -37,9 +39,8 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
     layerName->setColour (TextEditor::backgroundColourId, Colour (0x0));
     layerName->addListener (this);
 
-    addAndMakeVisible (layerVisibility = new ToggleButton(""));
-    layerVisibility->addListener (this);
-
+    addAndMakeVisible (layerColour = new CtrlrColourEditorComponent (this));
+    
     addAndMakeVisible(isolateButton = new TextButton("Edit"));
     isolateButton->setButtonText("Edit");
     isolateButton->addListener(this);
@@ -77,28 +78,34 @@ CtrlrPanelLayerListItem::~CtrlrPanelLayerListItem()
 }
 
 //==============================================================================
-void CtrlrPanelLayerListItem::paint (Graphics& g)
+void CtrlrPanelLayerListItem::paint(juce::Graphics& g)
 {
-    // Add this line to ensure a consistent background color
-    g.setColour(Colours::white);
+    // Get the background color from the current LookAndFeel
+    auto backgroundColour = getLookAndFeel().findColour(juce::ListBox::backgroundColourId);
+
+    // Get the text colour from the current LookAndFeel
+    auto textColour = getLookAndFeel().findColour(juce::ListBox::textColourId);
+
+    // Fill the background with the dynamic color
+    g.setColour(backgroundColour);
     g.fillRect(getLocalBounds());
 
     // The rest of your existing paint code follows
-    g.setColour(Colours::black);
+    g.setColour(textColour);
     g.drawLine(0, getHeight(), getWidth(), getHeight(), 1.0f);
 
-	// Show if this layer is part of an isolation
+    // Show if this layer is part of an isolation
     if (owner.isLayerIsolationActive())
     {
         // Highlight the item differently when isolation is active
-        g.setColour(Colours::orange.withAlpha(0.1f));
+        g.setColour(juce::Colours::orange.withAlpha(0.1f));
         g.fillRect(getLocalBounds().reduced(1));
     }
 
     // Optional: Add visual feedback when dragging
     if (isDragging)
     {
-		g.setColour(getLookAndFeel().findColour(juce::TextButton::buttonOnColourId).withAlpha(0.3f));
+        g.setColour(getLookAndFeel().findColour(juce::TextButton::buttonOnColourId).withAlpha(0.3f));
         g.fillRect(getLocalBounds());
     }
 }
@@ -253,32 +260,50 @@ void CtrlrPanelLayerListItem::mouseDown(const MouseEvent& e)
     }
 }
 
-
-
-//[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 void CtrlrPanelLayerListItem::setLayer (CtrlrPanelCanvasLayer *_layer)
 {
-	if (_layer == nullptr)
-		return;
+    if (_layer == nullptr)
+        return;
 
-	layer = _layer;
+    layer = _layer;
 
-	layerName->setText (layer->getProperty(Ids::uiPanelCanvasLayerName), dontSendNotification);
-	layerVisibility->setToggleState (layer->getProperty(Ids::uiPanelCanvasLayerVisibility), sendNotification);
-	layerColour->setColour (VAR2COLOUR(layer->getProperty(Ids::uiPanelCanvasLayerColour)), false);
-	layerIndex->setText (layer->getProperty(Ids::uiPanelCanvasLayerIndex).toString(), dontSendNotification);
-	
-	// Update button states when layer is set
+    layerName->setText (layer->getProperty(Ids::uiPanelCanvasLayerName), dontSendNotification);
+    layerVisibility->setToggleState (layer->getProperty(Ids::uiPanelCanvasLayerVisibility), sendNotification);
+    
+    // Set the colour, and then call updateLabel() to apply it visually.
+    // Set the colour on the component. The 'false' parameter prevents it from
+    // sending a change message, which is correct for an initialization step.
+    layerColour->setColour (VAR2COLOUR(layer->getProperty(Ids::uiPanelCanvasLayerColour)), false);
+    
+    // This is the crucial line to ensure the component's internal UI is updated
+    // with the color from the layer when the list item is first created or assigned.
+    layerColour->updateLabel();
+    
+    layerIndex->setText (layer->getProperty(Ids::uiPanelCanvasLayerIndex).toString(), dontSendNotification);
+    
+    // Update button states when layer is set
     updateButtonStates();
 }
 
-void CtrlrPanelLayerListItem::changeListenerCallback (ChangeBroadcaster* source)
+void CtrlrPanelLayerListItem::changeListenerCallback (juce::ChangeBroadcaster* source)
 {
-	if (layer)
-	{
-		layer->setProperty (Ids::uiPanelCanvasLayerColour, layerColour->getColour().toString());
-        layerColour->updateLabel();
-	}
+    // First, check that the change message came from the colour editor
+    if (source == layerColour)
+    {
+        if (layer)
+        {
+            // 1. Get the new color from the component and set it in the layer's property.
+            layer->setProperty (Ids::uiPanelCanvasLayerColour, layerColour->getColour().toString());
+
+            // 2. Tell the colour editor component to update its internal text box
+            //    with the new color value and background.
+            layerColour->updateLabel();
+            
+            // 3. Force the parent list item to repaint, which ensures all children
+            //    (including the colour editor) are redrawn correctly.
+            repaint();
+        }
+    }
 }
 
 void CtrlrPanelLayerListItem::setRow(const int _rowIndex)
@@ -338,7 +363,7 @@ void CtrlrPanelLayerListItem::handleDragIconMouseDrag(const MouseEvent& e)
             // Correct the startDragging call with the hotspot parameter
             // The hotspot is the top-left corner of the drag image,
             // which will align to the mouse cursor's position.
-            Point<int> hotspot(0, 0);
+            Point<int> hotspot(20, 20);
             dragContainer->startDragging(dragDescription, this, dragImage, true, &hotspot, nullptr);
         }
     }
@@ -352,20 +377,27 @@ void CtrlrPanelLayerListItem::handleDragIconMouseUp(const MouseEvent& e)
 
 DragIconComponent::DragIconComponent(CtrlrPanelLayerListItem* parentItem) : parent(parentItem)
 {
-    setMouseCursor(MouseCursor::DraggingHandCursor);
+    setMouseCursor(juce::MouseCursor::DraggingHandCursor);
 
     dragDropIcon = R"(
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-<path d="M470.6 566.6L566.6 470.6C575.8 461.4 578.5 447.7 573.5 435.7C568.5 423.7 556.9 416 544 416L480 416L480 96C480 78.3 465.7 64 448 64C430.3 64 416 78.3 416 96L416 416L352 416C339.1 416 327.4 423.8 322.4 435.8C317.4 447.8 320.2 461.5 329.3 470.7L425.3 566.7C437.8 579.2 458.1 579.2 470.6 566.7zM214.6 73.4C202.1 60.9 181.8 60.9 169.3 73.4L73.3 169.4C64.1 178.6 61.4 192.3 66.4 204.3C71.4 216.3 83.1 224 96 224L160 224L160 544C160 561.7 174.3 576 192 576C209.7 576 224 561.7 224 544L224 224L288 224C300.9 224 312.6 216.2 317.6 204.2C322.6 192.2 319.8 178.5 310.7 169.3L214.7 73.3z"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+	<path fill="#000000" d="M409,103.2c0,2.5,0,4,0,5.5c0,114,0,227.9,0,341.9c0,14.1-11.5,25.6-25.6,25.6c-14.1,0-25.6-11.6-25.6-25.7c0-113.6,0-227.2,0-340.7c0-1.8,0-3.6,0-6.3c-1.5,1.4-2.5,2.2-3.4,3.1c-18.3,18.3-36.5,36.6-54.8,54.8c-7.2,7.2-16,9.5-25.7,6.7c-9.7-2.8-15.6-9.7-17.8-19.3c-2.3-9.9,1.7-18,8.6-24.9c28.2-28.2,56.5-56.4,84.7-84.7c5.1-5.1,10.2-10,15-15.3c10.1-11.2,28.2-10.3,38.6,0.3c32.5,33.3,65.7,66,98.5,99c1.8,1.8,3.6,3.7,5,5.8c7.8,10.9,6,25.4-4.2,34.2c-9.9,8.5-25.2,7.9-34.6-1.4c-18.4-18.3-36.7-36.7-55.1-55.1C411.7,105.7,410.7,104.8,409,103.2z"/>
+	<path fill="#000000" d="M102,388.7c0-2,0-3.2,0-4.4c0-114.1,0-228.2,0-342.3c0-14.7,11.4-26.4,25.8-26.2c14.3,0.1,25.5,11.7,25.5,26.2c0,114,0,227.9,0,341.9c0,1.2,0,2.5,0,4.8c1.6-1.5,2.6-2.4,3.5-3.3c18.3-18.3,36.5-36.6,54.8-54.8c7.1-7.1,15.8-9.4,25.4-6.7c9.5,2.7,15.5,9.3,17.9,18.8c2.6,10-1.3,18.3-8.3,25.3c-19,19-38,38-57,57c-14.5,14.5-28.9,29-43.3,43.5c-10.9,11-27,10.5-37.9-0.6c-32.8-33.1-65.8-65.9-98.6-98.9c-2-2-3.9-4.1-5.5-6.4c-7.6-10.8-5.5-25.3,4.6-33.9c9.8-8.3,25.1-7.8,34.3,1.3c18.5,18.4,36.9,36.9,55.4,55.3C99.4,386.3,100.4,387.2,102,388.7z"/></svg>
     )";
 }
 
-void DragIconComponent::paint(Graphics& g)
+void DragIconComponent::paint(juce::Graphics& g)
 {
-    std::unique_ptr<Drawable> icon = Drawable::createFromImageData(dragDropIcon, strlen(dragDropIcon));
+    std::unique_ptr<juce::Drawable> icon = juce::Drawable::createFromImageData(dragDropIcon, strlen(dragDropIcon));
+
     if (icon)
     {
-        icon->drawWithin(g, getLocalBounds().toFloat(), RectanglePlacement::centred, 1.0f);
+        auto iconColour = getLookAndFeel().findColour(juce::Label::textColourId);
+
+        // This is the key change: we replace the black fill colour with the correct one. I spent half an hour on this one :(
+        icon->replaceColour(juce::Colours::black, iconColour);
+
+        icon->drawWithin(g, getLocalBounds().toFloat(), juce::RectanglePlacement::centred, 1.0f);
     }
 }
 

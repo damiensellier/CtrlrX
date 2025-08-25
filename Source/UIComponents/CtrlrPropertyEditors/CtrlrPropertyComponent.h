@@ -9,6 +9,8 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "Ctrlrlog.h"
 
+#include <functional>
+
 class CtrlrFloatingWindow;
 
 class CtrlrPropertyChild: public ChangeBroadcaster
@@ -133,6 +135,7 @@ class CtrlrChoicePropertyComponent  : public Component,
 		bool numeric;
 };
 
+/* Colour Property */
 class CtrlrColourLabel : public Label
 {
 	TextEditor *createEditorComponent ()
@@ -146,11 +149,75 @@ class CtrlrColourLabel : public Label
 	}
 };
 
+
+// Helper class to get a callback when the modal window is dismissed
+class ModalCallback  : public juce::ModalComponentManager::Callback
+{
+public:
+    std::function<void()> onDismissed;
+
+    void modalStateFinished (int) override
+    {
+        if (onDismissed)
+            onDismissed();
+    }
+};
+
+// Added v5.6.34. Required extra class for the colour picker button so that it follows the lookAndFeel colourScheme in the panel windows as well as the others (layer manager etc)
+class ColourPickerButton : public juce::Button
+{
+public:
+    ColourPickerButton(const juce::String& name = juce::String())
+        : juce::Button(name)
+    {
+        setWantsKeyboardFocus(false);
+    }
+
+    void paintButton(juce::Graphics& g, bool isMouseOver, bool isMouseDown) override
+    {
+        // 1. Get the button's background color from the LookAndFeel
+        auto buttonColour = getLookAndFeel().findColour(juce::TextButton::buttonColourId);
+
+        if (isMouseOver)
+            // buttonColour = getLookAndFeel().findColour(juce::TextButton::buttonOnColourId);
+			buttonColour = getLookAndFeel().findColour(juce::TextButton::buttonColourId).contrasting(0.05f);
+
+        // 2. Draw the button's background rectangle
+        g.setColour(buttonColour);
+        g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
+        
+        // 3. Draw the button's outline
+        g.setColour(getLookAndFeel().findColour(juce::ComboBox::outlineColourId));
+        g.drawRoundedRectangle(getLocalBounds().toFloat(), 4.0f, 1.0f);
+
+        // --- The existing SVG icon code ---
+        const juce::String eyedropperSVG = R"(
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+            <path fill="#000000" d="M13.354.646a1.207 1.207 0 0 0-1.708 0L8.5 3.793l-.646-.647a.5.5 0 1 0-.708.708L8.293 5l-7.147 7.146A.5.5 0 0 0 1 12.5v1.793l-.854.853a.5.5 0 1 0 .708.707L1.707 15H3.5a.5.5 0 0 0 .354-.146L11 7.707l1.146 1.147a.5.5 0 0 0 .708-.708l-.647-.646 3.147-3.146a1.207 1.207 0 0 0 0-1.708zM2 12.707l7-7L10.293 7l-7 7H2z"/>
+        </svg>
+        )";
+
+        std::unique_ptr<juce::Drawable> icon = juce::Drawable::createFromImageData(eyedropperSVG.toRawUTF8(), strlen(eyedropperSVG.toRawUTF8()));
+
+        if (icon)
+        {
+            auto iconColour = getLookAndFeel().findColour(juce::TextButton::textColourOffId);
+            icon->replaceColour(juce::Colours::black, iconColour);
+            
+            // Calculate a new, smaller rectangle for the icon to be drawn in.
+            const float iconSizeFactor = 0.4f; // % of the button's size
+            auto iconBounds = getLocalBounds().toFloat().reduced(getLocalBounds().getWidth() * (1.0f - iconSizeFactor) / 2.0f);
+
+            icon->drawWithin(g, iconBounds, juce::RectanglePlacement::centred, 1.0f);
+        }
+    }
+};
+
 class CtrlrColourEditorComponent : 	public Component,
 									public ChangeListener,
 									public ChangeBroadcaster,
 									public Label::Listener,
-									public Button::Listener  // Add this
+									public Button::Listener
 {
 	public:
 		CtrlrColourEditorComponent(ChangeListener *defaultListener=0);
@@ -166,18 +233,19 @@ class CtrlrColourEditorComponent : 	public Component,
 		void buttonClicked(Button* buttonThatWasClicked) override; // Added v5.6.34.
 		// void mouseDown (const MouseEvent &e);
 		void changeListenerCallback (ChangeBroadcaster* source) override; // Added override
+		void lookAndFeelChanged() override;
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrColourEditorComponent)
 
 	private:
 		CtrlrColourLabel colourTextInput;
-		DrawableButton* colourPickerButton;
-		Drawable* eyedropperDrawable;
+		// ColourPickerButton* colourPickerButton;
+		std::unique_ptr<ColourPickerButton> colourPickerButton;
 		Colour colour;
 		bool canResetToDefault;
 
 		void openColourPicker(); // Add this helper method
-		void updateButtonColour(); // Helper to update button appearance
+		// void updateButtonColour(); // Helper to update button appearance
 };
 
 class CtrlrColourPropertyComponent : public Component, public ChangeListener, public CtrlrPropertyChild
@@ -197,6 +265,7 @@ class CtrlrColourPropertyComponent : public Component, public ChangeListener, pu
 		CtrlrColourEditorComponent cs;
 };
 
+/* Read Only Property */
 class CtrlrReadOnlyProperty : public Component, public CtrlrPropertyChild
 {
 	public:

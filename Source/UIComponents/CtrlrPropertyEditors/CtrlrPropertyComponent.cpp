@@ -505,57 +505,21 @@ void CtrlrChoicePropertyComponent::changed()
 	//    }
 }
 
+/** CtrlrColourEditorComponent **/
+
 CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener* defaultListener)
-    : canResetToDefault(true), colourPickerButton(nullptr), eyedropperDrawable(nullptr)
+    : canResetToDefault(true), colourPickerButton(std::make_unique<ColourPickerButton>("colourPicker"))
 {
-    const char* eyedropperSVG = R"(
-    <svg xmlns="http://www.w3.org/2000/svg" width="4" height="4" fill="currentColor" viewBox="0 0 4 4">
-      <path d="M13.354.646a1.207 1.207 0 0 0-1.708 0L8.5 3.793l-.646-.647a.5.5 0 1 0-.708.708L8.293 5l-7.147 7.146A.5.5 0 0 0 1 12.5v1.793l-.854.853a.5.5 0 1 0 .708.707L1.707 15H3.5a.5.5 0 0 0 .354-.146L11 7.707l1.146 1.147a.5.5 0 0 0 .708-.708l-.647-.646 3.147-3.146a1.207 1.207 0 0 0 0-1.708zM2 12.707l7-7L10.293 7l-7 7H2z"/>
-    </svg>
-    )";
-	
-    // Add the Label component as a child and make it visible. The parent (this component) now owns it.
-    addAndMakeVisible(colourTextInput);
-    colourTextInput.setJustificationType(Justification::centred);
-    colourTextInput.setFont(colourTextInput.getFont().withStyle(Font::bold));
+	addAndMakeVisible(&colourTextInput);
+    colourTextInput.setJustificationType(juce::Justification::centred);
+    colourTextInput.setFont(colourTextInput.getFont().withStyle(juce::Font::bold));
     colourTextInput.setEditable(true, false, false);
     colourTextInput.setAlwaysOnTop(true);
     colourTextInput.addListener(this);
-
-    // Create and store the drawable
-    std::unique_ptr<XmlElement> svgXml(XmlDocument::parse(eyedropperSVG));
-    if (svgXml != nullptr)
-    {
-        eyedropperDrawable = Drawable::createFromSVG(*svgXml).release();
-        if (eyedropperDrawable != nullptr)
-        {
-            // Set the drawable color to ensure visibility
-            eyedropperDrawable->replaceColour(Colours::slategrey, findColour(TextButton::textColourOffId));
-			
-            /* @dnaldoog Tried various ways of scaling like AffineTransform etc but only ImageOnButtonBackground seems to work*/
-			// SOLUTION : Create the button with a raw pointer and add it as a child. The parent takes ownership here.
-            colourPickerButton = new DrawableButton("colourPicker", DrawableButton::ImageOnButtonBackground);
-            colourPickerButton->setImages(eyedropperDrawable);
-            colourPickerButton->setTooltip("Choose custom colour");
-            colourPickerButton->addListener(this);
-        }
-    }
-
-    // If SVG failed, fallback to text button
-    if (colourPickerButton == nullptr)
-    {
-        colourPickerButton = new DrawableButton("colourPicker", DrawableButton::ImageOnButtonBackground);
-        // colourPickerButton->setButtonText("...");
-        // colourPickerButton->setTooltip("Open colour picker");
-        colourPickerButton->addListener(this);
-    }
-	
-	// This is the single, correct place to add the button as a child.
-    // Ownership is transferred here.
-    addAndMakeVisible(colourPickerButton);
-
-    // Set initial button appearance
-    updateButtonColour();
+    
+    colourPickerButton->setTooltip("Choose custom colour");
+    colourPickerButton->addListener(this);
+    addAndMakeVisible(colourPickerButton.get());
     
     if (defaultListener)
         addChangeListener(defaultListener);
@@ -563,101 +527,98 @@ CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener* defaultLi
 
 CtrlrColourEditorComponent::~CtrlrColourEditorComponent()
 {
-    delete colourPickerButton;
-    delete eyedropperDrawable;
-}
-
-void CtrlrColourEditorComponent::updateLabel()
-{
-    if (colourPickerButton != nullptr) // Check ptr first
-    {
-    colourTextInput.setColour(Label::backgroundColourId, getColour());
-    colourTextInput.setColour(Label::textColourId, getColour().contrasting().darker(0.25f));
-    colourTextInput.setColour(Label::outlineColourId, findColour(ComboBox::outlineColourId));
-    colourTextInput.setText(getColour().toDisplayString(true), dontSendNotification);
-
-    // Update button color swatch
-    updateButtonColour();
-    }
-}
-
-void CtrlrColourEditorComponent::updateButtonColour()
-{
-    if (colourPickerButton != nullptr)
-    {
-        // DrawableButton uses different colour IDs
-        colourPickerButton->setColour(DrawableButton::backgroundColourId, getLookAndFeel().findColour(TextButton::buttonColourId));
-        colourPickerButton->setColour(DrawableButton::backgroundOnColourId, getLookAndFeel().findColour(TextButton::buttonOnColourId));
-        colourPickerButton->repaint();
-    }
+    // The ColourPickerButton now manages its own memory
+   //  delete colourPickerButton;
 }
 
 void CtrlrColourEditorComponent::resized()
 {
     if (colourPickerButton != nullptr)
     {
-        const int buttonWidth = getHeight(); // Square button
+        const int buttonWidth = getHeight();
         colourPickerButton->setBounds(getWidth() - buttonWidth, 0, buttonWidth, getHeight());
         colourTextInput.setBounds(0, 0, getWidth() - buttonWidth - 2, getHeight());
     }
 }
 
-void CtrlrColourEditorComponent::buttonClicked(Button* buttonThatWasClicked)
+void CtrlrColourEditorComponent::lookAndFeelChanged()
 {
-    if (buttonThatWasClicked == colourPickerButton)
+    // Simply repaint the button to force it to redraw with the new colors
+    if (colourPickerButton != nullptr)
+        colourPickerButton->repaint();
+}
+
+void CtrlrColourEditorComponent::updateLabel()
+{
+    if (colourPickerButton != nullptr)
+    {
+        // Set the colors
+        colourTextInput.setColour(juce::Label::backgroundColourId, getColour());
+        colourTextInput.setColour(juce::Label::textColourId, getColour().contrasting().darker(0.25f));
+        colourTextInput.setText(getColour().toDisplayString(true), juce::dontSendNotification);
+        
+        // Repaint the components to reflect the changes
+        colourTextInput.repaint();
+        colourPickerButton->repaint();
+    }
+}
+
+void CtrlrColourEditorComponent::buttonClicked(juce::Button* buttonThatWasClicked)
+{
+    if (buttonThatWasClicked == colourPickerButton.get())
     {
         openColourPicker();
     }
 }
 
+// Added v5.6.34. Required extra class for the colour picker button to recover it's init state when clicking just outside the colour selector popup and not the button itself again.
 void CtrlrColourEditorComponent::openColourPicker()
 {
-    auto colourSelector = std::make_unique<ColourSelector>(ColourSelector::showAlphaChannel
-                                                           | ColourSelector::showColourAtTop
-                                                           | ColourSelector::editableColour
-                                                           | ColourSelector::showSliders
-                                                           | ColourSelector::showColourspace);
+    // The color selector popup to display
+    auto colourSelector = std::make_unique<juce::ColourSelector>();
+
+    // Set its size and initial colour
+    colourSelector->setSize (300, 400);
+    colourSelector->setCurrentColour (getColour());
     
-    colourSelector->setName("background");
-    colourSelector->setCurrentColour(getColour());
-    colourSelector->addChangeListener(this);
-    colourSelector->setColour(ColourSelector::backgroundColourId, Colours::transparentBlack);
-    colourSelector->setSize(300, 400);
-    
-    CallOutBox::launchAsynchronously(std::move(colourSelector),
-                                     colourPickerButton->getScreenBounds(),
-                                     nullptr);
+    // The component itself listens for changes from the selector
+    colourSelector->addChangeListener (this);
+
+    // This is the correct way to launch the CallOutBox in JUCE 6.
+    juce::CallOutBox::launchAsynchronously (std::move (colourSelector),
+                                          colourPickerButton->getScreenBounds(),
+                                          nullptr);
 }
 
-void CtrlrColourEditorComponent::labelTextChanged(Label* labelThatHasChanged)
+void CtrlrColourEditorComponent::labelTextChanged(juce::Label* labelThatHasChanged)
 {
-    colour = Colour::fromString(labelThatHasChanged->getText());
-    updateLabel(); // This will update both the label appearance AND the button
-    sendChangeMessage();
+    // This method is called when the user types in the text box.
+    // It should parse the text and then call the same logic as the colour picker.
+    setColour(juce::Colour::fromString(labelThatHasChanged->getText()), true);
 }
-void CtrlrColourEditorComponent::setColour(const Colour& newColour, const bool sendChangeMessageNow)
+
+void CtrlrColourEditorComponent::setColour(const juce::Colour& newColour, const bool sendChangeMessageNow)
 {
     colour = newColour;
-    updateLabel();
+    updateLabel(); // This updates the visual appearance of the label and button
     
+    // Now send the change message to listeners like the LayerListItem
     if (sendChangeMessageNow)
         sendChangeMessage();
 }
 
-void CtrlrColourEditorComponent::changeListenerCallback (ChangeBroadcaster* source)
+void CtrlrColourEditorComponent::changeListenerCallback (juce::ChangeBroadcaster* source)
 {
-	const ColourSelector* const cs = (const ColourSelector*) source;
-
-	if (cs != 0)
-	{
-		if (cs->getCurrentColour() != getColour())
-            setColour (cs->getCurrentColour(), true);
-	}
+    // Check if the source of the change is the colour selector
+    if (auto* cs = dynamic_cast<juce::ColourSelector*>(source))
+    {
+        // Update the component's internal colour and notify listeners
+        setColour(cs->getCurrentColour(), true);
+    }
 }
 
-/**
- *
- */
+/** CtrlrColourPropertyComponent **/
+
 CtrlrColourPropertyComponent::CtrlrColourPropertyComponent (const Value &_valueToControl) : valueToControl(_valueToControl)
 {
 	addAndMakeVisible (&cs);
