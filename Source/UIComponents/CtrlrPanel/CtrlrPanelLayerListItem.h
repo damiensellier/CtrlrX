@@ -68,9 +68,9 @@ private:
 
     std::unique_ptr<juce::Label> layerName;
     std::unique_ptr<juce::Label> layerIndex;
-    std::unique_ptr<CtrlrColourEditorComponent> layerColour; // This should be a CtrlrColourEditorComponent
-    std::unique_ptr<juce::TextButton> isolateButton;
+    std::unique_ptr<CtrlrColourEditorComponent> layerColour;
     std::unique_ptr<juce::TextButton> restoreButton;
+    std::unique_ptr<juce::TextButton> isolateButton;
     std::unique_ptr<DragIconComponent> dragIcon;
 
     CtrlrPanelCanvasLayer* layer;
