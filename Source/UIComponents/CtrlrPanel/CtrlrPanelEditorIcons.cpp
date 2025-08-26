@@ -116,10 +116,33 @@ juce::String ToggleIconComponent::getButtonText() const
 
 void ToggleIconComponent::paintButton(juce::Graphics& g, bool isMouseOverButton, bool isButtonDown)
 {
+    // Get the appropriate icon based on toggle state
     juce::Drawable* iconToDraw = getToggleState() ? onIcon.get() : offIcon.get();
 
     if (iconToDraw != nullptr)
     {
-        iconToDraw->drawWithin(g, getLocalBounds().toFloat(), juce::RectanglePlacement::centred, 1.0f);
+        // Get theme-appropriate color - same approach as DragIconComponent
+        auto iconColour = getLookAndFeel().findColour(juce::Label::textColourId);
+
+        // Create a copy of the drawable so we don't modify the original
+        auto iconCopy = iconToDraw->createCopy();
+
+        if (iconCopy)
+        {
+            // Replace the default color with theme color
+            iconCopy->replaceColour(juce::Colours::black, iconColour);
+
+            // Optional: Add visual feedback for mouse interactions
+            if (isButtonDown)
+            {
+                iconCopy->replaceColour(iconColour, iconColour.darker(0.3f));
+            }
+            else if (isMouseOverButton)
+            {
+                iconCopy->replaceColour(iconColour, iconColour.brighter(0.2f));
+            }
+
+            iconCopy->drawWithin(g, getLocalBounds().toFloat(), juce::RectanglePlacement::centred, 1.0f);
+        }
     }
 }
