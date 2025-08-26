@@ -5,91 +5,73 @@
 #include "CtrlrPanelLayerList.h"
 #include "CtrlrInlineUtilitiesGUI.h"
 
+// CtrlrPanelLayerListItem.cpp
 CtrlrPanelLayerListItem::CtrlrPanelLayerListItem(CtrlrPanelLayerList& _owner)
-    : layer(0), owner(_owner),
-    layerName(0),
-    //layerVisibility(0),
-    layerColour(0),
-    layerIndex(0),
-    isolateButton(0),
-    restoreButton(0),
-    dragStartedFromIcon(false),
-    dragIcon(0),
-    isDragging(false)
+    : layer(0), owner(_owner), dragStartedFromIcon(false), isDragging(false),
+    layerName(std::make_unique<Label>()),
+    layerIndex(std::make_unique<Label>()),
+    layerVisibility(std::make_unique<ToggleIconComponent>(IconType::EyeSlash, IconType::Eye)),
+    layerColour(std::make_unique<CtrlrColourEditorComponent>(this)),
+    dragIcon(std::make_unique<DragIconComponent>(this)),
+    isolateButton(std::make_unique<TextButton>("Edit")),
+    restoreButton(std::make_unique<TextButton>("Restore"))
 {
     SvgIconManager::initialise();
-    addAndMakeVisible(layerIndex = new Label(L"layerIndex",
-        L"2"));
+
+    addAndMakeVisible(layerIndex.get());
+    layerIndex->setText(L"2", dontSendNotification);
     layerIndex->setFont(Font(12.0000f, Font::plain));
     layerIndex->setJustificationType(Justification::centred);
     layerIndex->setEditable(false, false, false);
     layerIndex->setColour(TextEditor::textColourId, Colours::black);
     layerIndex->setColour(TextEditor::backgroundColourId, Colour(0x0));
+    layerIndex->addMouseListener(this, true);
 
-    addAndMakeVisible(dragIcon = new DragIconComponent(this));
+    addAndMakeVisible(dragIcon.get());
 
-    layerVisibility = std::make_unique<ToggleIconComponent>(IconType::EyeSlash, IconType::Eye);
     addAndMakeVisible(layerVisibility.get());
     layerVisibility->addListener(this);
+    layerVisibility->addMouseListener(this, true);
+    layerVisibility->setMouseCursor(MouseCursor::PointingHandCursor);
 
-    addAndMakeVisible(layerName = new Label("",
-        L"Layer Name"));
+    addAndMakeVisible(layerName.get());
+    layerName->setText(L"Layer Name", dontSendNotification);
     layerName->setFont(Font(12.0000f, Font::plain));
     layerName->setJustificationType(Justification::centredLeft);
     layerName->setEditable(true, true, false);
     layerName->setColour(TextEditor::textColourId, Colours::black);
     layerName->setColour(TextEditor::backgroundColourId, Colour(0x0));
     layerName->addListener(this);
+    layerName->addMouseListener(this, true);
 
-    //addAndMakeVisible(layerVisibility = new ToggleButton(""));
-    //layerVisibility->addListener(this);
+    addAndMakeVisible(layerColour.get());
+    layerColour->addMouseListener(this, true);
 
-    layerVisibility = std::make_unique<ToggleIconComponent>(IconType::EyeSlash, IconType::Eye);
-    addAndMakeVisible(layerVisibility.get());
-    layerVisibility->addListener(this);
-
-    addAndMakeVisible(layerColour = new CtrlrColourEditorComponent(this));
-    addAndMakeVisible(layerIndex = new Label(L"layerIndex", L"2"));
-    layerIndex->setFont(Font(12.0000f, Font::plain));
-    layerIndex->setJustificationType(Justification::centred);
-    layerIndex->setEditable(false, false, false);
-    layerIndex->setColour(TextEditor::textColourId, Colours::black);
-    layerIndex->setColour(TextEditor::backgroundColourId, Colour(0x0));
-
-    addAndMakeVisible(isolateButton = new TextButton("Edit"));
+    addAndMakeVisible(isolateButton.get());
     isolateButton->setButtonText("Edit");
     isolateButton->addListener(this);
     isolateButton->setColour(TextButton::buttonColourId, findColour(juce::TextButton::buttonOnColourId));
     isolateButton->setColour(TextButton::textColourOffId, findColour(juce::TextButton::textColourOffId));
 
-    addAndMakeVisible(restoreButton = new TextButton("Restore"));
+    addAndMakeVisible(restoreButton.get());
     restoreButton->setButtonText("Restore");
     restoreButton->addListener(this);
     restoreButton->setColour(TextButton::buttonColourId, Colours::green);
     restoreButton->setColour(TextButton::textColourOffId, Colours::white);
     restoreButton->setVisible(false);
 
-    // Add mouse listeners for existing components
-    layerIndex->addMouseListener(this, true);
-    layerVisibility->addMouseListener(this, true);
-    layerName->addMouseListener(this, true);
-    layerColour->addMouseListener(this, true);
-
-    layerVisibility->setMouseCursor(MouseCursor::PointingHandCursor);
-
     setSize(355, 40);
-
 }
 
 CtrlrPanelLayerListItem::~CtrlrPanelLayerListItem()
 {
-    deleteAndZero(layerName);
-    //deleteAndZero(layerVisibility);
-    deleteAndZero(layerColour);
-    deleteAndZero(layerIndex);
-    deleteAndZero(isolateButton);
-    deleteAndZero(restoreButton);
-    deleteAndZero(dragIcon);
+    //deleteAndZero(layerName);
+    ////deleteAndZero(layerVisibility);
+    //deleteAndZero(layerColour);
+    //deleteAndZero(layerIndex);
+    //deleteAndZero(isolateButton);
+    //deleteAndZero(restoreButton);
+    //deleteAndZero(dragIcon);
 }
 
 //==============================================================================
@@ -194,7 +176,7 @@ void CtrlrPanelLayerListItem::resized()
 
 void CtrlrPanelLayerListItem::labelTextChanged(Label* labelThatHasChanged)
 {
-    if (labelThatHasChanged == layerName)
+    if (labelThatHasChanged == layerName.get())
     {
         if (layer)
         {
@@ -209,27 +191,28 @@ void CtrlrPanelLayerListItem::buttonClicked(Button* buttonThatWasClicked)
     {
         if (layer)
         {
-            layer->setProperty(Ids::uiPanelCanvasLayerVisibility, layerVisibility->getToggleState());
+            layer->setProperty(Ids::uiPanelCanvasLayerVisibility, layerVisibility->getToggleState(), 0);
         }
     }
-    else if (buttonThatWasClicked == isolateButton)
+    else if (buttonThatWasClicked == isolateButton.get())
     {
         if (layer)
         {
-            // When Edit is clicked, turn it red briefly, then isolate
+            // Set the state in the data model
+            layer->setProperty(Ids::uiPanelCanvasLayerIsIsolated, true, 0);
+
+            // The rest of the logic can remain the same
             isolateButton->setColour(TextButton::buttonColourId, Colours::red);
             isolateButton->setColour(TextButton::textColourOffId, Colours::white);
-
-            // Perform the isolation
             owner.isolateLayer(rowIndex);
-
-            // Update button states (this will hide Edit and show Restore)
             updateButtonStates();
         }
     }
-    else if (buttonThatWasClicked == restoreButton)
+    else if (buttonThatWasClicked == restoreButton.get())
     {
-        // Restore visibility and update button states
+        // Set the state in the data model
+        layer->setProperty(Ids::uiPanelCanvasLayerIsIsolated, false, 0);
+
         owner.restoreLayerVisibility();
         updateButtonStates();
     }
@@ -237,18 +220,19 @@ void CtrlrPanelLayerListItem::buttonClicked(Button* buttonThatWasClicked)
 
 void CtrlrPanelLayerListItem::updateButtonStates()
 {
-    // Check if THIS specific layer is the one that was isolated
-    bool isThisLayerIsolated = owner.isLayerIsolated(rowIndex);
+    if (!layer)
+        return;
+
+    // Read the state from the data model
+    bool isThisLayerIsolated = layer->getProperty(Ids::uiPanelCanvasLayerIsIsolated);
 
     if (isThisLayerIsolated)
     {
-        // Only THIS layer shows Restore button
         isolateButton->setVisible(false);
         restoreButton->setVisible(true);
     }
     else
     {
-        // All other layers show Edit button (light blue)
         isolateButton->setVisible(true);
         isolateButton->setButtonText("Edit");
         isolateButton->setColour(TextButton::buttonColourId, Colours::lightblue);
@@ -303,7 +287,7 @@ void CtrlrPanelLayerListItem::setLayer(CtrlrPanelCanvasLayer* _layer)
 void CtrlrPanelLayerListItem::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     // First, check that the change message came from the colour editor
-    if (source == layerColour)
+    if (source == layerColour.get())
     {
         if (layer)
         {

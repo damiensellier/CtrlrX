@@ -35,6 +35,7 @@ class CtrlrPanelCanvasLayer :   public Component,
 		void resized();
 		void setCustomLookAndFeel(const luabind::object &customLookAndFeel);
         void setCustomLookAndFeel (LookAndFeelBase *customLookAndFeel);
+		//static const juce::Identifier uiPanelCanvasLayerIsIsolated;
 		JUCE_LEAK_DETECTOR(CtrlrPanelCanvasLayer)
 
 	private:

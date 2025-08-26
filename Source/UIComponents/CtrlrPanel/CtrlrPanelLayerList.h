@@ -83,7 +83,7 @@ public:
 
  private:
     CtrlrPanel& owner;
-    
+    bool isBeingDestroyed = false;
     int dropInsertionIndex;
     bool layerIsolationActive = false;
     int isolatedLayerIndex = -1;

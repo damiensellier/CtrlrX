@@ -65,23 +65,24 @@ public:
     JUCE_LEAK_DETECTOR(CtrlrPanelLayerListItem)
 
 private:
+
+    std::unique_ptr<juce::Label> layerName;
+    std::unique_ptr<juce::Label> layerIndex;
+    std::unique_ptr<CtrlrColourEditorComponent> layerColour; // This should be a CtrlrColourEditorComponent
+    std::unique_ptr<juce::TextButton> isolateButton;
+    std::unique_ptr<juce::TextButton> restoreButton;
+    std::unique_ptr<DragIconComponent> dragIcon;
+
     CtrlrPanelCanvasLayer* layer;
     CtrlrPanelLayerList& owner;
     int rowIndex;
 
     bool isDragging;
     Point<int> dragStartPosition;
-
-    Label* layerName;
-
     //ToggleButton* layerVisibility;
-    CtrlrColourEditorComponent* layerColour;
-    Label* layerIndex;
-
-    TextButton* isolateButton;
-    TextButton* restoreButton;
+    //CtrlrColourEditorComponent* layerColour;
     bool dragStartedFromIcon;        // Add this line if missing
-    DragIconComponent* dragIcon;     // This is correct
+
 
     CtrlrPanelLayerListItem(const CtrlrPanelLayerListItem&);
     const CtrlrPanelLayerListItem& operator= (const CtrlrPanelLayerListItem&);

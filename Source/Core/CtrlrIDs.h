@@ -135,6 +135,7 @@ namespace Ids
     DECLARE_ID (uiPanelCanvasLayerIndex);
     DECLARE_ID (uiPanelCanvasLayerUid);
     DECLARE_ID (uiPanelCanvasLayerColour);
+    DECLARE_ID (uiPanelCanvasLayerIsIsolated);
     DECLARE_ID (uiPanelCanvasLayerMouseHandle);
     DECLARE_ID (uiPanelCanvasLayerVisibility);
     DECLARE_ID (uiPanelCanvasLayer);
@@ -144,6 +145,7 @@ namespace Ids
     DECLARE_ID (uiPanelMidiControllerMenuHideOnExport);
     DECLARE_ID (uiPanelMidiThruMenuHideOnExport);
     DECLARE_ID (uiPanelMidiChannelMenuHideOnExport);
+
     
     DECLARE_ID (panelMidiProgram);
     DECLARE_ID (panelMidiBankLsb);

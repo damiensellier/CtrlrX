@@ -133,7 +133,9 @@ CtrlrPanelLayerList::CtrlrPanelLayerList (CtrlrPanel &_owner)
     layerList->setMultipleSelectionEnabled(false);
 }
 
-CtrlrPanelLayerList::~CtrlrPanelLayerList() {}
+CtrlrPanelLayerList::~CtrlrPanelLayerList() {
+    isBeingDestroyed = true;
+}
 
 //==============================================================================
 void CtrlrPanelLayerList::paint (Graphics& g)
@@ -307,6 +309,7 @@ void CtrlrPanelLayerList::moveLayerDown()
 
 void CtrlrPanelLayerList::refresh()
 {
+    if (isBeingDestroyed || !layerList) return;
 	layerList->updateContent();
 	updateAllButtonStates();
 }
@@ -341,6 +344,7 @@ PopupMenu CtrlrPanelLayerList::getMenuForIndex(int topLevelMenuIndex, const Stri
 
 void CtrlrPanelLayerList::menuItemSelected(int menuItemID, int topLevelMenuIndex)
 {
+    if (isBeingDestroyed) return;
 	if (topLevelMenuIndex == 1)
 	{
 		if (menuItemID == 2)
@@ -472,37 +476,37 @@ void CtrlrPanelLayerList::moveLayerToPosition(int sourceActualIndex, int targetA
 }
 void CtrlrPanelLayerList::isolateLayer(int targetLayerIndex)
 {
-	if (!owner.getEditor() || !owner.getEditor()->getCanvas())
-		return;
+    if (!owner.getEditor() || !owner.getEditor()->getCanvas())
+        return;
 
-	// FIRST: Save the current states BEFORE making any changes
-	owner.saveLayerVisibilityStates();
+    // First, clear the isolated state and visibility for ALL layers.
+    for (int i = 0; i < getNumRows(); ++i)
+    {
+        CtrlrPanelCanvasLayer* layer = owner.getEditor()->getCanvas()->getLayerFromArray(i);
+        if (layer)
+        {
+            layer->setProperty(Ids::uiPanelCanvasLayerIsIsolated, false);
+            layer->setProperty(Ids::uiPanelCanvasLayerVisibility, false);
+        }
+    }
 
-	// Remember which layer was isolated
-	isolatedLayerIndex = targetLayerIndex;
+    // Now, set the isolated state and visibility for the target layer.
+    CtrlrPanelCanvasLayer* targetLayer = owner.getEditor()->getCanvas()->getLayerFromArray(targetLayerIndex);
+    if (targetLayer)
+    {
+        targetLayer->setProperty(Ids::uiPanelCanvasLayerIsIsolated, true);
+        targetLayer->setProperty(Ids::uiPanelCanvasLayerVisibility, true);
+    }
 
-	// THEN: Hide all layers except the target layer
-	for (int i = 0; i < getNumRows(); ++i)
-	{
-		CtrlrPanelCanvasLayer* layer = owner.getEditor()->getCanvas()->getLayerFromArray(i);
-		if (layer)
-		{
-			if (i == targetLayerIndex)
-			{
-				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, true);
-			}
-			else
-			{
-				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, false);
-			}
-		}
-	}
+    // Remember which layer was isolated
+    isolatedLayerIndex = targetLayerIndex;
+    layerIsolationActive = true;
 
-	layerIsolationActive = true;
-	refresh();
-	updateAllButtonStates();
+    // Refresh the list UI to reflect the changes.
+    refresh();
+    updateAllButtonStates();
 
-	_DBG("Layer " + String(targetLayerIndex) + " isolated - all other layers hidden");
+    _DBG("Layer " + String(targetLayerIndex) + " isolated - all other layers hidden");
 }
 
 // Update the restoreLayerVisibility method:
@@ -518,6 +522,7 @@ void CtrlrPanelLayerList::restoreLayerVisibility()
 
 void CtrlrPanelLayerList::updateAllButtonStates()
 {
+    if (isBeingDestroyed || !layerList) return;
 	for (int i = 0; i < getNumRows(); ++i)
 	{
 		if (Component* comp = layerList->getComponentForRowNumber(i))

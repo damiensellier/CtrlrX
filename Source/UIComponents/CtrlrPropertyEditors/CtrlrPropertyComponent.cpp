@@ -20,13 +20,18 @@ CtrlrPropertyComponent::CtrlrPropertyComponent(const Identifier& _propertyName,
 {
 	if (!identifierDefinition.isValid())
 	{
+		// If the identifier is not valid, create an unknown property component.
 		addAndMakeVisible(new CtrlrUnknownPropertyComponent(propertyName, propertyElement, identifierDefinition));
 		visibleText = propertyName.toString();
 		propertyType = CtrlrIDManager::UnknownProperty;
 	}
 	else
 	{
-		addAndMakeVisible(getPropertyComponent());
+		// If the identifier is valid, create and add the correct property component.
+		// There should be only ONE call to getPropertyComponent().
+		Component* child = getPropertyComponent();
+		jassert(child != nullptr); // Sanity check to ensure a component was created.
+		addAndMakeVisible(child);
 	}
 }
 
@@ -631,9 +636,20 @@ void CtrlrColourEditorComponent::openColourPicker()
 
 void CtrlrColourEditorComponent::labelTextChanged(Label* labelThatHasChanged)
 {
-	colour = Colour::fromString(labelThatHasChanged->getText());
-	updateLabel(); // This will update both the label appearance AND the button
-	sendChangeMessage();
+	// In CtrlrColourEditorComponent::labelTextChanged()
+// Don't send a change notification on every text change.
+// The `sendChangeMessage()` call here is the key problem.
+// It will trigger the changeListenerCallback in CtrlrColourPropertyComponent,
+// which will update the value tree, which then refreshes the UI,
+// which in turn calls this function again, creating the loop.
+// Let the `changeListenerCallback` from the color selector handle this.
+
+// Remove the `sendChangeMessage()` call from here.
+// The `setColour()` method should be called instead.
+// Then let the `changeListenerCallback` of the color selector handle the change.
+	//colour = Colour::fromString(labelThatHasChanged->getText());
+	//updateLabel(); // This will update both the label appearance AND the button
+	//sendChangeMessage();
 }
 void CtrlrColourEditorComponent::setColour(const Colour& newColour, const bool sendChangeMessageNow)
 {
@@ -675,7 +691,11 @@ void CtrlrColourPropertyComponent::refresh()
 
 void CtrlrColourPropertyComponent::changeListenerCallback(ChangeBroadcaster* source)
 {
-	valueToControl = cs.getColour().toString();
+	// In CtrlrColourPropertyComponent::changeListenerCallback()
+	// Add a check to prevent unnecessary updates.
+	if (cs.getColour().toString() != valueToControl.toString()) {
+		valueToControl = cs.getColour().toString();
+	}
 }
 
 void CtrlrColourPropertyComponent::resized()

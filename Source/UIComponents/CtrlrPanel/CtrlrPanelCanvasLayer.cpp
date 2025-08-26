@@ -18,6 +18,7 @@ CtrlrPanelCanvasLayer::CtrlrPanelCanvasLayer(CtrlrPanelCanvas &_owner)
 	setProperty (Ids::uiPanelCanvasLayerColour, "0x000000");
 	setProperty (Ids::uiPanelCanvasLayerVisibility, true);
 	setProperty (Ids::uiPanelCanvasLayerIndex, 0);
+	setProperty(Ids::uiPanelCanvasLayerIsIsolated, false);
 	owner.getCanvasTree().addChild (layerTree, -1, 0);
 }
 
