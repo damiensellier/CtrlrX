@@ -133,7 +133,14 @@ CtrlrPanelLayerList::CtrlrPanelLayerList (CtrlrPanel &_owner)
     layerList->setMultipleSelectionEnabled(false);
 }
 
-CtrlrPanelLayerList::~CtrlrPanelLayerList() {}
+CtrlrPanelLayerList::~CtrlrPanelLayerList()
+{
+    // The parent component (`CtrlrChildWindowContent`) takes ownership
+    // of these when they are added with `addAndMakeVisible`. We must
+    // explicitly release them from our unique_ptr to prevent a double-free crash.
+    layerList.release();
+    headerComponent.release();
+}
 
 //==============================================================================
 void CtrlrPanelLayerList::paint (Graphics& g)

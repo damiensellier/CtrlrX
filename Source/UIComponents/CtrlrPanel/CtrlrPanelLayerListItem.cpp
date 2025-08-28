@@ -58,7 +58,7 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
 	layerIndex->addMouseListener (this, true);
 	layerVisibility->addMouseListener (this, true);
 	layerName->addMouseListener (this, true);
-	layerColour->addMouseListener (this, true);
+	// layerColour->addMouseListener (this, true); // Useless. CtrlrPanelLayerListItem class does not have a mouseDrag or mouseUp override that handles events from layerColour.
 
 	layerVisibility->setMouseCursor (MouseCursor::PointingHandCursor);
 
@@ -311,10 +311,6 @@ void CtrlrPanelLayerListItem::setRow(const int _rowIndex)
 	rowIndex = _rowIndex;
 }
 
-void CtrlrPanelLayerListItem::mouseDrag(const MouseEvent& e)
-{
-}
-
 void CtrlrPanelLayerListItem::mouseUp(const MouseEvent& e)
 {
     isDragging = false;
@@ -363,7 +359,7 @@ void CtrlrPanelLayerListItem::handleDragIconMouseDrag(const MouseEvent& e)
             // Correct the startDragging call with the hotspot parameter
             // The hotspot is the top-left corner of the drag image,
             // which will align to the mouse cursor's position.
-            Point<int> hotspot(20, 20);
+            Point<int> hotspot(0, 0); // Not sure if it's working, I don't notice any change with positive values.
             dragContainer->startDragging(dragDescription, this, dragImage, true, &hotspot, nullptr);
         }
     }

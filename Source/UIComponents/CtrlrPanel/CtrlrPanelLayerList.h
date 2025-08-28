@@ -9,7 +9,7 @@
 // Forward declarations
 class CtrlrPanel;
 class CtrlrPanelLayerListItem; // You are using this in refreshComponentForRow
-
+class CtrlrChildWindowContent;
 
 // Define the header component class here
 class CtrlrPanelLayerListHeader : public juce::Component
@@ -81,7 +81,7 @@ public:
     
     bool isLayerIsolated(int layerIndex) const;
 
-    JUCE_LEAK_DETECTOR(CtrlrPanelLayerList)
+    JUCE_LEAK_DETECTOR(CtrlrPanelLayerList) // Useless, another macro is in the private declaration
 
 private:
     CtrlrPanel& owner;

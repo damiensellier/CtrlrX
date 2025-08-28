@@ -583,11 +583,14 @@ void CtrlrColourEditorComponent::openColourPicker()
     
     // The component itself listens for changes from the selector
     colourSelector->addChangeListener (this);
+    
+    // Set the button's toggle state to true when the popup is launched.
+    colourPickerButton->setToggleState (true, juce::dontSendNotification);
 
     // This is the correct way to launch the CallOutBox in JUCE 6.
     juce::CallOutBox::launchAsynchronously (std::move (colourSelector),
                                           colourPickerButton->getScreenBounds(),
-                                          nullptr);
+                                          nullptr); // The parent component is not needed here.
 }
 
 void CtrlrColourEditorComponent::labelTextChanged(juce::Label* labelThatHasChanged)
@@ -614,6 +617,12 @@ void CtrlrColourEditorComponent::changeListenerCallback (juce::ChangeBroadcaster
     {
         // Update the component's internal colour and notify listeners
         setColour(cs->getCurrentColour(), true);
+
+        // Reset the button's toggle state to false when the popup closes.
+        if (colourPickerButton != nullptr)
+        {
+            colourPickerButton->setToggleState (false, juce::dontSendNotification);
+        }
     }
 }
 

@@ -175,14 +175,19 @@ public:
 
     void paintButton(juce::Graphics& g, bool isMouseOver, bool isMouseDown) override
     {
-        // 1. Get the button's background color from the LookAndFeel
+        // Start with the default color.
         auto buttonColour = getLookAndFeel().findColour(juce::TextButton::buttonColourId);
 
-        if (isMouseOver)
-            // buttonColour = getLookAndFeel().findColour(juce::TextButton::buttonOnColourId);
-			buttonColour = getLookAndFeel().findColour(juce::TextButton::buttonColourId).contrasting(0.05f);
-
-        // 2. Draw the button's background rectangle
+        if (getToggleState() || isMouseDown) // I could not get it to work properly, I was unable to get it reset when clicking outside the oclour selector popup. the only way to reset was to click again in the button itself.
+        {
+            buttonColour = getLookAndFeel().findColour(juce::TextButton::buttonColourId);
+        }
+        else if (isMouseOver) // Not always reset propertly if we open the colour selector
+        {
+            buttonColour = getLookAndFeel().findColour(juce::TextButton::buttonColourId).contrasting(0.02f);
+        }
+        
+        // Now, draw the button with the determined color.
         g.setColour(buttonColour);
         g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
         
@@ -190,7 +195,7 @@ public:
         g.setColour(getLookAndFeel().findColour(juce::ComboBox::outlineColourId));
         g.drawRoundedRectangle(getLocalBounds().toFloat(), 4.0f, 1.0f);
 
-        // --- The existing SVG icon code ---
+        // 4. Draw the eyedropper icon.
         const juce::String eyedropperSVG = R"(
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
             <path fill="#000000" d="M13.354.646a1.207 1.207 0 0 0-1.708 0L8.5 3.793l-.646-.647a.5.5 0 1 0-.708.708L8.293 5l-7.147 7.146A.5.5 0 0 0 1 12.5v1.793l-.854.853a.5.5 0 1 0 .708.707L1.707 15H3.5a.5.5 0 0 0 .354-.146L11 7.707l1.146 1.147a.5.5 0 0 0 .708-.708l-.647-.646 3.147-3.146a1.207 1.207 0 0 0 0-1.708zM2 12.707l7-7L10.293 7l-7 7H2z"/>
@@ -201,7 +206,8 @@ public:
 
         if (icon)
         {
-            auto iconColour = getLookAndFeel().findColour(juce::TextButton::textColourOffId);
+            // Use a contrasting color for the icon so it's always visible.
+            auto iconColour = buttonColour.contrasting();
             icon->replaceColour(juce::Colours::black, iconColour);
             
             // Calculate a new, smaller rectangle for the icon to be drawn in.

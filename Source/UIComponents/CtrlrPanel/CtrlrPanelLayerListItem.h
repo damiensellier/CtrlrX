@@ -6,7 +6,6 @@ class CtrlrPanelCanvas;
 class CtrlrPanelLayerList;
 class CtrlrPanelCanvasLayer;
 class CtrlrColourEditorComponent;
-class CtrlrPanelLayerListItem;
 
 class CtrlrPanelLayerListItem;
 
@@ -54,7 +53,7 @@ public:
     void labelTextChanged (Label* labelThatHasChanged);
     void buttonClicked (Button* buttonThatWasClicked);
     void mouseDown (const MouseEvent& e);
-	void mouseDrag(const MouseEvent& e);
+    // void mouseDrag(const MouseEvent& e); // Useless. Handled by handleDragIconMouseUp
     void mouseUp(const MouseEvent& e);
 
     JUCE_LEAK_DETECTOR(CtrlrPanelLayerListItem)
