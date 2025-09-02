@@ -5,6 +5,7 @@
 #include "CtrlrPanel/CtrlrPanel.h"
 #include "CtrlrPanel/CtrlrPanelCanvas.h"
 #include "CtrlrPanel/CtrlrPanelCanvasLayer.h"
+#include "CtrlrPanel/CtrlrPanelEditorIcons.h" // Added v5.6.34.
 #include <juce_graphics/juce_graphics.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "Ctrlrlog.h"
@@ -196,11 +197,7 @@ public:
         g.drawRoundedRectangle(getLocalBounds().toFloat(), 4.0f, 1.0f);
 
         // 4. Draw the eyedropper icon.
-        const juce::String eyedropperSVG = R"(
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-            <path fill="#000000" d="M13.354.646a1.207 1.207 0 0 0-1.708 0L8.5 3.793l-.646-.647a.5.5 0 1 0-.708.708L8.293 5l-7.147 7.146A.5.5 0 0 0 1 12.5v1.793l-.854.853a.5.5 0 1 0 .708.707L1.707 15H3.5a.5.5 0 0 0 .354-.146L11 7.707l1.146 1.147a.5.5 0 0 0 .708-.708l-.647-.646 3.147-3.146a1.207 1.207 0 0 0 0-1.708zM2 12.707l7-7L10.293 7l-7 7H2z"/>
-        </svg>
-        )";
+		const juce::String eyedropperSVG = SvgIconManager::getSvgString(IconType::EyeDropper);
 
         std::unique_ptr<juce::Drawable> icon = juce::Drawable::createFromImageData(eyedropperSVG.toRawUTF8(), strlen(eyedropperSVG.toRawUTF8()));
 

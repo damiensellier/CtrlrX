@@ -1123,6 +1123,9 @@
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditor.cpp">
       <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditorIcons.cpp">
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelFindProperty.cpp">
       <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
@@ -4216,6 +4219,9 @@
       <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditor.h">
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditorIcons.h">
       <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelFindProperty.h">

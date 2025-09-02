@@ -2,6 +2,7 @@
 #define __JUCER_HEADER_CTRLRPANELLAYERLISTITEM_CTRLRPANELLAYERLISTITEM_618D5794__
 
 #include "CtrlrMacros.h"
+#include "CtrlrPanelEditorIcons.h" // Added v5.6.34. Handles SVG icons for the panelEditor and childWindows. Thanks to @dnaldoog
 class CtrlrPanelCanvas;
 class CtrlrPanelLayerList;
 class CtrlrPanelCanvasLayer;
@@ -22,7 +23,10 @@ public:
 
 private:
     CtrlrPanelLayerListItem* parent;
-    const char* dragDropIcon;
+    // const char* dragDropIcon;
+    std::unique_ptr<juce::Drawable> dragIconDrawable;
+    // const char* dragDropIcon;
+	juce::String dragDropIcon;
 };
 
 
@@ -55,6 +59,8 @@ public:
     void mouseDown (const MouseEvent& e);
     // void mouseDrag(const MouseEvent& e); // Useless. Handled by handleDragIconMouseUp
     void mouseUp(const MouseEvent& e);
+	
+	std::unique_ptr<ToggleIconComponent> layerVisibility;
 
     JUCE_LEAK_DETECTOR(CtrlrPanelLayerListItem)
 
@@ -67,7 +73,7 @@ private:
     Point<int> dragStartPosition;
 
     Label* layerName;
-    ToggleButton* layerVisibility;
+    // ToggleButton* layerVisibility;
     CtrlrColourEditorComponent* layerColour;
     Label* layerIndex;
 

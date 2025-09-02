@@ -441,6 +441,7 @@
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelCanvasLayers.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelComponentProperties.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditor.cpp"/>
+    <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditorIcons.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelFindProperty.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelLayerList.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelLayerListItem.cpp"/>
@@ -2729,6 +2730,7 @@
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelCanvasLayer.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelComponentProperties.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditor.h"/>
+    <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditorIcons.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelFindProperty.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelLayerList.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelLayerListItem.h"/>

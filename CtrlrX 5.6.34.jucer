@@ -994,6 +994,10 @@
                 file="Source/UIComponents/CtrlrPanel/CtrlrPanelEditor.cpp"/>
           <FILE id="hv7qCr" name="CtrlrPanelEditor.h" compile="0" resource="0"
                 file="Source/UIComponents/CtrlrPanel/CtrlrPanelEditor.h"/>
+          <FILE id="TF41hd" name="CtrlrPanelEditorIcons.cpp" compile="1" resource="0"
+                file="Source/UIComponents/CtrlrPanel/CtrlrPanelEditorIcons.cpp"/>
+          <FILE id="vJDIFH" name="CtrlrPanelEditorIcons.h" compile="0" resource="0"
+                file="Source/UIComponents/CtrlrPanel/CtrlrPanelEditorIcons.h"/>
           <FILE id="iDNFSe" name="CtrlrPanelFindProperty.cpp" compile="1" resource="0"
                 file="Source/UIComponents/CtrlrPanel/CtrlrPanelFindProperty.cpp"/>
           <FILE id="DP5ROh" name="CtrlrPanelFindProperty.h" compile="0" resource="0"

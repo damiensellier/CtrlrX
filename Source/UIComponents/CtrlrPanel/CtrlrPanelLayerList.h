@@ -81,7 +81,7 @@ public:
     
     bool isLayerIsolated(int layerIndex) const;
 
-    JUCE_LEAK_DETECTOR(CtrlrPanelLayerList) // Useless, another macro is in the private declaration
+    // JUCE_LEAK_DETECTOR(CtrlrPanelLayerList) // Useless, another macro is in the private declaration
 
 private:
     CtrlrPanel& owner;

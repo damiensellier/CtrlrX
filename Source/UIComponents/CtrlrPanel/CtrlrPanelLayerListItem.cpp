@@ -8,7 +8,7 @@
 CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
     : layer(0), owner(_owner),
       layerName (0),
-      layerVisibility (0),
+      // layerVisibility (0), // Remove v5.6.34.
       layerColour (0),
       layerIndex (0),
       isolateButton(0),
@@ -17,21 +17,27 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
       dragIcon(0),
       isDragging(false)
 {
-	addAndMakeVisible (layerIndex = new Label (L"layerIndex",
-                                               L"2"));
+	SvgIconManager::initialise(); // Added v5.6.34. Thanks to @dnaldoog
+	
+	// Layer Index
+	addAndMakeVisible (layerIndex = new Label (L"layerIndex", L"2"));
     layerIndex->setFont (Font (12.0000f, Font::plain));
     layerIndex->setJustificationType (Justification::centred);
     layerIndex->setEditable (false, false, false);
     layerIndex->setColour (TextEditor::textColourId, Colours::black);
     layerIndex->setColour (TextEditor::backgroundColourId, Colour (0x0));
 	
+	// Drag Icon
 	addAndMakeVisible(dragIcon = new DragIconComponent(this));
 	
-    addAndMakeVisible (layerVisibility = new ToggleButton(""));
+	// Layer visibility (checkBox replaced by SVG Eye Icon)
+	layerVisibility = std::make_unique<ToggleIconComponent>(IconType::EyeSlash, IconType::Eye);
+    addAndMakeVisible(layerVisibility.get());
     layerVisibility->addListener (this);
+	layerVisibility->setMouseCursor (MouseCursor::PointingHandCursor);
 	
-	addAndMakeVisible (layerName = new Label ("",
-                                              L"Layer Name"));
+	// Layer Name
+	addAndMakeVisible (layerName = new Label ("", L"Layer Name"));
     layerName->setFont (Font (12.0000f, Font::plain));
     layerName->setJustificationType (Justification::centredLeft);
     layerName->setEditable (true, true, false);
@@ -39,14 +45,17 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
     layerName->setColour (TextEditor::backgroundColourId, Colour (0x0));
     layerName->addListener (this);
 
+	// Layer Colour
     addAndMakeVisible (layerColour = new CtrlrColourEditorComponent (this));
     
+	// isolate Button
     addAndMakeVisible(isolateButton = new TextButton("Edit"));
     isolateButton->setButtonText("Edit");
     isolateButton->addListener(this);
     isolateButton->setColour(TextButton::buttonColourId, findColour(juce::TextButton::buttonOnColourId));
     isolateButton->setColour(TextButton::textColourOffId, findColour(juce::TextButton::textColourOffId));
 
+	// Restore Button
     addAndMakeVisible(restoreButton = new TextButton("Restore"));
     restoreButton->setButtonText("Restore");
     restoreButton->addListener(this);
@@ -58,9 +67,7 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
 	layerIndex->addMouseListener (this, true);
 	layerVisibility->addMouseListener (this, true);
 	layerName->addMouseListener (this, true);
-	// layerColour->addMouseListener (this, true); // Useless. CtrlrPanelLayerListItem class does not have a mouseDrag or mouseUp override that handles events from layerColour.
-
-	layerVisibility->setMouseCursor (MouseCursor::PointingHandCursor);
+	// layerColour->addMouseListener (this, true); // Useless. CtrlrPanelLayerListItem class does not have a mouseDrag or mouseUp override that handles events from layerColour
 
     setSize (355, 40);
 
@@ -69,7 +76,7 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
 CtrlrPanelLayerListItem::~CtrlrPanelLayerListItem()
 {
     deleteAndZero (layerName);
-    deleteAndZero (layerVisibility);
+    // deleteAndZero (layerVisibility); // Useless, checkBox being replaced by switching SVG icons
     deleteAndZero (layerColour);
     deleteAndZero (layerIndex);
 	deleteAndZero (isolateButton);
@@ -141,8 +148,7 @@ void CtrlrPanelLayerListItem::resized()
 
 	// 3. Visibility Toggle
 	float visibilityWidth = totalWidth * visibilityProportion;
-	// float checkboxSize = jmin(visibilityWidth, (float)componentHeight); // don't know why but the checkbox is cropped on the right side ???
-	int checkboxSize = 32;
+	int checkboxSize = 24; // Change this value to reduce the size of the Eye Icon
 	float checkboxX = x + (visibilityWidth - checkboxSize) / 2.0f;
 	float checkboxY = (totalHeight - checkboxSize) / 2.0f;
 	layerVisibility->setBounds((int)checkboxX, (int)checkboxY, (int)checkboxSize, (int)checkboxSize);
@@ -190,7 +196,8 @@ void CtrlrPanelLayerListItem::labelTextChanged (Label* labelThatHasChanged)
 
 void CtrlrPanelLayerListItem::buttonClicked (Button* buttonThatWasClicked)
 {
-    if (buttonThatWasClicked == layerVisibility)
+    // if (buttonThatWasClicked == layerVisibility)
+	if (buttonThatWasClicked == layerVisibility.get()) // Updated v5.6.34. Thanks to @dnaldoog
     {
         if (layer)
         {
@@ -371,29 +378,23 @@ void CtrlrPanelLayerListItem::handleDragIconMouseUp(const MouseEvent& e)
     dragStartedFromIcon = false;
 }
 
-DragIconComponent::DragIconComponent(CtrlrPanelLayerListItem* parentItem) : parent(parentItem)
+// DragIconComponent implementation
+DragIconComponent::DragIconComponent(CtrlrPanelLayerListItem* parentItem)
+    : parent(parentItem)
 {
     setMouseCursor(juce::MouseCursor::DraggingHandCursor);
-
-    dragDropIcon = R"(
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-	<path fill="#000000" d="M409,103.2c0,2.5,0,4,0,5.5c0,114,0,227.9,0,341.9c0,14.1-11.5,25.6-25.6,25.6c-14.1,0-25.6-11.6-25.6-25.7c0-113.6,0-227.2,0-340.7c0-1.8,0-3.6,0-6.3c-1.5,1.4-2.5,2.2-3.4,3.1c-18.3,18.3-36.5,36.6-54.8,54.8c-7.2,7.2-16,9.5-25.7,6.7c-9.7-2.8-15.6-9.7-17.8-19.3c-2.3-9.9,1.7-18,8.6-24.9c28.2-28.2,56.5-56.4,84.7-84.7c5.1-5.1,10.2-10,15-15.3c10.1-11.2,28.2-10.3,38.6,0.3c32.5,33.3,65.7,66,98.5,99c1.8,1.8,3.6,3.7,5,5.8c7.8,10.9,6,25.4-4.2,34.2c-9.9,8.5-25.2,7.9-34.6-1.4c-18.4-18.3-36.7-36.7-55.1-55.1C411.7,105.7,410.7,104.8,409,103.2z"/>
-	<path fill="#000000" d="M102,388.7c0-2,0-3.2,0-4.4c0-114.1,0-228.2,0-342.3c0-14.7,11.4-26.4,25.8-26.2c14.3,0.1,25.5,11.7,25.5,26.2c0,114,0,227.9,0,341.9c0,1.2,0,2.5,0,4.8c1.6-1.5,2.6-2.4,3.5-3.3c18.3-18.3,36.5-36.6,54.8-54.8c7.1-7.1,15.8-9.4,25.4-6.7c9.5,2.7,15.5,9.3,17.9,18.8c2.6,10-1.3,18.3-8.3,25.3c-19,19-38,38-57,57c-14.5,14.5-28.9,29-43.3,43.5c-10.9,11-27,10.5-37.9-0.6c-32.8-33.1-65.8-65.9-98.6-98.9c-2-2-3.9-4.1-5.5-6.4c-7.6-10.8-5.5-25.3,4.6-33.9c9.8-8.3,25.1-7.8,34.3,1.3c18.5,18.4,36.9,36.9,55.4,55.3C99.4,386.3,100.4,387.2,102,388.7z"/></svg>
-    )";
+    dragDropIcon = SvgIconManager::getSvgString(IconType::DragDropThin);
 }
 
 void DragIconComponent::paint(juce::Graphics& g)
 {
-    std::unique_ptr<juce::Drawable> icon = juce::Drawable::createFromImageData(dragDropIcon, strlen(dragDropIcon));
-
-    if (icon)
+    if (!dragDropIcon.isEmpty())
     {
-        auto iconColour = getLookAndFeel().findColour(juce::Label::textColourId);
-
-        // This is the key change: we replace the black fill colour with the correct one. I spent half an hour on this one :(
-        icon->replaceColour(juce::Colours::black, iconColour);
-
-        icon->drawWithin(g, getLocalBounds().toFloat(), juce::RectanglePlacement::centred, 1.0f);
+        auto drawable = SvgIconManager::getDrawable(IconType::DragDropThin, *this);
+        if (drawable)
+        {
+            drawable->drawWithin(g, getLocalBounds().toFloat(), juce::RectanglePlacement::centred, 1.0f);
+        }
     }
 }
 
