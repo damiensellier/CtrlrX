@@ -23,10 +23,8 @@ public:
 
 private:
     CtrlrPanelLayerListItem* parent;
-    // const char* dragDropIcon;
     std::unique_ptr<juce::Drawable> dragIconDrawable;
-    // const char* dragDropIcon;
-	juce::String dragDropIcon;
+    juce::String dragDropIcon;
 };
 
 
@@ -60,7 +58,7 @@ public:
     // void mouseDrag(const MouseEvent& e); // Useless. Handled by handleDragIconMouseUp
     void mouseUp(const MouseEvent& e);
 	
-	std::unique_ptr<ToggleIconComponent> layerVisibility;
+    std::unique_ptr<ToggleIconComponent> layerVisibility;
 
     JUCE_LEAK_DETECTOR(CtrlrPanelLayerListItem)
 
@@ -73,16 +71,15 @@ private:
     Point<int> dragStartPosition;
 
     Label* layerName;
-    // ToggleButton* layerVisibility;
     CtrlrColourEditorComponent* layerColour;
     Label* layerIndex;
 
     TextButton* isolateButton;
     TextButton* restoreButton;
-    bool dragStartedFromIcon;        // Add this line if missing
-    DragIconComponent* dragIcon;     // This is correct
+    bool dragStartedFromIcon;
+    DragIconComponent* dragIcon;
 	
-	CtrlrPanelLayerListItem (const CtrlrPanelLayerListItem&);
+    CtrlrPanelLayerListItem (const CtrlrPanelLayerListItem&);
     const CtrlrPanelLayerListItem& operator= (const CtrlrPanelLayerListItem&);
 };
 

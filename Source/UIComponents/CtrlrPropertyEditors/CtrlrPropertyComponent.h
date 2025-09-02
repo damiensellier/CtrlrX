@@ -197,7 +197,7 @@ public:
         g.drawRoundedRectangle(getLocalBounds().toFloat(), 4.0f, 1.0f);
 
         // 4. Draw the eyedropper icon.
-		const juce::String eyedropperSVG = SvgIconManager::getSvgString(IconType::EyeDropper);
+        const juce::String eyedropperSVG = SvgIconManager::getSvgString(IconType::EyeDropper);
 
         std::unique_ptr<juce::Drawable> icon = juce::Drawable::createFromImageData(eyedropperSVG.toRawUTF8(), strlen(eyedropperSVG.toRawUTF8()));
 

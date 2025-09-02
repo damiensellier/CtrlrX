@@ -8,7 +8,6 @@
 CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
     : layer(0), owner(_owner),
       layerName (0),
-      // layerVisibility (0), // Remove v5.6.34.
       layerColour (0),
       layerIndex (0),
       isolateButton(0),
@@ -17,27 +16,27 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
       dragIcon(0),
       isDragging(false)
 {
-	SvgIconManager::initialise(); // Added v5.6.34. Thanks to @dnaldoog
+    SvgIconManager::initialise(); // Added v5.6.34. Thanks to @dnaldoog
 	
-	// Layer Index
-	addAndMakeVisible (layerIndex = new Label (L"layerIndex", L"2"));
+    // Layer Index
+    addAndMakeVisible (layerIndex = new Label (L"layerIndex", L"2"));
     layerIndex->setFont (Font (12.0000f, Font::plain));
     layerIndex->setJustificationType (Justification::centred);
     layerIndex->setEditable (false, false, false);
     layerIndex->setColour (TextEditor::textColourId, Colours::black);
     layerIndex->setColour (TextEditor::backgroundColourId, Colour (0x0));
 	
-	// Drag Icon
-	addAndMakeVisible(dragIcon = new DragIconComponent(this));
+    // Drag Icon
+    addAndMakeVisible(dragIcon = new DragIconComponent(this));
 	
-	// Layer visibility (checkBox replaced by SVG Eye Icon)
-	layerVisibility = std::make_unique<ToggleIconComponent>(IconType::EyeSlash, IconType::Eye);
+    // Layer visibility (checkBox replaced by SVG Eye Icon)
+    layerVisibility = std::make_unique<ToggleIconComponent>(IconType::EyeSlash, IconType::Eye);
     addAndMakeVisible(layerVisibility.get());
     layerVisibility->addListener (this);
 	layerVisibility->setMouseCursor (MouseCursor::PointingHandCursor);
 	
-	// Layer Name
-	addAndMakeVisible (layerName = new Label ("", L"Layer Name"));
+    // Layer Name
+    addAndMakeVisible (layerName = new Label ("", L"Layer Name"));
     layerName->setFont (Font (12.0000f, Font::plain));
     layerName->setJustificationType (Justification::centredLeft);
     layerName->setEditable (true, true, false);
@@ -45,17 +44,17 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
     layerName->setColour (TextEditor::backgroundColourId, Colour (0x0));
     layerName->addListener (this);
 
-	// Layer Colour
+    // Layer Colour
     addAndMakeVisible (layerColour = new CtrlrColourEditorComponent (this));
     
-	// isolate Button
+    // isolate Button
     addAndMakeVisible(isolateButton = new TextButton("Edit"));
     isolateButton->setButtonText("Edit");
     isolateButton->addListener(this);
     isolateButton->setColour(TextButton::buttonColourId, findColour(juce::TextButton::buttonOnColourId));
     isolateButton->setColour(TextButton::textColourOffId, findColour(juce::TextButton::textColourOffId));
 
-	// Restore Button
+    // Restore Button
     addAndMakeVisible(restoreButton = new TextButton("Restore"));
     restoreButton->setButtonText("Restore");
     restoreButton->addListener(this);
@@ -64,10 +63,9 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
     restoreButton->setVisible(false);
 
     // Add mouse listeners for existing components
-	layerIndex->addMouseListener (this, true);
-	layerVisibility->addMouseListener (this, true);
-	layerName->addMouseListener (this, true);
-	// layerColour->addMouseListener (this, true); // Useless. CtrlrPanelLayerListItem class does not have a mouseDrag or mouseUp override that handles events from layerColour
+    layerIndex->addMouseListener (this, true);
+    layerVisibility->addMouseListener (this, true);
+    layerName->addMouseListener (this, true);
 
     setSize (355, 40);
 
@@ -76,7 +74,6 @@ CtrlrPanelLayerListItem::CtrlrPanelLayerListItem (CtrlrPanelLayerList &_owner)
 CtrlrPanelLayerListItem::~CtrlrPanelLayerListItem()
 {
     deleteAndZero (layerName);
-    // deleteAndZero (layerVisibility); // Useless, checkBox being replaced by switching SVG icons
     deleteAndZero (layerColour);
     deleteAndZero (layerIndex);
 	deleteAndZero (isolateButton);
@@ -197,7 +194,7 @@ void CtrlrPanelLayerListItem::labelTextChanged (Label* labelThatHasChanged)
 void CtrlrPanelLayerListItem::buttonClicked (Button* buttonThatWasClicked)
 {
     // if (buttonThatWasClicked == layerVisibility)
-	if (buttonThatWasClicked == layerVisibility.get()) // Updated v5.6.34. Thanks to @dnaldoog
+    if (buttonThatWasClicked == layerVisibility.get()) // Updated v5.6.34. Thanks to @dnaldoog
     {
         if (layer)
         {
