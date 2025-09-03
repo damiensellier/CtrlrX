@@ -53,6 +53,11 @@ class CtrlrPanelResourceEditor  : public Component,
 		Image thumbnail;
 		bool isFontFile(const File& file);
 	
+		// Image strip helper methods
+		Image createImageStripThumbnail(const Image& originalImage, int maxSize); // added 09/01/2025
+		Image createHorizontalStripThumbnail(const Image& originalImage, int sectionSize, int numSections, int maxSize);// added 09/01/2025
+		Image createVerticalStripThumbnail(const Image& originalImage, int sectionSize, int numSections, int maxSize);// added 09/01/2025
+	
 	    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrPanelResourceEditor);
 };
 

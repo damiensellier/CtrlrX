@@ -15,43 +15,51 @@ public:
     {
     }
 
-    void paint(Graphics& g) override
-    {
-        g.fillAll(Colour(0xfff0f0f0));
+    void paint(Graphics& g) override // updated to calculate text height
+	{
+		g.fillAll(Colour(0xfff0f0f0));
 
-        // Draw the info text at the top
-        g.setColour(Colours::black);
-        g.setFont(Font(12.0f));
+		// Create an AttributedString to hold the text with its properties
+		AttributedString text;
+		text.append(infoMessage, Font(12.0f), Colours::black);
 
-        int textX = 10;
-        int textY = 10;
-        int textWidth = getWidth() - 20;
-        int textHeight = thumbnail.isNull() ? (getHeight() - 20) : 120; // Reserve space for image if present
+		int textX = 10;
+		int textY = 10;
+		int textWidth = getWidth() - 20;
 
-        g.drawMultiLineText(infoMessage, textX, textY + 15, textWidth);
+		// Use a TextLayout to calculate the exact height required
+		TextLayout tl;
+		tl.createLayout(text, (float) textWidth);
 
-        // Draw the thumbnail image underneath the text
-        if (!thumbnail.isNull())
-        {
-            int imageY = textHeight + 20; // Position below text with some margin
-            int imageX = (getWidth() - thumbnail.getWidth()) / 2; // Center the image horizontally
+		// Draw the info text
+		tl.draw(g, Rectangle<float>((float)textX, (float)textY, (float)textWidth, tl.getHeight()));
 
-            // Ensure imageX is not negative (in case thumbnail is wider than dialog)
-            if (imageX < 10) imageX = 10;
+		// Get the actual vertical position where the text ends
+		int textEndY = textY + (int)tl.getHeight();
 
-            g.drawImage(thumbnail, imageX, imageY, thumbnail.getWidth(), thumbnail.getHeight(),
-                        0, 0, thumbnail.getWidth(), thumbnail.getHeight());
+		// Draw the thumbnail image underneath the text
+		if (!thumbnail.isNull())
+		{
+			// Position the image with a margin below the text
+			int imageY = textEndY + 20;
+			int imageX = (getWidth() - thumbnail.getWidth()) / 2;
 
-            // Draw a border around the image
-            g.setColour(Colours::grey);
-            g.drawRect(imageX - 1, imageY - 1, thumbnail.getWidth() + 2, thumbnail.getHeight() + 2);
-        }
-    }
+			if (imageX < 10)
+				imageX = 10;
+
+			g.drawImage(thumbnail, imageX, imageY, thumbnail.getWidth(), thumbnail.getHeight(),
+						0, 0, thumbnail.getWidth(), thumbnail.getHeight());
+
+			g.setColour(Colours::grey);
+			g.drawRect(imageX - 1, imageY - 1, thumbnail.getWidth() + 2, thumbnail.getHeight() + 2);
+		}
+	}
 
     void resized() override
     {
         // Component will be resized by the dialog window
     }
+	
 private:
     String infoMessage;
     Image thumbnail;
@@ -366,7 +374,27 @@ void CtrlrPanelResourceEditor::showResourceInfo(const int resourceIndex)
 		message << "Height: " + STR(originalImage.getHeight()) + "\n";
 		message << "Has alpha: " + STR((int)originalImage.hasAlphaChannel()) + "\n";
 		
-		thumbnailImage = createThumbnail(originalImage, 150);
+		
+		int originalWidth = originalImage.getWidth();
+		int originalHeight = originalImage.getHeight();
+
+		bool isHorizontalStrip = (originalWidth >= 6 * originalHeight && originalWidth % originalHeight == 0);
+		bool isVerticalStrip = (originalHeight >= 6 * originalWidth && originalHeight % originalWidth == 0);
+
+		if (isHorizontalStrip)
+		{
+			int numFrames = originalWidth / originalHeight;
+			message << "Detected horizontal image strip with " + STR(numFrames) + " frames\n";
+			message << "Frame size: " + STR(originalHeight) + "x" + STR(originalHeight) + "\n";
+		}
+		else if (isVerticalStrip)
+		{
+			int numFrames = originalHeight / originalWidth;
+			message << "Detected vertical image strip with " + STR(numFrames) + " frames\n";
+			message << "Frame size: " + STR(originalWidth) + "x" + STR(originalWidth) + "\n";
+		}
+		
+		thumbnailImage = createImageStripThumbnail(originalImage, 150);
 		message << "Thumbnail size: " + STR(thumbnailImage.getWidth()) + "x" + STR(thumbnailImage.getHeight()) + "\n";
 	}
 	// Check if it might be a font file
@@ -579,15 +607,34 @@ void CtrlrPanelResourceEditor::showResourceInfo(const int resourceIndex)
 	
 	DialogWindow::LaunchOptions lo;
 	
-	if ((hasImage || hasFont) && !thumbnailImage.isNull())
-	{
-		// Create a custom component that contains both the label and image/font preview
-		Component* contentComponent = new ImageInfoComponent(message, thumbnailImage);
-		// Adjust height to accommodate text at top + preview at bottom + margins
-		int dialogHeight = 160 + thumbnailImage.getHeight() + 30; // text area + preview + margins
-		contentComponent->setSize(450, dialogHeight);
-		lo.content.set(contentComponent, true);
-	}
+	if ((hasImage || hasFont) && !thumbnailImage.isNull()) // Improved method for margin
+    {
+        // Create a custom component that contains both the label and image/font preview
+        Component* contentComponent = new ImageInfoComponent(message, thumbnailImage);
+        
+        // Calculate the actual text height using TextLayout (similar to paint method)
+        // This is important to size the dialog correctly based on content
+        AttributedString textForHeightCalc;
+        textForHeightCalc.append(message, Font(12.0f), Colours::black);
+        TextLayout tlForHeightCalc;
+        tlForHeightCalc.createLayout(textForHeightCalc, 450.0f - 20.0f); // Use dialog width - margins
+        int estimatedTextHeight = (int)tlForHeightCalc.getHeight();
+
+        const int topMargin = 10;
+        const int textImageMargin = 20;
+        const int bottomMargin = 20; // Additional bottom margin for the dialog itself
+
+        // Adjust height to accommodate text at top + preview + margins
+        // estimatedTextHeight for the actual text content
+        // topMargin for space above text
+        // textImageMargin for space between text and image
+        // thumbnailImage.getHeight() for the image itself
+        // bottomMargin for space below image
+        int dialogHeight = topMargin + estimatedTextHeight + textImageMargin + thumbnailImage.getHeight() + bottomMargin;
+        
+        contentComponent->setSize(450, dialogHeight);
+        lo.content.set(contentComponent, true);
+    }
 	else
 	{
 		// No image, just show the text label as before
@@ -788,4 +835,165 @@ Image CtrlrPanelResourceEditor::createThumbnail(const Image& originalImage, int 
 	// Create scaled thumbnail with high quality resampling
 	return originalImage.rescaled(thumbnailWidth, thumbnailHeight,
 								  Graphics::ResamplingQuality::highResamplingQuality);
+}
+
+// New image strip helper methods
+Image CtrlrPanelResourceEditor::createImageStripThumbnail(const Image& originalImage, int maxSize)
+{
+	int originalWidth = originalImage.getWidth();
+	int originalHeight = originalImage.getHeight();
+	
+	// Check if it's a horizontal strip (width >> height)
+	bool isHorizontalStrip = (originalWidth >= 6 * originalHeight);
+	// Check if it's a vertical strip (height >> width)
+	bool isVerticalStrip = (originalHeight >= 6 * originalWidth);
+	
+	if (!isHorizontalStrip && !isVerticalStrip)
+	{
+		// Not a strip, use regular thumbnail
+		return createThumbnail(originalImage, maxSize);
+	}
+	
+	if (isHorizontalStrip)
+	{
+		// Check if width can be divided into square sections
+		if (originalWidth % originalHeight != 0)
+		{
+			// Not evenly divisible, probably not a repeating strip
+			return createThumbnail(originalImage, maxSize);
+		}
+		
+		int sectionSize = originalHeight; // Square sections
+		int numSections = originalWidth / sectionSize;
+		
+		if (numSections < 5)
+		{
+			// Not enough sections for strip treatment
+			return createThumbnail(originalImage, maxSize);
+		}
+		
+		return createHorizontalStripThumbnail(originalImage, sectionSize, numSections, maxSize);
+	}
+	else // isVerticalStrip
+	{
+		// Check if height can be divided into square sections
+		if (originalHeight % originalWidth != 0)
+		{
+			// Not evenly divisible, probably not a repeating strip
+			return createThumbnail(originalImage, maxSize);
+		}
+		
+		int sectionSize = originalWidth; // Square sections
+		int numSections = originalHeight / sectionSize;
+		
+		if (numSections < 5)
+		{
+			// Not enough sections for strip treatment
+			return createThumbnail(originalImage, maxSize);
+		}
+		
+		return createVerticalStripThumbnail(originalImage, sectionSize, numSections, maxSize);
+	}
+}
+
+Image CtrlrPanelResourceEditor::createHorizontalStripThumbnail(const Image& originalImage,
+															   int sectionSize, int numSections, int maxSize)
+{
+	// Calculate positions for 5 representative sections
+	Array<int> sectionIndices;
+	sectionIndices.add(0);                              // First
+	sectionIndices.add(numSections / 4);                // Quarter
+	sectionIndices.add(numSections / 2);                // Center
+	sectionIndices.add((numSections * 3) / 4);          // Three-quarter
+	sectionIndices.add(numSections - 1);                // Last
+	
+	// Calculate thumbnail dimensions
+	int thumbSectionSize = jmin(maxSize / 5, sectionSize); // Fit 5 sections in maxSize
+	int thumbWidth = thumbSectionSize * 5;
+	int thumbHeight = thumbSectionSize;
+	
+	// Create composite thumbnail
+	Image thumbnail(Image::ARGB, thumbWidth, thumbHeight, true);
+	Graphics g(thumbnail);
+	g.fillAll(Colours::transparentBlack);
+	
+	for (int i = 0; i < 5; i++)
+	{
+		int sourceX = sectionIndices[i] * sectionSize;
+		int destX = i * thumbSectionSize;
+		
+		// Create a temporary image for this section
+		Image sectionImage(Image::ARGB, sectionSize, sectionSize, true);
+		Graphics sectionG(sectionImage);
+		
+		// Use reduceClipRegion to extract the specific section
+		Rectangle<int> sectionRect(sourceX, 0, sectionSize, sectionSize);
+		sectionG.reduceClipRegion(sectionRect.translated(-sourceX, 0)); // Translate to origin
+		sectionG.drawImageAt(originalImage, -sourceX, 0); // Draw with offset
+		
+		// Scale and draw this section to the thumbnail
+		Image scaledSection = sectionImage.rescaled(thumbSectionSize, thumbSectionSize,
+													Graphics::ResamplingQuality::highResamplingQuality);
+		g.drawImageAt(scaledSection, destX, 0);
+		
+		// Draw separator line between sections (except after last)
+		if (i < 4)
+		{
+			g.setColour(Colours::darkgrey);
+			g.drawVerticalLine(destX + thumbSectionSize, 0, thumbHeight);
+		}
+	}
+	
+	return thumbnail;
+}
+
+Image CtrlrPanelResourceEditor::createVerticalStripThumbnail(const Image& originalImage,
+															 int sectionSize, int numSections, int maxSize)
+{
+	// Calculate positions for 5 representative sections
+	Array<int> sectionIndices;
+	sectionIndices.add(0);                              // First
+	sectionIndices.add(numSections / 4);                // Quarter
+	sectionIndices.add(numSections / 2);                // Center
+	sectionIndices.add((numSections * 3) / 4);          // Three-quarter
+	sectionIndices.add(numSections - 1);                // Last
+	
+	// Calculate thumbnail dimensions
+	int thumbSectionSize = jmin(maxSize / 5, sectionSize); // Fit 5 sections in maxSize
+	int thumbWidth = thumbSectionSize;
+	int thumbHeight = thumbSectionSize * 5;
+	
+	// Create composite thumbnail
+	Image thumbnail(Image::ARGB, thumbWidth, thumbHeight, true);
+	Graphics g(thumbnail);
+	g.fillAll(Colours::transparentBlack);
+	
+	for (int i = 0; i < 5; i++)
+	{
+		int sourceY = sectionIndices[i] * sectionSize;
+		int destY = i * thumbSectionSize;
+		
+		// Create a temporary image for this section
+		Image sectionImage(Image::ARGB, sectionSize, sectionSize, true);
+		Graphics sectionG(sectionImage);
+		
+		// Use reduceClipRegion to extract the specific section
+		Rectangle<int> sectionRect(0, sourceY, sectionSize, sectionSize);
+		sectionG.reduceClipRegion(sectionRect.translated(0, -sourceY)); // Translate to origin
+		sectionG.drawImageAt(originalImage, 0, -sourceY); // Draw with offset
+		
+		// Scale and draw this section to the thumbnail
+		Image scaledSection = sectionImage.rescaled(thumbSectionSize, thumbSectionSize,
+													Graphics::ResamplingQuality::highResamplingQuality);
+		g.drawImageAt(scaledSection, 0, destY);
+		
+		// Draw separator line between sections (except after last)
+		if (i < 4)
+		{
+			g.setColour(Colours::darkgrey);
+			g.drawHorizontalLine(destY + thumbSectionSize, 0, thumbWidth);
+		}
+	}
+	
+	return thumbnail;
 }
