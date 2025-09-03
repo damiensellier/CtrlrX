@@ -135,6 +135,7 @@ namespace Ids
     DECLARE_ID (uiPanelCanvasLayerIndex);
     DECLARE_ID (uiPanelCanvasLayerUid);
     DECLARE_ID (uiPanelCanvasLayerColour);
+    DECLARE_ID (uiPanelCanvasLayerIsIsolated);
     DECLARE_ID (uiPanelCanvasLayerMouseHandle);
     DECLARE_ID (uiPanelCanvasLayerVisibility);
     DECLARE_ID (uiPanelCanvasLayer);

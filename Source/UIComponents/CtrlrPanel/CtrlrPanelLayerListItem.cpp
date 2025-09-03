@@ -206,7 +206,8 @@ void CtrlrPanelLayerListItem::buttonClicked (Button* buttonThatWasClicked)
         if (layer)
         {
             // When Edit is clicked, turn it red briefly, then isolate
-            isolateButton->setColour(TextButton::buttonColourId, Colours::red);
+			owner.restoreLayerVisibility(); // remember layer visibility before isolating
+			layer->setProperty(Ids::uiPanelCanvasLayerIsIsolated, true, 0); // toggle isolation property: see restoreButton            isolateButton->setColour(TextButton::buttonColourId, Colours::red);
             isolateButton->setColour(TextButton::textColourOffId, Colours::white);
 
             // Perform the isolation
@@ -219,6 +220,7 @@ void CtrlrPanelLayerListItem::buttonClicked (Button* buttonThatWasClicked)
     else if (buttonThatWasClicked == restoreButton)
     {
         // Restore visibility and update button states
+		layer->setProperty(Ids::uiPanelCanvasLayerIsIsolated, false, 0); // toggle isolation property: see isolateButton
         owner.restoreLayerVisibility();
         updateButtonStates();
     }
@@ -226,8 +228,10 @@ void CtrlrPanelLayerListItem::buttonClicked (Button* buttonThatWasClicked)
 
 void CtrlrPanelLayerListItem::updateButtonStates()
 {
-    // Check if THIS specific layer is the one that was isolated
-    bool isThisLayerIsolated = owner.isLayerIsolated(rowIndex);
+    if (!layer)
+        return;
+
+    bool isThisLayerIsolated = layer->getProperty(Ids::uiPanelCanvasLayerIsIsolated);
 
     if (isThisLayerIsolated)
     {

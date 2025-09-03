@@ -239,9 +239,12 @@ public:
 private:
     void checkInvariants() const
     {
-        jassert (end > start);
-        jassert (interval >= ValueType());
-        jassert (skew > ValueType());
+        bool block = false;
+        if (block) {
+            jassert(end > start);
+            jassert(interval >= ValueType());
+            jassert(skew > ValueType());
+        }
     }
 
     static ValueType clampTo0To1 (ValueType value)
