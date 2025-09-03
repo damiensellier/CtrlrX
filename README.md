@@ -382,6 +382,7 @@ Tuturial coming soon.
 * **UPDATED** CtrlrPropertyComponent Font size, kerning & horizontal-scale sliders replaced by drop-down selector for convenience. `CtrlrPropertyComponent.cpp` &`.h`
 * **FIXED** CtrlrX crashing or freezing when closing while the notify bar was visible. `CtrlrPanelEditor.cpp` & `.h`
 * **UPDATED** Utils get16bitSigned() & get16bitSigned() funtions bind to LUA. `CtrlrLuaUtils.cpp` & `.h`
+* **UPDATED** Layer manager complete redesign for clarity and convenience. `CtrlrPanelLayerList.cpp` & `.h`, `CtrlrPanelLayerListItem.cpp` & `.h`, `CtrlrPanelEditorIcon.cpp` & `.h`
 
 #### Version 5.6.33 | 2025.05.28
 

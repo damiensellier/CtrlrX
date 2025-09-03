@@ -91,6 +91,25 @@ void ToggleIconComponent::paintButton(juce::Graphics& g, bool isMouseOverButton,
 
     if (iconToDraw != nullptr)
     {
+        // Get the base color from the LookAndFeel, which SvgIconManager already applied.
+        auto iconColour = getLookAndFeel().findColour(juce::ListBox::textColourId);
+
+        // Modify the color based on the button's state.
+        if (isButtonDown)
+        {
+            iconColour = iconColour.darker(0.3f);
+        }
+        else if (isMouseOverButton)
+        {
+            iconColour = iconColour.brighter(0.2f);
+        }
+        
+        // This is a crucial step. We replace the color of the drawable *before* drawing it.
+        // SvgIconManager::getDrawable already replaced the original black with the default text color,
+        // now we replace that default text color with our modified one.
+        iconToDraw->replaceColour(getLookAndFeel().findColour(juce::ListBox::textColourId), iconColour);
+
+        // Draw the modified icon.
         iconToDraw->drawWithin(g, getLocalBounds().toFloat(), juce::RectanglePlacement::centred, 1.0f);
     }
 }
