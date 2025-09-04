@@ -515,9 +515,19 @@ void CtrlrPanelLayerList::isolateLayer(int targetLayerIndex)
 // Update the restoreLayerVisibility method:
 void CtrlrPanelLayerList::restoreLayerVisibility()
 {
+	// New: Loop through all layers and explicitly set their 'isolated' property to false.
+	for (int i = 0; i < getNumRows(); ++i)
+	{
+		if (CtrlrPanelCanvasLayer* layer = owner.getEditor()->getCanvas()->getLayerFromArray(i))
+		{
+			layer->setProperty(Ids::uiPanelCanvasLayerIsIsolated, false, 0);
+		}
+	}
+
+	// Now, call the existing restoration logic.
 	owner.restoreLayerVisibilityStates();
 	layerIsolationActive = false;
-	isolatedLayerIndex = -1;  // Reset - no layer is isolated anymore
+	isolatedLayerIndex = -1;
 	refresh();
 	updateAllButtonStates();
 	_DBG("Layer visibility restored");
