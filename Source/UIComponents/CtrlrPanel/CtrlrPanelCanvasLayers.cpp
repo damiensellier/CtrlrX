@@ -268,7 +268,7 @@ void CtrlrPanelCanvas::layersChanged()
 	{
 		if ((bool)layers[i]->getProperty (Ids::uiPanelCanvasLayerVisibility) == true)
 		{
-			//addAndMakeVisible (layers[i]);
+			addAndMakeVisible (layers[i]);
 			layers[i]->setVisible((bool)layers[i]->getProperty(Ids::uiPanelCanvasLayerVisibility));
 		}
 			else
