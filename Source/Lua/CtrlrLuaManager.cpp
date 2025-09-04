@@ -322,8 +322,8 @@ void CtrlrPanelCanvas::wrapForLua (lua_State *L)
 
 	module(L)
 		[
-			class_<CtrlrPanelCanvas, bases<Component> >("CtrlrPanelCanvas")
-			.def("getLayerByName", &CtrlrPanelCanvas::getLayerByName)
+		class_<CtrlrPanelCanvas, bases<Component> >("CtrlrPanelCanvas")
+		.def("getLayerByName", &CtrlrPanelCanvas::getLayerByName)
 		.def("getLayer", &CtrlrPanelCanvas::getLayer)
 		.def("getLayerFromArray", &CtrlrPanelCanvas::getLayerFromArray)
 		.def("getNumLayers", &CtrlrPanelCanvas::getNumLayers)
@@ -356,8 +356,10 @@ void CtrlrPanelCanvasLayer::wrapForLua(lua_State *L)
 
 	module(L)
 		[
-			class_<CtrlrPanelCanvasLayer, bases<Component, CtrlrLuaObject> >("CtrlrPanelCanvasLayer")
-			.def("moveUp", &CtrlrPanelCanvasLayer::moveUp)
+		class_<CtrlrPanelCanvasLayer, bases<Component, CtrlrLuaObject> >("CtrlrPanelCanvasLayer")
+		.def("moveUp", &CtrlrPanelCanvasLayer::moveUp)
+		/*Override setVisble to update Layer Editor visible/hidden status */
+		.def("setVisible", (void (CtrlrPanelCanvasLayer::*)(bool)) & CtrlrPanelCanvasLayer::setVisible) // Updated v5.5.34. Thanks to @dnaldoog
 		.def("moveDown", &CtrlrPanelCanvasLayer::moveDown)
 		.def("setCustomLookAndFeel", (void (CtrlrPanelCanvasLayer::*)(const luabind::object &)) &CtrlrPanelCanvasLayer::setCustomLookAndFeel)
 		];
