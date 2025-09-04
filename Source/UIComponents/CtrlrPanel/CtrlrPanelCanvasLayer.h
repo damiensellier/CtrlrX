@@ -33,6 +33,7 @@ class CtrlrPanelCanvasLayer :   public Component,
 		void moveUp();
 		void moveDown();
 		void resized();
+		void setVisible(bool shouldBeVisible) override; // to override Component::setVisible and update the ValueTree property too
 		void setCustomLookAndFeel(const luabind::object &customLookAndFeel);
         void setCustomLookAndFeel (LookAndFeelBase *customLookAndFeel);
 		JUCE_LEAK_DETECTOR(CtrlrPanelCanvasLayer)
