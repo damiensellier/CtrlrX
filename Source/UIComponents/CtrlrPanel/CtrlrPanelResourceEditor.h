@@ -57,6 +57,7 @@ class CtrlrPanelResourceEditor  : public Component,
 		Image createImageStripThumbnail(const Image& originalImage, int maxSize); // added 09/01/2025
 		Image createHorizontalStripThumbnail(const Image& originalImage, int sectionSize, int numSections, int maxSize);// added 09/01/2025
 		Image createVerticalStripThumbnail(const Image& originalImage, int sectionSize, int numSections, int maxSize);// added 09/01/2025
+		const double maxAspectRatioForStrip;
 	
 	    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrPanelResourceEditor);
 };

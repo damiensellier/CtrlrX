@@ -74,7 +74,8 @@ CtrlrPanelResourceEditor::CtrlrPanelResourceEditor (CtrlrPanelEditor &_owner)
 	  move(nullptr),
 	  reload(nullptr),
 	  sortByColumnId(1),
-	  sortForward(1)
+	  sortForward(1),
+	  maxAspectRatioForStrip(50.0f) // Lower value will split small l/w ratios
 {
     addAndMakeVisible (resourceList = new TableListBox ("Resource List", this));
     resourceList->setName (L"resourceList");
@@ -838,62 +839,61 @@ Image CtrlrPanelResourceEditor::createThumbnail(const Image& originalImage, int 
 }
 
 // New image strip helper methods
+// REF : https://github.com/damiensellier/CtrlrX/pull/161#issuecomment-3257863818
 Image CtrlrPanelResourceEditor::createImageStripThumbnail(const Image& originalImage, int maxSize)
 {
 	int originalWidth = originalImage.getWidth();
 	int originalHeight = originalImage.getHeight();
-	
-	// Check if it's a horizontal strip (width >> height)
-	bool isHorizontalStrip = (originalWidth >= 6 * originalHeight);
-	// Check if it's a vertical strip (height >> width)
-	bool isVerticalStrip = (originalHeight >= 6 * originalWidth);
-	
-	if (!isHorizontalStrip && !isVerticalStrip)
+
+	// Case 1: Symmetrical Strip
+	if ((originalWidth > originalHeight && (originalWidth % originalHeight == 0)) ||
+		(originalHeight > originalWidth && (originalHeight % originalWidth == 0)))
 	{
-		// Not a strip, use regular thumbnail
-		return createThumbnail(originalImage, maxSize);
+		int sectionSize = jmin(originalWidth, originalHeight);
+		int numSections = jmax(originalWidth, originalHeight) / sectionSize;
+
+		if (numSections >= 5)
+		{
+			_DBG("Detected image strip with " + String(numSections) + " sections");
+			if (originalWidth > originalHeight) // Horizontal Strip
+			{
+				return createHorizontalStripThumbnail(originalImage, sectionSize, numSections, maxSize);
+			}
+			else // Vertical Strip
+			{
+				return createVerticalStripThumbnail(originalImage, sectionSize, numSections, maxSize);
+			}
+		}
 	}
-	
-	if (isHorizontalStrip)
+
+	double aspectRatio = (double)jmax(originalWidth, originalHeight) / (double)jmin(originalWidth, originalHeight);
+	_DBG("L/W ratio: " + String(maxAspectRatioForStrip) + ":AspectRatio = 1:" + String(aspectRatio));
+	// Check if the image has an extreme length-to-width ratio
+	if (aspectRatio > maxAspectRatioForStrip)
 	{
-		// Check if width can be divided into square sections
-		if (originalWidth % originalHeight != 0)
+		_DBG("Extreme aspect ratio detected, cropping to square region");
+		Image croppedImage;
+		if (originalHeight > originalWidth) // Vertical Strip
 		{
-			// Not evenly divisible, probably not a repeating strip
-			return createThumbnail(originalImage, maxSize);
+			int frameHeight = originalWidth;
+			int croppedHeight = frameHeight * 5;
+
+			croppedImage = originalImage.getClippedImage({ 0, 0, originalWidth, jmin(croppedHeight, originalHeight) });
 		}
-		
-		int sectionSize = originalHeight; // Square sections
-		int numSections = originalWidth / sectionSize;
-		
-		if (numSections < 5)
+		else // Horizontal Strip
 		{
-			// Not enough sections for strip treatment
-			return createThumbnail(originalImage, maxSize);
+			int frameWidth = originalHeight;
+			int croppedWidth = frameWidth * 5;
+
+			croppedImage = originalImage.getClippedImage({ 0, 0, jmin(croppedWidth, originalWidth), originalHeight });
 		}
-		
-		return createHorizontalStripThumbnail(originalImage, sectionSize, numSections, maxSize);
+		_DBG("Cropped size: " + String(croppedImage.getWidth()) + "x" + String(croppedImage.getHeight()));
+		return createThumbnail(croppedImage, maxSize);
 	}
-	else // isVerticalStrip
-	{
-		// Check if height can be divided into square sections
-		if (originalHeight % originalWidth != 0)
-		{
-			// Not evenly divisible, probably not a repeating strip
-			return createThumbnail(originalImage, maxSize);
-		}
-		
-		int sectionSize = originalWidth; // Square sections
-		int numSections = originalHeight / sectionSize;
-		
-		if (numSections < 5)
-		{
-			// Not enough sections for strip treatment
-			return createThumbnail(originalImage, maxSize);
-		}
-		
-		return createVerticalStripThumbnail(originalImage, sectionSize, numSections, maxSize);
-	}
+
+	_DBG("Normal aspect ratio, creating standard thumbnail");
+	// Fallback: If the aspect ratio is not extreme, just display the whole image as a single thumbnail.
+	return createThumbnail(originalImage, maxSize);
 }
 
 Image CtrlrPanelResourceEditor::createHorizontalStripThumbnail(const Image& originalImage,
