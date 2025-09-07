@@ -206,13 +206,13 @@ bool CtrlrEditor::perform (const InvocationInfo &info) // Updated v5.6.34. Will 
             break;
 
         case CtrlrEditor::showGlobalSettingsDialog:
-            owner.getWindowManager().showModalDialog ("Ctrlr/Settings", ScopedPointer <CtrlrSettings> (new CtrlrSettings(owner)), true, this);
+            owner.getWindowManager().showModalDialog ("CtrlrX/Settings", ScopedPointer <CtrlrSettings> (new CtrlrSettings(owner)), true, this); // Updated v5.6.34. Was "Ctrlr/"
             break;
 
         case CtrlrEditor::showAboutDialog:
         {
             CtrlrAbout* aboutWindow = new CtrlrAbout(owner);
-            owner.getWindowManager().showModalDialog ("Ctrlr/About", aboutWindow, false, this);
+            owner.getWindowManager().showModalDialog ("CtrlrX/About", aboutWindow, false, this); // Updated v5.6.34. Was "Ctrlr/"
         }
         break;
 
