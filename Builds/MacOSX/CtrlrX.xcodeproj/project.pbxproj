@@ -1091,7 +1091,7 @@
 		FF043386CBC0BE011DBB287F /* LImage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = LImage.h; path = ../../Source/Lua/JuceClasses/LImage.h; sourceTree = SOURCE_ROOT; };
 		FF5E0CE1B844032293A168A2 /* add.svg */ = {isa = PBXFileReference; lastKnownFileType = file.svg; name = add.svg; path = ../../Source/Resources/Icons/add.svg; sourceTree = SOURCE_ROOT; };
 		FF6BEDB081380169B1217EC2 /* LComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = LComponent.h; path = ../../Source/Lua/JuceClasses/LComponent.h; sourceTree = SOURCE_ROOT; };
-		FF88A70C0FFB26F4644E7C00 /* CtrlrPanelEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CtrlrPanelEditor.h; path = ../../Source/UIComponents/CtrlrPanel/CtrlrPanelEditor.h; sourceTree = SOURCE_ROOT; };
+		FF88A70C0FFB26F4644E7C00 /* CtrlrPanelEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CtrlrPanelEditor.h; path = ../../Source/UIComponents/CtrlrPanel/CtrlrPanelEditor.h; sourceTree = SOURCE_ROOT; usesTabs = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

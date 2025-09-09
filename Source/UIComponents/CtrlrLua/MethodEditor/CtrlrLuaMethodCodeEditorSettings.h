@@ -94,7 +94,7 @@ private:
     TextButton* resetButton;
     TextButton* resetToPreviousButton;
     Slider* fontSize;
-	ScopedPointer<Label> label0; // Updated v5.6.34. Thanks to @dnaldoog
+    ScopedPointer<Label> label0; // Updated v5.6.34. Thanks to @dnaldoog
     ScopedPointer<Label> label1; // Updated v5.6.34. Thanks to @dnaldoog
     ScopedPointer<Label> label2; // Updated v5.6.34. Thanks to @dnaldoog
     ScopedPointer<Label> label3; // Updated v5.6.34. Thanks to @dnaldoog

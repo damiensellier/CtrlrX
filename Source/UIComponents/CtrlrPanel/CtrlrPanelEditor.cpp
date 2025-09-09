@@ -243,7 +243,7 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
 
 CtrlrPanelEditor::~CtrlrPanelEditor()
 {
-	// 1. Detach from specific components
+    // 1. Detach from specific components
     setLookAndFeel(nullptr);
     if (getCanvas())
     {
