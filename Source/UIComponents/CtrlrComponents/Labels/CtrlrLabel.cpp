@@ -38,8 +38,8 @@ bool CtrlrLabelInternal::keyPressed (const KeyPress &key)
 
 //==============================================================================
 CtrlrLabel::CtrlrLabel (CtrlrModulator &owner)
-    : CtrlrComponent(owner),
-      ctrlrLabel (0)
+    : CtrlrComponent(owner)
+	// , ctrlrLabel (0) // Updated v5.6.34. Thanks to @dnaldoog
 {
     addAndMakeVisible (ctrlrLabel = new CtrlrLabelInternal (*this, "ctrlrLabel",
                                                "label text"));
@@ -92,7 +92,7 @@ CtrlrLabel::~CtrlrLabel()
 	owner.getOwnerPanel().removePanelListener(this);
     //[/Destructor_pre]
 
-    deleteAndZero (ctrlrLabel);
+    // deleteAndZero (ctrlrLabel); // Removed v5.6.34. Thanks to @dnaldoog
 
     //[Destructor]. You can add your own custom destruction code here..
     //[/Destructor]

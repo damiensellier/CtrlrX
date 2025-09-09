@@ -31,6 +31,13 @@ CtrlrPanelNotifier::CtrlrPanelNotifier(CtrlrPanelEditor &_owner) // Added back v
     text->setText ("", dontSendNotification); // Default text required
 }
 
+CtrlrPanelNotifier::~CtrlrPanelNotifier() // Added v5.6.34. Thanks to @dnaldoog
+{
+	// The ScopedPointer 'text' will be automatically cleaned up.
+    // No manual cleanup is needed.
+	// text = nullptr; // Force ScopedPointer cleanup
+}
+
 void CtrlrPanelNotifier::paint (Graphics &g) // Added back v5.6.31 for file management bottom notification bar
 {
     gui::drawSelectionRectangle (g, getWidth(), getHeight(), background); // Updated v5.6.31 (link to GUI class)
@@ -80,9 +87,12 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
           panelEditorTree(Ids::uiPanelEditor),
           ctrlrComponentSelection(nullptr),
           ctrlrPanelProperties(nullptr),
-          spacerComponent(nullptr)
+          spacerComponent(nullptr),
+          lookAndFeel(nullptr), // Added v5.6.34. Thanks to @dnaldoog
+          previousGlobalLookAndFeel(nullptr) // Added v5.6.34. Thanks to @dnaldoog
 {   
-    ctrlrComponentSelection = new CtrlrComponentSelection(*this);
+	previousGlobalLookAndFeel = &LookAndFeel::getDefaultLookAndFeel(); // Added v5.6.34. Thanks to @dnaldoog
+	ctrlrComponentSelection = new CtrlrComponentSelection(*this);
     //removeColour(TooltipWindow::textColourId);
     
     addAndMakeVisible(ctrlrPanelViewport = new CtrlrPanelViewport(*this));
@@ -233,14 +243,34 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
 
 CtrlrPanelEditor::~CtrlrPanelEditor()
 {
-    componentAnimator.removeChangeListener (this); // Updated v5.6.34. NOW WORKING with ChangeListener added as class member in the .h file . Was NOT WORKING in 5.6.31. Added back v5.6.31 for file management bottom notification bar.
-    // setLookAndFeel(nullptr); // Updated v5.6.30. reset LnF to global LnF from Preferences when closing panel
+	// 1. Detach from specific components
+    setLookAndFeel(nullptr);
+    if (getCanvas())
+    {
+        getCanvas()->setLookAndFeel(nullptr);
+    }
+
+    // 2. Restore the previous global LookAndFeel to the default
+    //    This is safe because we're not using a dangling pointer.
+	//
+	// NOTE : I removed the condition : if (previousGlobalLookAndFeel != nullptr).
+	// It now doesn't rely on the value of a potentially dangerous raw pointer.
+	// Instead, it uses a safe and guaranteed way to revert to JUCE's default LookAndFeel.
+	// This completely avoids the possibility of a dangling pointer and the resulting crash.
+	
+    LookAndFeel::setDefaultLookAndFeel(nullptr);
+
+	// 3. Continue with cleanup
+	componentAnimator.removeChangeListener (this); // !!!MANDATORY!!! Updated v5.6.34. NOW WORKING with ChangeListener added as class member in the .h file . Was NOT WORKING in 5.6.31. Added back v5.6.31 for file management bottom notification bar.
     getPanelEditorTree().removeListener(this);
     owner.getPanelTree().removeListener(this);
     owner.getPanelTree().removeChild(getPanelEditorTree(), 0);
     ctrlrComponentSelection->removeChangeListener(ctrlrPanelProperties);
     masterReference.clear();
-    deleteAndZero(ctrlrPanelProperties);
+    
+    // 4. Clean up raw pointers.
+    //    It is highly recommended to change these to ScopedPointer/unique_ptr.
+	deleteAndZero(ctrlrPanelProperties);
     deleteAndZero(spacerComponent);
     deleteAndZero(ctrlrPanelViewport);
 }

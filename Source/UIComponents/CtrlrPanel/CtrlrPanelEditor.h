@@ -20,13 +20,13 @@ class CtrlrLuaMethod;
 class CtrlrPanelEditor;
 
 
-class CtrlrPanelNotifier : public Component,
-                           public LookAndFeel_V4
+class CtrlrPanelNotifier : public Component
+						   // , public LookAndFeel_V4
                              // Added back v5.6.31 for file management bottom notification bar
 {
     public:
         CtrlrPanelNotifier(CtrlrPanelEditor &_owner);
-        ~CtrlrPanelNotifier() {}
+        ~CtrlrPanelNotifier(); // Updated v5.6.34. Thanks to @dnaldoog
         void paint (Graphics &g);
         void resized();
         void setNotification (const String &notification, const CtrlrNotificationType ctrlrNotificationType);
@@ -124,12 +124,23 @@ class CtrlrPanelEditor  :	public Component,
 		WeakReference <CtrlrLuaMethod>
         resizedEditorCbk,
         resizedCbk;
+
+		// Old way
 		CtrlrPanelProperties* ctrlrPanelProperties;
 		StretchableLayoutResizerBar* spacerComponent;
 		CtrlrPanelViewport* ctrlrPanelViewport;
+	
+		// New way
+		// ScopedPointer<CtrlrPanelProperties> ctrlrPanelProperties;
+		// ScopedPointer<StretchableLayoutResizerBar> spacerComponent;
+		// ScopedPointer<CtrlrPanelViewport> ctrlrPanelViewport;
+	
 		WeakReference<CtrlrNotificationCallback> notificationCallback;
 		Component* editorComponentsInEditMode[3];
 		Component* editorComponents[2];
 		std::unique_ptr<LookAndFeel> lookAndFeel;
+	
+		juce::LookAndFeel* previousGlobalLookAndFeel; // Added v5.6.34. Thanks to @dnaldoog
+	
         // ScopedPointer<LookAndFeel_V4> lfv4; // Related to the WIN crash on LnF switch
 };

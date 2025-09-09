@@ -49,7 +49,8 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    Label* ctrlrLabel;
+    // Label* ctrlrLabel;
+	ScopedPointer<Label> ctrlrLabel; // Updated v5.6.34. Thanks to @dnaldoog
 
     //==============================================================================
     // (prevent copy constructor and operator= being generated..)

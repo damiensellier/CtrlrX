@@ -195,6 +195,7 @@ class CtrlrEditor  : public AudioProcessorEditor,
     
         // Use a ScopedPointer to manage the current LookAndFeel object
         ScopedPointer<LookAndFeel> currentLookAndFeel;
+        LookAndFeel* previousGlobalLookAndFeel; // Added v5.6.34. Thanks to @dnaldoog
 };
 
 

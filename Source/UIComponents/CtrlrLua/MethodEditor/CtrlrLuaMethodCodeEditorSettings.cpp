@@ -300,27 +300,28 @@ CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
     // Now it's safe to delete the components.
     deleteAndZero(fontTest);
     
-    deleteAndZero(label0);
     deleteAndZero(fontTypeface);
     deleteAndZero(fontBold);
     deleteAndZero(fontItalic);
     deleteAndZero(resetToPreviousButton);
     deleteAndZero(fontSize);
     
-    deleteAndZero(label1);
+	// Useless for labels since the scopedPointer handles it.
+	// deleteAndZero(label0);
+    // deleteAndZero(label1);
+	// deleteAndZero(label2);
+    // deleteAndZero(label3);
+	// deleteAndZero(syntaxLabel);
+	
     deleteAndZero(bgColour);
-    deleteAndZero(label2);
     deleteAndZero(lineNumbersBgColour);
-    deleteAndZero(label3);
     deleteAndZero(lineNumbersColour);
     
-    deleteAndZero(syntaxLabel);
     deleteAndZero(syntaxTokenType);
     deleteAndZero(syntaxTokenColor);
     
     deleteAndZero(openSearchTabs);
     deleteAndZero(resetButton);
-	// deleteAndZero(cancelButton);
     deleteAndZero(applyButton);
 }
 

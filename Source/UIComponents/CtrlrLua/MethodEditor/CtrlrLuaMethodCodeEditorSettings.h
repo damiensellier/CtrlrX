@@ -80,7 +80,6 @@ private:
     int sampleWidth;
     int sampleHeight;
 	
-    Label* label0;
     ComboBox* fontTypeface;
     ColourComboBox* bgColour;
     ColourComboBox* lineNumbersBgColour;
@@ -95,10 +94,11 @@ private:
     TextButton* resetButton;
     TextButton* resetToPreviousButton;
     Slider* fontSize;
-    Label* label1;
-    Label* label2;
-    Label* label3;
-    Label* syntaxLabel;
+	ScopedPointer<Label> label0; // Updated v5.6.34. Thanks to @dnaldoog
+    ScopedPointer<Label> label1; // Updated v5.6.34. Thanks to @dnaldoog
+    ScopedPointer<Label> label2; // Updated v5.6.34. Thanks to @dnaldoog
+    ScopedPointer<Label> label3; // Updated v5.6.34. Thanks to @dnaldoog
+    ScopedPointer<Label> syntaxLabel; // Updated v5.6.34. Thanks to @dnaldoog
     CodeEditorComponent* fontTest;
 
     static CodeEditorComponent::ColourScheme& getSharedScheme();
