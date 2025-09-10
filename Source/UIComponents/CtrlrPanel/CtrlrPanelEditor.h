@@ -52,6 +52,10 @@ class CtrlrPanelEditor  :	public Component,
 	public:
 		CtrlrPanelEditor (CtrlrPanel &_owner, CtrlrManager &_ctrlrManager, const String &panelName);
 		~CtrlrPanelEditor();
+    
+        // Use the JUCE_DECLARE_WEAK_REFERENCEABLE macro for safe weak pointers
+        JUCE_DECLARE_WEAK_REFERENCEABLE(CtrlrPanelEditor)
+    
 		enum BackgroundImageLayout
 		{
 			Stretched,
@@ -109,39 +113,40 @@ class CtrlrPanelEditor  :	public Component,
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrPanelEditor)
 
 	private:
+        // Declare the LookAndFeel pointer first to ensure it is destroyed last
+        std::unique_ptr<juce::LookAndFeel> lookAndFeel;
+    
+        // Old way
+        // CtrlrPanelProperties* ctrlrPanelProperties;
+        // StretchableLayoutResizerBar* spacerComponent;
+        // CtrlrPanelViewport* ctrlrPanelViewport;
+    
+        // New way. Use ScopedPointers to handle the objects for improved deletion.
+        ScopedPointer <CtrlrComponentSelection> ctrlrComponentSelection;
+        ScopedPointer<CtrlrPanelProperties> ctrlrPanelProperties;
+        ScopedPointer<StretchableLayoutResizerBar> spacerComponent;
+        ScopedPointer<CtrlrPanelViewport> ctrlrPanelViewport;
         ScopedPointer <CtrlrPanelNotifier> ctrlrPanelNotifier;  // Added back v5.6.31 for file management bottom notification bar
+    
 		ComponentAnimator componentAnimator;
 		CtrlrPanel &owner;
         double canvasHeight;
         double canvasWidth;
         double canvasAspectRatio;
-		ScopedPointer <CtrlrComponentSelection> ctrlrComponentSelection;
 		StretchableLayoutManager layoutManager;
 		bool lastEditMode, currentRestoreState;
 		CtrlrManager &ctrlrManager;
 		ValueTree panelEditorTree;
-		friend class WeakReference<CtrlrPanelEditor>;
-		WeakReference <CtrlrPanelEditor>::Master masterReference;
-		WeakReference <CtrlrLuaMethod>
-        resizedEditorCbk,
-        resizedCbk;
-
-        // Old way
-        // CtrlrPanelProperties* ctrlrPanelProperties;
-        // StretchableLayoutResizerBar* spacerComponent;
-        // CtrlrPanelViewport* ctrlrPanelViewport;
+    
+        // The macro JUCE_DECLARE_WEAK_REFERENCEABLE(CtrlrPanelEditor)
+        // already handles the weak reference master.
+        // The following lines are redundant and should be removed from your code.
+        // friend class juce::WeakReference<CtrlrPanelEditor>;
+        // juce::WeakReference<CtrlrPanelEditor>::Master masterReference;
         
-        // New way
-        ScopedPointer<CtrlrPanelProperties> ctrlrPanelProperties;
-        ScopedPointer<StretchableLayoutResizerBar> spacerComponent;
-        ScopedPointer<CtrlrPanelViewport> ctrlrPanelViewport;
-        
+        juce::WeakReference<CtrlrLuaMethod> resizedEditorCbk, resizedCbk;
+    
         WeakReference<CtrlrNotificationCallback> notificationCallback;
         Component* editorComponentsInEditMode[3];
         Component* editorComponents[2];
-        std::unique_ptr<LookAndFeel> lookAndFeel;
-        
-        // juce::LookAndFeel* previousGlobalLookAndFeel; // Added v5.6.34. Thanks to @dnaldoog
-        
-        // ScopedPointer<LookAndFeel_V4> lfv4; // Related to the WIN crash on LnF switch
 };

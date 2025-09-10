@@ -274,9 +274,9 @@ CtrlrPanelEditor::~CtrlrPanelEditor()
     // This is important: JUCE's default look and feel can also be a source of leaks if not managed
     juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
 
-    // This is a good sign that masterReference is being cleared,
-    // which should help prevent some leaks.
-    masterReference.clear();
+	// USELESS : because JUCE_DECLARE_WEAK_REFERENCEABLE macro is in the header already.
+	// It automatically handles the weak reference master
+	// masterReference.clear();
     
     // The ScopedPointers will now automatically delete the components they own
     // (ctrlrPanelViewport, ctrlrPanelProperties, spacerComponent, ctrlrPanelNotifier).
