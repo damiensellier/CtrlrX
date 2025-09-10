@@ -19,6 +19,10 @@
 #include "CtrlrComponents/CtrlrComponent.h"
 
 
+//--------------------------------------------------------------------------------------------------
+// CtrlrPanelNotifier
+//--------------------------------------------------------------------------------------------------
+
 CtrlrPanelNotifier::CtrlrPanelNotifier(CtrlrPanelEditor &_owner) // Added back v5.6.31 for file management bottom notification bar
     : owner(_owner), background(Colours::lightgrey)
 {
@@ -34,8 +38,8 @@ CtrlrPanelNotifier::CtrlrPanelNotifier(CtrlrPanelEditor &_owner) // Added back v
 CtrlrPanelNotifier::~CtrlrPanelNotifier() // Added v5.6.34. Thanks to @dnaldoog
 {
 	// The ScopedPointer 'text' will be automatically cleaned up.
-    // No manual cleanup is needed.
-	// text = nullptr; // Force ScopedPointer cleanup
+	// No manual cleanup is needed. But...
+	text = nullptr; // Force ScopedPointer cleanup
 }
 
 void CtrlrPanelNotifier::paint (Graphics &g) // Added back v5.6.31 for file management bottom notification bar
@@ -77,29 +81,34 @@ Colour CtrlrPanelNotifier::getBackgroundColourForNotification(const CtrlrNotific
     return (Colours::lightgrey);
 }
 
+//--------------------------------------------------------------------------------------------------
+// CtrlrPanelEditor
+//--------------------------------------------------------------------------------------------------
 
-
-CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManager, const String &panelName)
-        : Component(L"Ctrlr Panel Editor"),
-          lastEditMode(true),
-          ctrlrManager(_ctrlrManager),
-          owner(_owner),
-          panelEditorTree(Ids::uiPanelEditor),
-          ctrlrComponentSelection(nullptr),
-          ctrlrPanelProperties(nullptr),
-          spacerComponent(nullptr),
-          lookAndFeel(nullptr), // Added v5.6.34. Thanks to @dnaldoog
-          previousGlobalLookAndFeel(nullptr) // Added v5.6.34. Thanks to @dnaldoog
-{   
-	previousGlobalLookAndFeel = &LookAndFeel::getDefaultLookAndFeel(); // Added v5.6.34. Thanks to @dnaldoog
-	ctrlrComponentSelection = new CtrlrComponentSelection(*this);
-    //removeColour(TooltipWindow::textColourId);
+CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManager, const juce::String &panelName)
+    : juce::Component(L"Ctrlr Panel Editor"),
+    lastEditMode(true),
+    ctrlrManager(_ctrlrManager),
+    owner(_owner),
+    panelEditorTree(Ids::uiPanelEditor),
+    currentRestoreState(true),
+    canvasWidth(0),
+    canvasHeight(0)
+{
+    ctrlrComponentSelection.reset(new CtrlrComponentSelection(*this));
     
-    addAndMakeVisible(ctrlrPanelViewport = new CtrlrPanelViewport(*this));
-    addAndMakeVisible(ctrlrPanelProperties = new CtrlrPanelProperties(*this));
-    addAndMakeVisible(spacerComponent = new StretchableLayoutResizerBar(&layoutManager, 1, true));
-    addAndMakeVisible (ctrlrPanelNotifier = new CtrlrPanelNotifier(*this));  // Added back v5.6.31 for file management bottom notification bar
+    // Corrected to use the proper syntax for ScopedPointers
+    ctrlrPanelViewport = new CtrlrPanelViewport(*this);
+    ctrlrPanelProperties = new CtrlrPanelProperties(*this);
+    spacerComponent = new juce::StretchableLayoutResizerBar(&layoutManager, 1, true);
     
+    addAndMakeVisible(ctrlrPanelViewport);
+    addAndMakeVisible(ctrlrPanelProperties);
+    addAndMakeVisible(spacerComponent);
+    
+	// Added back v5.6.31 for file management bottom notification bar
+    addAndMakeVisible(ctrlrPanelNotifier = new CtrlrPanelNotifier(*this));
+	
     ctrlrPanelNotifier->setAlwaysOnTop (true);  // Added back v5.6.31 for file management bottom notification bar
     ctrlrPanelNotifier->setVisible (false);  // Added back v5.6.31 for file management bottom notification bar
     //componentAnimator.addChangeListener (this); // Added back v5.6.31 not working
@@ -243,36 +252,34 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
 
 CtrlrPanelEditor::~CtrlrPanelEditor()
 {
-    // 1. Detach from specific components
+    // Check if the component selection object is valid before trying to use it
+    if (ctrlrComponentSelection)
+    {
+        // Remove the listener before the objects are destroyed
+        ctrlrComponentSelection->removeChangeListener(ctrlrPanelProperties.get());
+    }
+
+    getPanelEditorTree().removeListener(this);
+    owner.getPanelTree().removeListener(this);
+    owner.getPanelTree().removeChild(getPanelEditorTree(), 0);
+
+    componentAnimator.removeChangeListener(this);
+    
+    // Set look and feel to null to clean up
     setLookAndFeel(nullptr);
     if (getCanvas())
     {
         getCanvas()->setLookAndFeel(nullptr);
     }
+    // This is important: JUCE's default look and feel can also be a source of leaks if not managed
+    juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
 
-    // 2. Restore the previous global LookAndFeel to the default
-    //    This is safe because we're not using a dangling pointer.
-	//
-	// NOTE : I removed the condition : if (previousGlobalLookAndFeel != nullptr).
-	// It now doesn't rely on the value of a potentially dangerous raw pointer.
-	// Instead, it uses a safe and guaranteed way to revert to JUCE's default LookAndFeel.
-	// This completely avoids the possibility of a dangling pointer and the resulting crash.
-	
-    LookAndFeel::setDefaultLookAndFeel(nullptr);
-
-	// 3. Continue with cleanup
-	componentAnimator.removeChangeListener (this); // !!!MANDATORY!!! Updated v5.6.34. NOW WORKING with ChangeListener added as class member in the .h file . Was NOT WORKING in 5.6.31. Added back v5.6.31 for file management bottom notification bar.
-    getPanelEditorTree().removeListener(this);
-    owner.getPanelTree().removeListener(this);
-    owner.getPanelTree().removeChild(getPanelEditorTree(), 0);
-    ctrlrComponentSelection->removeChangeListener(ctrlrPanelProperties);
+    // This is a good sign that masterReference is being cleared,
+    // which should help prevent some leaks.
     masterReference.clear();
     
-    // 4. Clean up raw pointers.
-    //    It is highly recommended to change these to ScopedPointer/unique_ptr.
-	deleteAndZero(ctrlrPanelProperties);
-    deleteAndZero(spacerComponent);
-    deleteAndZero(ctrlrPanelViewport);
+    // The ScopedPointers will now automatically delete the components they own
+    // (ctrlrPanelViewport, ctrlrPanelProperties, spacerComponent, ctrlrPanelNotifier).
 }
 
 void CtrlrPanelEditor::visibilityChanged()

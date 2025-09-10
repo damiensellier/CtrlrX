@@ -33,11 +33,12 @@ class CtrlrPanelNotifier : public Component
         Colour getBackgroundColourForNotification(const CtrlrNotificationType ctrlrNotificationType);
         void mouseDown (const MouseEvent &e);
 
-        JUCE_LEAK_DETECTOR(CtrlrPanelNotifier)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrPanelNotifier)
 
-    private:
-        Colour background;
-        ScopedPointer <Label> text;
+private:
+        juce::Colour background;
+        // Corrected to use a ScopedPointer for proper memory management.
+        juce::ScopedPointer <juce::Label> text;
         CtrlrPanelEditor &owner;
 };
 
@@ -126,21 +127,21 @@ class CtrlrPanelEditor  :	public Component,
         resizedCbk;
 
         // Old way
-        CtrlrPanelProperties* ctrlrPanelProperties;
-        StretchableLayoutResizerBar* spacerComponent;
-        CtrlrPanelViewport* ctrlrPanelViewport;
+        // CtrlrPanelProperties* ctrlrPanelProperties;
+        // StretchableLayoutResizerBar* spacerComponent;
+        // CtrlrPanelViewport* ctrlrPanelViewport;
         
         // New way
-        // ScopedPointer<CtrlrPanelProperties> ctrlrPanelProperties;
-        // ScopedPointer<StretchableLayoutResizerBar> spacerComponent;
-        // ScopedPointer<CtrlrPanelViewport> ctrlrPanelViewport;
+        ScopedPointer<CtrlrPanelProperties> ctrlrPanelProperties;
+        ScopedPointer<StretchableLayoutResizerBar> spacerComponent;
+        ScopedPointer<CtrlrPanelViewport> ctrlrPanelViewport;
         
         WeakReference<CtrlrNotificationCallback> notificationCallback;
         Component* editorComponentsInEditMode[3];
         Component* editorComponents[2];
         std::unique_ptr<LookAndFeel> lookAndFeel;
         
-        juce::LookAndFeel* previousGlobalLookAndFeel; // Added v5.6.34. Thanks to @dnaldoog
+        // juce::LookAndFeel* previousGlobalLookAndFeel; // Added v5.6.34. Thanks to @dnaldoog
         
         // ScopedPointer<LookAndFeel_V4> lfv4; // Related to the WIN crash on LnF switch
 };
