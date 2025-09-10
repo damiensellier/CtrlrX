@@ -23,8 +23,8 @@ CtrlrEditor::CtrlrEditor (CtrlrProcessor *_ownerFilter, CtrlrManager &_owner)
     currentLookAndFeel = new LookAndFeel_V4(juce::LookAndFeel_V4::getLightColourScheme());
     setLookAndFeel(currentLookAndFeel); // Set the editor's LookAndFeel initially
 
-	menuBar = new MenuBarComponent(this);
-    addAndMakeVisible(menuBar);
+    menuBar = new MenuBarComponent(this); // Added v5.6.34
+    addAndMakeVisible(menuBar); // Added v5.6.34
 	
 	Rectangle<int> editorRect;
     // http://www.juce.com/forum/topic/applicationcommandmanager-menus-not-active-annoyance#new

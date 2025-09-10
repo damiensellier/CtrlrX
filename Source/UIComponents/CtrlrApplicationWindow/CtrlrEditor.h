@@ -169,12 +169,12 @@ class CtrlrEditor  : public AudioProcessorEditor,
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrEditor)
 
 	private:
-        // Use a ScopedPointer to manage the menuBar object
-        juce::ScopedPointer<juce::MenuBarComponent> menuBar;
-        // MenuBarComponent *menuBar; // Updated v5.6.34. ScopedPointed will handle its destruction properly
-    
-        // Use a ScopedPointer to manage the current LookAndFeel object
-        ScopedPointer<LookAndFeel> currentLookAndFeel; // Updated v5.6.34. ScopedPointed will handle its destruction properly
+		// Use a ScopedPointer to manage the menuBar object
+		juce::ScopedPointer<juce::MenuBarComponent> menuBar;
+		// MenuBarComponent *menuBar; // Updated v5.6.34. ScopedPointed will handle its destruction properly
+		
+		// Use a ScopedPointer to manage the current LookAndFeel object
+		ScopedPointer<LookAndFeel> currentLookAndFeel; // Updated v5.6.34. ScopedPointed will handle its destruction properly
     
 		bool menuHandlerCalled;
 		TooltipWindow tooltipWindow;
@@ -191,19 +191,18 @@ class CtrlrEditor  : public AudioProcessorEditor,
 		bool hideMidiThruMenu = false;
 		bool hideMidiChannelMenu = false;
     
-        bool vpResizable;
-        double vpFixedAspectRatio;
-        bool vpEnableFixedAspectRatio;
-        bool vpEnableResizableLimits;
-        int vpMinWidth;
-        int vpMinHeight;
-        int vpMaxWidth;
-        int vpMaxHeight;
-        int panelCanvasHeight;
-        int panelCanvasWidth;
-        double vpStandaloneAspectRatio;
-        bool vpMenuBarVisible;
+		bool vpResizable;
+		double vpFixedAspectRatio;
+		bool vpEnableFixedAspectRatio;
+		bool vpEnableResizableLimits;
+		int vpMinWidth;
+		int vpMinHeight;
+		int vpMaxWidth;
+		int vpMaxHeight;
+		int panelCanvasHeight;
+		int panelCanvasWidth;
+		double vpStandaloneAspectRatio;
+		bool vpMenuBarVisible;
 };
-
 
 #endif
