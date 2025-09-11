@@ -207,7 +207,7 @@ void CtrlrPanelModulatorList::paintRowBackground (Graphics& g, int rowNumber, in
 	if (rowIsSelected)
 	{
 		gui::drawSelectionRectangle (g, width, height);
-        g.fillAll(Colours::red);
+		g.fillAll(Component::findColour(TextButton::buttonOnColourId).brighter(0.6f)); // Updated v5.6.34. Was (Colours::red)
 	}
 }
 
