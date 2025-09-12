@@ -52,22 +52,36 @@ CtrlrFixedSlider::CtrlrFixedSlider (CtrlrModulator &owner)
     setProperty (Ids::uiFixedSliderContent, "");
     
     setProperty (Ids::uiSliderLookAndFeel, "Default");
-     setProperty (Ids::uiSliderLookAndFeelIsCustom, false);
+    setProperty (Ids::uiSliderLookAndFeelIsCustom, false);
      
-     setProperty (Ids::uiSliderPopupBubble, false);
+    setProperty (Ids::uiSliderPopupBubble, false);
      
-     setProperty (Ids::uiSliderStyle, "RotaryVerticalDrag");
+    setProperty (Ids::uiSliderStyle, "RotaryVerticalDrag");
     
-     bool LegacyMode = owner.getOwnerPanel().getEditor()->getProperty(Ids::uiPanelLegacyMode);  // Legacy mode flag for version before 5.6.29
-     if (LegacyMode)
-     {
-         setLookAndFeel(new LookAndFeel_V3());
-         setProperty(Ids::uiSliderLookAndFeel, "V3");
-     }
-    
-    if ( owner.getOwnerPanel().getEditor()->getProperty(Ids::uiPanelLookAndFeel) == "V3"
-        || owner.getOwnerPanel().getEditor()->getProperty(Ids::uiPanelLookAndFeel) == "V2"
-        || owner.getOwnerPanel().getEditor()->getProperty(Ids::uiPanelLookAndFeel) == "V1" )
+    bool LegacyMode = owner.getOwnerPanel().getEditor()->getProperty(Ids::uiPanelLegacyMode);  // Legacy mode flag for version before 5.6.29
+	String panelLnF = owner.getOwnerPanel().getEditor()->getProperty(Ids::uiPanelLookAndFeel);
+	
+	if (LegacyMode || panelLnF == "V3") // Added v5.6.34. Not really good because it will create a new LnF but won't destroy it so it will lead to memory leaks
+	{
+		setLookAndFeel(new LookAndFeel_V3());
+		setProperty(Ids::uiSliderLookAndFeel, "V3");
+	}
+	
+	else if (panelLnF == "V2") // Added v5.6.34. Not really good because it will create a new LnF but won't destroy it so it will lead to memory leaks
+	{
+		setLookAndFeel(new LookAndFeel_V2());
+		setProperty(Ids::uiSliderLookAndFeel, "V2");
+	}
+	
+	else if (panelLnF == "V1") // Added v5.6.34. Not really good because it will create a new LnF but won't destroy it so it will lead to memory leaks
+	{
+		setLookAndFeel(new LookAndFeel_V1());
+		setProperty(Ids::uiSliderLookAndFeel, "V1");
+	}
+	
+	if ( panelLnF == "V3"
+		|| panelLnF == "V2"
+		|| panelLnF == "V1" )
     {
         setSize (64, 64);
         setProperty (Ids::uiSliderRotaryOutlineColour, "0xff0000ff");  // 0xff0000ff
