@@ -8,7 +8,7 @@
 #include "CtrlrPanel/CtrlrPanelEditorIcons.h" // Added v5.6.34.
 #include <juce_graphics/juce_graphics.h>
 #include <juce_gui_basics/juce_gui_basics.h>
-#include "Ctrlrlog.h"
+#include "CtrlrLog.h" // Case sensitive on LINUX
 
 #include <functional>
 
