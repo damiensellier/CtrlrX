@@ -70,42 +70,16 @@ IPCH/                     # Precompiled header cache directory
 *.sdf                     # IntelliSense database
 *.tlog                    # Build log files
 
-# Xcode Specific Ignores (tuned for your Builds folder structure)
-Builds/                   # Ignore the entire Builds folder by default (where binaries go)
+# Builds Specific Ignores
+# Ignore the entire Builds folder
+Builds/
+Builds/MacOSX/
+Builds/VisualStudio2017/
+Builds/VisualStudio2019/
+Builds/VisualStudio2022/
 
-# EXCEPTIONS: Do NOT ignore the essential Xcode project and workspace files themselves
-# These contain your project's structure and settings and MUST be tracked.
-# Unignore the project bundle directory itself (e.g., Builds/MacOS/MyProject.xcodeproj/)
-!Builds/*/*.xcodeproj/
-# Unignore the workspace bundle directory itself (e.g., Builds/MacOS/MyWorkspace.xcworkspace/)
-!Builds/*/*.xcworkspace/
-
-# Now, re-ignore common Xcode generated files *within* the project/workspace bundles
-Builds/*/*.xcodeproj/xcuserdata/
-Builds/*/*.xcodeproj/DerivedData/
-Builds/*/*.xcodeproj/UserInterfaceState.xcuserstate
-Builds/*/*.xcworkspace/xcuserdata/
-Builds/*/*.xcworkspace/DerivedData/
-Builds/*/*.xcworkspace/UserInterfaceState.xcuserstate
-Builds/*/*.xcodeproj/project.xcworkspace/xcuserdata/ # For nested workspaces
-
-# Explicitly ensure the core project definition files are NOT ignored
-!Builds/*/*.xcodeproj/project.pbxproj
-# Explicitly ensure the core workspace definition file is NOT ignored
-!Builds/*/*.xcworkspace/contents.xcworkspacedata
-# Explicitly ensure shared workspace data is NOT ignored (e.g., shared schemes)
-!Builds/*/*.xcworkspace/xcshareddata/
-
-# Linux Makefile/Autotools
-*.mk                      # Generated Makefiles (if your Makefiles are generated, ignore them)
-# !Makefile               # If your root Makefile is hand-written and needs to be tracked, uncomment this!
-*.in                      # Autoconf input files (if generated)
-configure                 # Autotools configure script (if generated)
-config.status             # Autotools config status
-config.log                # Autotools config log
-autom4te.cache/           # Autotools cache
-libtool                   # Libtool script
-tags                      # Ctags output
+# EXCEPTION: Unignore the LinuxMakefile subfolder and all its contents
+!Builds/LinuxMakefile/
 
 # Juce Specific
 # JuceLibraryCode/ (Commented out - these files MUST be tracked for CI/CD)
@@ -121,5 +95,11 @@ Source/Misc/boost/
 # Other project-specific ignores
 Panels/                   # Ignore the Panels directory and its contents
 # /Panels                 # If 'Panels' can also exist as a file in root and needs ignoring, use this
-Source/Misc/boost/boost.zip
+
+# Steinberg VST2 SDK ignores
 Source/Misc/vst2sdk/
+
+# macOS Specific Files
+.DS_Store                 # macOS directory metadata
+Builds/MacOSX/build/Release/libCtrlrX.a
+Builds/MacOSX/CtrlrX.xcodeproj/project.xcworkspace/xcuserdata/DYREC.xcuserdatad/UserInterfaceState.xcuserstate

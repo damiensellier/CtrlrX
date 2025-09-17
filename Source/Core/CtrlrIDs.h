@@ -63,6 +63,8 @@ namespace Ids
     DECLARE_ID (modulatorCustomName);
     
     DECLARE_ID (uiPanelViewPortBackgroundColour);
+	
+    DECLARE_ID (uiPanelCanvasLayerIsIsolated); // Added v5.6.34
     
     DECLARE_ID (uiPanelImageAlpha);
     DECLARE_ID (uiPanelImageLayout);
@@ -842,6 +844,7 @@ namespace Ids
     DECLARE_ID (luaMethodEditorBgColour);
     DECLARE_ID (luaMethodEditorLineNumbersBgColour); // Added v5.6.31
     DECLARE_ID (luaMethodEditorLineNumbersColour); // Added v5.6.31
+	DECLARE_ID (luaMethodEditorFontColour); // Added v5.6.34. Editor font colour
     DECLARE_ID (luaMethodGroup);
     DECLARE_ID (luaMethodCode);
     DECLARE_ID (luaMethodSource);
@@ -850,6 +853,8 @@ namespace Ids
     DECLARE_ID (luaMethod);
     DECLARE_ID (luaManager);
     DECLARE_ID (luaMethodValid);
+    
+    DECLARE_ID (openSearchTabsState); // Added v5.6.34
     
     DECLARE_ID (luaModulatorValueChange);
     DECLARE_ID (luaModulatorComponentChange);

@@ -26,6 +26,7 @@ const Result CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bo
     }
     
     File me = File::getSpecialLocation(File::currentApplicationFile);
+    String fileExtension = me.getFileExtension();
     File newMe;
     MemoryBlock panelExportData, panelResourcesData;
     String error;
@@ -46,27 +47,96 @@ const Result CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bo
                                || typeOS == juce::SystemStats::OperatingSystemType::MacOS_11 //  For macOS BigSur
                                || typeOS == juce::SystemStats::OperatingSystemType::MacOS_12 //  For macOS Monterey
                                );
-
-    File defaultDirectory = me.getParentDirectory().getChildFile(File::createLegalFileName(panelToWrite->getProperty(Ids::name))).withFileExtension(me.getFileExtension());
     
-    fc = std::make_unique<FileChooser> (CTRLR_NEW_INSTANCE_DIALOG_TITLE,
-                                            me.getParentDirectory().getChildFile(File::createLegalFileName(panelToWrite->getProperty(Ids::name))).withFileExtension(me.getFileExtension()),
-                                            me.getFileExtension(),
-                                            nativeFileChooser); // panelToWrite->getOwner().getProperty(Ids::ctrlrNativeFileDialogs)); // if vst3, won't work since there's no ctrlr.settings
+    // Get the parent directory of the currently running application.
+    File fcInitialDirectory;
+    
+    // Output the extension type of the exporter instance to the debug log.
+    std::cout << "CtrlrX source fileExtension is : " << fileExtension << std::endl;
+    logger.log("CtrlrX source fileExtension is :" + fileExtension);
+    
+    
+    // Step 1: Determine the primary target folder based on application type.
+    if (fileExtension == ".vst3" || fileExtension == ".vst" || fileExtension == ".component" || fileExtension == ".aaxplugin")
+    {
+        // Since `me` is the plugin bundle itself, the parent directory is the correct target folder.
+        fcInitialDirectory = me.getParentDirectory();
+    } else {
+        // For a standalone app, the most user-friendly export location is the Applications folder.
+        fcInitialDirectory = File::getSpecialLocation(File::globalApplicationsDirectory);
+    }
+    
+    // Load the last saved directory as a fallback.
+    File panelLastSaveDir = File(owner.getProperty(Ids::panelLastSaveDir));
+    
+    // Step 2 & 3: Check if the primary folder is writable. If not, check the fallback directory.
+    if (!fcInitialDirectory.isDirectory() || !fcInitialDirectory.hasWriteAccess()) {
+        std::cout << "Primary target folder is not writable: " << fcInitialDirectory.getFullPathName() << std::endl;
+        logger.log("Primary target folder is not writable: " + fcInitialDirectory.getFullPathName());
+        
+        if (panelLastSaveDir.exists() && panelLastSaveDir.isDirectory() && panelLastSaveDir.hasWriteAccess()) {
+            fcInitialDirectory = panelLastSaveDir; // The last folder the user saved a panel to.
+            std::cout << "Falling back to last saved directory: " << fcInitialDirectory.getFullPathName() << std::endl;
+            logger.log("Falling back to last saved directory: " + fcInitialDirectory.getFullPathName());
+        } else {
+            // Step 4: Final fallback to the user's desktop.
+            fcInitialDirectory = File::getSpecialLocation(File::userDesktopDirectory);
+            std::cout << "Falling back to user's desktop." << std::endl;
+            logger.log("Falling back to user's desktop.");
+        }
+    }
+    
+    // Now, create the FileChooser with the determined initial directory.
+    fc = std::make_unique<FileChooser>(CTRLR_NEW_INSTANCE_DIALOG_TITLE,
+                                       fcInitialDirectory,
+                                       me.getFileExtension(),
+                                       nativeFileChooser); // panelToWrite->getOwner().getProperty(Ids::ctrlrNativeFileDialogs)); // if vst3, this won't work since there's no ctrlr.settings
     
     // Launch FileChooser to export file and define the new output file name and extension
     // browseForFileToSave(true) to show "cancel | Save" instead of "Cancel | Open" buttons won't work. It will show a filename box (we don't want that) and will force to save a the file with doubled extension such as filename.vst3..vst3
     if (fc->browseForDirectory()) {
         newMe = fc->getResult().getChildFile(File::createLegalFileName(panelToWrite->getProperty(Ids::name).toString() + me.getFileExtension()));
+        
+        // Check if the file already exists and ask for confirmation before overwriting
+        if (newMe.exists()) {
+            // Pass "Cancel" as the first button and "Overwrite" as the second.
+            // This displays them correctly for macOS UI standards.
+            bool overwriteCancelled = AlertWindow::showOkCancelBox(
+                                                                   AlertWindow::QuestionIcon,
+                                                                   "File Already Exists",
+                                                                   "\"" + newMe.getFileName() + "\" already exists. Do you want to overwrite it?",
+                                                                   "Cancel",    // <-- This is the first button, returning true
+                                                                   "Overwrite", // <-- This is the second button, returning false
+                                                                   nullptr
+                                                                   );
+            
+            // The showOkCancelBox returns true for the first button ("Cancel")
+            // and false for the second button ("Overwrite").
+            // So, if the user clicked "Cancel", overwriteCancelled will be true.
+            if (overwriteCancelled) {
+                logger.log("MAC native, user cancelled the overwrite operation.");
+                return Result::fail("User cancelled the export operation.");
+            }
+            
+            // If the user clicked "Overwrite", the condition above is false,
+            // and the code continues here.
+            
+            // First, delete the existing bundle.
+            logger.log("MAC native, attempting to delete existing bundle at: " + newMe.getFullPathName());
+            if (!newMe.deleteRecursively()) {
+                return (Result::fail("MAC native, failed to delete existing bundle at: " + newMe.getFullPathName()));
+            }
+        }
+        
         if (!me.copyDirectoryTo(newMe)) {
             return (Result::fail("MAC native, copyDirectoryTo from \"" + me.getFullPathName() + "\" to \"" + newMe.getFullPathName() + "\" failed"));
             logger.log("MAC native, copyDirectoryTo from \"" + me.getFullPathName() + "\" to \"" + newMe.getFullPathName() + "\" failed");
         }
+        
     } else {
-        return (Result::fail("MAC native, browse for directory dialog failed"));
-        logger.log("MAC native, browse for directory dialog failed");
+        return (Result::fail("User cancelled the export operation."));
+        logger.log("MAC native, browse for directory dialog was cancelled by user.");
     }
-    
     
     Result res = setBundleInfo(panelToWrite, newMe); // Bundle Info
     if (!res.wasOk())
@@ -85,9 +155,6 @@ const Result CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bo
         File resourcesFile = newMe.getChildFile("Contents/Resources/" + String(CTRLR_MAC_RESOURCES_FILE));
         File fileEncrypted = newMe.getChildFile("Contents/Resources/"+String(CTRLR_MAC_PANEL_FILE)+String("BF")); // Added v5.6.31
         File executableFile = me.getChildFile("Contents/MacOS/CtrlrX");
-        String fileExtension = me.getFileExtension();
-        std::cout << "CtrlrX source fileExtension is : " << fileExtension << std::endl;
-        logger.log("CtrlrX source fileExtension is :" + fileExtension);
         
         if (panelFile.create() && panelFile.hasWriteAccess()){ // Panel File
             if (!panelFile.replaceWithData(panelExportData.getData(), panelExportData.getSize()))

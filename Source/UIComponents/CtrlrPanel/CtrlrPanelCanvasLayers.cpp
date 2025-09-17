@@ -84,7 +84,7 @@ bool CtrlrPanelCanvas::isLayer(Component *componentToCheck)
 	return (layers.contains((CtrlrPanelCanvasLayer*)componentToCheck));
 }
 
-/** @brief Gets a layer by it's name, if the layer is not found 0 is returned
+/** @brief Gets a layer by its name, if the layer is not found 0 is returned
 
 */
 CtrlrPanelCanvasLayer *CtrlrPanelCanvas::getLayerByName(const String &layerName)
@@ -100,7 +100,7 @@ CtrlrPanelCanvasLayer *CtrlrPanelCanvas::getLayerByName(const String &layerName)
 	return (0);
 }
 
-/** @brief Gets a layer by it's unique identifier, if the layer is not found 0 is returned
+/** @brief Gets a layer by its unique identifier, if the layer is not found 0 is returned
 
 */
 CtrlrPanelCanvasLayer *CtrlrPanelCanvas::getLayer(const String &layerUid)
@@ -269,6 +269,7 @@ void CtrlrPanelCanvas::layersChanged()
 		if ((bool)layers[i]->getProperty (Ids::uiPanelCanvasLayerVisibility) == true)
 		{
 			addAndMakeVisible (layers[i]);
+			layers[i]->setVisible((bool)layers[i]->getProperty(Ids::uiPanelCanvasLayerVisibility)); // Updated v5.6.34. Thanks to @dnaldoog
 		}
 			else
 		{
@@ -307,4 +308,13 @@ void CtrlrPanelCanvas::editModeChanged(const bool isEditMode)
 			layers[i]->setInterceptsMouseClicks (false, true);
 		}
 	}
+}
+
+void CtrlrPanelCanvasLayer::setVisible(bool shouldBeVisible) // Added v5.5.34. Thanks to @dnaldoog
+{
+	// Update the ValueTree property
+	setProperty(Ids::uiPanelCanvasLayerVisibility, shouldBeVisible);
+
+	// Call the base class method to change visibility of the component itself
+	Component::setVisible(shouldBeVisible);
 }

@@ -17,6 +17,9 @@ class CtrlrEditor  : public AudioProcessorEditor,
 	public:
 		CtrlrEditor (CtrlrProcessor *ownerFilter, CtrlrManager &_owner);
 		~CtrlrEditor();
+    
+        JUCE_DECLARE_WEAK_REFERENCEABLE(CtrlrEditor) // Added v5.6.34. To replace masterReference.clear() on destruction
+        
 		enum TopMenuIDs
 		{
 			MenuFile,
@@ -119,8 +122,10 @@ class CtrlrEditor  : public AudioProcessorEditor,
 		void activeCtrlrChanged();
 		const WeakReference<CtrlrEditor>::SharedRef& getWeakReference();
 		CtrlrManager &getOwner()											{ return (owner); }
-		WeakReference<CtrlrEditor>::Master masterReference;
-		void paint (Graphics& g);
+		
+        // WeakReference<CtrlrEditor>::Master masterReference;
+		
+        void paint (Graphics& g);
 		void resized();
 		void getAllCommands (Array< CommandID > &commands);
 		void getCommandInfo (CommandID commandID, ApplicationCommandInfo &result);
@@ -159,11 +164,19 @@ class CtrlrEditor  : public AudioProcessorEditor,
         // New method to set the main LookAndFeel for the editor and its children
         void setEditorLookAndFeel (const String &lookAndFeelDesc, const juce::var& colourSchemeProperty); // Added v5.6.34
     
+        void performLuaEditorCommand(const int commandID); // Added v5.6.34. Required to add shortcuts to LUA Method Editor menu items
+    
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrEditor)
 
 	private:
+		// Use a ScopedPointer to manage the menuBar object
+		juce::ScopedPointer<juce::MenuBarComponent> menuBar;
+		// MenuBarComponent *menuBar; // Updated v5.6.34. ScopedPointed will handle its destruction properly
+		
+		// Use a ScopedPointer to manage the current LookAndFeel object
+		ScopedPointer<LookAndFeel> currentLookAndFeel; // Updated v5.6.34. ScopedPointed will handle its destruction properly
+    
 		bool menuHandlerCalled;
-		MenuBarComponent *menuBar;
 		TooltipWindow tooltipWindow;
 		CtrlrManager &owner;
 		ResizableCornerComponent resizer;
@@ -178,22 +191,18 @@ class CtrlrEditor  : public AudioProcessorEditor,
 		bool hideMidiThruMenu = false;
 		bool hideMidiChannelMenu = false;
     
-        bool vpResizable;
-        double vpFixedAspectRatio;
-        bool vpEnableFixedAspectRatio;
-        bool vpEnableResizableLimits;
-        int vpMinWidth;
-        int vpMinHeight;
-        int vpMaxWidth;
-        int vpMaxHeight;
-        int panelCanvasHeight;
-        int panelCanvasWidth;
-        double vpStandaloneAspectRatio;
-        bool vpMenuBarVisible;
-    
-        // Use a ScopedPointer to manage the current LookAndFeel object
-        ScopedPointer<LookAndFeel> currentLookAndFeel;
+		bool vpResizable;
+		double vpFixedAspectRatio;
+		bool vpEnableFixedAspectRatio;
+		bool vpEnableResizableLimits;
+		int vpMinWidth;
+		int vpMinHeight;
+		int vpMaxWidth;
+		int vpMaxHeight;
+		int panelCanvasHeight;
+		int panelCanvasWidth;
+		double vpStandaloneAspectRatio;
+		bool vpMenuBarVisible;
 };
-
 
 #endif

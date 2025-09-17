@@ -1,104 +1,120 @@
-/*
-  ==============================================================================
-
-  This is an automatically generated file created by the Jucer!
-
-  Creation date:  27 Oct 2012 8:17:44pm
-
-  Be careful when adding custom code to these files, as only the code within
-  the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
-  and re-saved.
-
-  Jucer version: 1.12
-
-  ------------------------------------------------------------------------------
-
-  The Jucer is part of the JUCE library - "Jules' Utility Class Extensions"
-  Copyright 2004-6 by Raw Material Software ltd.
-
-  ==============================================================================
-*/
-
 #ifndef __JUCER_HEADER_CTRLRLUAMETHODCODEEDITORSETTINGS_CTRLRLUAMETHODCODEEDITORSETTINGS_FC2CDFB3__
 #define __JUCER_HEADER_CTRLRLUAMETHODCODEEDITORSETTINGS_CTRLRLUAMETHODCODEEDITORSETTINGS_FC2CDFB3__
 
-//[Headers]     -- You can add your own extra header files here --
+#include "stdafx.h"
+#include "CtrlrLuaCodeTokeniser.h"
 #include "Methods/CtrlrLuaMethod.h"
 #include "CtrlrTextEditor.h"
 #include "CtrlrWindowManagers/CtrlrChildWindowContent.h"
 #include "CtrlrWindowManagers/CtrlrPanelWindowManager.h"
-#include "CtrlrLuaCodeTokeniser.h"
 #include "CtrlrPropertyEditors/CtrlrPropertyComponent.h"
+#include "CtrlrLuaMethodCodeEditorSettingsColourLnF.h"
+
 class CtrlrLuaMethodEditor;
-//[/Headers]
 
-
-
-//==============================================================================
-/**
-                                                                    //[Comments]
-    An auto-generated component, created by the Jucer.
-
-    Describe your class and how it works here!
-                                                                    //[/Comments]
-*/
 class CtrlrLuaMethodCodeEditorSettings  : public Component,
                                           public ChangeListener,
-										  public ComboBox::Listener,
-										  public Button::Listener,
-										  public Slider::Listener
+                                          public ComboBox::Listener,
+                                          public Button::Listener,
+                                          public Slider::Listener
 {
 public:
-    //==============================================================================
-    CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMethodEditor &_owner);
+
+    CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMethodEditor &_owner, juce::Value& sharedSearchTabsValue_);
     ~CtrlrLuaMethodCodeEditorSettings();
 
-    //==============================================================================
-    //[UserMethods]     -- You can add your own custom methods in this section.
-	void changeListenerCallback (ChangeBroadcaster* source);
-	const Font getFont();
-    const Colour getBgColour(); // Added v5.6.31
-    const Colour getLineNumbersBgColour(); // Added v5.6.31
-    const Colour getLineNumbersColour(); // Added v5.6.31
-    //[/UserMethods]
+    void changeListenerCallback(ChangeBroadcaster* source);
+    const Font getFont();
+    const Colour getBgColour();
+    const Colour getLineNumbersBgColour();
+    const Colour getLineNumbersColour();
 
-    void paint (Graphics& g);
+    // Moved these from local functions inside the constructor
+    void populateColourCombo(ColourComboBox* combo);
+    int findColourIndex(const Colour& colour);
+    Colour getColourFromCombo(ComboBox* combo);
+
+	void paint(Graphics& g);
     void resized();
-    void comboBoxChanged (ComboBox* comboBoxThatHasChanged);
-    void buttonClicked (Button* buttonThatWasClicked);
-    void sliderValueChanged (Slider* sliderThatWasMoved);
+    void comboBoxChanged(ComboBox* comboBoxThatHasChanged);
+    void buttonClicked(Button* buttonThatWasClicked);
+    void sliderValueChanged(Slider* sliderThatWasMoved);
+    void loadSyntaxColorsFromSettings();
+    void saveSyntaxColorsToSettings();
+    void populateSyntaxTokenCombo();
+    void updateSyntaxColors();
+    String getCurrentSelectedTokenType();
+    void populateColourComboWithThumbnails(ColourComboBox* combo);
+    void updateTokenColorDisplay(const String& tokenType);
+    void clearSyntaxColorSettings();
 
+    bool hasUnsavedChanges() const;
+    void markAsChanged();
+    void markAsSaved();
+    bool promptToSaveChanges();
+    void applySettings();
+    void closeWindow();
 
+    const char* getDefaultFont() const {
+        return defaultFont;
+    };
 
+	
 private:
-    //[UserVariables]   -- You can add your own custom variables in this section.
-	CtrlrLuaCodeTokeniser luaTokeniser;
-	CodeDocument codeDocument;
-	CtrlrLuaMethodEditor &owner;
-	Font codeFont;
-    int marginLeft; // Added v5.6.31
+	bool hasChanges;
+    static constexpr const char* defaultFont = "<Monospaced>";
+
+    struct ColourItem {
+        String name;
+        Colour colour;
+    };
+    static const ColourItem availableColours[];
+
+    CtrlrLuaCodeTokeniser luaTokeniser;
+    CodeDocument codeDocument;
+    CtrlrLuaMethodEditor& owner;
+    Font codeFont;
+	Font previousFont;
+    int marginLeft;
     int marginTop;
     int sampleWidth;
     int sampleHeight;
-    //[/UserVariables]
-
-    //==============================================================================
-    Label* label0; // Added v5.6.31
+	
     ComboBox* fontTypeface;
+    ColourComboBox* bgColour;
+    ColourComboBox* lineNumbersBgColour;
+    ColourComboBox* lineNumbersColour;
+    ComboBox* syntaxTokenType;
+    ColourComboBox* syntaxTokenColor;
     ToggleButton* fontBold;
-    ToggleButton* fontUnderline;
     ToggleButton* fontItalic;
+    ToggleButton* openSearchTabs;
+    TextButton* applyButton;
+    TextButton* cancelButton;
+    TextButton* resetButton;
+    TextButton* resetToPreviousButton;
     Slider* fontSize;
-    Label* label1; // Added v5.6.31
-    CtrlrColourEditorComponent* bgColour;
-    Label* label2; // Added v5.6.31
-    CtrlrColourEditorComponent* lineNumbersBgColour; // Added v5.6.31
-    Label* label3; // Added v5.6.31
-    CtrlrColourEditorComponent* lineNumbersColour; // Added v5.6.31
+    ScopedPointer<Label> label0; // Updated v5.6.34. Thanks to @dnaldoog
+    ScopedPointer<Label> label1; // Updated v5.6.34. Thanks to @dnaldoog
+    ScopedPointer<Label> label2; // Updated v5.6.34. Thanks to @dnaldoog
+    ScopedPointer<Label> label3; // Updated v5.6.34. Thanks to @dnaldoog
+    ScopedPointer<Label> syntaxLabel; // Updated v5.6.34. Thanks to @dnaldoog
     CodeEditorComponent* fontTest;
 
-    //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrLuaMethodCodeEditorSettings);
+    static CodeEditorComponent::ColourScheme& getSharedScheme();
+    HashMap<String, Colour> customSyntaxColors;
+
+    Font originalFont;
+    Colour originalBgColour;
+    Colour originalLineNumbersBgColour;
+    Colour originalLineNumbersColour;
+    HashMap<String, Colour> originalSyntaxColors;
+    bool originalOpenSearchTabs;
+
+
+    juce::Value& sharedSearchTabsValue;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrLuaMethodCodeEditorSettings);
 };
 
 

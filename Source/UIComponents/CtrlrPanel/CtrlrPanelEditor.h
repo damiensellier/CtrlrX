@@ -20,24 +20,25 @@ class CtrlrLuaMethod;
 class CtrlrPanelEditor;
 
 
-class CtrlrPanelNotifier : public Component,
-                           public LookAndFeel_V4
+class CtrlrPanelNotifier : public Component
+						   // , public LookAndFeel_V4
                              // Added back v5.6.31 for file management bottom notification bar
 {
     public:
         CtrlrPanelNotifier(CtrlrPanelEditor &_owner);
-        ~CtrlrPanelNotifier() {}
+        ~CtrlrPanelNotifier(); // Updated v5.6.34. Thanks to @dnaldoog
         void paint (Graphics &g);
         void resized();
         void setNotification (const String &notification, const CtrlrNotificationType ctrlrNotificationType);
         Colour getBackgroundColourForNotification(const CtrlrNotificationType ctrlrNotificationType);
         void mouseDown (const MouseEvent &e);
 
-        JUCE_LEAK_DETECTOR(CtrlrPanelNotifier)
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrPanelNotifier)
 
-    private:
-        Colour background;
-        ScopedPointer <Label> text;
+private:
+        juce::Colour background;
+        // Corrected to use a ScopedPointer for proper memory management.
+        juce::ScopedPointer <juce::Label> text;
         CtrlrPanelEditor &owner;
 };
 
@@ -45,11 +46,16 @@ class CtrlrPanelNotifier : public Component,
 class CtrlrPanelEditor  :	public Component,
 							public ValueTree::Listener,
 							public CtrlrLuaObject,
-                            public LookAndFeel_V4
+                            public LookAndFeel_V4,
+                            public juce::ChangeListener // Add this line
 {
 	public:
 		CtrlrPanelEditor (CtrlrPanel &_owner, CtrlrManager &_ctrlrManager, const String &panelName);
 		~CtrlrPanelEditor();
+    
+        // Use the JUCE_DECLARE_WEAK_REFERENCEABLE macro for safe weak pointers
+        JUCE_DECLARE_WEAK_REFERENCEABLE(CtrlrPanelEditor)
+    
 		enum BackgroundImageLayout
 		{
 			Stretched,
@@ -89,7 +95,7 @@ class CtrlrPanelEditor  :	public Component,
     
         void notify(const String &notification, CtrlrNotificationCallback *callback, const CtrlrNotificationType ctrlrNotificationType = NotifyInformation);  // Added back v5.6.31 for file management bottom notification bar
         void notificationClicked(const MouseEvent e); // Added back v5.6.31 for file management bottom notification bar
-        void changeListenerCallback (ChangeBroadcaster *source); // Added back v5.6.31 for file management bottom notification bar
+        void changeListenerCallback (ChangeBroadcaster *source) override; // Updated v5.6.34. Required override. Added back v5.6.31 for file management bottom notification bar.
     
 		void setAllCombosDisabled();
 		void setAllCombosEnabled();
@@ -97,36 +103,50 @@ class CtrlrPanelEditor  :	public Component,
 		bool getRestoreState()					{ return (currentRestoreState); }
 		void setRestoreState(const bool _state) { currentRestoreState = _state; }
 		void reloadResources (Array <CtrlrPanelResource*> resourcesThatChanged);
-        void showComponentRuntimeConfig(CtrlrComponent *componentToConfigure);
+        // void showComponentRuntimeConfig(CtrlrComponent *componentToConfigure); // Useless. Related to the WIN crash on LnF switch
 		void searchForProperty();
         static LookAndFeel* getLookAndFeelFromDescription(const String &lookAndFeelDesc);
         void editModeChanged(const bool isEditMode);
     
+        bool luaEditorExistsAndIsFocused(); // Added v5.6.34. Required to pass keypress to the LUA method manager for menu items. Handles the focus gain/loss.
+    
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrPanelEditor)
 
 	private:
+        // Declare the LookAndFeel pointer first to ensure it is destroyed last
+        std::unique_ptr<juce::LookAndFeel> lookAndFeel;
+    
+        // Old way
+        // CtrlrPanelProperties* ctrlrPanelProperties;
+        // StretchableLayoutResizerBar* spacerComponent;
+        // CtrlrPanelViewport* ctrlrPanelViewport;
+    
+        // New way. Use ScopedPointers to handle the objects for improved deletion.
+        ScopedPointer <CtrlrComponentSelection> ctrlrComponentSelection;
+        ScopedPointer<CtrlrPanelProperties> ctrlrPanelProperties;
+        ScopedPointer<StretchableLayoutResizerBar> spacerComponent;
+        ScopedPointer<CtrlrPanelViewport> ctrlrPanelViewport;
         ScopedPointer <CtrlrPanelNotifier> ctrlrPanelNotifier;  // Added back v5.6.31 for file management bottom notification bar
+    
 		ComponentAnimator componentAnimator;
 		CtrlrPanel &owner;
         double canvasHeight;
         double canvasWidth;
         double canvasAspectRatio;
-		ScopedPointer <CtrlrComponentSelection> ctrlrComponentSelection;
 		StretchableLayoutManager layoutManager;
 		bool lastEditMode, currentRestoreState;
 		CtrlrManager &ctrlrManager;
 		ValueTree panelEditorTree;
-		friend class WeakReference<CtrlrPanelEditor>;
-		WeakReference <CtrlrPanelEditor>::Master masterReference;
-		WeakReference <CtrlrLuaMethod>
-        resizedEditorCbk,
-        resizedCbk;
-		CtrlrPanelProperties* ctrlrPanelProperties;
-		StretchableLayoutResizerBar* spacerComponent;
-		CtrlrPanelViewport* ctrlrPanelViewport;
-		WeakReference<CtrlrNotificationCallback> notificationCallback;
-		Component* editorComponentsInEditMode[3];
-		Component* editorComponents[2];
-		std::unique_ptr<LookAndFeel> lookAndFeel;
-        ScopedPointer<LookAndFeel_V4> lfv4;
+    
+        // The macro JUCE_DECLARE_WEAK_REFERENCEABLE(CtrlrPanelEditor)
+        // already handles the weak reference master.
+        // The following lines are redundant and should be removed from your code.
+        // friend class juce::WeakReference<CtrlrPanelEditor>;
+        // juce::WeakReference<CtrlrPanelEditor>::Master masterReference;
+        
+        juce::WeakReference<CtrlrLuaMethod> resizedEditorCbk, resizedCbk;
+    
+        WeakReference<CtrlrNotificationCallback> notificationCallback;
+        Component* editorComponentsInEditMode[3];
+        Component* editorComponents[2];
 };

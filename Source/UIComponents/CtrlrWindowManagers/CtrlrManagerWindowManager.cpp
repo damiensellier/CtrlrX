@@ -197,7 +197,7 @@ CtrlrChildWindow *CtrlrManagerWindowManager::createWindow(const CtrlrManagerWind
             break;
 	}
 
-	w->setName("Ctrlr/" + w->getContent()->getContentName());
+	w->setName("CtrlrX/" + w->getContent()->getContentName()); // Updated v5.6.34. Was "Ctrlr/"
 	windows.add (w);
 
 	return (w);

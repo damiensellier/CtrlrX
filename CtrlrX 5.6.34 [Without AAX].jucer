@@ -892,6 +892,10 @@
                   resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettings.cpp"/>
             <FILE id="Z3BSWj" name="CtrlrLuaMethodCodeEditorSettings.h" compile="0"
                   resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettings.h"/>
+            <FILE id="OTtUEM" name="CtrlrLuaMethodCodeEditorSettingsColourLnF.cpp"
+                  compile="1" resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettingsColourLnF.cpp"/>
+            <FILE id="M8SZ20" name="CtrlrLuaMethodCodeEditorSettingsColourLnF.h"
+                  compile="0" resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettingsColourLnF.h"/>
             <FILE id="c9Wgnl" name="CtrlrLuaMethodDebuggerControls.cpp" compile="1"
                   resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodDebuggerControls.cpp"/>
             <FILE id="dDoOFH" name="CtrlrLuaMethodDebuggerControls.h" compile="0"
@@ -920,6 +924,8 @@
                   file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodEditor.cpp"/>
             <FILE id="GOuGXn" name="CtrlrLuaMethodEditor.h" compile="0" resource="0"
                   file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodEditor.h"/>
+            <FILE id="skDtVG" name="CtrlrLuaMethodEditorCommandIDs.h" compile="0"
+                  resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodEditorCommandIDs.h"/>
             <FILE id="U8p6ed" name="CtrlrLuaMethodEditorConsole.cpp" compile="1"
                   resource="0" file="Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodEditorConsole.cpp"/>
             <FILE id="IcOt6d" name="CtrlrLuaMethodEditorConsole.h" compile="0"
@@ -988,6 +994,10 @@
                 file="Source/UIComponents/CtrlrPanel/CtrlrPanelEditor.cpp"/>
           <FILE id="hv7qCr" name="CtrlrPanelEditor.h" compile="0" resource="0"
                 file="Source/UIComponents/CtrlrPanel/CtrlrPanelEditor.h"/>
+          <FILE id="TF41hd" name="CtrlrPanelEditorIcons.cpp" compile="1" resource="0"
+                file="Source/UIComponents/CtrlrPanel/CtrlrPanelEditorIcons.cpp"/>
+          <FILE id="vJDIFH" name="CtrlrPanelEditorIcons.h" compile="0" resource="0"
+                file="Source/UIComponents/CtrlrPanel/CtrlrPanelEditorIcons.h"/>
           <FILE id="iDNFSe" name="CtrlrPanelFindProperty.cpp" compile="1" resource="0"
                 file="Source/UIComponents/CtrlrPanel/CtrlrPanelFindProperty.cpp"/>
           <FILE id="DP5ROh" name="CtrlrPanelFindProperty.h" compile="0" resource="0"

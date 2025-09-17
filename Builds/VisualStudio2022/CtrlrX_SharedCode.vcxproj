@@ -416,6 +416,7 @@
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaCodeTokeniser.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditor.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditorSettings.cpp"/>
+    <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditorSettingsColourLnF.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerControls.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerInfo.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerPrompt.cpp"/>
@@ -440,6 +441,7 @@
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelCanvasLayers.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelComponentProperties.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditor.cpp"/>
+    <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditorIcons.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelFindProperty.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelLayerList.cpp"/>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelLayerListItem.cpp"/>
@@ -2704,6 +2706,7 @@
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaCodeTokeniserFunctions.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditor.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditorSettings.h"/>
+    <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditorSettingsColourLnF.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerControls.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerInfo.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerPrompt.h"/>
@@ -2711,6 +2714,7 @@
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerVars.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditArea.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditor.h"/>
+    <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorCommandIDs.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorConsole.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorTabs.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodFind.h"/>
@@ -2726,6 +2730,7 @@
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelCanvasLayer.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelComponentProperties.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditor.h"/>
+    <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditorIcons.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelFindProperty.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelLayerList.h"/>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelLayerListItem.h"/>

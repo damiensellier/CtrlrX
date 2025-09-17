@@ -17,7 +17,9 @@
 * [Compiling CtrlrX](#compiling-ctrlrx)
   * [Windows](#windows)
   * [macOS](#macos)
-  * [Linux Build Instructions](#linux-build-instructions)
+  * [Linux Build Instructions](#linux-build-instructions)  
+  * [Linux Debian 12 Specific Build Instructions](#linux-debian-12-specific-build-instructions)
+  * [Linux Fedora 42 Specific Build Instructions](#linux-fedora-42-specific-build-instructions)
 * [Exporting Plugin Instances](#exporting-plugin-instances)
   * [VST2 Support](#vst2-support)
   * [VST3 Support](#vst3-support)
@@ -232,6 +234,63 @@ sudo apt install -y \
 **Note 1: Boost Library:** Boost is already included with CtrlrX. You need to unzip the file located at `/Source/Misc/boost/boost.zip`. Ensure that its contents are extracted into the `/Source/Misc/boost/` directory, resulting in a structure like `/Source/Misc/boost/boost/_boost_content_` (where `_boost_content_` represents the actual Boost library files and subfolders).
 **Note 2:** For other Linux distributions (e.g., Fedora, Arch Linux), the package names and installation commands may differ. Please consult your distribution's documentation for the equivalent packages.
 
+### Linux Debian 12 Specific Build Instructions
+
+```
+sudo apt install git g++ -y
+sudo apt install libxi-dev -y
+sudo apt install libx11-dev binutils-dev -y
+sudo apt install libudev-dev libasound2-dev libtiff-dev -y
+sudo apt install libcurl4-gnutls-dev libiberty-dev -y
+sudo apt install libxrandr-dev libxinerama-dev -y
+sudo apt install libxcursor-dev libfreetype-dev pkg-config -y
+git clone https://github.com/damiensellier/CtrlrX
+cd ~/CtrlrX/Source/Misc/boost
+unzip boost.zip 
+# Download VST2 toolkit
+cd ~
+git clone --filter=blob:none --sparse https://github.com/RomanKubiak/ctrlr
+cd ~/ctrlr
+git sparse-checkout add Source/Misc/vst2sdk
+cd ~/CtrlrX/Source/Plugin
+cp -av ~/ctrlr/Source/Misc/vst2sdk/pluginterfaces .
+
+cd ~/CtrlrX/Builds/LinuxMakefile
+./build.sh # or make
+# note "make clean" to clean and recompile
+```
+
+### Linux Fedora 42 Specific Build Instructions
+
+```
+sudo dnf install g++ -y 
+sudo dnf install git -y
+sudo dnf install alsa-lib-devel -y ;
+sudo dnf install freetype-devel -y ;
+sudo dnf install libcurl-devel -y ;
+sudo dnf install libXrandr-devel -y ;
+sudo dnf install libXinerama-devel -y ;
+sudo dnf install libXcursor-devel -y ;
+sudo dnf install libudev-devel -y ;
+sudo dnf install binutils-devel -y ;
+sudo dnf install libzstd-devel -y
+
+git clone https://github.com/damiensellier/CtrlrX
+cd ~/CtrlrX/Source/Misc/boost
+unzip boost.zip
+# Download VST2 toolkit
+cd ~
+git clone --filter=blob:none --sparse https://github.com/RomanKubiak/ctrlr
+cd ~/ctrlr
+git sparse-checkout add Source/Misc/vst2sdk
+cd ~/CtrlrX/Source/Plugin
+cp -av ~/ctrlr/Source/Misc/vst2sdk/pluginterfaces .
+
+cd ~/CtrlrX/Builds/LinuxMakefile
+./build.sh # or make
+# note "make clean" to clean and recompile
+```
+
 ---
 
 ## Exporting Plugin Instances
@@ -340,7 +399,7 @@ Tuturial coming soon.
 
 ## Changelog
 
-#### Version 5.6.34 | 2025.07.26
+#### Version 5.6.34 | 2025.09.13
 
 * **NEW** ProTools AAX plugin support (requires AAX SDK 2.8+ and codesigning via PACE)
 * **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
@@ -367,6 +426,23 @@ Tuturial coming soon.
 * **FIXED** Alert windows LnF version not following the global LnF for V3. `CtrlrEditor.cpp` & `.h`, `CtrlrInlineUtilitiesGUI.cpp` & `.h`
 * **ADDED** Preferences "ctrlrPropertyLineImprovedLegibility" to force B&W text for property pane text entry fields. `CtrlrPropertyComponent.cpp`, `CtrlrIDs.xml`, `CtrlrIDs.h`
 * **FIXED** CtrlrPanel.cpp panelVersionMajor & panelVersionMinor stored as int. `CtrlrPanel.cpp` 
+* **ADDED** Algorithm for Roland, E-mu, Korg, Waldorf, Lexicon, Exclusive OR, Akai, Korg, Sequential checksums. `CtrlrSysexProcessor.cpp` & `.h` `CtrlrMacros.h`, `CtrlrPropertyComponent.cpp`, `CtrlrUtilities.cpp`
+* **FIXED** Resource Editor colours follow the general LnF colourScheme. `CtrlrPanelResourceEditor.cpp` & `.h`
+* **ADDED** Resource Editor file preview thumbnail. `CtrlrPanelResourceEditor.cpp` & `.h`
+* **FIXED** Single quote content in comboBox. `CtrlrValueMap.cpp` & `.h`
+* **ADDED** CtrlrPanelProperties highlighted tab when active. `CtrlrPanelProperties.cpp`
+* **ADDED** alertWindow warning at export when trying to overwrite an existing panel on macOS. `CtrlrMac.cpp`
+* **UPDATED** Export instance alertWindows won't show up if cancelled by user. `CtrlrMac.cpp`, `CtrlrPanelFileOperations.cpp`
+* **UPDATED** Export instance fileChooser default directory is now set to panelLastSaveDir or falls back to desktop. `CtrlrMac.cpp`
+* **FIXED** CtrlrLuaMethodCodeEditorSettings Highlight colours such as Error, comments, operatiors etc. `CtrlrLuaMethodCodeEditorSettings.cpp`, `CtrlrLuaMethodCodeTokeniserFUnctions.h`
+* **UPDATED** CtrlrLuaMethodCodeEditorSettings GUI with a better sample code preview. `CtrlrLuaMethodCodeEditorSettings.cpp`
+* **UPDATED** CtrlrPropertyComponent Separated colourChooser from colour field. `CtrlrPropertyComponent.cpp` &`.h`, `CtrlrIDs.xml`
+* **UPDATED** CtrlrPropertyComponent Layer selection via comboBox. `CtrlrPropertyComponent.cpp` & `.h`, `CtrlrIDs.xml`
+* **UPDATED** CtrlrPropertyComponent Font size, kerning & horizontal-scale sliders replaced by drop-down selector for convenience. `CtrlrPropertyComponent.cpp` &`.h`
+* **FIXED** CtrlrX crashing or freezing when closing while the notify bar was visible. `CtrlrPanelEditor.cpp` & `.h`
+* **UPDATED** Utils get16bitSigned() & get16bitSigned() funtions bind to LUA. `CtrlrLuaUtils.cpp` & `.h`
+* **UPDATED** Layer manager complete redesign for clarity and convenience. `CtrlrPanelLayerList.cpp` & `.h`, `CtrlrPanelLayerListItem.cpp` & `.h`, `CtrlrPanelEditorIcon.cpp` & `.h`
+* **UPDATED** DEBIAN 12 and Fedora 42 build instructions. `README.md`
 
 #### Version 5.6.33 | 2025.05.28
 

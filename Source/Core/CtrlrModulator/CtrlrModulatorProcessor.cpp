@@ -473,6 +473,7 @@ void CtrlrModulatorProcessor::sendMidiMessage()
 	}
 }
 
+// Used by combo
 const CtrlrValueMap &CtrlrModulatorProcessor::setValueMap (const String &mapAsString)
 {
 	{

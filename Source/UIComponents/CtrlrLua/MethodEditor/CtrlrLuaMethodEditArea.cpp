@@ -33,7 +33,8 @@
 
 //==============================================================================
 CtrlrLuaMethodEditArea::CtrlrLuaMethodEditArea (CtrlrLuaMethodEditor &_owner)
-    : owner(_owner)
+    : owner(_owner),
+    sharedSearchTabsValue()
 {
     addAndMakeVisible (lowerTabs = new TabbedComponent (TabbedButtonBar::TabsAtBottom));
     lowerTabs->setCurrentTabIndex (-1);
@@ -54,8 +55,8 @@ CtrlrLuaMethodEditArea::CtrlrLuaMethodEditArea (CtrlrLuaMethodEditor &_owner)
 	output->setColour (TextEditor::outlineColourId, Colours::transparentBlack);
 	output->setColour (TextEditor::shadowColourId, Colours::transparentBlack);
 
-	find						= new CtrlrLuaMethodFind(owner);
-	addAndMakeVisible (resizer	= new StretchableLayoutResizerBar (&layoutManager, 1, false));
+    find = new CtrlrLuaMethodFind(owner, sharedSearchTabsValue);
+    addAndMakeVisible (resizer  = new StretchableLayoutResizerBar (&layoutManager, 1, false));
     debuggerPrompt              = new CtrlrLuaMethodDebuggerPrompt(owner);
 	luaConsole                  = new CtrlrLuaConsole (owner.getOwner());
 
@@ -117,31 +118,31 @@ void CtrlrLuaMethodEditArea::resized()
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 void CtrlrLuaMethodEditArea::mouseDoubleClick (const MouseEvent &e)
 {
-	// LUA compile error: ERROR: [string "function myNewMethod()..."]:4: '=' expected near 'end'
-	// Search result: SEARCH: [method]:3 position:43-46
+    // LUA compile error: ERROR: [string "function myNewMethod()..."]:4: '=' expected near 'end'
+    // Search result: SEARCH: [method]:3 position:43-46
 
-	const String line = output->getLineAtPosition (output->getTextIndexAt (e.x, e.y)).trim();
+    const String line = output->getLineAtPosition (output->getTextIndexAt (e.x, e.y)).trim();
 
-	//_DBG(line);
+    _DBG(line); // Added v5.6.34.
 
-	if (line.startsWithIgnoreCase("ERROR"))
-	{
-		const int errorInLine = line.fromFirstOccurrenceOf ("]:", false, true).getIntValue();
+    if (line.startsWithIgnoreCase("ERROR"))
+    {
+        const int errorInLine = line.fromFirstOccurrenceOf ("]:", false, true).getIntValue();
 
-		if (errorInLine > 0 && owner.getCurrentEditor())
-		{
-			owner.getCurrentEditor()->setErrorLine(errorInLine);
-		}
-	}
-	else if (line.startsWithIgnoreCase("Method: "))
-	{
-		const String methodName	= line.fromFirstOccurrenceOf ("Method: ", false, false).upToFirstOccurrenceOf("line: ", false, true).trim();
-		const int errorInLine	= line.fromFirstOccurrenceOf ("line: ", false, true).getIntValue();
-		const int positionStart	= line.fromFirstOccurrenceOf ("start: ", false,true).getIntValue();
-		const int positionEnd	= line.fromFirstOccurrenceOf ("end: ", false,true).getIntValue();
+        if (errorInLine > 0 && owner.getCurrentEditor())
+        {
+            owner.getCurrentEditor()->setErrorLine(errorInLine);
+        }
+    }
+    else if (line.startsWithIgnoreCase("Method: "))
+    {
+        const String methodName  = line.fromFirstOccurrenceOf("Method: ", false, false).upToFirstOccurrenceOf("line: ", false, true).trim();
+        const int errorInLine    = line.fromFirstOccurrenceOf("line: ", false, true).getIntValue();
+        const int positionStart  = line.fromFirstOccurrenceOf("start: ", false,true).getIntValue();
+        const int positionEnd    = line.fromFirstOccurrenceOf("end: ", false,true).getIntValue();
 
-		owner.searchResultClicked (methodName, errorInLine, positionStart, positionEnd);
-	}
+        owner.searchResultClicked (methodName, errorInLine, positionStart, positionEnd);
+    }
 }
 
 CtrlrLuaMethodEditorTabs *CtrlrLuaMethodEditArea::getTabs()
@@ -223,23 +224,32 @@ TabbedComponent *CtrlrLuaMethodEditArea::getLowerTabs()
 	return (lowerTabs);
 }
 
-bool CtrlrLuaMethodEditArea::keyPressed (const KeyPress &key, Component *event)
+bool CtrlrLuaMethodEditArea::keyPressed (const KeyPress &key, Component *originatingComponent) // Updated v5.6.34. was : bool CtrlrLuaMethodEditArea::keyPressed (const KeyPress &key, Component *event)
 {
-    if (getTabs())
+    const auto modifiers = key.getModifiers();
+    
+    // Ctrl + Tab: Switch tabs
+    if (modifiers.isCommandDown() && key.getKeyCode() == 9)
     {
-        if (getTabs()->getCurrentTabIndex() < (getTabs()->getNumTabs()-1) && getTabs()->getCurrentTabIndex() >= 0)
+        if (getTabs())
         {
-            getTabs()->setCurrentTabIndex(getTabs()->getCurrentTabIndex() + 1);
-            return (true);
-        }
-
-        if (getTabs()->getCurrentTabIndex() >= getTabs()->getNumTabs() - 1)
-        {
-            getTabs()->setCurrentTabIndex(0);
-            return (true);
+            int current = getTabs()->getCurrentTabIndex();
+            int numTabs = getTabs()->getNumTabs();
+            
+            if (current < numTabs - 1)
+            {
+                getTabs()->setCurrentTabIndex(current + 1);
+            }
+            else
+            {
+                getTabs()->setCurrentTabIndex(0);
+            }
+            return true;
         }
     }
-    return (false);
+    
+    // If we didn't handle the key, return false so the parent can handle it.
+    return false;
 }
 
 void CtrlrLuaMethodEditArea::setActiveOutputTab()

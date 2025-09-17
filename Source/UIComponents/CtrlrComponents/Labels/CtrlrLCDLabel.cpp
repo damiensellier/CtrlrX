@@ -5,8 +5,8 @@
 
 //==============================================================================
 CtrlrLCDLabel::CtrlrLCDLabel (CtrlrModulator &owner)
-    : CtrlrComponent(owner),
-      ctrlrLabel (0)
+    : CtrlrComponent(owner)
+	// , ctrlrLabel (0) // Updated v5.6.34. Thanks to @dnaldoog
 {
     addAndMakeVisible (ctrlrLabel = new Label ("ctrlrLabel",
                                                "LCD TEST"));
@@ -58,7 +58,7 @@ CtrlrLCDLabel::~CtrlrLCDLabel()
     //[Destructor_pre]. You can add your own custom destruction code here..
     //[/Destructor_pre]
 
-    deleteAndZero (ctrlrLabel);
+    // deleteAndZero (ctrlrLabel); // Removed v5.6.34. Useless. Thanks to @dnaldoog.
 
     //[Destructor]. You can add your own custom destruction code here..
     //[/Destructor]

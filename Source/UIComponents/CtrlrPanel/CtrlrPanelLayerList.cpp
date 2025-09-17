@@ -1,92 +1,188 @@
 #include "stdafx.h"
-/*
-  ==============================================================================
 
-  This is an automatically generated file created by the Jucer!
-
-  Creation date:  14 Nov 2011 8:14:25pm
-
-  Be careful when adding custom code to these files, as only the code within
-  the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
-  and re-saved.
-
-  Jucer version: 1.12
-
-  ------------------------------------------------------------------------------
-
-  The Jucer is part of the JUCE library - "Jules' Utility Class Extensions"
-  Copyright 2004-6 by Raw Material Software ltd.
-
-  ==============================================================================
-*/
-
-//[Headers] You can add your own extra header files here...
 #include "CtrlrManager/CtrlrManager.h"
 #include "CtrlrPanel/CtrlrPanel.h"
 #include "CtrlrPanel/CtrlrPanelEditor.h"
 #include "CtrlrPanel/CtrlrPanelCanvas.h"
 #include "CtrlrPanelLayerListItem.h"
 #include "CtrlrInlineUtilitiesGUI.h"
-//[/Headers]
 
 #include "CtrlrPanelLayerList.h"
 
+//==============================================================================
+// CtrlrPanelLayerListHeader Implementation
+//==============================================================================
+CtrlrPanelLayerListHeader::CtrlrPanelLayerListHeader()
+{
+    addAndMakeVisible(indexHeader);
+    indexHeader.setText("z-index", juce::dontSendNotification);
+    indexHeader.setJustificationType(juce::Justification::centred);
+    indexHeader.setFont(juce::Font(12.0f, juce::Font::plain));
+	
+	addAndMakeVisible(reorderHeader);
+	reorderHeader.setText("Reorder", juce::dontSendNotification);
+	reorderHeader.setJustificationType(juce::Justification::centred);
+	reorderHeader.setFont(juce::Font(12.0f, juce::Font::plain));
+    
+    addAndMakeVisible(visibilityHeader);
+    visibilityHeader.setText("Visiblity", juce::dontSendNotification);
+    visibilityHeader.setJustificationType(juce::Justification::centred);
+    visibilityHeader.setFont(juce::Font(12.0f, juce::Font::plain));
+    
+    addAndMakeVisible(nameHeader);
+    nameHeader.setText("Name", juce::dontSendNotification);
+    nameHeader.setJustificationType(juce::Justification::centred);
+    nameHeader.setFont(juce::Font(12.0f, juce::Font::plain));
 
-//[MiscUserDefs] You can add your own user definitions and misc code here...
-//[/MiscUserDefs]
+    addAndMakeVisible(colourHeader);
+    colourHeader.setText("Colour", juce::dontSendNotification);
+    colourHeader.setJustificationType(juce::Justification::centred);
+    colourHeader.setFont(juce::Font(12.0f, juce::Font::plain));
+    
+    addAndMakeVisible(editHeader);
+    editHeader.setText("Edit View", juce::dontSendNotification);
+    editHeader.setJustificationType(juce::Justification::centred);
+    editHeader.setFont(juce::Font(12.0f, juce::Font::plain));
 
+}
+
+CtrlrPanelLayerListHeader::~CtrlrPanelLayerListHeader() {}
+
+void CtrlrPanelLayerListHeader::resized()
+{
+    // The proportions must add up to 1.0
+	const float layerIndexProportion = 0.07f;
+	const float dragIconProportion = 0.07f;
+	const float visibilityProportion = 0.07f;
+	const float layerNameProportion = 0.33f;
+	const float layerColourProportion = 0.23f;
+	const float buttonProportion = 0.23f;
+    
+    float x = 0.0f;
+    const float totalWidth = getWidth();
+
+    // Position elements in the new order
+    // 1. Layer Index
+    float layerIndexWidth = totalWidth * layerIndexProportion;
+    indexHeader.setBounds(x, 0, layerIndexWidth, getHeight());
+    x += layerIndexWidth;
+
+    // 2. Drag Icon (Reorder)
+    float dragIconWidth = totalWidth * dragIconProportion;
+    reorderHeader.setBounds(x, 0, dragIconWidth, getHeight());
+    x += dragIconWidth;
+    
+    // 3. Visibility
+    float visibilityWidth = totalWidth * visibilityProportion;
+    visibilityHeader.setBounds(x, 0, visibilityWidth, getHeight());
+    x += visibilityWidth;
+    
+    // 4. Layer Name
+    float layerNameWidth = totalWidth * layerNameProportion;
+    nameHeader.setBounds(x, 0, layerNameWidth, getHeight());
+    x += layerNameWidth;
+    
+    // 5. Layer Colour
+    float colourChooserWidth = totalWidth * layerColourProportion;
+    colourHeader.setBounds(x, 0, colourChooserWidth, getHeight());
+    x += colourChooserWidth;
+    
+    // 6. Action Buttons
+    float buttonWidth = totalWidth * buttonProportion;
+    editHeader.setBounds(x, 0, buttonWidth, getHeight());
+    x += buttonWidth;
+    
+    // Update separator positions
+    separatorPositions.clear();
+    separatorPositions.add(static_cast<int>(indexHeader.getRight()));
+    separatorPositions.add(static_cast<int>(reorderHeader.getRight()));
+    separatorPositions.add(static_cast<int>(visibilityHeader.getRight()));
+    separatorPositions.add(static_cast<int>(nameHeader.getRight()));
+    separatorPositions.add(static_cast<int>(colourHeader.getRight()));
+}
+
+void CtrlrPanelLayerListHeader::paint (juce::Graphics& g)
+{
+    g.setColour (juce::Colours::lightgrey);
+
+    for (int pos : separatorPositions)
+    {
+        g.drawLine (pos, 0, pos, getHeight(), 1.0f);
+    }
+}
+
+//==============================================================================
+// CtrlrPanelLayerList Implementation
 //==============================================================================
 CtrlrPanelLayerList::CtrlrPanelLayerList (CtrlrPanel &_owner)
     : owner(_owner),
-      layerList (0)
+      dropInsertionIndex(-1),
+      layerIsolationActive(false),
+      isolatedLayerIndex(-1),
+      layerList(std::make_unique<juce::ListBox>("Layer List", this)),
+      headerComponent(std::make_unique<CtrlrPanelLayerListHeader>())
 {
-    addAndMakeVisible (layerList = new ListBox ("Layer List", this));
+    // Explicitly call the methods from the base class that provides them
+    CtrlrChildWindowContent::addAndMakeVisible(*headerComponent);
+    CtrlrChildWindowContent::addAndMakeVisible(*layerList);
+    
+    // Explicitly call the setSize method from the base class
+    CtrlrChildWindowContent::setSize(600, 400);
 
-
-    //[UserPreSize]
-	layerList->setRowHeight (40);
-	layerList->setMultipleSelectionEnabled (false);
-    //[/UserPreSize]
-
-    setSize (600, 400);
-
-
-    //[Constructor] You can add your own custom stuff here..
-    //[/Constructor]
+    layerList->setRowHeight(40);
+    layerList->setMultipleSelectionEnabled(false);
 }
 
 CtrlrPanelLayerList::~CtrlrPanelLayerList()
 {
-    //[Destructor_pre]. You can add your own custom destruction code here..
-    //[/Destructor_pre]
-
-    deleteAndZero (layerList);
-
-
-    //[Destructor]. You can add your own custom destruction code here..
-    //[/Destructor]
+    // The parent component (`CtrlrChildWindowContent`) takes ownership
+    // of these when they are added with `addAndMakeVisible`. We must
+    // explicitly release them from our unique_ptr to prevent a double-free crash.
+    layerList.release();
+    headerComponent.release();
 }
 
 //==============================================================================
 void CtrlrPanelLayerList::paint (Graphics& g)
 {
-    //[UserPrePaint] Add your own custom painting code here..
-    //[/UserPrePaint]
+    // Draw drop insertion indicator
+    if (dropInsertionIndex >= 0)
+    {
+        g.setColour(Colours::blue);
+        int y = dropInsertionIndex * layerList->getRowHeight() + headerComponent->getHeight();
+        
+        // Explicitly call the getWidth() method from the CtrlrChildWindowContent base class
+        g.fillRect(0, y - 1, CtrlrChildWindowContent::getWidth(), 3);
+    }
+    
+    // Draw isolation indicator
+    if (layerIsolationActive)
+    {
+        g.setColour(Colours::orange.withAlpha(0.3f));
+        g.fillRect(2, headerComponent->getHeight() + 2, CtrlrChildWindowContent::getWidth() - 4, 20);
 
-    //[UserPaint] Add your own custom painting code here..
-    //[/UserPaint]
+        g.setColour(Colours::orange.darker());
+        g.setFont(Font(11.0f, Font::bold));
+        g.drawText("LAYER ISOLATION ACTIVE", 5, headerComponent->getHeight() + 2, CtrlrChildWindowContent::getWidth() - 10, 20, Justification::centredLeft);
+    }
 }
 
 void CtrlrPanelLayerList::resized()
 {
-    layerList->setBounds (0, 0, getWidth() - 0, getHeight() - 0);
-    //[UserResized] Add your own custom resize handling here..
-    //[/UserResized]
+    const int headerHeight = 30;
+
+    // Set bounds for the header component
+    if (headerComponent)
+    {
+        // Explicitly call getWidth() from the base class
+        headerComponent->setBounds(0, 0, CtrlrChildWindowContent::getWidth(), headerHeight);
+    }
+    
+    // Set bounds for the list below the header
+    // Explicitly call getWidth() and getHeight() from the base class
+    layerList->setBounds(0, headerHeight, CtrlrChildWindowContent::getWidth(), CtrlrChildWindowContent::getHeight() - headerHeight);
 }
 
-
-
-//[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 int CtrlrPanelLayerList::getNumRows()
 {
 	return (owner.getEditor()->getCanvas()->getNumLayers());
@@ -96,7 +192,7 @@ void CtrlrPanelLayerList::paintListBoxItem (int rowNumber, Graphics& g, int widt
 {
     if (rowIsSelected)
     {
-        gui::drawSelectionRectangle (g, width, height);
+		// gui::drawSelectionRectangle (g, width, height); // Update v5.6.34. Won't highlight the selected list item
     }
 }
 
@@ -107,8 +203,13 @@ Component* CtrlrPanelLayerList::refreshComponentForRow (int rowNumber, bool isRo
 	if (itemInfo == 0)
 		itemInfo = new CtrlrPanelLayerListItem (*this);
 
-	itemInfo->setRow (rowNumber);
-	itemInfo->setLayer (owner.getEditor()->getCanvas()->getLayerFromArray(rowNumber));
+	// Calculate the actual layer index (reverse the order)
+	int totalLayers = owner.getEditor()->getCanvas()->getNumLayers();
+	int actualLayerIndex = totalLayers - 1 - rowNumber;  // Reverse the index
+
+	itemInfo->setRow(actualLayerIndex);  // Use the actual layer index for the row
+	itemInfo->setLayer(owner.getEditor()->getCanvas()->getLayerFromArray(actualLayerIndex));
+	
 	return itemInfo;
 }
 
@@ -138,6 +239,11 @@ void CtrlrPanelLayerList::addLayer()
 void CtrlrPanelLayerList::removeLayer()
 {
 	const int selectedRow = layerList->getSelectedRow();
+
+	// Convert visual row to actual layer index
+	int totalLayers = getNumRows();
+	int actualLayerIndex = totalLayers - 1 - selectedRow;
+
 	CtrlrPanelLayerListItem *item = dynamic_cast <CtrlrPanelLayerListItem*> (layerList->getComponentForRowNumber (selectedRow));
 	CtrlrPanelCanvasLayer *layer = 0;
 	if (item != nullptr)
@@ -155,6 +261,11 @@ void CtrlrPanelLayerList::removeLayer()
 void CtrlrPanelLayerList::moveLayerUp()
 {
 	const int selectedRow = layerList->getSelectedRow();
+	
+	// Convert visual row to actual layer index
+	int totalLayers = getNumRows();
+	int actualLayerIndex = totalLayers - 1 - selectedRow;
+	
 	CtrlrPanelLayerListItem *item = dynamic_cast <CtrlrPanelLayerListItem*> (layerList->getComponentForRowNumber (selectedRow));
 	CtrlrPanelCanvasLayer *layer = 0;
 	if (item != nullptr)
@@ -162,12 +273,13 @@ void CtrlrPanelLayerList::moveLayerUp()
 		layer = item->getLayer();
 	}
 
-	if (selectedRow-1 < 0)
+	if (selectedRow-1 < 0)  // Can't move top visual row up
 		return;
 
 	if (owner.getEditor())
 	{
-		owner.getEditor()->getCanvas()->moveLayer(layer);
+		// In reversed view: visual "up" = actual "down" in the array
+		owner.getEditor()->getCanvas()->moveLayer(layer, false);  // false = down in actual array
 	}
 	layerList->updateContent();
 	layerList->selectRow (selectedRow-1);
@@ -176,6 +288,11 @@ void CtrlrPanelLayerList::moveLayerUp()
 void CtrlrPanelLayerList::moveLayerDown()
 {
 	const int selectedRow = layerList->getSelectedRow();
+	
+	// Convert visual row to actual layer index
+	int totalLayers = getNumRows();
+	int actualLayerIndex = totalLayers - 1 - selectedRow;
+
 	CtrlrPanelLayerListItem *item = dynamic_cast <CtrlrPanelLayerListItem*> (layerList->getComponentForRowNumber (selectedRow));
 	CtrlrPanelCanvasLayer *layer = 0;
 	if (item != nullptr)
@@ -183,12 +300,13 @@ void CtrlrPanelLayerList::moveLayerDown()
 		layer = item->getLayer();
 	}
 
-	if (selectedRow+1 >= getNumRows())
+	if (selectedRow+1 >= getNumRows())  // Can't move bottom visual row down
 		return;
 
 	if (owner.getEditor())
 	{
-		owner.getEditor()->getCanvas()->moveLayer(layer,false);
+		// In reversed view: visual "down" = actual "up" in the array
+		owner.getEditor()->getCanvas()->moveLayer(layer, true);  // true = up in actual array
 	}
 	layerList->updateContent();
 	layerList->selectRow (selectedRow+1);
@@ -197,6 +315,7 @@ void CtrlrPanelLayerList::moveLayerDown()
 void CtrlrPanelLayerList::refresh()
 {
 	layerList->updateContent();
+	updateAllButtonStates();
 }
 
 StringArray CtrlrPanelLayerList::getMenuBarNames()
@@ -222,7 +341,7 @@ PopupMenu CtrlrPanelLayerList::getMenuForIndex(int topLevelMenuIndex, const Stri
 	}
 	else if (topLevelMenuIndex == 2)
 	{
-		menu.addItem (6, "Refresh view");
+		menu.addItem (6, "Restore view");
 	}
 	return (menu);
 }
@@ -243,7 +362,8 @@ void CtrlrPanelLayerList::menuItemSelected(int menuItemID, int topLevelMenuIndex
 	if (topLevelMenuIndex == 2)
 	{
 		if (menuItemID == 6)
-			refresh();
+			restoreLayerVisibility();
+			updateAllButtonStates();
 	}
 	if (topLevelMenuIndex == 0 && menuItemID==1)
 	{
@@ -252,27 +372,181 @@ void CtrlrPanelLayerList::menuItemSelected(int menuItemID, int topLevelMenuIndex
 	}
 	
 }
-//[/MiscUserCode]
 
+bool CtrlrPanelLayerList::isInterestedInDragSource(const SourceDetails& dragSourceDetails)
+{
+	// We're interested if the drag source contains "layer_item" in the description
+	return dragSourceDetails.description.toString().contains("layer_item");
+}
 
-//==============================================================================
-#if 0
-/*  -- Jucer information section --
+void CtrlrPanelLayerList::itemDragEnter(const SourceDetails& dragSourceDetails)
+{
+    CtrlrChildWindowContent::repaint();
+}
 
-    This is where the Jucer puts all of its metadata, so don't change anything in here!
+void CtrlrPanelLayerList::itemDragMove(const SourceDetails& dragSourceDetails)
+{
+    // Get the mouse position relative to the ListBox's content area
+    Point<int> localPos = layerList->getLocalPoint(static_cast<CtrlrChildWindowContent*>(this), dragSourceDetails.localPosition);
+    
+    // Correct for the header row
+    int yPosRelativeToListBox = localPos.y - headerComponent->getHeight();
+    
+    // Calculate which row the mouse is over
+    int visualRow = yPosRelativeToListBox / layerList->getRowHeight();
 
-BEGIN_JUCER_METADATA
+    // Clamp to valid range
+    visualRow = jmax(0, jmin(visualRow, getNumRows() - 1));
 
-<JUCER_COMPONENT documentType="Component" className="CtrlrPanelLayerList" componentName=""
-                 parentClasses="public CtrlrChildWindowContent, public ListBoxModel"
-                 constructorParams="CtrlrPanel &amp;_owner" variableInitialisers="owner(_owner)"
-                 snapPixels="8" snapActive="1" snapShown="1" overlayOpacity="0.330000013"
-                 fixedSize="1" initialWidth="600" initialHeight="400">
-  <BACKGROUND backgroundColour="ffffff"/>
-  <GENERICCOMPONENT name="" id="bf3c104833fd7aa" memberName="layerList" virtualName=""
-                    explicitFocusOrder="0" pos="0 0 0M 0M" class="ListBox" params="&quot;Layer List&quot;, this"/>
-</JUCER_COMPONENT>
+    // Store the visual row (we'll convert to actual layer index later)
+    dropInsertionIndex = visualRow;
 
-END_JUCER_METADATA
-*/
-#endif
+    CtrlrChildWindowContent::repaint();
+}
+
+void CtrlrPanelLayerList::itemDragExit(const SourceDetails& dragSourceDetails)
+{
+    dropInsertionIndex = -1;
+    CtrlrChildWindowContent::repaint();
+}
+
+void CtrlrPanelLayerList::itemDropped(const SourceDetails& dragSourceDetails)
+{
+    if (!isInterestedInDragSource(dragSourceDetails))
+        return;
+
+    // Extract the source row index from the description
+    String desc = dragSourceDetails.description.toString();
+    int sourceVisualRow = desc.getTrailingIntValue();
+
+    // Calculate target position relative to the ListBox
+    Point<int> localPos = layerList->getLocalPoint(static_cast<CtrlrChildWindowContent*>(this), dragSourceDetails.localPosition);
+
+    // Correct for the header row
+    int yPosRelativeToListBox = localPos.y - headerComponent->getHeight();
+    
+    int targetVisualRow = yPosRelativeToListBox / layerList->getRowHeight();
+    targetVisualRow = jmax(0, jmin(targetVisualRow, getNumRows() - 1));
+
+    if (targetVisualRow != sourceVisualRow && sourceVisualRow >= 0 && sourceVisualRow < getNumRows())
+    {
+        // Convert visual rows to actual layer indices
+        int totalLayers = getNumRows();
+        int sourceActualIndex = totalLayers - 1 - sourceVisualRow;
+        int targetActualIndex = totalLayers - 1 - targetVisualRow;
+
+        moveLayerToPosition(sourceActualIndex, targetActualIndex);
+    }
+
+    dropInsertionIndex = -1;
+    CtrlrChildWindowContent::repaint();
+}
+void CtrlrPanelLayerList::moveLayerToPosition(int sourceActualIndex, int targetActualIndex)
+{
+	if (owner.getEditor() && owner.getEditor()->getCanvas())
+	{
+		// Get the layer that's being moved
+		CtrlrPanelCanvasLayer* sourceLayer = owner.getEditor()->getCanvas()->getLayerFromArray(sourceActualIndex);
+
+		if (sourceLayer != nullptr)
+		{
+			if (targetActualIndex < sourceActualIndex)
+			{
+				// Moving to lower actual index (higher in visual list) - call moveLayerUp
+				for (int i = sourceActualIndex; i > targetActualIndex; --i)
+				{
+					owner.getEditor()->getCanvas()->moveLayer(sourceLayer, true); // true = up in actual array
+				}
+			}
+			else if (targetActualIndex > sourceActualIndex)
+			{
+				// Moving to higher actual index (lower in visual list) - call moveLayerDown
+				for (int i = sourceActualIndex; i < targetActualIndex; ++i)
+				{
+					owner.getEditor()->getCanvas()->moveLayer(sourceLayer, false); // false = down in actual array
+				}
+			}
+
+			// Update the list display and select the new visual position
+			layerList->updateContent();
+
+			// Convert the target actual index back to visual row for selection
+			int totalLayers = getNumRows();
+			int targetVisualRow = totalLayers - 1 - targetActualIndex;
+			layerList->selectRow(targetVisualRow);
+		}
+	}
+}
+void CtrlrPanelLayerList::isolateLayer(int targetLayerIndex)
+{
+	if (!owner.getEditor() || !owner.getEditor()->getCanvas())
+		return;
+
+	// FIRST: Save the current states BEFORE making any changes
+	owner.saveLayerVisibilityStates();
+
+	// Remember which layer was isolated
+	isolatedLayerIndex = targetLayerIndex;
+
+	// THEN: Hide all layers except the target layer
+	for (int i = 0; i < getNumRows(); ++i)
+	{
+		CtrlrPanelCanvasLayer* layer = owner.getEditor()->getCanvas()->getLayerFromArray(i);
+		if (layer)
+		{
+			if (i == targetLayerIndex)
+			{
+				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, true);
+			}
+			else
+			{
+				layer->setProperty(Ids::uiPanelCanvasLayerVisibility, false);
+			}
+		}
+	}
+
+	layerIsolationActive = true;
+	refresh();
+	updateAllButtonStates();
+
+	_DBG("Layer " + String(targetLayerIndex) + " isolated - all other layers hidden");
+}
+
+// Update the restoreLayerVisibility method:
+void CtrlrPanelLayerList::restoreLayerVisibility()
+{
+	// New: Loop through all layers and explicitly set their 'isolated' property to false.
+	for (int i = 0; i < getNumRows(); ++i)
+	{
+		if (CtrlrPanelCanvasLayer* layer = owner.getEditor()->getCanvas()->getLayerFromArray(i))
+		{
+			layer->setProperty(Ids::uiPanelCanvasLayerIsIsolated, false, 0);
+		}
+	}
+
+	// Now, call the existing restoration logic.
+	owner.restoreLayerVisibilityStates();
+	layerIsolationActive = false;
+	isolatedLayerIndex = -1;
+	refresh();
+	updateAllButtonStates();
+	_DBG("Layer visibility restored");
+}
+
+void CtrlrPanelLayerList::updateAllButtonStates()
+{
+	for (int i = 0; i < getNumRows(); ++i)
+	{
+		if (Component* comp = layerList->getComponentForRowNumber(i))
+		{
+			if (CtrlrPanelLayerListItem* item = dynamic_cast<CtrlrPanelLayerListItem*>(comp))
+			{
+				item->updateButtonStates();
+			}
+		}
+	}
+}
+bool CtrlrPanelLayerList::isLayerIsolated(int layerIndex) const
+{
+	return (isolatedLayerIndex == layerIndex && owner.hasLayerVisibilityStates());
+}

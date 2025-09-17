@@ -1,297 +1,402 @@
 #include "stdafx.h"
 #include "CtrlrEditor.h"
+#include "CtrlrLuaManager.h" // Added v5.6.34.
 #include "CtrlrAbout.h"
 #include "CtrlrPanel/CtrlrPanel.h"
 #include "CtrlrPanel/CtrlrPanelEditor.h"
+#include "CtrlrLua/MethodEditor/CtrlrLuaMethodEditor.h" // Added v5.6.34.
+#include "CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettings.h" // Added v5.6.34.
 #include "CtrlrWindowManagers/CtrlrDialogWindow.h"
 #include "CtrlrMIDI/CtrlrMIDISettingsDialog.h"
+#include "CtrlrMIDI/CtrlrMIDISettingsDialog.h"
+#include "CtrlrLua/MethodEditor/CtrlrLuaMethodEditorCommandIDs.h" // Added v5.6.34.
 
-bool CtrlrEditor::perform (const InvocationInfo &info)
+void CtrlrEditor::performLuaEditorCommand(const int commandID) // Added v5.6.34. Declare the functions to call depending on the LUA method editor menu item selected from the GUI.
 {
+    _DBG("performLuaEditorCommand called with ID: " + String(commandID));
+
+    if (auto* activePanel = getActivePanel())
+    {
+        _DBG("getActivePanel() is valid.");
+        auto& winManager = activePanel->getPanelWindowManager();
+
+        if (auto* luaMethodEditor = (CtrlrLuaMethodEditor*)winManager.getContent(CtrlrPanelWindowManager::LuaMethodEditor))
+        {
+            _DBG("luaMethodEditor is valid.");
+
+            if (commandID == LuaMethodEditorCommandIDs::fileSave)
+            {
+                if (auto* editor = luaMethodEditor->getCurrentEditor())
+                    editor->saveDocument();
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::fileSaveAndCompile)
+            {
+                if (auto* editor = luaMethodEditor->getCurrentEditor())
+                    editor->saveAndCompileDocument();
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::fileSaveAndCompileAll)
+            {
+                luaMethodEditor->saveAndCompilAllMethods();
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::fileCloseCurrentTab)
+            {
+                luaMethodEditor->closeCurrentTab();
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::fileCloseAllTabs)
+            {
+                luaMethodEditor->closeAllTabs();
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::fileConvertToFiles)
+            {
+                luaMethodEditor->convertToFiles();
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::fileClose)
+            {
+                winManager.toggle(CtrlrPanelWindowManager::LuaMethodEditor, false);
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::editSearch)
+            {
+                if (auto* editor = luaMethodEditor->getCurrentEditor())
+                {
+                    if (auto* codeComponent = editor->getCodeComponent())
+                    {
+                        codeComponent->showFindPanel(false);
+                    }
+                }
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::editFindAndReplace)
+            {
+                if (auto* editor = luaMethodEditor->getCurrentEditor())
+                {
+                    if (auto* codeComponent = editor->getCodeComponent())
+                    {
+                        codeComponent->showFindPanel(true);
+                    }
+                }
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::editDebugger)
+            {
+                luaMethodEditor->getMethodEditArea()->showDebuggerTab();
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::editConsole)
+            {
+                luaMethodEditor->getMethodEditArea()->showConsoleTab();
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::editClearOutput)
+            {
+                luaMethodEditor->getMethodEditArea()->clearOutputText();
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::editPreferences)
+            {
+                CtrlrLuaMethodCodeEditorSettings s(*luaMethodEditor, SharedValues::getSearchTabsValue());
+                
+                _DBG("Attempting to show modal dialog.");
+
+                CtrlrDialogWindow::showModalDialog ("Code editor preferences", &s, false, luaMethodEditor);
+                
+                _DBG("Modal dialog returned.");
+
+                if (activePanel)
+                {
+                    auto& manager = activePanel->getCtrlrManagerOwner();
+
+                    luaMethodEditor->getComponentTree().setProperty (Ids::luaMethodEditorFont, manager.getFontManager().getStringFromFont (s.getFont()), nullptr);
+                    luaMethodEditor->getComponentTree().setProperty (Ids::luaMethodEditorBgColour, COLOUR2STR (s.getBgColour()), nullptr);
+                    luaMethodEditor->getComponentTree().setProperty (Ids::luaMethodEditorLineNumbersBgColour, COLOUR2STR(s.getLineNumbersBgColour()), nullptr);
+                    luaMethodEditor->getComponentTree().setProperty (Ids::luaMethodEditorLineNumbersColour, COLOUR2STR(s.getLineNumbersColour()), nullptr);
+                    luaMethodEditor->updateTabs();
+                }
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::editSingleLineComment)
+            {
+                if (auto* editor = luaMethodEditor->getCurrentEditor())
+                    editor->toggleLineComment();
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::editMultiLineComment)
+            {
+                if (auto* editor = luaMethodEditor->getCurrentEditor())
+                    editor->toggleLongLineComment();
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::editDuplicateLine)
+            {
+                if (auto* editor = luaMethodEditor->getCurrentEditor())
+                    editor->duplicateCurrentLine();
+            }
+            else if (commandID == LuaMethodEditorCommandIDs::editGoToLine)
+            {
+                if (auto* editor = luaMethodEditor->getCurrentEditor())
+                    if (auto* codeComponent = editor->getCodeComponent())
+                        codeComponent->showGoTOPanel();
+            }
+        }
+        else
+        {
+            _DBG("luaMethodEditor is a nullptr.");
+        }
+    }
+    else
+    {
+        _DBG("activePanel is a nullptr.");
+    }
+}
+
+bool CtrlrEditor::perform (const InvocationInfo &info) // Updated v5.6.34. Will now perform the different switch case function for all menu including the LUA method editor menu items.
+{
+    _DBG("perform called with commandID: " + juce::String(info.commandID));
+    
     if (Time::getCurrentTime().toMilliseconds() - lastCommandInvocationMillis < 20)
     {
         return (true);
     }
 
-	lastCommandInvocationMillis = Time::getCurrentTime().toMilliseconds();
+    lastCommandInvocationMillis = Time::getCurrentTime().toMilliseconds();
 
-	switch (info.commandID)
-	{
-		case showKeyboardMappingDialog:
-			performShowKeyboardMappingDialog(info.commandID);
-			break;
+    // Check for the new Lua editor commands using the corrected range.
+    // This is the dispatch point for all the shortcuts we added.
+    // Correct range check for the LuaMethodEditorCommandIDs enum
+    if (info.commandID >= LuaMethodEditorCommandIDs::fileClose && info.commandID <= LuaMethodEditorCommandIDs::editPreferences)
+    {
+        performLuaEditorCommand(info.commandID);
+        return true;
+    }
 
-		case showMidiMonitor:
-			owner.getWindowManager().toggle(CtrlrManagerWindowManager::MidiMonWindow, true);
-			break;
+    // Existing command dispatch logic.
+    switch (info.commandID)
+    {
+        case CtrlrEditor::showKeyboardMappingDialog:
+            performShowKeyboardMappingDialog(info.commandID);
+            break;
 
-		case showLogViewer:
-			owner.getWindowManager().toggle(CtrlrManagerWindowManager::LogViewer, true);
-			break;
+        case CtrlrEditor::showMidiMonitor:
+            owner.getWindowManager().toggle(CtrlrManagerWindowManager::MidiMonWindow, true);
+            break;
 
-		case showMidiCalculator:
-			owner.getWindowManager().toggle(CtrlrManagerWindowManager::MIDICalculator, true);
-			break;
+        case CtrlrEditor::showLogViewer:
+            owner.getWindowManager().toggle(CtrlrManagerWindowManager::LogViewer, true);
+            break;
 
-		case doSaveState:
-			owner.saveStateToDisk();
-			break;
+        case CtrlrEditor::showMidiCalculator:
+            owner.getWindowManager().toggle(CtrlrManagerWindowManager::MIDICalculator, true);
+            break;
 
-		case doOpenPanel:
-			owner.openPanelFromFile(nullptr);
-			break;
+        case CtrlrEditor::doSaveState:
+            owner.saveStateToDisk();
+            break;
 
-		case doNewPanel:
-			owner.addPanel(ValueTree());
-			break;
+        case CtrlrEditor::doOpenPanel:
+            owner.openPanelFromFile(nullptr);
+            break;
 
-		case doRefreshPropertyLists:
-			if (isPanelActive())
-			{
-				if (getActivePanel()->getEditor(false))
-				{
-					CtrlrPanelProperties *props = getActivePanel()->getEditor(false)->getPropertiesPanel();
-					if (props)
-					{
-						props->refreshAll();
-					}
-				}
-			}
-			break;
+        case CtrlrEditor::doNewPanel:
+            owner.addPanel(ValueTree());
+            break;
 
-		 case showGlobalSettingsDialog:
-			owner.getWindowManager().showModalDialog ("Ctrlr/Settings", ScopedPointer <CtrlrSettings> (new CtrlrSettings(owner)), true, this);
-			break;
-		 
+        case CtrlrEditor::doRefreshPropertyLists:
+            if (isPanelActive())
+            {
+                if (getActivePanel()->getEditor(false))
+                {
+                    CtrlrPanelProperties *props = getActivePanel()->getEditor(false)->getPropertiesPanel();
+                    if (props)
+                    {
+                        props->refreshAll();
+                    }
+                }
+            }
+            break;
 
-		/* Updated v5.6.34. It's not showing up on LINUX
-         case showAboutDialog:
-			owner.getWindowManager().showModalDialog ("Ctrlr/About", ScopedPointer <CtrlrAbout> (new CtrlrAbout(owner)), false, this);
-			break;
-         */
-            
-        /*case showGlobalSettingsDialog: // Updated v5.6.34.
-		{
-			// 1. Create the dialog component.
-			// JUCE will take ownership when you pass the raw pointer to showModalDialog.
-			// Using a raw pointer here is safe because showModalDialog (or its underlying
-			// mechanism) is designed to take ownership and delete the component.
-			CtrlrSettings* settingsWindow = new CtrlrSettings(owner);
-			
-			// 2. You can optionally keep a WeakReference if you need to access it later,
-			// though for a simple "settings" dialog that you just show and close, it's often not needed.
-			// WeakReference<CtrlrSettings> settingsRef(settingsWindow); // If you needed to access it later
-			
-			// 3. Show the modal dialog, passing the raw pointer.
-			// The JUCE framework will now manage the lifetime of 'aboutWindow'.
-			owner.getWindowManager().showModalDialog ("Ctrlr/Settings", settingsWindow, true, this); // Is resizable
-		}
-			break;
-        */
+        case CtrlrEditor::showGlobalSettingsDialog:
+            owner.getWindowManager().showModalDialog ("CtrlrX/Settings", ScopedPointer <CtrlrSettings> (new CtrlrSettings(owner)), true, this); // Updated v5.6.34. Was "Ctrlr/"
+            break;
 
-		case showAboutDialog: // Updated v5.6.34. Alternate version to prevent not showing up on LINUX
-		{
-			// 1. Create the dialog component.
-			// JUCE will take ownership when you pass the raw pointer to showModalDialog.
-			// Using a raw pointer here is safe because showModalDialog (or its underlying
-			// mechanism) is designed to take ownership and delete the component.
-			CtrlrAbout* aboutWindow = new CtrlrAbout(owner);
-			
-			// 2. You can optionally keep a WeakReference if you need to access it later,
-			// though for a simple "About" dialog that you just show and close, it's often not needed.
-			// WeakReference<CtrlrAbout> aboutRef(aboutWindow); // If you needed to access it later
-			
-			// 3. Show the modal dialog, passing the raw pointer.
-			// The JUCE framework will now manage the lifetime of 'aboutWindow'.
-			owner.getWindowManager().showModalDialog ("Ctrlr/About", aboutWindow, false, this); // Is not resizable
-		}
-			break;
+        case CtrlrEditor::showAboutDialog:
+        {
+            CtrlrAbout* aboutWindow = new CtrlrAbout(owner);
+            owner.getWindowManager().showModalDialog ("CtrlrX/About", aboutWindow, false, this); // Updated v5.6.34. Was "Ctrlr/"
+        }
+        break;
 
-		case doZoomIn:
-			if (getActivePanelEditor())
-			{
-				double newZoomFactor = (double)getActivePanelEditor()->getProperty(Ids::uiPanelZoom) + 0.1;
-				if (newZoomFactor < MINZOOM || newZoomFactor > MAXZOOM)
-					return true;
-				getActivePanelEditor()->setProperty(Ids::uiPanelZoom, newZoomFactor);
-			}
-			break;
+        case CtrlrEditor::doZoomIn:
+            if (getActivePanelEditor())
+            {
+                double newZoomFactor = (double)getActivePanelEditor()->getProperty(Ids::uiPanelZoom) + 0.1;
+                if (newZoomFactor < MINZOOM || newZoomFactor > MAXZOOM)
+                    return true;
+                getActivePanelEditor()->setProperty(Ids::uiPanelZoom, newZoomFactor);
+            }
+            break;
 
-		case doZoomOut:
-			if (getActivePanelEditor())
-			{
-				double newZoomFactor = (double)getActivePanelEditor()->getProperty(Ids::uiPanelZoom) - 0.1;
-				if (newZoomFactor < MINZOOM || newZoomFactor >MAXZOOM)
-					return true;
-				getActivePanelEditor()->setProperty(Ids::uiPanelZoom, newZoomFactor);
-			}
-			break;
+        case CtrlrEditor::doZoomOut:
+            if (getActivePanelEditor())
+            {
+                double newZoomFactor = (double)getActivePanelEditor()->getProperty(Ids::uiPanelZoom) - 0.1;
+                if (newZoomFactor < MINZOOM || newZoomFactor >MAXZOOM)
+                    return true;
+                getActivePanelEditor()->setProperty(Ids::uiPanelZoom, newZoomFactor);
+            }
+            break;
 
-		case doCopy:
-			getActivePanel()->getCanvas()->copy();
-			break;
+        case CtrlrEditor::doCopy:
+            getActivePanel()->getCanvas()->copy();
+            break;
 
-		case doCut:
-			getActivePanel()->getCanvas()->cut();
-			break;
+        case CtrlrEditor::doCut:
+            getActivePanel()->getCanvas()->cut();
+            break;
 
-		case doPaste:
-			getActivePanel()->getCanvas()->paste();
-			break;
+        case CtrlrEditor::doPaste:
+            getActivePanel()->getCanvas()->paste();
+            break;
 
-		case doUndo:
-			getActivePanel()->undo();
-			break;
+        case CtrlrEditor::doUndo:
+            getActivePanel()->undo();
+            break;
 
-		case doRedo:
-			getActivePanel()->redo();
-			break;
+        case CtrlrEditor::doRedo:
+            getActivePanel()->redo();
+            break;
 
-        case doSearchForProperty:
+        case CtrlrEditor::doSearchForProperty:
             getActivePanelEditor()->searchForProperty();
             break;
 
-		case doSave:
-			getActivePanel()->savePanel();
-			break;
+        case CtrlrEditor::doSave:
+            getActivePanel()->savePanel();
+            break;
 
-		case doClose:
-			if (getActivePanel()->canClose(true))
-			{
-				owner.removePanel(getActivePanelEditor());
-			}
-			break;
+        case CtrlrEditor::doClose:
+            if (getActivePanel()->canClose(true))
+            {
+                owner.removePanel(getActivePanelEditor());
+            }
+            break;
 
-		case doSaveAs:
-			getActivePanel()->savePanelAs(doExportFileText);
-			break;
+        case CtrlrEditor::doSaveAs:
+            getActivePanel()->savePanelAs(doExportFileText);
+            break;
 
-		case doSaveVersioned:
-			getActivePanel()->savePanelVersioned();
-			break;
+        case CtrlrEditor::doSaveVersioned:
+            getActivePanel()->savePanelVersioned();
+            break;
 
-		case doExportFileText:
-		case doExportFileZText:
-		case doExportFileBin:
-		case doExportFileZBin:
-		case doExportFileZBinRes:
-		case doExportFileInstance:
-		case doExportFileInstanceRestricted:
-		case doExportGenerateUID:
-			getActivePanel()->savePanelAs (info.commandID);
-			break;
+        case CtrlrEditor::doExportFileText:
+        case CtrlrEditor::doExportFileZText:
+        case CtrlrEditor::doExportFileBin:
+        case CtrlrEditor::doExportFileZBin:
+        case CtrlrEditor::doExportFileZBinRes:
+        case CtrlrEditor::doExportFileInstance:
+        case CtrlrEditor::doExportGenerateUID:
+        case CtrlrEditor::doExportFileInstanceRestricted:
+            getActivePanel()->savePanelAs (info.commandID);
+            break;
 
-		case doViewPropertyDisplayIDs:
-			if (getActivePanel()) getActivePanel()->setProperty (Ids::panelPropertyDisplayIDs, !getActivePanel()->getProperty(Ids::panelPropertyDisplayIDs));
-			break;
+        case CtrlrEditor::doViewPropertyDisplayIDs:
+            if (getActivePanel()) getActivePanel()->setProperty (Ids::panelPropertyDisplayIDs, !getActivePanel()->getProperty(Ids::panelPropertyDisplayIDs));
+            break;
 
-		case doPanelMode:
-			DBG("doPanelMode");
-			if (getActivePanelEditor()) getActivePanelEditor()->setProperty (Ids::uiPanelEditMode, !getActivePanelEditor()->getProperty(Ids::uiPanelEditMode));
-			break;
+        case CtrlrEditor::doPanelMode:
+            DBG("doPanelMode");
+            if (getActivePanelEditor()) getActivePanelEditor()->setProperty (Ids::uiPanelEditMode, !getActivePanelEditor()->getProperty(Ids::uiPanelEditMode));
+            break;
 
-		case doPanelLock:
-			if (getActivePanelEditor()) getActivePanelEditor()->setProperty (Ids::uiPanelLock, !(bool)getActivePanelEditor()->getProperty(Ids::uiPanelLock));
-			break;
+        case CtrlrEditor::doPanelLock:
+            if (getActivePanelEditor()) getActivePanelEditor()->setProperty (Ids::uiPanelLock, !(bool)getActivePanelEditor()->getProperty(Ids::uiPanelLock));
+            break;
 
-		case doPanelDisableCombosOnEdit:
-			if (getActivePanelEditor()) getActivePanelEditor()->setProperty (Ids::uiPanelDisableCombosOnEdit, !(bool)getActivePanelEditor()->getProperty(Ids::uiPanelDisableCombosOnEdit));
-			break;
+        case CtrlrEditor::doPanelDisableCombosOnEdit:
+            if (getActivePanelEditor()) getActivePanelEditor()->setProperty (Ids::uiPanelDisableCombosOnEdit, !(bool)getActivePanelEditor()->getProperty(Ids::uiPanelDisableCombosOnEdit));
+            break;
 
-		case showLuaEditor:
-			if (getActivePanel()) getActivePanel()->getPanelWindowManager().toggle (CtrlrPanelWindowManager::LuaMethodEditor, true);
-			break;
+        case CtrlrEditor::showLuaEditor:
+            if (getActivePanel()) getActivePanel()->getPanelWindowManager().toggle (CtrlrPanelWindowManager::LuaMethodEditor, true);
+            break;
 
-		case doRefreshDeviceList:
-			performMidiDeviceRefresh();
-			break;
+        case CtrlrEditor::doRefreshDeviceList:
+            performMidiDeviceRefresh();
+            break;
 
-		case showLuaConsole:
-			if (getActivePanel()) getActivePanel()->getPanelWindowManager().toggle (CtrlrPanelWindowManager::LuaConsole, true);
-			break;
+        case CtrlrEditor::showLuaConsole:
+            if (getActivePanel()) getActivePanel()->getPanelWindowManager().toggle (CtrlrPanelWindowManager::LuaConsole, true);
+            break;
 
-		case showComparatorTables:
-			if (getActivePanel()) getActivePanel()->dumpComparatorTables();
-			break;
+        case CtrlrEditor::showComparatorTables:
+            if (getActivePanel()) getActivePanel()->dumpComparatorTables();
+            break;
 
-		case showModulatorList:
-			if (getActivePanel()) getActivePanel()->getPanelWindowManager().toggle (CtrlrPanelWindowManager::ModulatorList, true);
-			break;
+        case CtrlrEditor::showModulatorList:
+            if (getActivePanel()) getActivePanel()->getPanelWindowManager().toggle (CtrlrPanelWindowManager::ModulatorList, true);
+            break;
 
-		case showLayers:
-			if (getActivePanel()) getActivePanel()->getPanelWindowManager().toggle (CtrlrPanelWindowManager::LayerEditor, true);
-			break;
+        case CtrlrEditor::showLayers:
+            if (getActivePanel()) getActivePanel()->getPanelWindowManager().toggle (CtrlrPanelWindowManager::LayerEditor, true);
+            break;
 
-		case doSendSnapshot:
-			if (getActivePanel()) getActivePanel()->sendSnapshot();
-			break;
+        case CtrlrEditor::doSendSnapshot:
+            if (getActivePanel()) getActivePanel()->sendSnapshot();
+            break;
 
-		case doShowMidiSettingsDialog:
-			if (getActivePanel()) getActivePanel()->getPanelWindowManager().toggle (CtrlrPanelWindowManager::MIDISettings, true);
-			break;
+        case CtrlrEditor::doShowMidiSettingsDialog:
+            if (getActivePanel()) getActivePanel()->getPanelWindowManager().toggle (CtrlrPanelWindowManager::MIDISettings, true);
+            break;
 
-		case optMidiInputFromHost:
-		case optMidiInputFromHostCompare:
-		case optMidiOutuptToHost:
-		    /* This should be fixed by the time check on the top of this method */
-			//if (info.invocationMethod == ApplicationCommandTarget::InvocationInfo::direct)
+        case CtrlrEditor::optMidiInputFromHost:
+        case CtrlrEditor::optMidiInputFromHostCompare:
+        case CtrlrEditor::optMidiOutuptToHost:
             performMidiHostOptionChange(info.commandID);
-			break;
+            break;
 
-		case optMidiSnapshotOnLoad:
-		case optMidiSnapshotOnProgramChange:
+        case CtrlrEditor::optMidiSnapshotOnLoad:
+        case CtrlrEditor::optMidiSnapshotOnProgramChange:
             performMidiOptionChange(info.commandID);
-			break;
+            break;
 
-		case optMidiThruD2D:
-		case optMidiThruD2H:
-		case optMidiThruH2D:
-		case optMidiThruH2H:
-		case optMidiThruD2DChannelize:
-		case optMidiThruD2HChannelize:
-		case optMidiThruH2DChannelize:
-		case optMidiThruH2HChannelize:
-		    /* This should be fixed by the time check on the top of this method */
-			//if (info.invocationMethod == ApplicationCommandTarget::InvocationInfo::direct)
+        case CtrlrEditor::optMidiThruD2D:
+        case CtrlrEditor::optMidiThruD2H:
+        case CtrlrEditor::optMidiThruH2D:
+        case CtrlrEditor::optMidiThruH2H:
+        case CtrlrEditor::optMidiThruD2DChannelize:
+        case CtrlrEditor::optMidiThruD2HChannelize:
+        case CtrlrEditor::optMidiThruH2DChannelize:
+        case CtrlrEditor::optMidiThruH2HChannelize:
             performMidiThruChange(info.commandID);
-			break;
+            break;
 
-		case doCrash:
-			invalidCtrlrPtr->cancelPendingUpdate();
-			break;
+        case CtrlrEditor::doCrash:
+            invalidCtrlrPtr->cancelPendingUpdate();
+            break;
 
-		case doDumpVstTables:
-			owner.getVstManager().dumpDebugData();
-			if (isPanelActive())
-			{
-				getActivePanel()->dumpDebugData();
-			}
-			break;
+        case CtrlrEditor::doDumpVstTables:
+            owner.getVstManager().dumpDebugData();
+            if (isPanelActive())
+            {
+                getActivePanel()->dumpDebugData();
+            }
+            break;
 
-		case doQuit:
-			if (owner.canCloseWindow())
-			{
-				JUCEApplication::quit();
-			}
-			break;
+        case CtrlrEditor::doQuit:
+            if (owner.canCloseWindow())
+            {
+                JUCEApplication::quit();
+            }
+            break;
 
-		case doRegisterExtension:
-			tempResult = owner.getNativeObject().registerFileHandler();
-			if (tempResult.wasOk())
-			{
-				INFO("Register file handler", "Registration successful");
-			}
-			else
-			{
-				WARN("Registration failed");
-			}
-			break;
+        case CtrlrEditor::doRegisterExtension:
+            tempResult = owner.getNativeObject().registerFileHandler();
+            if (tempResult.wasOk())
+            {
+                INFO("Register file handler", "Registration successful");
+            }
+            else
+            {
+                WARN("Registration failed");
+            }
+            break;
 
-		default:
-			break;
-	}
+        default:
+            break;
+    }
 
-	return (true);
+    return (true);
 }
 
 void CtrlrEditor::performRecentFileOpen(const int menuItemID)

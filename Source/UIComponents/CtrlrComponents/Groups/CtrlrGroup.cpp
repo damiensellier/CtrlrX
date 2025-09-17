@@ -32,8 +32,8 @@ void CtrlrGroupContentComponent::customLookAndFeelChanged(LookAndFeelBase *custo
 
 //==============================================================================
 CtrlrGroup::CtrlrGroup (CtrlrModulator &owner)
-    : CtrlrComponent(owner), content(*this),
-      label (0)
+    : CtrlrComponent(owner), content(*this)
+	// , label (0) // Updated v5.6.34. Thanks to @dnaldoog
 {
     addAndMakeVisible (label = new Label ("new label",
                                           "Group Text"));
@@ -108,15 +108,9 @@ CtrlrGroup::CtrlrGroup (CtrlrModulator &owner)
 
 CtrlrGroup::~CtrlrGroup()
 {
-    //[Destructor_pre]. You can add your own custom destruction code here..
 	owner.getModulatorTree().removeListener (this);
 	componentTree.removeListener (this);
-    //[/Destructor_pre]
-
-    deleteAndZero (label);
-
-    //[Destructor]. You can add your own custom destruction code here..
-    //[/Destructor]
+    // deleteAndZero (label); // Removed v5.6.34. Thanks to @dnaldoog
 }
 
 //==============================================================================

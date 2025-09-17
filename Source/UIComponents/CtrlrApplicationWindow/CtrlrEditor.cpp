@@ -23,6 +23,9 @@ CtrlrEditor::CtrlrEditor (CtrlrProcessor *_ownerFilter, CtrlrManager &_owner)
     currentLookAndFeel = new LookAndFeel_V4(juce::LookAndFeel_V4::getLightColourScheme());
     setLookAndFeel(currentLookAndFeel); // Set the editor's LookAndFeel initially
 
+    menuBar = new MenuBarComponent(this); // Added v5.6.34
+    addAndMakeVisible(menuBar); // Added v5.6.34
+	
 	Rectangle<int> editorRect;
     // http://www.juce.com/forum/topic/applicationcommandmanager-menus-not-active-annoyance#new
     owner.getCommandManager().setFirstCommandTarget (this);
@@ -183,9 +186,41 @@ CtrlrEditor::CtrlrEditor (CtrlrProcessor *_ownerFilter, CtrlrManager &_owner)
 
 CtrlrEditor::~CtrlrEditor()
 {
-    menuBar->setLookAndFeel(nullptr); // Detach LookAndFeel from menuBar first
-    deleteAndZero (menuBar);
-	masterReference.clear();
+    // 1. First, make sure all child components are detached from the LookAndFeel
+	setLookAndFeel(nullptr);
+	
+    if (menuBar != nullptr)
+        menuBar->setLookAndFeel(nullptr);
+	
+    // 2. Clear the global default LookAndFeel if it was set
+    // This is important if you ever call LookAndFeel::setDefaultLookAndFeel()
+    LookAndFeel::setDefaultLookAndFeel(nullptr);
+
+    // 3. Now let the ScopedPointer's destructor run, which will safely delete the object.
+    // The ScopedPointer will do this automatically when the destructor finishes,
+    // so no manual 'deleteAndZero' or 'currentLookAndFeel.reset()' is needed.
+
+    // 4. Finally, let the parent component's destructor destroy the child components
+    // and let the weak reference macro clean up
+	
+	
+	// ---
+	// WAS
+	// ---
+	
+	// USELESS : menuBar as a child component to CtrlrEditor with the line addAndMakeVisible(menuBar).
+	// This operation transfers ownership of the menuBar object to its parent, CtrlrEditor.
+	// When a juce::Component (in this case, CtrlrEditor) is destroyed, its destructor automatically calls deleteAllChildren().
+	// This function iterates through all its child components and safely deletes them.
+	// menuBar->setLookAndFeel(nullptr); // Detach LookAndFeel from menuBar first
+	
+	// USELESS : When you use addAndMakeVisible(menuBar), the CtrlrEditor component becomes the parent of menuBar.
+	// This means the CtrlrEditor now owns the menuBar and is responsible for its destruction.
+    // deleteAndZero (menuBar);
+	
+	// USELESS : because JUCE_DECLARE_WEAK_REFERENCEABLE macro is in the header already.
+	// It automatically handles the weak reference master
+	// masterReference.clear();
 }
 
 void CtrlrEditor::paint (Graphics& g)
@@ -229,6 +264,11 @@ void CtrlrEditor::setEditorLookAndFeel (const String &lookAndFeelDesc, const var
             }
         }
 
+        // Explicitly set the L&F of the editor and menubar to nullptr first
+        // This ensures no components are using the old L&F before we destroy it.
+        setLookAndFeel (nullptr);
+        menuBar->setLookAndFeel(nullptr);
+        
         currentLookAndFeel = newLookAndFeel; // Transfers ownership from ScopedPointer
         setLookAndFeel (currentLookAndFeel); // Set the editor's LookAndFeel, which propagates to children
 

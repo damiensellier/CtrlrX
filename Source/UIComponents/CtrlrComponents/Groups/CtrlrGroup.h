@@ -100,7 +100,9 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    Label* label;
+    // Label* label;
+	juce::ScopedPointer<Label> label; // Updated v5.6.34. Thanks to @dnaldoog
+	// std::unique_ptr<Label> label; // compliant to JUCE 6.0.8 standards
 
     //==============================================================================
     // (prevent copy constructor and operator= being generated..)

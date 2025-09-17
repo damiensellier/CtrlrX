@@ -1047,6 +1047,9 @@
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditorSettings.cpp">
       <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditorSettingsColourLnF.cpp">
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerControls.cpp">
       <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClCompile>
@@ -1117,6 +1120,9 @@
       <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditor.cpp">
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditorIcons.cpp">
       <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelFindProperty.cpp">
@@ -4022,6 +4028,9 @@
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditorSettings.h">
       <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodCodeEditorSettingsColourLnF.h">
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodDebuggerControls.h">
       <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
@@ -4041,6 +4050,9 @@
       <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditor.h">
+      <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorCommandIDs.h">
       <Filter>CtrlrX\Source\UIComponents\CtrlrLua\MethodEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrLua\MethodEditor\CtrlrLuaMethodEditorConsole.h">
@@ -4086,6 +4098,9 @@
       <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditor.h">
+      <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelEditorIcons.h">
       <Filter>CtrlrX\Source\UIComponents\CtrlrPanel</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\UIComponents\CtrlrPanel\CtrlrPanelFindProperty.h">

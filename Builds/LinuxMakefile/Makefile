@@ -269,6 +269,7 @@ OBJECTS_SHARED_CODE := \
   $(JUCE_OBJDIR)/CtrlrLuaCodeTokeniser_f07b7773.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditor_2dacc3f5.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditorSettings_3cdccab8.o \
+  $(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditorSettingsColourLnF_21730b8a.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodDebuggerControls_6e517932.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodDebuggerInfo_e4ac56aa.o \
   $(JUCE_OBJDIR)/CtrlrLuaMethodDebuggerPrompt_18948aa0.o \
@@ -293,6 +294,7 @@ OBJECTS_SHARED_CODE := \
   $(JUCE_OBJDIR)/CtrlrPanelCanvasLayers_24f6490d.o \
   $(JUCE_OBJDIR)/CtrlrPanelComponentProperties_a6700c67.o \
   $(JUCE_OBJDIR)/CtrlrPanelEditor_b6d0d2c0.o \
+  $(JUCE_OBJDIR)/CtrlrPanelEditorIcons_1dd7a784.o \
   $(JUCE_OBJDIR)/CtrlrPanelFindProperty_6784c901.o \
   $(JUCE_OBJDIR)/CtrlrPanelLayerList_8154b2e6.o \
   $(JUCE_OBJDIR)/CtrlrPanelLayerListItem_f5855019.o \
@@ -1147,6 +1149,11 @@ $(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditorSettings_3cdccab8.o: ../../Source/UICompo
 	@echo "Compiling CtrlrLuaMethodCodeEditorSettings.cpp"
 	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_SHARED_CODE) $(JUCE_CFLAGS_SHARED_CODE) -o "$@" -c "$<"
 
+$(JUCE_OBJDIR)/CtrlrLuaMethodCodeEditorSettingsColourLnF_21730b8a.o: ../../Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettingsColourLnF.cpp
+	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
+	@echo "Compiling CtrlrLuaMethodCodeEditorSettingsColourLnF.cpp"
+	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_SHARED_CODE) $(JUCE_CFLAGS_SHARED_CODE) -o "$@" -c "$<"
+
 $(JUCE_OBJDIR)/CtrlrLuaMethodDebuggerControls_6e517932.o: ../../Source/UIComponents/CtrlrLua/MethodEditor/CtrlrLuaMethodDebuggerControls.cpp
 	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
 	@echo "Compiling CtrlrLuaMethodDebuggerControls.cpp"
@@ -1265,6 +1272,11 @@ $(JUCE_OBJDIR)/CtrlrPanelComponentProperties_a6700c67.o: ../../Source/UIComponen
 $(JUCE_OBJDIR)/CtrlrPanelEditor_b6d0d2c0.o: ../../Source/UIComponents/CtrlrPanel/CtrlrPanelEditor.cpp
 	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
 	@echo "Compiling CtrlrPanelEditor.cpp"
+	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_SHARED_CODE) $(JUCE_CFLAGS_SHARED_CODE) -o "$@" -c "$<"
+
+$(JUCE_OBJDIR)/CtrlrPanelEditorIcons_1dd7a784.o: ../../Source/UIComponents/CtrlrPanel/CtrlrPanelEditorIcons.cpp
+	-$(V_AT)mkdir -p $(JUCE_OBJDIR)
+	@echo "Compiling CtrlrPanelEditorIcons.cpp"
 	$(V_AT)$(CXX) $(JUCE_CXXFLAGS) $(JUCE_CPPFLAGS_SHARED_CODE) $(JUCE_CFLAGS_SHARED_CODE) -o "$@" -c "$<"
 
 $(JUCE_OBJDIR)/CtrlrPanelFindProperty_6784c901.o: ../../Source/UIComponents/CtrlrPanel/CtrlrPanelFindProperty.cpp

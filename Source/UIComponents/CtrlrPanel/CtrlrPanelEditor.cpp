@@ -19,6 +19,10 @@
 #include "CtrlrComponents/CtrlrComponent.h"
 
 
+//--------------------------------------------------------------------------------------------------
+// CtrlrPanelNotifier
+//--------------------------------------------------------------------------------------------------
+
 CtrlrPanelNotifier::CtrlrPanelNotifier(CtrlrPanelEditor &_owner) // Added back v5.6.31 for file management bottom notification bar
     : owner(_owner), background(Colours::lightgrey)
 {
@@ -29,6 +33,13 @@ CtrlrPanelNotifier::CtrlrPanelNotifier(CtrlrPanelEditor &_owner) // Added back v
     text->setColour (Label::outlineColourId, Colours::transparentBlack);
     text->setFont (Font (12.0f, Font::bold));
     text->setText ("", dontSendNotification); // Default text required
+}
+
+CtrlrPanelNotifier::~CtrlrPanelNotifier() // Added v5.6.34. Thanks to @dnaldoog
+{
+	// The ScopedPointer 'text' will be automatically cleaned up.
+	// No manual cleanup is needed. But...
+	text = nullptr; // Force ScopedPointer cleanup
 }
 
 void CtrlrPanelNotifier::paint (Graphics &g) // Added back v5.6.31 for file management bottom notification bar
@@ -70,26 +81,34 @@ Colour CtrlrPanelNotifier::getBackgroundColourForNotification(const CtrlrNotific
     return (Colours::lightgrey);
 }
 
+//--------------------------------------------------------------------------------------------------
+// CtrlrPanelEditor
+//--------------------------------------------------------------------------------------------------
 
-
-CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManager, const String &panelName)
-        : Component(L"Ctrlr Panel Editor"),
-          lastEditMode(true),
-          ctrlrManager(_ctrlrManager),
-          owner(_owner),
-          panelEditorTree(Ids::uiPanelEditor),
-          ctrlrComponentSelection(nullptr),
-          ctrlrPanelProperties(nullptr),
-          spacerComponent(nullptr)
-{   
-    ctrlrComponentSelection = new CtrlrComponentSelection(*this);
-    //removeColour(TooltipWindow::textColourId);
+CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManager, const juce::String &panelName)
+    : juce::Component(L"Ctrlr Panel Editor"),
+    lastEditMode(true),
+    ctrlrManager(_ctrlrManager),
+    owner(_owner),
+    panelEditorTree(Ids::uiPanelEditor),
+    currentRestoreState(true),
+    canvasWidth(0),
+    canvasHeight(0)
+{
+    ctrlrComponentSelection.reset(new CtrlrComponentSelection(*this));
     
-    addAndMakeVisible(ctrlrPanelViewport = new CtrlrPanelViewport(*this));
-    addAndMakeVisible(ctrlrPanelProperties = new CtrlrPanelProperties(*this));
-    addAndMakeVisible(spacerComponent = new StretchableLayoutResizerBar(&layoutManager, 1, true));
-    addAndMakeVisible (ctrlrPanelNotifier = new CtrlrPanelNotifier(*this));  // Added back v5.6.31 for file management bottom notification bar
+    // Corrected to use the proper syntax for ScopedPointers
+    ctrlrPanelViewport = new CtrlrPanelViewport(*this);
+    ctrlrPanelProperties = new CtrlrPanelProperties(*this);
+    spacerComponent = new juce::StretchableLayoutResizerBar(&layoutManager, 1, true);
     
+    addAndMakeVisible(ctrlrPanelViewport);
+    addAndMakeVisible(ctrlrPanelProperties);
+    addAndMakeVisible(spacerComponent);
+    
+	// Added back v5.6.31 for file management bottom notification bar
+    addAndMakeVisible(ctrlrPanelNotifier = new CtrlrPanelNotifier(*this));
+	
     ctrlrPanelNotifier->setAlwaysOnTop (true);  // Added back v5.6.31 for file management bottom notification bar
     ctrlrPanelNotifier->setVisible (false);  // Added back v5.6.31 for file management bottom notification bar
     //componentAnimator.addChangeListener (this); // Added back v5.6.31 not working
@@ -233,16 +252,34 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
 
 CtrlrPanelEditor::~CtrlrPanelEditor()
 {
-    //componentAnimator.removeChangeListener (this); // NOT WORKING Added back v5.6.31 for file management bottom notification bar
-    // setLookAndFeel(nullptr); // Updated v5.6.30. reset LnF to global LnF from Preferences when closing panel
+    // Check if the component selection object is valid before trying to use it
+    if (ctrlrComponentSelection)
+    {
+        // Remove the listener before the objects are destroyed
+        ctrlrComponentSelection->removeChangeListener(ctrlrPanelProperties.get());
+    }
+
     getPanelEditorTree().removeListener(this);
     owner.getPanelTree().removeListener(this);
     owner.getPanelTree().removeChild(getPanelEditorTree(), 0);
-    ctrlrComponentSelection->removeChangeListener(ctrlrPanelProperties);
-    masterReference.clear();
-    deleteAndZero(ctrlrPanelProperties);
-    deleteAndZero(spacerComponent);
-    deleteAndZero(ctrlrPanelViewport);
+
+    componentAnimator.removeChangeListener(this);
+    
+    // Set look and feel to null to clean up
+    setLookAndFeel(nullptr);
+    if (getCanvas())
+    {
+        getCanvas()->setLookAndFeel(nullptr);
+    }
+    // This is important: JUCE's default look and feel can also be a source of leaks if not managed
+    juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
+
+	// USELESS : because JUCE_DECLARE_WEAK_REFERENCEABLE macro is in the header already.
+	// It automatically handles the weak reference master
+	// masterReference.clear();
+    
+    // The ScopedPointers will now automatically delete the components they own
+    // (ctrlrPanelViewport, ctrlrPanelProperties, spacerComponent, ctrlrPanelNotifier).
 }
 
 void CtrlrPanelEditor::visibilityChanged()
@@ -515,22 +552,30 @@ void CtrlrPanelEditor::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasC
         }
         else if (property == Ids::uiPanelLookAndFeel)
         {
-            if (lookAndFeel)
-            {
-                getCanvas()->setLookAndFeel(nullptr);
-                delete lookAndFeel.release();
-            }
-            
-            lookAndFeel.reset(getLookAndFeelFromDescription(getProperty(property)));
-            getCanvas()->setLookAndFeel(lookAndFeel.get());
-            
-            setLookAndFeel(getLookAndFeelFromDescription(getProperty(Ids::uiPanelLookAndFeel))); // Updates the current component LookAndFeel : PanelEditor
-            LookAndFeel::setDefaultLookAndFeel(getLookAndFeelFromDescription(getProperty(Ids::uiPanelLookAndFeel))); // Force selected LnF as Default LnF for popups, combobox, alert windows
-            lookAndFeelChanged();
+            // 1. Create a single new LookAndFeel object and give ownership to a unique_ptr.
+            //    This is the only place we call the function that allocates a new object.
+            auto newLookAndFeel = std::unique_ptr<juce::LookAndFeel>(getLookAndFeelFromDescription(getProperty(property)));
+
+            // 2. Safely check if the pointer is valid. If not, do nothing.
+            if (newLookAndFeel.get() == nullptr)
+                return;
+
+            // 3. Now, set all the necessary LookAndFeel pointers using this ONE new object.
+            //    The .get() method returns the raw pointer without transferring ownership.
+            getCanvas()->setLookAndFeel(newLookAndFeel.get());
+            setLookAndFeel(newLookAndFeel.get());
+            LookAndFeel::setDefaultLookAndFeel(newLookAndFeel.get());
+
+            // 4. Finally, assign the new unique_ptr to the class member.
+            //    This safely manages the lifetime of the new object.
+            lookAndFeel = std::move(newLookAndFeel);
+
+            // lookAndFeelChanged(); // Useless ???
             
             if (!getProperty(Ids::uiPanelLegacyMode)) // Added v5.6.30. Protects Legacy panels' BKG Colours when being assigned LnF V3
             {
-                setProperty(Ids::uiPanelViewPortBackgroundColour, (String) Component::findColour (ResizableWindow::backgroundColourId).withAlpha(0.7f).toString()); // Update Canvas props
+                // Update colors based on the new valid LookAndFeel.
+				setProperty(Ids::uiPanelViewPortBackgroundColour, (String) Component::findColour (ResizableWindow::backgroundColourId).withAlpha(0.7f).toString()); // Update Canvas props
                 setProperty(Ids::uiPanelBackgroundColour, (String) Component::findColour (ResizableWindow::backgroundColourId).toString());
                 setProperty(Ids::uiPanelBackgroundColour1, (String) Component::findColour (ResizableWindow::backgroundColourId).toString());
                 setProperty(Ids::uiPanelBackgroundColour2, (String) Component::findColour (ResizableWindow::backgroundColourId).darker(0.2f).toString());
@@ -738,4 +783,19 @@ void CtrlrPanelEditor::reloadResources(Array<CtrlrPanelResource *> resourcesThat
 
 void CtrlrPanelEditor::searchForProperty()
 {
+}
+
+bool CtrlrPanelEditor::luaEditorExistsAndIsFocused() // Added v5.6.34. Required to pass keypress to the LUA method manager for menu items. Handles the focus gain/loss.
+{
+    // We use the public getContent() method on the window manager.
+    // This will return a pointer to the component inside the Lua editor window.
+    juce::Component* luaEditorContent = owner.getPanelWindowManager().getContent(CtrlrPanelWindowManager::LuaMethodEditor);
+
+    // Now we check if the content component exists and has keyboard focus.
+    if (luaEditorContent != nullptr && luaEditorContent->hasKeyboardFocus(true))
+    {
+        return true;
+    }
+
+    return false;
 }

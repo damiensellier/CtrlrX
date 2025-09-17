@@ -3,6 +3,15 @@
 
 #include "CtrlrIDManager.h"
 #include "CtrlrPanel/CtrlrPanel.h"
+#include "CtrlrPanel/CtrlrPanelCanvas.h"
+#include "CtrlrPanel/CtrlrPanelCanvasLayer.h"
+#include "CtrlrPanel/CtrlrPanelEditorIcons.h" // Added v5.6.34.
+#include <juce_graphics/juce_graphics.h>
+#include <juce_gui_basics/juce_gui_basics.h>
+#include "CtrlrLog.h" // Case sensitive on LINUX
+
+#include <functional>
+
 class CtrlrFloatingWindow;
 
 class CtrlrPropertyChild: public ChangeBroadcaster
@@ -127,6 +136,7 @@ class CtrlrChoicePropertyComponent  : public Component,
 		bool numeric;
 };
 
+/* Colour Property */
 class CtrlrColourLabel : public Label
 {
 	TextEditor *createEditorComponent ()
@@ -140,14 +150,82 @@ class CtrlrColourLabel : public Label
 	}
 };
 
+
+// Helper class to get a callback when the modal window is dismissed
+class ModalCallback  : public juce::ModalComponentManager::Callback
+{
+public:
+    std::function<void()> onDismissed;
+
+    void modalStateFinished (int) override
+    {
+        if (onDismissed)
+            onDismissed();
+    }
+};
+
+// Added v5.6.34. Required extra class for the colour picker button so that it follows the lookAndFeel colourScheme in the panel windows as well as the others (layer manager etc)
+class ColourPickerButton : public juce::Button
+{
+public:
+    ColourPickerButton(const juce::String& name = juce::String())
+        : juce::Button(name)
+    {
+        setWantsKeyboardFocus(false);
+    }
+
+    void paintButton(juce::Graphics& g, bool isMouseOver, bool isMouseDown) override
+    {
+        // Start with the default color.
+        auto buttonColour = getLookAndFeel().findColour(juce::TextButton::buttonColourId);
+
+        if (getToggleState() || isMouseDown) // I could not get it to work properly, I was unable to get it reset when clicking outside the oclour selector popup. the only way to reset was to click again in the button itself.
+        {
+            buttonColour = getLookAndFeel().findColour(juce::TextButton::buttonColourId);
+        }
+        else if (isMouseOver) // Not always reset propertly if we open the colour selector
+        {
+            buttonColour = getLookAndFeel().findColour(juce::TextButton::buttonColourId).contrasting(0.02f);
+        }
+        
+        // Now, draw the button with the determined color.
+        g.setColour(buttonColour);
+        g.fillRoundedRectangle(getLocalBounds().toFloat(), 4.0f);
+        
+        // 3. Draw the button's outline
+        g.setColour(getLookAndFeel().findColour(juce::ComboBox::outlineColourId));
+        g.drawRoundedRectangle(getLocalBounds().toFloat(), 4.0f, 1.0f);
+
+        // 4. Draw the eyedropper icon.
+        const juce::String eyedropperSVG = SvgIconManager::getSvgString(IconType::EyeDropper);
+
+        std::unique_ptr<juce::Drawable> icon = juce::Drawable::createFromImageData(eyedropperSVG.toRawUTF8(), strlen(eyedropperSVG.toRawUTF8()));
+
+        if (icon)
+        {
+            // Use a contrasting color for the icon so it's always visible.
+            auto iconColour = buttonColour.contrasting();
+            icon->replaceColour(juce::Colours::black, iconColour);
+            
+            // Calculate a new, smaller rectangle for the icon to be drawn in.
+            const float iconSizeFactor = 0.4f; // % of the button's size
+            auto iconBounds = getLocalBounds().toFloat().reduced(getLocalBounds().getWidth() * (1.0f - iconSizeFactor) / 2.0f);
+
+            icon->drawWithin(g, iconBounds, juce::RectanglePlacement::centred, 1.0f);
+        }
+    }
+};
+
 class CtrlrColourEditorComponent : 	public Component,
 									public ChangeListener,
 									public ChangeBroadcaster,
-									public Label::Listener
+									public Label::Listener,
+									public Button::Listener
 {
 	public:
 		CtrlrColourEditorComponent(ChangeListener *defaultListener=0);
-		~CtrlrColourEditorComponent() { }
+		~CtrlrColourEditorComponent();
+	
 		void updateLabel();
 		void labelTextChanged (Label *labelThatHasChanged);
 		void resized();
@@ -155,73 +233,22 @@ class CtrlrColourEditorComponent : 	public Component,
 		void setColour (const Colour& newColour, const bool sendChangeMessageNow=false);
 		const Colour getColour(){ return (colour); }
 		void refresh() { updateLabel(); }
-		void mouseDown (const MouseEvent &e);
-		void changeListenerCallback (ChangeBroadcaster* source);
+		void buttonClicked(Button* buttonThatWasClicked) override; // Added v5.6.34.
+		// void mouseDown (const MouseEvent &e);
+		void changeListenerCallback (ChangeBroadcaster* source) override; // Added override
+		void lookAndFeelChanged() override;
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrColourEditorComponent)
 
 	private:
 		CtrlrColourLabel colourTextInput;
+		// ColourPickerButton* colourPickerButton;
+		std::unique_ptr<ColourPickerButton> colourPickerButton;
 		Colour colour;
 		bool canResetToDefault;
 
-		class CtrlrColourSelectorComp   : public Component, public Button::Listener
-		{
-			public:
-				CtrlrColourSelectorComp (CtrlrColourEditorComponent* owner_, const bool canResetToDefault) : owner (owner_), defaultButton (0)
-				{
-		            addAndMakeVisible (selector = new ColourSelector());
-					selector->setName ("Colour");
-					selector->setCurrentColour (owner->getColour());
-					selector->addChangeListener (owner);
-					//Desktop::getInstance().addGlobalMouseListener(this);
-
-					if (canResetToDefault)
-					{
-		                addAndMakeVisible (defaultButton = new TextButton ("Reset to Default"));
-						defaultButton->addListener (this);
-					}
-
-					setSize (300,400);
-				}
-
-				~CtrlrColourSelectorComp()
-				{
-		            deleteAllChildren();
-				}
-
-				void mouseDown (const MouseEvent &e)
-				{
-				}
-
-				void resized()
-				{
-		            if (defaultButton != 0)
-					{
-		                selector->setBounds (0, 0, getWidth(), getHeight() - 30);
-						defaultButton->changeWidthToFitText (22);
-						defaultButton->setTopLeftPosition (10, getHeight() - 26);
-					}
-					else
-					{
-		                selector->setBounds (0, 0, getWidth(), getHeight());
-					}
-				}
-
-				void buttonClicked (Button*)
-		        {
-					owner->resetToDefault();
-					owner->refresh();
-					selector->setCurrentColour (owner->getColour());
-				}
-
-				JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrColourSelectorComp)
-		private:
-
-			CtrlrColourEditorComponent* owner;
-			ColourSelector* selector;
-			TextButton* defaultButton;
-		};
+		void openColourPicker(); // Add this helper method
+		// void updateButtonColour(); // Helper to update button appearance
 };
 
 class CtrlrColourPropertyComponent : public Component, public ChangeListener, public CtrlrPropertyChild
@@ -229,9 +256,10 @@ class CtrlrColourPropertyComponent : public Component, public ChangeListener, pu
 	public:
 		CtrlrColourPropertyComponent (const Value &_valueToControl);
 		~CtrlrColourPropertyComponent();
-		void refresh();
-		void changeListenerCallback (ChangeBroadcaster* source);
-		void resized();
+	
+		void refresh() override;
+		void changeListenerCallback (ChangeBroadcaster* source) override;
+		void resized() override;
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrColourPropertyComponent)
 
@@ -240,6 +268,7 @@ class CtrlrColourPropertyComponent : public Component, public ChangeListener, pu
 		CtrlrColourEditorComponent cs;
 };
 
+/* Read Only Property */
 class CtrlrReadOnlyProperty : public Component, public CtrlrPropertyChild
 {
 	public:
@@ -259,6 +288,7 @@ class CtrlrReadOnlyProperty : public Component, public CtrlrPropertyChild
 		Label value;
 		ValueTree propertyElement;
 		Identifier propertyName;
+		CtrlrPanel* panel; // Added v5.6.34. Thanks to @dnaldoog. Used to get the name of the layer, not the useless long id string
 };
 
 class CtrlrExpressionProperty  : public Component,
@@ -307,38 +337,50 @@ class CtrlrFontPropertyComponent  : public Component,
 									public ComboBox::Listener,
 									public Button::Listener,
 									public Slider::Listener,
-									public CtrlrPropertyChild,
-									public LookAndFeel_V2
+									public CtrlrPropertyChild
+									// public LookAndFeel_V2
 {
 	public:
 		CtrlrFontPropertyComponent (const Value &_valueToControl, CtrlrPanel *_owner);
-		~CtrlrFontPropertyComponent();
-		void refresh();
-		Font getFont();
-		void resized();
-		void comboBoxChanged (ComboBox* comboBoxThatHasChanged);
-		void buttonClicked (Button* buttonThatWasClicked);
-		void sliderValueChanged (Slider* sliderThatWasMoved);
-		Label* createSliderTextBox (Slider& slider);
+		~CtrlrFontPropertyComponent() override; // Mark destructor with override
+    void refresh() override; // Mark as override if it overrides a base class method
+    Font getFont();
+    void resized() override; // Mark as override
 
-		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrFontPropertyComponent);
+    // These are listener methods and should be marked override
+    void comboBoxChanged (ComboBox* comboBoxThatHasChanged) override;
+    void buttonClicked (Button* buttonThatWasClicked) override;
+    void sliderValueChanged (Slider* sliderThatWasMoved) override;
 
-		class SliderLabelComp : public Label
-		{
-			public:
-				SliderLabelComp() : Label ("", "") {}
-				void mouseWheelMove (const MouseEvent&, const MouseWheelDetails&) {}
-		};
+    // This function seems to be part of an old LookAndFeel, so it's best to remove it if you're not using it.
+    // Label* createSliderTextBox (Slider& slider);
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrFontPropertyComponent);
+
+    class SliderLabelComp : public Label
+    {
+    public:
+        SliderLabelComp() : Label ("", "") {}
+        void mouseWheelMove (const MouseEvent&, const MouseWheelDetails&) override {} // Mark as override
+    };
 
 	private:
 		Value valueToControl;
 		StringArray choices;
 		CtrlrPanel *owner;
+	
+		// Pointers for components whose memory will be managed by the parent
 		ComboBox* typeface;
+		ComboBox* fontSizeComboBox; // Replaces the Slider
+		ComboBox* horizontalScaleComboBox; // Replaces the Slider
+		ComboBox* kerningComboBox; // Replaces the Slider
 		DrawableButton* fontBold;
 		DrawableButton* fontItalic;
 		DrawableButton* fontUnderline;
-		Slider* fontSize,*horizontalScale,*kerning;
+
+		Label* fontSizeLabel; // Added v5.6.34. Thanks to @dnaldoog
+		Label* horizontalScaleLabel; // Added v5.6.34. Thanks to @dnaldoog
+		Label* kerningLabel; // Added v5.6.34. Thanks to @dnaldoog
 };
 
 class CtrlrLuaMethodProperty  : public Component,

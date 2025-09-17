@@ -105,6 +105,31 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
     
 	propertyType = CtrlrIDManager::stringToType(identifierDefinition.getProperty("type"));
     
+    // Added v5.6.34. Thanks to @dnaldoog
+    _DBG("Property Name: " + propertyName.toString() + " | XML Type: " + identifierDefinition.getProperty("type").toString() + " | Mapped Type: " + String(propertyType));
+    if (propertyName == Ids::componentLayerUid)
+    {
+        possibleChoices = new StringArray();
+        possibleValues = new Array<var>();
+
+        if (panel != nullptr && panel->getCanvas() != nullptr)
+        {
+            CtrlrPanelCanvas* canvas = panel->getCanvas();
+            for (int i = 0; i < canvas->getNumLayers(); i++)
+            {
+                CtrlrPanelCanvasLayer* layer = canvas->getLayerFromArray(i);
+                if (layer != nullptr)
+                {
+                    possibleChoices->add(layer->getProperty(Ids::uiPanelCanvasLayerName).toString());
+                    possibleValues->add(layer->getProperty(Ids::uiPanelCanvasLayerUid).toString());
+                }
+            }
+        }
+    }
+    _DBG("CtrlrPropertyComponent::getPropertyComponent [POST] propertyType==" + String((int)propertyType) + " visibleText==" + visibleText);
+    
+    // END of addon
+    
     int propertyLineheightBaseValue = 36; // Declare the variable outside the if-else block. Mandatory for Preference window property lines.
     bool propertyLineImprovedLegibility = false; // Declare the variable outside the if-else block. Mandatory for Preference window property lines.
     
@@ -120,7 +145,8 @@ Component *CtrlrPropertyComponent::getPropertyComponent()
             // preferredHeight = 36;
             preferredHeight = roundDoubleToInt(propertyLineheightBaseValue * 1.0); // Updated v5.6.33.
 			// return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true)); // valueToControl, maxNumChars, isMultiLine, isReadOnly
-            return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true, propertyLineImprovedLegibility)); // valueToControl, maxNumChars, isMultiLine, isReadOnly, propertyLineImprovedLegibility
+            // return (new CtrlrTextPropertyComponent (valueToControl, 1024, false, true, propertyLineImprovedLegibility)); // valueToControl, maxNumChars, isMultiLine, isReadOnly, propertyLineImprovedLegibility
+            return (new CtrlrReadOnlyProperty(propertyName, propertyElement, identifierDefinition, panel)); // Updated v5.6.34. Thanks to @dnaldoog.
             
 		case CtrlrIDManager::Text:
             // preferredHeight = 36;
@@ -245,9 +271,20 @@ const String CtrlrPropertyComponent::getElementSubType()
 	{
 		return ("");
 	}
-	else if (propertyElement.getType() == Ids::uiPanelCanvasLayer)
+	else if (propertyElement.getType() == Ids::uiPanelCanvasLayer) // Updated v5.6.34. Thanks to @dnaldoog.
 	{
-		return ("uiPanelCanvasLayer");
+	    // Debug: Print all properties of this element
+        _DBG("Layer element properties:");
+        for (int i = 0; i < propertyElement.getNumProperties(); i++)
+        {
+            auto name = propertyElement.getPropertyName(i);
+            auto value = propertyElement.getProperty(name);
+            _DBG("  " + name.toString() + " = " + value.toString());
+        }
+
+        // Then try to get the layer name
+        String layerName = propertyElement.getProperty(Ids::uiPanelCanvasLayerName).toString();
+        return layerName.isEmpty() ? "Unnamed Layer" : layerName;
 	}
 	else
 	{
@@ -389,7 +426,7 @@ CtrlrChoicePropertyComponent::CtrlrChoicePropertyComponent (const Value &_valueT
     combo->setTextWhenNoChoicesAvailable (L"(no choices)");
     combo->addListener (this);
 
-	if (_choices != nullptr)
+	if (_choices != nullptr) // FIXED. Thanks to @dnaldoog. Was crashing APP when changing global LnF
 	{
 		choices = *_choices;
 
@@ -418,8 +455,12 @@ CtrlrChoicePropertyComponent::CtrlrChoicePropertyComponent (const Value &_valueT
 	refresh();
 }
 
-CtrlrChoicePropertyComponent::~CtrlrChoicePropertyComponent()
+CtrlrChoicePropertyComponent::~CtrlrChoicePropertyComponent() // Updated v5.6.34. Prevents crash on Windows when switching global LnF colourScheme
 {
+    if (combo != nullptr)
+    {
+        combo->removeListener(this);
+    }
 }
 
 void CtrlrChoicePropertyComponent::resized()
@@ -436,7 +477,8 @@ void CtrlrChoicePropertyComponent::refresh()
 {
 	if (numeric)
 	{
-		const int i = values.indexOf (valueToControl.toString());
+		// Change this line to use `indexOf` with `var` to find the correct index
+        const int i = values.indexOf(valueToControl.getValue());
 		combo->setSelectedItemIndex (i, sendNotification);
 	}
 	else
@@ -455,91 +497,137 @@ void CtrlrChoicePropertyComponent::changed()
 	{
 		valueToControl = combo->getText();
 	}
-
-	if (owner)
-    {
-        sendChangeMessage ();
-    }
+    
+	// CRASH REPORT! According to @dnaldoog , this will cause a crash when user changes L&F in Property Editor
+	//	if (owner)
+	//    {
+	//        sendChangeMessage ();
+	//    }
 }
 
-//void CtrlrChoicePropertyComponent::changeListenerCallback (ChangeBroadcaster* source)
-//{
-//}
+/** CtrlrColourEditorComponent **/
 
-CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener *defaultListener) : canResetToDefault (true)
+CtrlrColourEditorComponent::CtrlrColourEditorComponent(ChangeListener* defaultListener)
+    : canResetToDefault(true), colourPickerButton(std::make_unique<ColourPickerButton>("colourPicker"))
 {
-	addAndMakeVisible (&colourTextInput);
-	colourTextInput.setJustificationType (Justification::centred);
-	colourTextInput.setFont (colourTextInput.getFont().withStyle(Font::bold));
-	colourTextInput.setEditable (true, false, false); // single click, double-click, lossOfFocusDiscardsChanges
-	colourTextInput.setAlwaysOnTop (true);
-	colourTextInput.addListener (this);
-	colourTextInput.addMouseListener (this, true);
-
-	if (defaultListener)
-		addChangeListener (defaultListener);
+	addAndMakeVisible(&colourTextInput);
+    colourTextInput.setJustificationType(juce::Justification::centred);
+    colourTextInput.setFont(colourTextInput.getFont().withStyle(juce::Font::bold));
+    colourTextInput.setEditable(true, false, false);
+    colourTextInput.setAlwaysOnTop(true);
+    colourTextInput.addListener(this);
+    
+    colourPickerButton->setTooltip("Choose custom colour");
+    colourPickerButton->addListener(this);
+    addAndMakeVisible(colourPickerButton.get());
+    
+    if (defaultListener)
+        addChangeListener(defaultListener);
 }
 
-void CtrlrColourEditorComponent::updateLabel()
+CtrlrColourEditorComponent::~CtrlrColourEditorComponent()
 {
-	colourTextInput.setColour (Label::backgroundColourId, getColour());
-	colourTextInput.setColour (Label::textColourId, getColour().contrasting().darker(0.25f));
-    colourTextInput.setColour (Label::outlineColourId, findColour(ComboBox::outlineColourId));
-	colourTextInput.setText (getColour().toDisplayString (true), dontSendNotification);
-}
-
-void CtrlrColourEditorComponent::labelTextChanged (Label *labelThatHasChanged)
-{
-	colour = Colour::fromString(labelThatHasChanged->getText());
-	sendChangeMessage();
+    // The ColourPickerButton now manages its own memory
+   //  delete colourPickerButton;
 }
 
 void CtrlrColourEditorComponent::resized()
 {
-	colourTextInput.setBounds (0, 0, getWidth(), getHeight());
+    if (colourPickerButton != nullptr)
+    {
+        const int buttonWidth = getHeight();
+        colourPickerButton->setBounds(getWidth() - buttonWidth, 0, buttonWidth, getHeight());
+        colourTextInput.setBounds(0, 0, getWidth() - buttonWidth - 2, getHeight());
+    }
 }
 
-void CtrlrColourEditorComponent::setColour (const Colour& newColour, const bool sendChangeMessageNow)
+void CtrlrColourEditorComponent::lookAndFeelChanged()
 {
-	colour = newColour;
-
-	updateLabel();
-
-	if (sendChangeMessageNow)
-		sendChangeMessage();
+    // Simply repaint the button to force it to redraw with the new colors
+    if (colourPickerButton != nullptr)
+        colourPickerButton->repaint();
 }
 
-void CtrlrColourEditorComponent::mouseDown (const MouseEvent &e)
+void CtrlrColourEditorComponent::updateLabel()
 {
-    auto colourSelector = std::make_unique<ColourSelector> (ColourSelector::showAlphaChannel
-                                                                | ColourSelector::showColourAtTop
-                                                                | ColourSelector::editableColour
-                                                                | ColourSelector::showSliders
-                                                                | ColourSelector::showColourspace);
-
-        colourSelector->setName ("background");
-        colourSelector->setCurrentColour(colourTextInput.findColour(Label::backgroundColourId)); // Gets colour from the property box BG
-        colourSelector->addChangeListener (this);
-        colourSelector->setColour (ColourSelector::backgroundColourId, Colours::transparentBlack);
-        colourSelector->setSize (300, 400);
-
-        CallOutBox::launchAsynchronously (std::move (colourSelector), getScreenBounds(), nullptr);
+    if (colourPickerButton != nullptr)
+    {
+        // Set the colors
+        colourTextInput.setColour(juce::Label::backgroundColourId, getColour());
+        colourTextInput.setColour(juce::Label::textColourId, getColour().contrasting().darker(0.25f));
+        colourTextInput.setText(getColour().toDisplayString(true), juce::dontSendNotification);
+        
+        // Repaint the components to reflect the changes
+        colourTextInput.repaint();
+        colourPickerButton->repaint();
+    }
 }
 
-void CtrlrColourEditorComponent::changeListenerCallback (ChangeBroadcaster* source)
+void CtrlrColourEditorComponent::buttonClicked(juce::Button* buttonThatWasClicked)
 {
-	const ColourSelector* const cs = (const ColourSelector*) source;
-
-	if (cs != 0)
-	{
-		if (cs->getCurrentColour() != getColour())
-            setColour (cs->getCurrentColour(), true);
-	}
+    if (buttonThatWasClicked == colourPickerButton.get())
+    {
+        openColourPicker();
+    }
 }
 
-/**
- *
- */
+// Added v5.6.34. Required extra class for the colour picker button to recover it's init state when clicking just outside the colour selector popup and not the button itself again.
+void CtrlrColourEditorComponent::openColourPicker()
+{
+    // The color selector popup to display
+    auto colourSelector = std::make_unique<juce::ColourSelector>();
+
+    // Set its size and initial colour
+    colourSelector->setSize (300, 400);
+    colourSelector->setCurrentColour (getColour());
+    
+    // The component itself listens for changes from the selector
+    colourSelector->addChangeListener (this);
+    
+    // Set the button's toggle state to true when the popup is launched.
+    colourPickerButton->setToggleState (true, juce::dontSendNotification);
+
+    // This is the correct way to launch the CallOutBox in JUCE 6.
+    juce::CallOutBox::launchAsynchronously (std::move (colourSelector),
+                                          colourPickerButton->getScreenBounds(),
+                                          nullptr); // The parent component is not needed here.
+}
+
+void CtrlrColourEditorComponent::labelTextChanged(juce::Label* labelThatHasChanged)
+{
+    // This method is called when the user types in the text box.
+    // It should parse the text and then call the same logic as the colour picker.
+    setColour(juce::Colour::fromString(labelThatHasChanged->getText()), true);
+}
+
+void CtrlrColourEditorComponent::setColour(const juce::Colour& newColour, const bool sendChangeMessageNow)
+{
+    colour = newColour;
+    updateLabel(); // This updates the visual appearance of the label and button
+    
+    // Now send the change message to listeners like the LayerListItem
+    if (sendChangeMessageNow)
+        sendChangeMessage();
+}
+
+void CtrlrColourEditorComponent::changeListenerCallback (juce::ChangeBroadcaster* source)
+{
+    // Check if the source of the change is the colour selector
+    if (auto* cs = dynamic_cast<juce::ColourSelector*>(source))
+    {
+        // Update the component's internal colour and notify listeners
+        setColour(cs->getCurrentColour(), true);
+
+        // Reset the button's toggle state to false when the popup closes.
+        if (colourPickerButton != nullptr)
+        {
+            colourPickerButton->setToggleState (false, juce::dontSendNotification);
+        }
+    }
+}
+
+/** CtrlrColourPropertyComponent **/
+
 CtrlrColourPropertyComponent::CtrlrColourPropertyComponent (const Value &_valueToControl) : valueToControl(_valueToControl)
 {
 	addAndMakeVisible (&cs);
@@ -567,14 +655,15 @@ void CtrlrColourPropertyComponent::resized()
 
 /** A read-only component **/
 
-CtrlrReadOnlyProperty::CtrlrReadOnlyProperty(const Identifier &_propertyName,
-															const ValueTree &_propertyElement,
-															const ValueTree &identifier,
-															CtrlrPanel *panel,
-															StringArray *possibleChoices,
-															StringArray *possibleValues) : propertyName(_propertyName), propertyElement(_propertyElement)
+CtrlrReadOnlyProperty::CtrlrReadOnlyProperty(const Identifier& _propertyName,
+    const ValueTree& _propertyElement,
+    const ValueTree& identifier,
+    CtrlrPanel* _panel,
+    StringArray* possibleChoices,
+    StringArray* possibleValues)
+    : propertyName(_propertyName), propertyElement(_propertyElement), panel(_panel)
 {
-	addAndMakeVisible (&value);
+    addAndMakeVisible(&value);
 
     value.setColour(Label::backgroundColourId, findColour(Slider::backgroundColourId).withAlpha(0.5f));
     value.setColour(Label::outlineColourId, findColour(Slider::textBoxTextColourId).withAlpha(0.5f));
@@ -586,7 +675,10 @@ CtrlrReadOnlyProperty::~CtrlrReadOnlyProperty()
 
 void CtrlrReadOnlyProperty::refresh()
 {
-	value.setText (propertyElement.getPropertyAsValue(propertyName, 0).toString(), dontSendNotification);
+	// Get the value from the property element and convert it to a string.
+	String displayValue = propertyElement.getPropertyAsValue(propertyName, 0).toString(); // Added v5.6.34. Thanks to @dnaldoog
+	// Set the text of the 'value' Label.
+	value.setText(displayValue, dontSendNotification); // Added v5.6.34. Thanks to @dnaldoog
 }
 
 void CtrlrReadOnlyProperty::resized()
@@ -748,9 +840,9 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
       fontBold (0),
       fontItalic (0),
       fontUnderline (0),
-      fontSize (0),
-	  kerning(0),
-	  horizontalScale(0)
+      fontSizeComboBox (0),
+	  kerningComboBox(0),
+	  horizontalScaleComboBox(0)
 {
     addAndMakeVisible (typeface = new ComboBox (""));
     typeface->setEditableText (false);
@@ -771,32 +863,72 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
     fontUnderline->setTooltip (L"Underline");
     fontUnderline->addListener (this);
 
-    addAndMakeVisible (fontSize = new Slider (""));
-	fontSize->setLookAndFeel (this);
-	fontSize->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
-	fontSize->setTooltip (L"Size");
-    fontSize->setRange (1, 999, 1);
-    fontSize->setSliderStyle (Slider::RotaryVerticalDrag);
-    fontSize->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
-    fontSize->addListener (this);
+	// In your constructor, after creating the sliders:
+	addAndMakeVisible(fontSizeLabel = new Label("", "Size"));
+	fontSizeLabel->setFont(Font(10.0f, Font::plain));
+	fontSizeLabel->setJustificationType(Justification::centred);
+	fontSizeLabel->setColour(Label::textColourId, findColour(Label::textColourId));
 
-	addAndMakeVisible (horizontalScale = new Slider (""));
-	horizontalScale->setLookAndFeel (this);
-	horizontalScale->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
-	horizontalScale->setTooltip (L"Horizontal Scale");
-    horizontalScale->setRange (0.0, 10.0, 0.01);
-    horizontalScale->setSliderStyle (Slider::RotaryVerticalDrag);
-    horizontalScale->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
-    horizontalScale->addListener (this);
+	 // Create and add the new ComboBox for font size
+    addAndMakeVisible(fontSizeComboBox = new ComboBox(""));
+    fontSizeComboBox->setEditableText(true); // Allow custom values
+	fontSizeComboBox->setTooltip (L"Font size");
+    fontSizeComboBox->addListener(this);
 
-	addAndMakeVisible (kerning = new Slider (""));
-    kerning->setLookAndFeel (this);
-	kerning->setColour(Slider::rotarySliderFillColourId, Component::findColour(TextEditor::textColourId));
-	kerning->setTooltip (L"Extra Kerning");
-    kerning->setRange (0.0, 10.0, 0.01);
-    kerning->setSliderStyle (Slider::RotaryVerticalDrag);
-    kerning->setTextBoxStyle (Slider::TextBoxRight, false, 34, 16);
-    kerning->addListener (this);
+    const int sizes[] = { 8, 9, 10, 12, 14, 18, 24, 30, 36, 48, 60, 72};
+    for (int size : sizes)
+    {
+        fontSizeComboBox->addItem(String(size), size);
+    }
+	
+	fontSizeComboBox->setSelectedId(12); // Default font value.
+	
+	addAndMakeVisible(horizontalScaleLabel = new Label("", "Scale"));
+	horizontalScaleLabel->setFont(Font(10.0f, Font::plain));
+	horizontalScaleLabel->setJustificationType(Justification::centred);
+	horizontalScaleLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
+	addAndMakeVisible(kerningLabel = new Label("", "Kerning"));
+	kerningLabel->setFont(Font(10.0f, Font::plain));
+	kerningLabel->setJustificationType(Justification::centred);
+	kerningLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
+	addAndMakeVisible(horizontalScaleLabel = new Label("", "Scale"));
+    horizontalScaleLabel->setFont(Font(10.0f, Font::plain));
+    horizontalScaleLabel->setJustificationType(Justification::centred);
+    horizontalScaleLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
+    addAndMakeVisible(horizontalScaleComboBox = new ComboBox(""));
+    horizontalScaleComboBox->setEditableText(true); // Allow custom values
+    horizontalScaleComboBox->addListener(this);
+	
+    // Populate the ComboBox with common horizontal scale values
+    const float scaleValues[] = {0.50f, 0.75f, 0.85f, 0.90f, 1.00f, 1.10f, 1.25f, 1.50f, 2.00f};
+	int nextId = 1; // Also required for kerning comboBox
+    for (float value : scaleValues)
+    {
+        horizontalScaleComboBox->addItem(String(value, 2), nextId++);
+    }
+
+    addAndMakeVisible(kerningLabel = new Label("", "Kerning"));
+    kerningLabel->setFont(Font(10.0f, Font::plain));
+    kerningLabel->setJustificationType(Justification::centred);
+    kerningLabel->setColour(Label::textColourId, findColour(Label::textColourId));
+
+    addAndMakeVisible(kerningComboBox = new ComboBox(""));
+    kerningComboBox->setEditableText(true); // Allow custom values
+	kerningComboBox->setTooltip (L"Extra kerning");
+    kerningComboBox->addListener(this);
+
+	// Populate the ComboBox with common kerning values
+	const float kerningValues[] = {0.00f, 0.05f, 0.10f, 0.15f, 0.20f, 0.25f, 0.30f, 0.40f, 0.50f, 0.75f, 1.00f};
+	for (float value : kerningValues)
+	{
+		kerningComboBox->addItem(String(value, 2), nextId++);
+	}
+
+	// Set a default value for the ComboBox
+	kerningComboBox->setSelectedId(1); // 1 corresponds to the first item: 0.00
 
 	fontBold->setClickingTogglesState (true);
 	fontBold->setMouseCursor (MouseCursor::PointingHandCursor);
@@ -812,26 +944,81 @@ CtrlrFontPropertyComponent::CtrlrFontPropertyComponent (const Value &_valueToCon
 
 CtrlrFontPropertyComponent::~CtrlrFontPropertyComponent()
 {
+    // Remove listeners first to avoid dangling pointers
+    typeface->removeListener (this);
+    fontBold->removeListener (this);
+    fontItalic->removeListener (this);
+    fontUnderline->removeListener (this);
+	
+    // Remove listener for the new ComboBox
+    if (kerningComboBox) {
+        kerningComboBox->removeListener(this);
+    }
+	
+    // Remove listener for the new ComboBox
+    if (horizontalScaleComboBox) {
+        horizontalScaleComboBox->removeListener(this);
+    }
+    
+    // Remove listener for the new ComboBox
+    if (fontSizeComboBox) {
+        fontSizeComboBox->removeListener(this);
+    }
+
+    // Then delete the components
     deleteAndZero (typeface);
     deleteAndZero (fontBold);
     deleteAndZero (fontItalic);
     deleteAndZero (fontUnderline);
-    deleteAndZero (fontSize);
-	deleteAndZero (kerning);
-	deleteAndZero (horizontalScale);
+    deleteAndZero (fontSizeComboBox);
+    deleteAndZero (kerningComboBox);
+    deleteAndZero (horizontalScaleComboBox);
+
+    // The labels don't have listeners so they are fine to delete
+    deleteAndZero(fontSizeLabel);
+    deleteAndZero(horizontalScaleLabel);
+    deleteAndZero(kerningLabel);
 }
 
 void CtrlrFontPropertyComponent::resized()
 {
-    typeface->setBounds (0, 0, getWidth() * 0.4f, getHeight());
+    // Re-using the logic from your provided code
+    const int labelHeight = 12;
+    const int sliderHeight = getHeight() - labelHeight;
+    const int totalWidth = getWidth();
+    
+    // Define the widths for each section.
+    const float typefaceWidth = 0.4f;
+    const float buttonWidth = 0.05f;
+    const float remainingWidth = 1.0f - typefaceWidth - (buttonWidth * 3);
+    const float comboBoxWidth = remainingWidth / 3.0f;
 
-	fontBold->setBounds (getWidth() * 0.4f,									0, getWidth() * 0.05f,	getHeight());
-    fontItalic->setBounds ((getWidth() * 0.4f) + (getWidth() * 0.05f),		0, getWidth() * 0.05f,	getHeight());
-	fontUnderline->setBounds ((getWidth() * 0.4f) + 2*(getWidth() * 0.05f), 0, getWidth() * 0.05f,	getHeight());
+    // Typeface ComboBox
+    typeface->setBounds(0, labelHeight, totalWidth * typefaceWidth, sliderHeight);
 
-    fontSize->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f),							0, getWidth() * 0.14f,	getHeight());
-	horizontalScale->setBounds	((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + (getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
-	kerning->setBounds			((getWidth() * 0.4f) + 3*(getWidth() * 0.05f) + 2*(getWidth() * 0.14f),	0, getWidth() * 0.14f,	getHeight());
+    // Font Style Buttons
+    fontBold->setBounds(totalWidth * typefaceWidth, labelHeight, totalWidth * buttonWidth, sliderHeight);
+    fontItalic->setBounds(totalWidth * typefaceWidth + (totalWidth * buttonWidth), labelHeight, totalWidth * buttonWidth, sliderHeight);
+    fontUnderline->setBounds(totalWidth * typefaceWidth + 2 * (totalWidth * buttonWidth), labelHeight, totalWidth * buttonWidth, sliderHeight);
+    
+	// Calculate the starting X position for the three ComboBoxes
+    int startX = totalWidth * typefaceWidth + 3 * (totalWidth * buttonWidth);
+    
+    // Font Size ComboBox
+    fontSizeLabel->setBounds(startX, 0, totalWidth * comboBoxWidth, labelHeight);
+    fontSizeComboBox->setBounds(startX, labelHeight, totalWidth * comboBoxWidth, sliderHeight);
+    
+    startX += totalWidth * comboBoxWidth;
+    
+    // Horizontal Scale ComboBox
+    horizontalScaleLabel->setBounds(startX, 0, totalWidth * comboBoxWidth, labelHeight);
+    horizontalScaleComboBox->setBounds(startX, labelHeight, totalWidth * comboBoxWidth, sliderHeight);
+    
+    startX += totalWidth * comboBoxWidth;
+    
+    // Kerning ComboBox
+    kerningLabel->setBounds(startX, 0, totalWidth * comboBoxWidth, labelHeight);
+    kerningComboBox->setBounds(startX, labelHeight, totalWidth * comboBoxWidth, sliderHeight);
 }
 
 void CtrlrFontPropertyComponent::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
@@ -856,9 +1043,11 @@ void CtrlrFontPropertyComponent::refresh()
 {
 	Font font = owner->getCtrlrManagerOwner().getFontManager().getFontFromString(valueToControl.toString());
 	typeface->setText (font.getTypefaceName(), sendNotification);
-	fontSize->setValue (font.getHeight(), dontSendNotification);
-	kerning->setValue(font.getExtraKerningFactor(), dontSendNotification);
-	horizontalScale->setValue(font.getHorizontalScale(), dontSendNotification);
+	
+	fontSizeComboBox->setText(String(font.getHeight()), dontSendNotification); // This is the updated line to use the new ComboBox
+    kerningComboBox->setText(String(font.getExtraKerningFactor(), 2), dontSendNotification); // This is the updated line to use the new ComboBox
+    horizontalScaleComboBox->setText(String(font.getHorizontalScale(), 2), dontSendNotification); // This is the updated line to use the new ComboBox
+
 	fontBold->setToggleState (font.isBold(), sendNotification);
 	fontItalic->setToggleState (font.isItalic(), sendNotification);
 	fontUnderline->setToggleState (font.isUnderlined(), sendNotification);
@@ -866,47 +1055,46 @@ void CtrlrFontPropertyComponent::refresh()
 
 Font CtrlrFontPropertyComponent::getFont()
 {
-	Font font;
+    Font font;
 
-	if (typeface)
-		font.setTypefaceName (typeface->getText());
-	else
-		return (font);
+    if (typeface)
+        font.setTypefaceName (typeface->getText());
+    else
+        return (font);
 
-	font.setHeight (fontSize->getValue());
-	font.setBold (fontBold->getToggleState());
-	font.setItalic (fontItalic->getToggleState());
-	font.setUnderline (fontUnderline->getToggleState());
-	font.setExtraKerningFactor (kerning->getValue());
-	font.setHorizontalScale (horizontalScale->getValue());
-	return (font);
-}
-
-Label* CtrlrFontPropertyComponent::createSliderTextBox (Slider& slider)
-{
-    Label* const l = new CtrlrFontPropertyComponent::SliderLabelComp();
-
-	l->setFont (Font(10.0f,Font::bold));
-    l->setJustificationType (Justification::centred);
-
-    l->setColour (Label::textColourId, slider.findColour (Slider::textBoxTextColourId));
-
-    l->setColour (Label::backgroundColourId,
-                  (slider.getSliderStyle() == Slider::LinearBar || slider.getSliderStyle() == Slider::LinearBarVertical)
-                            ? slider.findColour (Slider::textBoxBackgroundColourId) // Colours::transparentBlack
-                            : slider.findColour (Slider::textBoxBackgroundColourId));
-    l->setColour (Label::outlineColourId, slider.findColour (Slider::textBoxOutlineColourId));
-
-    l->setColour (TextEditor::textColourId, slider.findColour (Slider::textBoxTextColourId));
-
-    l->setColour (TextEditor::backgroundColourId,
-                  slider.findColour (Slider::textBoxBackgroundColourId)
-                        .withAlpha ((slider.getSliderStyle() == Slider::LinearBar || slider.getSliderStyle() == Slider::LinearBarVertical)
-                                        ? 0.7f : 1.0f));
-
-    l->setColour (TextEditor::outlineColourId, slider.findColour (Slider::textBoxOutlineColourId));
-
-    return l;
+    // Get the font size from the new ComboBox
+    float newFontSize = 10.0f; // A default value in case of invalid input
+    if (fontSizeComboBox)
+    {
+        // Get the text from the editable ComboBox and convert it to a float.
+        newFontSize = (float) fontSizeComboBox->getText().getFloatValue();
+        // If the conversion fails (e.g., text is not a number), use a default.
+        if (newFontSize <= 0.0f)
+            newFontSize = 10.0f;
+    }
+    font.setHeight (newFontSize);
+    
+	// Get the kerning value from the new ComboBox
+	float newKerningValue = 0.0f;
+	if (kerningComboBox)
+	{
+		newKerningValue = kerningComboBox->getText().getFloatValue();
+	}
+	font.setExtraKerningFactor(newKerningValue);
+	
+	// Get the horizontal scale value from the new ComboBox
+    float newHorizontalScaleValue = 1.0f;
+    if (horizontalScaleComboBox)
+    {
+        newHorizontalScaleValue = horizontalScaleComboBox->getText().getFloatValue();
+    }
+    font.setHorizontalScale(newHorizontalScaleValue);
+	
+    font.setBold (fontBold->getToggleState());
+    font.setItalic (fontItalic->getToggleState());
+    font.setUnderline (fontUnderline->getToggleState());
+    
+    return font;
 }
 
 CtrlrLuaMethodProperty::CtrlrLuaMethodProperty (const Value &_valeToControl, const Identifier &_id, CtrlrPanel *_owner)
@@ -1520,9 +1708,12 @@ void CtrlrSysExEditor::mouseDown (const MouseEvent& e)
 			m.addItem (8193, "Current bank number");
 
 			m.addSectionHeader ("Checksums (tN) t=type N=num bytes to count");
-			m.addItem (13, "Roland JP8080 Checksum");
-			m.addItem (14, "Waldorf RackAttack Checksum");
-			m.addItem (15, "Ignore this byte on input");
+			m.addItem(13, "2's Complement (Roland, Yamaha)"); // Updated v5.6.34.
+			m.addItem(14, "Exclusive OR (XOR) (Akai, Korg, Sequential) "); // Added v5.6.34.
+			m.addItem (15, "Simple Summing (Waldorf, Lexicon, Oberheim)"); // Added v5.6.34.
+			m.addItem (16, "XOR Byte 1 (Technics)"); // Added v5.6.34.
+			m.addItem (17, "1's Complement (E-mu, Korg)"); // Added v5.6.34.
+			m.addItem (18, "Ignore this byte on input");
 			PopupMenu km,lm,mm,nm;
 
 			for (int i=0; i<16; i++)
@@ -1592,14 +1783,23 @@ void CtrlrSysExEditor::mouseDown (const MouseEvent& e)
 				l->setText ("z5", sendNotification);
 				break;
 			case 14:
-				l->setText ("w5", sendNotification);
+				l->setText("X5", sendNotification); // Exclusive OR, Akai, Korg, Sequential
 				break;
 			case 15:
-				l->setText ("ii", sendNotification);
+				l->setText("w5", sendNotification); // Simple Summing, Waldorf, Lexicon, Oberheim
+				break;
+			case 16:
+				l->setText("tc", sendNotification); // Technics Matsushita, XOR Byte 1
+				break;
+			case 17:
+				l->setText("O5", sendNotification); //1s Complement, E-mu, Korg
+				break;
+			case 18:
+				l->setText("ii", sendNotification); // ignore this byte on input
 				break;
 			}
 
-			if (ret >= 20 && ret < 37)
+			if (ret >= 19 && ret < 37)
 			{
 				l->setText ("k"+String::toHexString(ret-20), sendNotification);
 			}
@@ -1985,7 +2185,7 @@ public:
             setColour(Label::textColourId, findColour(Slider::textBoxTextColourId));
         }
 
-        setColour (Label::outlineColourId, findColour (Slider::textBoxOutlineColourId));
+        setColour(Label::outlineColourId, findColour (Slider::textBoxOutlineColourId));
         setColour(Label::backgroundWhenEditingColourId, findColour(Slider::backgroundColourId).withAlpha(0.7f));
         setColour(Label::textWhenEditingColourId, findColour(Label::textWhenEditingColourId).withAlpha(0.7f));
         setColour(Label::outlineWhenEditingColourId, findColour(Slider::textBoxOutlineColourId));
@@ -1999,14 +2199,17 @@ public:
 
         if (useImprovedLegibility) // Uses the member variable
         {
-            textEditor->setColour(juce::TextEditor::backgroundColourId, juce::Colour(0xfffffefa)); // halfwhite
+			textEditor->setColour(juce::TextEditor::backgroundColourId, juce::Colour(0xffffffff)); // white
             textEditor->setColour(juce::TextEditor::textColourId, juce::Colour(0xff000000)); // black
+            textEditor->setColour(juce::TextEditor::highlightColourId, juce::Colour(0xffF5F5F5)); //  CSS WhiteSmoke. Added v5.6.34
+            textEditor->setColour(juce::TextEditor::highlightedTextColourId, juce::Colour(0xff000000)); // black. Added v5.6.34
         }
         else
         {
             textEditor->setColour(juce::TextEditor::backgroundColourId, findColour(juce::Slider::backgroundColourId));
             textEditor->setColour(juce::TextEditor::textColourId, findColour(juce::Slider::textBoxTextColourId));
             textEditor->setColour(juce::TextEditor::highlightColourId, findColour(juce::TextEditor::highlightColourId));
+            textEditor->setColour(juce::TextEditor::highlightedTextColourId, findColour(juce::TextEditor::highlightColourId));
             textEditor->setColour(juce::TextEditor::outlineColourId, findColour(juce::Slider::textBoxOutlineColourId));
         }
 
