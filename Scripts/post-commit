@@ -1,11 +1,13 @@
 #!/bin/bash
 OSNAME=""
 DATE=`date`
+# binutils-dev libasound2-dev libboost-dev libcurl4-gnutls-dev libfreetype6-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxinerama-dev libxrandr-dev xorg-dev
 UBUNTU_PACKAGES="g++ libxrandr-dev libxinerama-dev libxcursor-dev \
 libasound2-dev binutils-dev \
 libfreetype6-dev xorg-dev \
 libgl1-mesa-dev libglapi-mesa \
-libxrandr-dev libudev-dev libgl1-mesa-dev libiberty-dev"
+libxrandr-dev libudev-dev libgl1-mesa-dev libiberty-dev \
+libcurl4-gnutls-dev libsframe1 libboost-dev"
 
 CTRLR_ROOT=""
 PACKAGE=""
@@ -14,6 +16,7 @@ BUILD_LOG_WIN64=""
 OUTPUT="ctrlr@ctrlr.org://var/www/ctrlr/nightly/"
 VERSION=""
 ARGS=$1
+PROJECT_NAME=CtrlrX
 
 echo "CTRLR pre-commit HOOK"
 
@@ -43,19 +46,20 @@ function detect_os {
 		if [ -d /cygdrive ]; then
 			CTRLR_ROOT="/cygdrive/c/devel/ctrlr"
 		else
-			CTRLR_ROOT="/c/devel/ctrlr"
+			CTRLR_ROOT="$(dirname $(readlink -f $0))/../"
 		fi
-		VERSION=`c:/devel/ctrlr/Scripts/git-revision.sh`
-		PACKAGE=$CTRLR_ROOT/Packaging/Windows/Ctrlr-$VERSION.exe
-		BUILD_LOG_WIN32=$CTRLR_ROOT/Builds/Ctrlr-$VERSION.win32.build.log
-		BUILD_LOG_WIN64=$CTRLR_ROOT/Builds/Ctrlr-$VERSION.win64.build.log
+		echo "CTRLR_ROOT= $CTRLR_ROOT"
+		VERSION=`$CTRLR_ROOT/Scripts/git-revision.sh`
+		PACKAGE=$CTRLR_ROOT/Packaging/Windows/${PROJECT_NAME}-$VERSION.exe
+		BUILD_LOG_WIN32=$CTRLR_ROOT/Builds/${PROJECT_NAME}-$VERSION.win32.build.log
+		BUILD_LOG_WIN64=$CTRLR_ROOT/Builds/${PROJECT_NAME}-$VERSION.win64.build.log
 		CTRLR_KEY="$CTRLR_ROOT/Packaging/ctrlr.key"
 		if [ -d /cygdrive ]; then
 			MSBUILD="/cygdrive/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/MSBuild.exe"
 			NSIS="/cygdrive/c/Program\ Files\ \(x86\)/NSIS/makensis.exe"
 		else
-			MSBUILD="/c/Program Files (x86)/Microsoft Visual Studio/2019/Community/MSBuild/Current/Bin/MSBuild.exe"
-			NSIS="/c/Program\ Files\ \(x86\)/NSIS/makensis.exe"
+			MSBUILD=`which MSBuild.exe`
+			NSIS=`which makensis.exe`
 		fi
 		return
 	fi
@@ -66,8 +70,8 @@ function detect_os {
 		ARCH=`uname -m`
 		CTRLR_ROOT="$(dirname $(readlink -f $0))/../"
 		VERSION=`$CTRLR_ROOT/Scripts/git-revision.sh`
-		PACKAGE=$CTRLR_ROOT/Packaging/Linux/Ctrlr-$ARCH-$VERSION.sh
-		BUILD_LOG=$CTRLR_ROOT/Builds/Ctrlr-$ARCH-$VERSION.linux.build.log
+		PACKAGE=$CTRLR_ROOT/Packaging/Linux/${PROJECT_NAME}-$ARCH-$VERSION.sh
+		BUILD_LOG=$CTRLR_ROOT/Builds/${PROJECT_NAME}-$ARCH-$VERSION.linux.build.log
 		CTRLR_KEY="$CTRLR_ROOT/Packaging/ctrlr.key"
 		
 		if [ "$DISTRO" == "Ubuntu" ]; then
@@ -79,10 +83,10 @@ function detect_os {
 	
 	if [ "$UNAME" == "Darwin" ]; then
 		OSNAME="OSX"
-		CTRLR_ROOT="$HOME/devel/ctrlr"
+		CTRLR_ROOT="$(dirname $(readlink -f $0))/../"
 		VERSION=`$CTRLR_ROOT/Scripts/git-revision.sh`
-		PACKAGE=$CTRLR_ROOT/Packaging/Mac/Ctrlr-$VERSION.dmg
-		BUILD_LOG=$CTRLR_ROOT/Builds/Ctrlr-$VERSION.mac.build.log
+		PACKAGE=$CTRLR_ROOT/Packaging/Mac/${PROJECT_NAME}-$VERSION.dmg
+		BUILD_LOG=$CTRLR_ROOT/Builds/${PROJECT_NAME}-$VERSION.mac.build.log
 		return
 	fi
 }
@@ -97,20 +101,38 @@ function build_now {
 	fi
 }
 
+function unpack_boost {
+	echo "CTRLR: check if boost is unpacked"
+	if [ ! -e $CTRLR_ROOT/Source/Misc/boost/bind.hpp ]; then
+		echo "CTRLR: need to unpack boost.zip"
+
+		cd $CTRLR_ROOT/Source/Misc/
+		if [ -e boost/boost.zip ]; then
+			unzip boost/boost.zip
+		else
+			echo "CTRLR: boost.zip file does not exist, exiting now"
+			exit 1
+		fi
+	else
+		echo "CTRLR: boost directory exists and is unpacked"
+	fi
+}
+
 function windows_create_installer {
 	echo "CTRLR: create installer"
 	echo $CTRLR_ROOT, $NSIS
 	cd $CTRLR_ROOT
-	eval $NSIS Packaging/Windows/ctrlr.nsi
+	"$NSIS" Packaging/Windows/ctrlr.nsi
 	if [ $? -ne 0 ]; then
 		echo "CTRLR: failed to create installer package"
 		exit 1
 	fi
 	
-	echo "CTRLR: rename $CTRLR_ROOT/Packaging/Windows/Ctrlr.exe -> $PACKAGE"
-	mv $CTRLR_ROOT/Packaging/Windows/Ctrlr.exe $PACKAGE
+	echo "CTRLR: rename $CTRLR_ROOT/Packaging/Windows/CtrlrX.exe -> $PACKAGE"
+	mv $CTRLR_ROOT/Packaging/Windows/CtrlrX.exe $PACKAGE
 	if [ $? -ne 0 ]; then
 		echo "CTRLR: failed to rename installer package"
+		ls $CTRLR_ROOT/Packaging/Windows/
 		exit 1
 	fi
 }
@@ -129,16 +151,16 @@ function windows_msbuild {
 
 		cd $CTRLR_ROOT/Builds/VisualStudio2019
 		
-		echo "CTRLR: Build Win32"
-		"$MSBUILD" Ctrlr.sln /target:Rebuild /fileloggerparameters:logfile=Ctrlr-$VERSION.win32.build.log /property:Configuration=Release_Win32 /property:VisualStudioVersion=15.0 
+		# echo "CTRLR: Build Win32"
+		# "$MSBUILD" Ctrlr.sln /target:Rebuild /fileloggerparameters:logfile=Ctrlr-$VERSION.win32.build.log /property:Configuration=Release_Win32 /property:platform=win32
 		
-		if [ $? -ne 0 ]; then
-			echo "CTRLR: Win32 build failed"
-			exit 1
-		fi
+		# if [ $? -ne 0 ]; then
+		# 	echo "CTRLR: Win32 build failed"
+		# 	exit 1
+		# fi
 		echo "CTRLR: Build x64"
 		
-		"$MSBUILD" Ctrlr.sln /target:Rebuild /fileloggerparameters:logfile=Ctrlr-$VERSION.win64.build.log /property:Configuration=Release /property:VisualStudioVersion=15.0 /property:Platform=x64
+		"$MSBUILD" CtrlrX.sln /target:Rebuild /fileloggerparameters:logfile=Ctrlr-$VERSION.win64.build.log /property:Configuration=Release /property:Platform=x64 -maxCpuCount
 		if [ $? -ne 0 ]; then
 			echo "CTRLR: x64 build failed"
 			exit 1
@@ -151,8 +173,8 @@ function windows_msbuild {
 
 function build_now_windows {
 	
-	REVISION_H="c:/devel/ctrlr/Source/Core/CtrlrRevision.h"
-	TEMPLATE_H="c:/devel/ctrlr/Source/Core/CtrlrRevision.template"
+	REVISION_H="$CTRLR_ROOT/Source/Core/CtrlrRevision.h"
+	TEMPLATE_H="$CTRLR_ROOT/Source/Core/CtrlrRevision.template"
 
 	echo -n > $BUILD_LOG_WIN32
 	echo -n > $BUILD_LOG_WIN64	
@@ -163,9 +185,10 @@ function build_now_windows {
 	echo
 	sed -e "s/%REVISION%/$VERSION/g" -e "s/%REVISION_DATE%/$DATE/g" $TEMPLATE_H > $REVISION_H
 	
+	unpack_boost
 	windows_msbuild
-	windows_create_installer	
-	windows_copy_to_website
+	windows_create_installer
+	#windows_copy_to_website
 }
 
 function build_now_osx {
@@ -187,41 +210,41 @@ function build_now_osx {
 	echo "[CTRLR]: Empty build log $BUILD_LOG"
 	echo -n > $BUILD_LOG
 	
-	echo "[CTRLR]: Build Standalone"
+	echo "[CTRLR]: Build"
 	cd $CTRLR_ROOT/Builds/MacOSX
-	xcodebuild -configuration Release_Nightly | tee -ia $BUILD_LOG
+	xcodebuild -configuration Release | tee -ia $BUILD_LOG
 	
 	if [ $? -ne 0 ]; then
 		echo "[CTRLR]: Build failed"
 		exit 1
 	fi
 
-	echo "[CTRLR]: Build VST"
-	cd $CTRLR_ROOT/Builds/MacOSX
-	xcodebuild -configuration Release_Nightly | tee -ia $BUILD_LOG
+	# echo "[CTRLR]: Build VST"
+	# cd $CTRLR_ROOT/Builds/MacOSX
+	# xcodebuild -configuration Release | tee -ia $BUILD_LOG
 	
-	if [ $? -ne 0 ]; then
-		echo "[CTRLR]: Build failed"
-		exit 1
-	fi
+	# if [ $? -ne 0 ]; then
+	# 	echo "[CTRLR]: Build failed"
+	# 	exit 1
+	# fi
 	
-	echo "[CTRLR]: Build AU Wrapper"
-	cd $CTRLR_ROOT/Builds/MacOSX
-	xcodebuild -configuration Release_Nightly | tee -ia $BUILD_LOG
+	# echo "[CTRLR]: Build AU Wrapper"
+	# cd $CTRLR_ROOT/Builds/MacOSX
+	# xcodebuild -configuration Release | tee -ia $BUILD_LOG
 	
-	if [ $? -ne 0 ]; then
-		echo "[CTRLR]: Build failed"
-		exit 1
-	fi
+	# if [ $? -ne 0 ]; then
+	# 	echo "[CTRLR]: Build failed"
+	# 	exit 1
+	# fi
 	
-	echo "[CTRLR]: Build AU"
-	cd $CTRLR_ROOT/Builds/MacOSX
-	xcodebuild -configuration Release_Nightly | tee -ia $BUILD_LOG
+	# echo "[CTRLR]: Build AU"
+	# cd $CTRLR_ROOT/Builds/MacOSX
+	# xcodebuild -configuration Release | tee -ia $BUILD_LOG
 	
-	if [ $? -ne 0 ]; then
-		echo "[CTRLR]: Build failed"
-		exit 1
-	fi
+	# if [ $? -ne 0 ]; then
+	# 	echo "[CTRLR]: Build failed"
+	# 	exit 1
+	# fi
 	
 	cd $CTRLR_ROOT
 	
@@ -321,20 +344,6 @@ function build_now_linux {
 	rm -f $CTRLR_ROOT/Bin/libCtrlr-*.so
 	rm -f $CTRLR_ROOT/Bin/Ctrlr-*
 	
-	echo "CTRLR: check if boost is unpacked"
-	if [ ! -d $CTRLR_ROOT/Source/Misc/boost ]; then
-		echo "CTRLR: need to unpack boost.zip"
-		cd $CTRLR_ROOT/Boost
-		if [ -e boost.zip ]; then
-			unzip boost.zip
-		else
-			echo "CTRLR: boost.zip file does not exist, exiting now"
-			exit 1
-		fi
-	else
-		echo "CTRLR: boot directory exists"
-	fi
-	
 	echo "CTRLR: Build Standalone"
 	echo -n > $BUILD_LOG
 	
@@ -358,7 +367,7 @@ function build_now_linux {
 	./build.sh | tee -ia $BUILD_LOG
 	
 	if [ $? -ne 0 ]; then
-		echo "CTRLR: build for VST dailed"
+		echo "CTRLR: build for VST failed"
 		exit 1
 	fi
 	
@@ -368,20 +377,28 @@ function build_now_linux {
 	echo "CTRLR: copy files for package"
 	mkdir -p $CTRLR_ROOT/Packaging/Linux/Ctrlr
 	
-	cp $CTRLR_ROOT/Builds/LinuxMakefile/build/Ctrlr $CTRLR_ROOT/Packaging/Linux/Ctrlr/
-	cp $CTRLR_ROOT/Builds/LinuxMakefile/build/Ctrlr.so $CTRLR_ROOT/Packaging/Linux/Ctrlr/
-	cp -r $CTRLR_ROOT/Builds/LinuxMakefile/build/Ctrlr.vst3 $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	cp $CTRLR_ROOT/Builds/LinuxMakefile/build/$PROJECT_NAME  $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	cp $CTRLR_ROOT/Builds/LinuxMakefile/build/$PROJECT_NAME.so  $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: build for VST probably failed"
+		exit 1
+	fi
+	cp -r $CTRLR_ROOT/Builds/LinuxMakefile/build/$PROJECT_NAME.vst3  $CTRLR_ROOT/Packaging/Linux/Ctrlr/
+	if [ $? -ne 0 ]; then
+		echo "CTRLR: build for VST3 probably failed"
+		exit 1
+	fi
 	
 	cp -r $CTRLR_ROOT/Panels $CTRLR_ROOT/Packaging/Linux/Ctrlr/
 	cp -r $CTRLR_ROOT/Doc $CTRLR_ROOT/Packaging/Linux/Ctrlr/
 	
 	echo "CTRLR: strip binaries"
-	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/Ctrlr
-	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/Ctrlr.so
-	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/Ctrlr.vst3/Contents/x86_64-linux/Ctrlr.so
+	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/$PROJECT_NAME
+	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/$PROJECT_NAME.so
+	strip $CTRLR_ROOT/Packaging/Linux/Ctrlr/$PROJECT_NAME.vst3/Contents/x86_64-linux/$PROJECT_NAME.so
 	echo "CTRLR: create self extracting package"
 	
-	$CTRLR_ROOT/Packaging/Linux/makeself.sh --bzip2 --notemp $CTRLR_ROOT/Packaging/Linux/Ctrlr $PACKAGE Ctrlr-$VERSION
+	$CTRLR_ROOT/Packaging/Linux/makeself.sh --bzip2 --notemp $CTRLR_ROOT/Packaging/Linux/Ctrlr $PACKAGE ${PROJECT_NAME}-$VERSION
 	if [ $? -ne 0 ]; then
 		echo "CTRLR: Creating self extractring package failed"
 		exit 1
@@ -389,4 +406,10 @@ function build_now_linux {
 }
 
 detect_os
+
+if [ "$1" == "unpack_boost" ]; then
+	unpack_boost
+	exit 0
+fi
+
 build_now

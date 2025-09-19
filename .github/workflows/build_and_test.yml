@@ -1,0 +1,330 @@
+name: Pamplejuce
+
+on:
+  workflow_dispatch: # lets you run a build from the UI
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+  push:
+  pull_request:
+
+# When pushing new commits, cancel any running builds on that branch
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUILD_TYPE: Release
+  BUILD_DIR: build
+  DISPLAY: :0 # linux pluginval needs this
+  HOMEBREW_NO_INSTALL_CLEANUP: 1
+  SCCACHE_GHA_ENABLED: true
+  SCCACHE_CACHE_MULTIARCH: 1
+  IPP_DIR: C:\Program Files (x86)\Intel\oneAPI\ipp\latest\lib\cmake\ipp
+
+defaults:
+  run:
+    shell: bash
+
+# jobs are run in paralell on different machines
+# all steps run in series
+jobs:
+  build_and_test:
+    # don't double run on PRs
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    env:
+      HAVE_DEV_ID_APP_CERT: ${{ secrets.DEV_ID_APP_CERT != '' }}
+      HAVE_DEV_ID_INSTALLER_CERT: ${{ secrets.DEV_ID_INSTALLER_CERT != '' }}
+      HAVE_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET != '' }}
+    strategy:
+      fail-fast: false # show all errors for each platform (vs. cancel jobs on error)
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-24.04
+            pluginval-binary: ./pluginval
+            extra-flags: -G Ninja
+          - name: macOS
+            os: macos-14
+            pluginval-binary: pluginval.app/Contents/MacOS/pluginval
+            extra-flags: -G Ninja -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          - name: Windows
+            os: windows-2022
+            pluginval-binary: ./pluginval.exe
+
+    steps:
+      # Setup MSVC toolchain and developer command prompt (Windows)
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      # Use clang on Linux so we don't introduce a 3rd compiler (Windows and macOS use MSVC and Clang)
+      - name: Set up Clang
+        if: runner.os == 'Linux'
+        uses: egor-tensin/setup-clang@v1
+
+      # This also starts up our "fake" display (Xvfb), needed for pluginval
+      - name: Install JUCE's Linux Deps
+        if: runner.os == 'Linux'
+        # Thanks to McMartin & co https://forum.juce.com/t/list-of-juce-dependencies-under-linux/15121/44
+        run: |
+          sudo apt-get update && sudo apt install libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libglu1-mesa-dev xvfb ninja-build
+          sudo /usr/bin/Xvfb $DISPLAY &
+
+      - name: Install IPP (Windows)
+        if: (runner.os == 'Windows')
+        run: |
+          nuget install intelipp.static.win-x64 -Version 2022.2.0.575
+
+      - name: Install Ninja (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ninja
+
+      - name: Install macOS Deps
+        if: ${{ matrix.name == 'macOS' }}
+        run: brew install ninja osxutils
+
+      # This block can be removed once 15.1 is default (JUCE requires it when building on macOS 14)
+      - name: Use latest Xcode on system (macOS)
+        if: ${{ matrix.name == 'macOS' }}
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install CtrlrX Deps
+        run: |
+          echo "OS: $RUNNER_OS"
+          echo "Current working directory: $PWD"
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt install -y binutils-dev libboost-dev libcurl4-gnutls-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxrandr-dev xorg-dev
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+            # to not clutter the build step logs:
+            pushd ./Source/Misc/
+            unzip boost/boost.zip
+            popd
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install boost
+            # somehow cmake doesn't pick up on /usr/local/include/boost/ ... maybe have to set it in the .jucer project
+            pushd ./Source/Misc/
+            unzip boost/boost.zip
+            popd
+          fi
+
+      - name: Cache the build
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Extract version from .jucer file
+        # Try to derive version from a jucer file that is newer than the VERSION file, before configuring cmake
+        # This step can be removed if/when the .jucer workflow is deprecated
+        run: |
+          echo "Version"
+          while IFS= read -r -d $'\0' JUCER_FILE <&3; do
+            if [ "$JUCER_FILE" -nt "VERSION" -a -n "`grep -h 'version=.\+Ctrlr' \"$JUCER_FILE\"`" ]; then
+              grep -h 'version=.\+Ctrlr' "$JUCER_FILE" | sed -E 's/.*version="([^"]*).*/\1/g' | head -n 1 > VERSION
+              echo "Found in $JUCER_FILE"
+            fi
+          done 3< <(find -name "Ctrlr*.jucer" -type f -print0)
+          cat VERSION
+      
+      - name: Configure
+        run: cmake -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ${{ matrix.extra-flags }} .
+
+      - name: Build
+        run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
+
+      # - name: Test & Benchmarks
+      #   working-directory: ${{ env.BUILD_DIR }}
+      #   run: ctest --verbose --output-on-failure
+
+      - name: Read in .env from CMake # see GitHubENV.cmake
+        run: |
+          cat .env # show us the config
+          cat .env >> $GITHUB_ENV # pull in our PRODUCT_NAME, etc
+
+      - name: Set additional env vars for next steps
+        run: |
+          ARTIFACTS_PATH=${{ env.BUILD_DIR }}/${{ env.PROJECT_NAME }}_artefacts/${{ env.BUILD_TYPE }}
+          echo "ARTIFACTS_PATH=$ARTIFACTS_PATH" >> $GITHUB_ENV
+          echo "VST3_PATH=$ARTIFACTS_PATH/VST3/${{ env.PRODUCT_NAME }}.vst3" >> $GITHUB_ENV
+          echo "AU_PATH=$ARTIFACTS_PATH/AU/${{ env.PRODUCT_NAME }}.component" >> $GITHUB_ENV
+          echo "AUV3_PATH=$ARTIFACTS_PATH/AUv3/${{ env.PRODUCT_NAME }}.appex" >> $GITHUB_ENV
+          echo "CLAP_PATH=$ARTIFACTS_PATH/CLAP/${{ env.PRODUCT_NAME }}.clap" >> $GITHUB_ENV
+          echo "STANDALONE_PATH=$ARTIFACTS_PATH/Standalone/${{ env.PRODUCT_NAME }}.app" >> $GITHUB_ENV
+          echo "ARTIFACT_NAME=${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-${{ matrix.name }}" >> $GITHUB_ENV
+
+      - name: Pluginval
+        run: |
+          curl -LO "https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_${{ matrix.name }}.zip"
+          7z x pluginval_${{ matrix.name }}.zip
+          ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}"
+
+      - name: Import Certificates (macOS)
+        if: ${{ matrix.name == 'macOS' && env.HAVE_DEV_ID_APP_CERT == 'true' && env.HAVE_DEV_ID_INSTALLER_CERT == 'true' }}
+        uses: sudara/basic-macos-keychain-action@v1
+        id: keychain
+        with:
+          dev-id-app-cert: ${{ secrets.DEV_ID_APP_CERT }}
+          dev-id-app-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
+          dev-id-installer-cert: ${{ secrets.DEV_ID_INSTALLER_CERT }}
+          dev-id-installer-password: ${{ secrets.DEV_ID_INSTALLER_PASSWORD }}
+
+      - name: Codesign (macOS)
+        if: ${{ matrix.name == 'macOS' && env.HAVE_DEV_ID_APP_CERT == 'true' && env.HAVE_DEV_ID_INSTALLER_CERT == 'true' }}
+        timeout-minutes: 5
+        run: |
+          # Each plugin must be code signed
+          codesign --force -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.VST3_PATH }}" --deep --strict --options=runtime --timestamp
+          codesign --force -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.AU_PATH }}" --deep --strict --options=runtime --timestamp
+          codesign --force -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.CLAP_PATH }}" --deep --strict --options=runtime --timestamp
+          codesign --force -s "${{ secrets.DEVELOPER_ID_APPLICATION}}" -v "${{ env.STANDALONE_PATH }}" --deep --strict --options=runtime --timestamp
+
+      - name: Add Custom Icons (macOS)
+        if: ${{ matrix.name == 'macOS' }}
+        run: |
+          # add the icns as its own icon resource (meta!)
+          sips -i Packaging/Mac/Icon.icns
+
+          # Grab the resource, put in tempfile
+          DeRez -only icns Packaging/Mac/Icon.icns > /tmp/icons
+
+          # Stuff the resource into the strange Icon? file's resource fork
+          Rez -a /tmp/icons -o "${{ env.VST3_PATH }}/Icon"$'\r'
+          Rez -a /tmp/icons -o "${{ env.AU_PATH }}/Icon"$'\r'
+          # Rez -a /tmp/icons -o "${{ env.CLAP_PATH }}/Icon"$'\r'
+
+          # Set custom icon attribute
+          SetFile -a C "${{ env.VST3_PATH }}"
+          SetFile -a C "${{ env.AU_PATH }}"
+          # SetFile -a C "${{ env.CLAP_PATH }}"
+
+      - name: pkgbuild, Productbuild and Notarize (macOS)
+        if: ${{ matrix.name == 'macOS' && env.HAVE_DEV_ID_APP_CERT == 'true' && env.HAVE_DEV_ID_INSTALLER_CERT == 'true' }}
+        timeout-minutes: 5
+        run: |
+          pkgbuild --identifier "${{ env.BUNDLE_ID }}.au.pkg" --version $VERSION --component "${{ env.AU_PATH }}" --install-location "/Library/Audio/Plug-Ins/Components"  "Packaging/${{ env.PRODUCT_NAME }}.au.pkg"
+          pkgbuild --identifier "${{ env.BUNDLE_ID }}.vst3.pkg" --version $VERSION --component "${{ env.VST3_PATH }}" --install-location "/Library/Audio/Plug-Ins/VST3" "Packaging/${{ env.PRODUCT_NAME }}.vst3.pkg"
+          # pkgbuild --identifier "${{ env.BUNDLE_ID }}.clap.pkg" --version $VERSION --component "${{ env.CLAP_PATH }}" --install-location "/Library/Audio/Plug-Ins/CLAP" "Packaging/${{ env.PRODUCT_NAME }}.clap.pkg"
+
+          # Standalone is special, needs a boolean to always install in /Applications
+          pkgbuild --analyze --root "$(dirname "${{ env.STANDALONE_PATH }}")" standalone.plist
+          plutil -replace BundleIsRelocatable -bool NO standalone.plist
+          pkgbuild --identifier "${{ env.BUNDLE_ID }}.app.pkg" --version $VERSION --root "$(dirname "${{ env.STANDALONE_PATH }}")" --component-plist standalone.plist --install-location "/Applications" "Packaging/${{ env.PRODUCT_NAME }}.app.pkg"
+
+          cd Packaging
+          envsubst < ./Mac/distribution.xml.template > distribution.xml
+          productbuild --resources ./resources --distribution distribution.xml --sign "${{ secrets.DEVELOPER_ID_INSTALLER }}" --timestamp "${{ env.ARTIFACT_NAME }}.pkg"
+
+          xcrun notarytool submit "${{ env.ARTIFACT_NAME }}.pkg" --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --password ${{ secrets.NOTARIZATION_PASSWORD }} --team-id ${{ secrets.TEAM_ID }} --wait
+          xcrun stapler staple "${{ env.ARTIFACT_NAME }}.pkg"
+
+      - name: Zip (Linux)
+        if: ${{ matrix.name == 'Linux' }}
+        working-directory: ${{ env.ARTIFACTS_PATH }}
+        run: 7z a -tzip "${{ env.ARTIFACT_NAME }}.zip" "-xr!lib${{ env.PRODUCT_NAME }}_SharedCode.a" .
+
+      - name: Generate Installer (Windows)
+        if: ${{ matrix.name == 'Windows' }}
+        run: |
+          iscc "Packaging\Windows\installer.iss"
+          find -iname "*.exe"
+          mv "Packaging/Windows/Output/${{ env.ARTIFACT_NAME }}.exe" "${{ env.ARTIFACTS_PATH }}/"
+
+      - name: Codesign with Azure Trusted Signing (Windows)
+        if: ${{ matrix.name == 'Windows' && env.HAVE_AZURE_CLIENT_SECRET == 'true' }}
+        uses: azure/trusted-signing-action@v0.5.1
+        with:
+          # The Azure Active Directory tenant (directory) ID.
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+
+          # The client (application) ID of an App Registration in the tenant.
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+
+          # A client secret that was generated for the App Registration.
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+          # The Code Signing Account endpoint. The URI value must have a URI that aligns to the region your Code Signing Account and Certificate Profile you are specifying were created in during the setup of these resources.
+          endpoint: ${{ secrets.AZURE_ENDPOINT }}
+
+          # The Code Signing Account name.
+          trusted-signing-account-name: ${{ secrets.AZURE_CODE_SIGNING_NAME }}
+
+          # The Certificate Profile name.
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE_NAME }}
+
+          # This signs all exes inside the folder
+          files-folder: ${{ env.ARTIFACTS_PATH }}
+          files-folder-filter: exe
+
+      - name: Upload Exe (Windows)
+        if: ${{ matrix.name == 'Windows' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}.exe
+          path: "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.exe"
+
+      - name: Upload Zip (Linux)
+        if: ${{ matrix.name == 'Linux' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}.zip
+          path: "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.zip"
+
+      - name: Upload pkg (macOS)
+        if: ${{ matrix.name == 'macOS' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}.pkg
+          path: Packaging/${{ env.ARTIFACT_NAME }}.pkg
+
+      # Enable tmate debugging of manually-triggered workflows if the input option was provided
+      - name: Setup tmate session if failed
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ failure() && github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
+
+  release:
+    if: contains(github.ref, 'tags/v')
+    runs-on: ubuntu-latest
+    needs: build_and_test
+
+    steps:
+      - name: Get Readme
+        uses: actions/checkout@v4
+        # (sparse) checkout needs to happen before getting artifacts, as it will 'clean' the directory.
+        with:
+          sparse-checkout: |
+            README.md
+            VERSION
+          sparse-checkout-cone-mode: false
+
+      - name: Get Artifacts
+        uses: actions/download-artifact@v4
+  
+      - name: Compose release notes
+        # Extract the first sub section after '## Changelog' until the next subsection from the README
+        run: |
+          set +e  # ignore failures
+          echo '![alt text](/Source/Resources/Icons/CtrlrX-README-250x315.png?raw=true "CtrlrX")' > release_notes.txt
+          echo -e "\n# CtrlrX ${GITHUB_REF_NAME} - Changelog" >> release_notes.txt
+          sed '0,/^## Changelog/d; 0,/^##/d; /##/,$d' README.md >> release_notes.txt
+          cat release_notes.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_notes.txt
+          prerelease: true
+          # download-artifact puts these files in their own dirs...
+          # Using globs sidesteps having to pass the version around
+          files: |
+            */*.exe
+            */*.zip
+            */*.dmg

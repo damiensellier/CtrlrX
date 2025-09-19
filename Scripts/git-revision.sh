@@ -1,4 +1,9 @@
 #!/bin/bash
-projecttag=`git describe --tags --long | cut -f1 -d'-'`
-revisioncount=`git log "$projecttag".. --oneline | wc -l | tr -d ' '`
-echo "$projecttag.$revisioncount"
+ROOT=`git rev-parse --show-toplevel`
+
+# get version from file
+V=`cat $ROOT/VERSION`
+
+HASH=`git rev-parse --short HEAD`
+
+echo "$V-$HASH"
