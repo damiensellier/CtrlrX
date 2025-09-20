@@ -423,6 +423,7 @@ function(_juce_add_au_resource_fork shared_code_target au_target)
             -d "ppc_$ppc" -d "i386_$i386" -d "ppc64_$ppc64" -d "x86_64_$x86_64"
             -I "${secret_au_resource_dir}"
             -I "/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers"
+            -I "${juce_found_AudioUnit}/Versions/A/Headers"
             -I "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/AudioUnit.framework/Headers"
             -isysroot "${CMAKE_OSX_SYSROOT}"
             "${au_rez_sources}"
