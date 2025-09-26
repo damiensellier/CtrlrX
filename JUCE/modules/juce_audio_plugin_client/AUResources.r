@@ -126,6 +126,14 @@ resource 'thng' (RES_ID, NAME) {
 			'dlle', RES_ID, 8
 			#define NeedLeadingComma 1
 	#endif
+	#if defined(arm64_YES)
+		#if defined(NeedLeadingComma)
+			,
+		#endif
+			cmpThreadSafeOnMac,
+			'dlle', RES_ID, 9
+			#define NeedLeadingComma 1
+	#endif
 	}
 };
 
