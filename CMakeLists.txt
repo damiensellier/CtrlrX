@@ -20,23 +20,25 @@ endif()
 # Change me!
 # This is the internal name of the project and the name of JUCE's shared code target
 # Note: This cannot have spaces (it may be 2024, but you can't have it all!)
-# Worry not, JUCE's PRODUCT_NAME can have spaces (and is what DAWs display)
-set(PROJECT_NAME "CtrlrX")
+# This name is also used for BUNDLE_ID generation.
+set(BASE_ID_NAME "CtrlrX") 
+set(PROJECT_NAME "${BASE_ID_NAME}")
 set(CMAKE_CXX_STANDARD 14) # the lua bindings prevent newer C++ standard usage.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# Worry not, JUCE's PRODUCT_NAME can have spaces (and is what DAWs will display)
-# You can also just have it be the same thing as PROJECT_NAME
-# You may want to append the major version on the end of this (and PROJECT_NAME) ala:
-#   set(PROJECT_NAME "MyPlugin_v${MAJOR_VERSION}")
-# Doing so enables major versions to show up in IDEs and DAWs as separate plugins
-# allowing you to change parameters and behavior without breaking existing user projects
-set(PRODUCT_NAME "CtrlrX")
 
-# Change me! Used for the MacOS bundle name and Installers
-set(COMPANY_NAME "CtrlrX")
+# Change me!
+# This is the user-facing Plugin Name that will be displayed in DAWs.
+# IMPORTANT: Trailing spaces are included here to match the Projucer setting.
+set(PRODUCT_NAME "CtrlrX                     ") 
 
-# Change me! Used for the MacOS bundle identifier (and signing)
-set(BUNDLE_ID "com.CtrlrX.CtrlrX")
+# Change me!
+# This is the user-facing Manufacturer Name.
+# IMPORTANT: Trailing spaces are included here to match the Projucer setting.
+set(COMPANY_NAME "CtrlrX Project               ")
+
+# The VST3 custom overrides are removed as the names are now set globally.
+# This variable is now set using the clean BASE_ID_NAME to ensure the bundle identifier is valid.
+set(BUNDLE_ID "com.${BASE_ID_NAME}.${PROJECT_NAME}")
 
 # Change me! Set the plugin formats you want built
 # Valid choices: AAX Unity VST VST3 AU AUv3 Standalone
@@ -67,7 +69,7 @@ juce_add_plugin("${PROJECT_NAME}"
     # Icons for the standalone app
     ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Icons/ctrlrx_logo.svg"
 
-    # Change me!
+    # Change me! This now includes trailing spaces for all formats.
     COMPANY_NAME "${COMPANY_NAME}"
     BUNDLE_ID "${BUNDLE_ID}"
 
@@ -85,10 +87,7 @@ juce_add_plugin("${PROJECT_NAME}"
     PLUGIN_CODE cTrl
     FORMATS "${FORMATS}"
 
-    # The name of your final executable
-    # This is how it's listed in the DAW
-    # This can be different from PROJECT_NAME and can have spaces!
-    # You might want to use v${MAJOR_VERSION} here once you go to v2...
+    # The name of your final executable. This now includes trailing spaces for all formats.
     PRODUCT_NAME "${PRODUCT_NAME}")
 
 # This lets us use our code in both the JUCE targets and our Test target
@@ -96,8 +95,8 @@ juce_add_plugin("${PROJECT_NAME}"
 add_library(SharedCode INTERFACE)
 
 #clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
-#    CLAP_ID "${BUNDLE_ID}"
-#    CLAP_FEATURES audio-effect)
+#   CLAP_ID "${BUNDLE_ID}"
+#   CLAP_FEATURES audio-effect)
 
 # Enable fast math, C++20 and a few other target defaults
 include(SharedCodeDefaults)
@@ -124,24 +123,24 @@ file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS
 
 target_sources(SharedCode INTERFACE ${SourceFiles})
 target_include_directories(SharedCode INTERFACE
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/include"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/lua/include"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/luabind"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/libusb/include"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/boost"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/vst2sdk"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/MIDI"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Core"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/CtrlrManager"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/CtrlrModulator"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/CtrlrPanel"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Native"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Plugin"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/UIComponents"
-   "${CMAKE_CURRENT_SOURCE_DIR}/Source/Lua"
-   "${CMAKE_CURRENT_SOURCE_DIR}/JuceLibraryCode"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/lua/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/luabind"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/libusb/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/boost"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/vst2sdk"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/MIDI"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Core"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/CtrlrManager"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/CtrlrModulator"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Core/CtrlrPanel"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Native"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Plugin"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/UIComponents"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Lua"
+    "${CMAKE_CURRENT_SOURCE_DIR}/JuceLibraryCode"
 )
 if(UNIX)
 # hide (quite) some warnings...
@@ -160,8 +159,8 @@ target_compile_definitions(SharedCode
     INTERFACE
 
     # JUCE_WEB_BROWSER and JUCE_USE_CURL off by default
-    JUCE_WEB_BROWSER=0  # If you set this to 1, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
-    JUCE_USE_CURL=0     # If you set this to 1, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
+    JUCE_WEB_BROWSER=0  # If you set this to 1, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
+    JUCE_USE_CURL=0     # If you set this to 1, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
     JUCE_VST3_CAN_REPLACE_VST2=0
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
 
@@ -196,7 +195,7 @@ target_link_libraries(SharedCode
     juce_core
     juce_cryptography
     juce_data_structures
-#    juce_dsp
+#   juce_dsp
     juce_events
     juce_graphics
     juce_gui_basics
