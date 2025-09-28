@@ -85,7 +85,6 @@ jobs:
 
       - name: Install macOS Deps
         if: ${{ matrix.name == 'macOS' }}
-        # run: brew install ninja osxutils
         run: brew install osxutils
 
       # This block can be removed once 15.1 is default (JUCE requires it when building on macOS 14)
@@ -136,11 +135,15 @@ jobs:
           cat VERSION
       
       - name: Configure
-        run: cmake -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ${{ matrix.extra-flags }} .
+        run: >
+          cmake -B ${{ env.BUILD_DIR }}
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}}
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          ${{ matrix.extra-flags }} .
 
       - name: Build
         run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
-
       # - name: Test & Benchmarks
       #   working-directory: ${{ env.BUILD_DIR }}
       #   run: ctest --verbose --output-on-failure
@@ -213,7 +216,7 @@ jobs:
         if: ${{ matrix.name == 'macOS' && env.HAVE_DEV_ID_APP_CERT == 'true' && env.HAVE_DEV_ID_INSTALLER_CERT == 'true' }}
         timeout-minutes: 5
         run: |
-          pkgbuild --identifier "${{ env.BUNDLE_ID }}.au.pkg" --version $VERSION --component "${{ env.AU_PATH }}" --install-location "/Library/Audio/Plug-Ins/Components"  "Packaging/${{ env.PRODUCT_NAME }}.au.pkg"
+          pkgbuild --identifier "${{ env.BUNDLE_ID }}.au.pkg" --version $VERSION --component "${{ env.AU_PATH }}" --install-location "/Library/Audio/Plug-Ins/Components"  "Packaging/${{ env.PRODUCT_NAME }}.au.pkg"
           pkgbuild --identifier "${{ env.BUNDLE_ID }}.vst3.pkg" --version $VERSION --component "${{ env.VST3_PATH }}" --install-location "/Library/Audio/Plug-Ins/VST3" "Packaging/${{ env.PRODUCT_NAME }}.vst3.pkg"
           # pkgbuild --identifier "${{ env.BUNDLE_ID }}.clap.pkg" --version $VERSION --component "${{ env.CLAP_PATH }}" --install-location "/Library/Audio/Plug-Ins/CLAP" "Packaging/${{ env.PRODUCT_NAME }}.clap.pkg"
 
@@ -239,7 +242,7 @@ jobs:
         timeout-minutes: 5
         run: |
           echo "WARNING: Codesigning secrets not found. Building unsigned package only."
-          pkgbuild --identifier "${{ env.BUNDLE_ID }}.au.pkg" --version $VERSION --component "${{ env.AU_PATH }}" --install-location "/Library/Audio/Plug-Ins/Components"  "Packaging/${{ env.PRODUCT_NAME }}.au.pkg"
+          pkgbuild --identifier "${{ env.BUNDLE_ID }}.au.pkg" --version $VERSION --component "${{ env.AU_PATH }}" --install-location "/Library/Audio/Plug-Ins/Components"  "Packaging/${{ env.PRODUCT_NAME }}.au.pkg"
           pkgbuild --identifier "${{ env.BUNDLE_ID }}.vst3.pkg" --version $VERSION --component "${{ env.VST3_PATH }}" --install-location "/Library/Audio/Plug-Ins/VST3" "Packaging/${{ env.PRODUCT_NAME }}.vst3.pkg"
           # pkgbuild --identifier "${{ env.BUNDLE_ID }}.clap.pkg" --version $VERSION --component "${{ env.CLAP_PATH }}" --install-location "/Library/Audio/Plug-Ins/CLAP" "Packaging/${{ env.PRODUCT_NAME }}.clap.pkg"
 

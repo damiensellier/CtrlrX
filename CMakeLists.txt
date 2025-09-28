@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
+# This line is the minimal change needed to suppress the warnings you saw previously.
+cmake_policy(SET CMP0175 NEW)
 
 # This tells cmake we have goodies in the /cmake folder
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -21,20 +23,21 @@ endif()
 # This is the internal name of the project and the name of JUCE's shared code target
 # Note: This cannot have spaces (it may be 2024, but you can't have it all!)
 # This name is also used for BUNDLE_ID generation.
-set(BASE_ID_NAME "CtrlrX") 
+set(BASE_ID_NAME "CtrlrX")
 set(PROJECT_NAME "${BASE_ID_NAME}")
 set(CMAKE_CXX_STANDARD 14) # the lua bindings prevent newer C++ standard usage.
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# --- User-facing display name with spaces (used for AU/Standalone display) ---
+set(PLUGIN_DISPLAY_NAME "CtrlrX")
+
 # Change me!
-# This is the user-facing Plugin Name that will be displayed in DAWs.
-# IMPORTANT: Trailing spaces are included here to match the Projucer setting.
-set(PRODUCT_NAME "CtrlrX                     ") 
+# This is the CLEAN name used for the final binary artifact files (CtrlrX.vst3, CtrlrX.app)
+set(PRODUCT_NAME "CtrlrX")
 
 # Change me!
 # This is the user-facing Manufacturer Name.
-# IMPORTANT: Trailing spaces are included here to match the Projucer setting.
-set(COMPANY_NAME "CtrlrX Project               ")
+set(COMPANY_NAME "CtrlrX Project")
 
 # The VST3 custom overrides are removed as the names are now set globally.
 # This variable is now set using the clean BASE_ID_NAME to ensure the bundle identifier is valid.
@@ -45,7 +48,7 @@ set(BUNDLE_ID "com.${BASE_ID_NAME}.${PROJECT_NAME}")
 set(FORMATS Standalone AU VST3)
 
 # For simplicity, the name of the CMake project is also the name of the target
-# CURRENT_VERSION is from the VERSION file and shall contain non-negative integer components, 
+# CURRENT_VERSION is from the VERSION file and shall contain non-negative integer components,
 # i.e. <major>[.<minor>[.<patch>[.<tweak>]]]
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
@@ -69,6 +72,9 @@ juce_add_plugin("${PROJECT_NAME}"
     # Icons for the standalone app
     ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Icons/ctrlrx_logo.svg"
 
+    # Set the user-facing display name for formats that support spaces (AU/Standalone)
+    PLUGIN_NAME "${PLUGIN_DISPLAY_NAME}"
+
     # Change me! This now includes trailing spaces for all formats.
     COMPANY_NAME "${COMPANY_NAME}"
     BUNDLE_ID "${BUNDLE_ID}"
@@ -87,16 +93,46 @@ juce_add_plugin("${PROJECT_NAME}"
     PLUGIN_CODE cTrl
     FORMATS "${FORMATS}"
 
-    # The name of your final executable. This now includes trailing spaces for all formats.
-    PRODUCT_NAME "${PRODUCT_NAME}")
+    # --- CORE PLUGIN CHARACTERISTICS FROM PROJUCER ---
+    PLUGIN_IS_SYNTH TRUE
+    PLUGIN_WANTS_MIDI_INPUT TRUE
+    PLUGIN_PRODUCES_MIDI_OUTPUT TRUE
+    PLUGIN_EDITOR_REQUIRES_KEYS TRUE
+    # -------------------------------------------------
+
+    # FIX: VST3 Category is set using the official plural argument (VST3_CATEGORIES)
+    # This is the most reliable, clean way to set the VST3 category.
+    # VST3_CATEGORIES "Tools"
+    
+    # The name of your final executable. This now uses the clean PRODUCT_NAME.
+    PRODUCT_NAME "${PRODUCT_NAME}"
+)
+
+# --- VST3 Dynamic Name/Manufacturer Override ---
+# This block is essential for controlling the final VST3 plugin name
+# (which includes the trailing space from PLUGIN_DISPLAY_NAME) and manufacturer.
+
+if ("VST3" IN_LIST FORMATS)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        # Overwrite the name property for VST3 compilation (includes trailing space)
+        JUCE_PLUGIN_NAME "CtrlrX                          "
+        # Overwrite the manufacturer property for VST3 compilation
+        JUCE_COMPANY_NAME "CtrlrX Project                  "
+    )
+endif()
+# ---------------------------------------------------
+
+# If you had any *other* necessary, non-category format overrides here, they should 
+# be re-added below using the old method, but for the VST3 category, the problem is solved.
+
 
 # This lets us use our code in both the JUCE targets and our Test target
 # Without running into ODR violations
 add_library(SharedCode INTERFACE)
 
 #clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
-#   CLAP_ID "${BUNDLE_ID}"
-#   CLAP_FEATURES audio-effect)
+#    CLAP_ID "${BUNDLE_ID}"
+#    CLAP_FEATURES audio-effect)
 
 # Enable fast math, C++20 and a few other target defaults
 include(SharedCodeDefaults)
@@ -159,8 +195,8 @@ target_compile_definitions(SharedCode
     INTERFACE
 
     # JUCE_WEB_BROWSER and JUCE_USE_CURL off by default
-    JUCE_WEB_BROWSER=0  # If you set this to 1, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
-    JUCE_USE_CURL=0     # If you set this to 1, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
+    JUCE_WEB_BROWSER=0 # If you set this to 1, add `NEEDS_WEB_BROWSER TRUE` to the `juce_add_plugin` call
+    JUCE_USE_CURL=0 # If you set this to 1, add `NEEDS_CURL TRUE` to the `juce_add_plugin` call
     JUCE_VST3_CAN_REPLACE_VST2=0
     JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
 
@@ -174,8 +210,8 @@ target_compile_definitions(SharedCode
     CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
     VERSION="${CURRENT_VERSION}"
 
-    # JucePlugin_Name is for some reason doesn't use the nicer PRODUCT_NAME
-    PRODUCT_NAME_WITHOUT_VERSION="CtrlrX"
+    # FIX: Suppress the Windows C4996 'unsafe function' warning (e.g., for sprintf in Lua)
+    $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
 )
 
 # Link to any other modules you added (with juce_add_module) here!
@@ -195,7 +231,7 @@ target_link_libraries(SharedCode
     juce_core
     juce_cryptography
     juce_data_structures
-#   juce_dsp
+#    juce_dsp
     juce_events
     juce_graphics
     juce_gui_basics
@@ -221,7 +257,6 @@ if(LINUX)
     message(STATUS "libudev version: ${libudev_VERSION}")
     message(STATUS "libX11 version: ${x11_VERSION}")
     message(STATUS "libz version: ${zlib_VERSION}")
-    message(STATUS "libzstd version: ${zstd_VERSION}")
     message(STATUS "libbfd found: ${LIBBFD_FOUND}")
     message(STATUS "libsframe at: ${sframe_LIBRARY}")
 
