@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.25)
 # This line is the minimal change needed to suppress the warnings you saw previously.
-cmake_policy(SET CMP0175 NEW)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.31.0") 
+  cmake_policy(SET CMP0175 NEW)
+endif()
 
 # This tells cmake we have goodies in the /cmake folder
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
