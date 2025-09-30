@@ -85,7 +85,7 @@ jobs:
 
       - name: Install macOS Deps
         if: ${{ matrix.name == 'macOS' }}
-        run: brew install ninja osxutils
+        run: brew install osxutils
 
       # This block can be removed once 15.1 is default (JUCE requires it when building on macOS 14)
       - name: Use latest Xcode on system (macOS)
@@ -135,11 +135,15 @@ jobs:
           cat VERSION
       
       - name: Configure
-        run: cmake -B ${{ env.BUILD_DIR }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}} -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache ${{ matrix.extra-flags }} .
+        run: >
+          cmake -B ${{ env.BUILD_DIR }}
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}}
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          ${{ matrix.extra-flags }} .
 
       - name: Build
         run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
-
       # - name: Test & Benchmarks
       #   working-directory: ${{ env.BUILD_DIR }}
       #   run: ctest --verbose --output-on-failure
@@ -205,7 +209,10 @@ jobs:
           SetFile -a C "${{ env.AU_PATH }}"
           # SetFile -a C "${{ env.CLAP_PATH }}"
 
-      - name: pkgbuild, Productbuild and Notarize (macOS)
+      # -----------------------------------------------------------------
+      # NEW STEP 1: Signed Packaging and Notarization (Full Process)
+      # -----------------------------------------------------------------
+      - name: Signed Packaging and Notarization (macOS)
         if: ${{ matrix.name == 'macOS' && env.HAVE_DEV_ID_APP_CERT == 'true' && env.HAVE_DEV_ID_INSTALLER_CERT == 'true' }}
         timeout-minutes: 5
         run: |
@@ -220,11 +227,35 @@ jobs:
 
           cd Packaging
           envsubst < ./Mac/distribution.xml.template > distribution.xml
+          # SIGNED productbuild command
           productbuild --resources ./resources --distribution distribution.xml --sign "${{ secrets.DEVELOPER_ID_INSTALLER }}" --timestamp "${{ env.ARTIFACT_NAME }}.pkg"
 
+          # Notarization and Stapling
           xcrun notarytool submit "${{ env.ARTIFACT_NAME }}.pkg" --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --password ${{ secrets.NOTARIZATION_PASSWORD }} --team-id ${{ secrets.TEAM_ID }} --wait
           xcrun stapler staple "${{ env.ARTIFACT_NAME }}.pkg"
 
+      # -----------------------------------------------------------------
+      # NEW STEP 2: Unsigned Packaging (Fallback)
+      # -----------------------------------------------------------------
+      - name: Unsigned Packaging (macOS)
+        if: ${{ matrix.name == 'macOS' && (env.HAVE_DEV_ID_APP_CERT != 'true' || env.HAVE_DEV_ID_INSTALLER_CERT != 'true') }}
+        timeout-minutes: 5
+        run: |
+          echo "WARNING: Codesigning secrets not found. Building unsigned package only."
+          pkgbuild --identifier "${{ env.BUNDLE_ID }}.au.pkg" --version $VERSION --component "${{ env.AU_PATH }}" --install-location "/Library/Audio/Plug-Ins/Components"  "Packaging/${{ env.PRODUCT_NAME }}.au.pkg"
+          pkgbuild --identifier "${{ env.BUNDLE_ID }}.vst3.pkg" --version $VERSION --component "${{ env.VST3_PATH }}" --install-location "/Library/Audio/Plug-Ins/VST3" "Packaging/${{ env.PRODUCT_NAME }}.vst3.pkg"
+          # pkgbuild --identifier "${{ env.BUNDLE_ID }}.clap.pkg" --version $VERSION --component "${{ env.CLAP_PATH }}" --install-location "/Library/Audio/Plug-Ins/CLAP" "Packaging/${{ env.PRODUCT_NAME }}.clap.pkg"
+
+          # Standalone is special, needs a boolean to always install in /Applications
+          pkgbuild --analyze --root "$(dirname "${{ env.STANDALONE_PATH }}")" standalone.plist
+          plutil -replace BundleIsRelocatable -bool NO standalone.plist
+          pkgbuild --identifier "${{ env.BUNDLE_ID }}.app.pkg" --version $VERSION --root "$(dirname "${{ env.STANDALONE_PATH }}")" --component-plist standalone.plist --install-location "/Applications" "Packaging/${{ env.PRODUCT_NAME }}.app.pkg"
+
+          cd Packaging
+          envsubst < ./Mac/distribution.xml.template > distribution.xml
+          # UNSIGNED productbuild command (NO --sign or --timestamp)
+          productbuild --resources ./resources --distribution distribution.xml "${{ env.ARTIFACT_NAME }}.pkg"
+          
       - name: Zip (Linux)
         if: ${{ matrix.name == 'Linux' }}
         working-directory: ${{ env.ARTIFACTS_PATH }}

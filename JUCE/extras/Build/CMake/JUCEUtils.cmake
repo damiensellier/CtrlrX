@@ -1587,6 +1587,21 @@ function(_juce_configure_plugin_targets target)
 
     _juce_get_vst3_category_string(${target} vst3_category_string)
 
+    # --- START PATCH: Force VST3 Category, Name, and Manufacturer Overrides ---
+    if ("VST3" IN_LIST active_formats)
+        # 1. Category: Explicitly overrides any default/incorrect category read by JUCE.
+        set(vst3_category_string "Instrument|Tools")
+
+        # 2. Name & Manufacturer: Override the target properties used by the generator expressions
+        #    to force the correct, custom values for VST3/Shared Code compilation.
+        # set_target_properties(${target} PROPERTIES
+        #     JUCE_PLUGIN_NAME "CtrlrX                          "
+        #     JUCE_COMPANY_NAME "CtrlrX Project                  "
+        # )
+    endif()
+    # --- END PATCH ---
+
+
     target_compile_definitions(${target} PUBLIC
         JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone
         JucePlugin_IsSynth=$<BOOL:$<TARGET_PROPERTY:${target},JUCE_IS_SYNTH>>
