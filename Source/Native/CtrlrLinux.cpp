@@ -20,6 +20,82 @@ extern "C"
     #include "libr.h"
 }
 
+
+static MemoryBlock hexToBytes(const String& hexString) {
+    MemoryBlock result;
+    String cleaned = hexString.removeCharacters(" \t\r\n");
+    
+    for (int i = 0; i < cleaned.length(); i += 2) {
+        if (i + 1 < cleaned.length()) {
+            String byteStr = cleaned.substring(i, i + 2);
+            uint8 byte = (uint8)byteStr.getHexValue32();
+            result.append(&byte, 1);
+        }
+    }
+    return result;
+}
+
+// Helper: Convert string to fixed-size byte array (pad or truncate)
+static MemoryBlock stringToFixedBytes(const String& str, int fixedSize) {
+    MemoryBlock result;
+    result.setSize(fixedSize, true);
+    
+    const char* chars = str.toUTF8();
+    int copySize = jmin(fixedSize, (int)strlen(chars));
+    memcpy(result.getData(), chars, copySize);
+    
+    return result;
+}
+
+// Helper: Replace all occurrences and return count
+static int replaceAllOccurrences(MemoryBlock& target, const MemoryBlock& search, const MemoryBlock& replace) {
+    if (search.getSize() != replace.getSize() || search.getSize() == 0) {
+        return 0;
+    }
+    
+    int count = 0;
+    const uint8* data = static_cast<const uint8*>(target.getData());
+    size_t dataSize = target.getSize();
+    size_t searchSize = search.getSize();
+    
+    for (size_t i = 0; i <= dataSize - searchSize; ++i) {
+        if (memcmp(data + i, search.getData(), searchSize) == 0) {
+            target.copyFrom(replace.getData(), (int)i, replace.getSize());
+            data = static_cast<const uint8*>(target.getData());
+            count++;
+        }
+    }
+    
+    _DBG("BinaryPatcher: Made " + String(count) + " replacement(s)");
+    return count;
+}
+
+// Function to get the actual VST3 plugin path
+static File getVST3PluginPath()
+{
+    std::ifstream maps("/proc/self/maps");
+    std::string line;
+    
+    while (std::getline(maps, line)) {
+        if (line.find(".vst3/Contents/") != std::string::npos && 
+            line.find(".so") != std::string::npos) {
+            
+            size_t pathStart = line.find('/');
+            if (pathStart != std::string::npos) {
+                std::string path = line.substr(pathStart);
+                size_t soEnd = path.find(".so");
+                if (soEnd != std::string::npos) {
+                    path = path.substr(0, soEnd + 3);
+                    return File(String(path));
+                }
+            }
+        }
+    }
+    
+    return File::getSpecialLocation(File::currentApplicationFile);
+}
+
+
 // Simple embedded data manager using only JUCE - no external dependencies
 class SimpleEmbeddedDataManager
 {
@@ -239,8 +315,7 @@ CtrlrLinux::CtrlrLinux(CtrlrManager &_owner) : owner(_owner)
 CtrlrLinux::~CtrlrLinux()
 {
 }
-
-const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const bool isRestricted, const bool signPanel)
+/************************************************************************************************************************/const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const bool isRestricted, const bool signPanel)
 {
     _DBG("CtrlrLinux::exportWithDefaultPanel (Simple version)");
 
@@ -249,24 +324,83 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
         return (Result::fail("Linux native, panel pointer is invalid"));
     }
 
-    File me = File::getSpecialLocation(File::currentApplicationFile);
+    File me = getVST3PluginPath();
+    _DBG("CtrlrLinux::exportWithDefaultPanel - Plugin path: " + me.getFullPathName());
+    
     File newMe;
     MemoryBlock panelExportData;
     MemoryBlock panelResourcesData;
+    
+    // Determine if we're a VST3 by checking the bundle structure
+    File parentDir = me.getParentDirectory(); // x86_64-linux
+    File contentsDir = parentDir.getParentDirectory(); // Contents
+    File bundleDir = contentsDir.getParentDirectory(); // CtrlrX-Debug.vst3
+
+    bool isVST3 = bundleDir.getFileName().endsWith(".vst3");
+
+    _DBG("CtrlrLinux::exportWithDefaultPanel - Detected type: " + String(isVST3 ? "VST3" : "Standalone"));
+    _DBG("  Current binary: " + me.getFullPathName());
+    _DBG("  Bundle dir: " + bundleDir.getFullPathName());
+    
+    String panelName = File::createLegalFileName(panelToWrite->getProperty(Ids::name));
+    
+    // Build the suggested file path based on type
+    File suggestedFile;
+    if (isVST3) {
+        // For VST3, suggest a .vst3 bundle
+        suggestedFile = bundleDir.getParentDirectory().getChildFile(panelName + ".vst3");
+    } else {
+        // For standalone, use the executable extension
+        suggestedFile = me.getParentDirectory()
+                          .getChildFile(panelName)
+                          .withFileExtension(me.getFileExtension());
+    }
 
     FileChooser fc(CTRLR_NEW_INSTANCE_DIALOG_TITLE,
-                   me.getParentDirectory().getChildFile(File::createLegalFileName(panelToWrite->getProperty(Ids::name))).withFileExtension(me.getFileExtension()),
-                   me.getFileExtension(),
+                   suggestedFile,
+                   isVST3 ? ".vst3" : me.getFileExtension(),
                    panelToWrite->getOwner().getProperty(Ids::ctrlrNativeFileDialogs));
 
     if (fc.browseForFileToSave(true))
     {
         _DBG("CtrlrLinux::exportWithDefaultPanel chosen file: " + fc.getResult().getFullPathName());
-        newMe = fc.getResult();
-
-        if (!me.copyFileTo(newMe))
-        {
-            return (Result::fail("Linux native, copyFileTo from \"" + me.getFullPathName() + "\" to \"" + newMe.getFullPathName() + "\" failed"));
+        File chosenFile = fc.getResult();
+        
+        if (isVST3) {
+            // Ensure the file has .vst3 extension
+            if (!chosenFile.getFileName().endsWith(".vst3")) {
+                chosenFile = chosenFile.withFileExtension(".vst3");
+            }
+            
+            // Create VST3 bundle structure
+            File bundleDir = chosenFile;
+            File contentsDir = bundleDir.getChildFile("Contents");
+            File binaryDir = contentsDir.getChildFile("x86_64-linux");
+            File binaryFile = binaryDir.getChildFile(panelName + ".so");
+            
+            _DBG("CtrlrLinux::exportWithDefaultPanel creating VST3 bundle at: " + bundleDir.getFullPathName());
+            _DBG("  Binary will be at: " + binaryFile.getFullPathName());
+            
+            // Create directories
+            if (!binaryDir.createDirectory()) {
+                return (Result::fail("Failed to create VST3 bundle directory structure"));
+            }
+            
+            // Copy the VST3 binary to the bundle location
+            if (!me.copyFileTo(binaryFile)) {
+                return (Result::fail("Linux native, copyFileTo from \"" + me.getFullPathName() + 
+                                   "\" to \"" + binaryFile.getFullPathName() + "\" failed"));
+            }
+            
+            // Update newMe to point to the actual binary for embedding
+            newMe = binaryFile;
+        } else {
+            // Standalone - direct copy
+            newMe = chosenFile;
+            if (!me.copyFileTo(newMe)) {
+                return (Result::fail("Linux native, copyFileTo from \"" + me.getFullPathName() + 
+                                   "\" to \"" + newMe.getFullPathName() + "\" failed"));
+            }
         }
     }
     else
@@ -283,19 +417,69 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
         return Result::fail("CtrlrPanel::exportPanel failed: " + error);
     }
 
-_DBG("CtrlrLinux::exportWithDefaultPanel - After exportPanel:");
-_DBG("  panelExportData size: " + STR((int32)panelExportData.getSize()));
-_DBG("  panelResourcesData size: " + STR((int32)panelResourcesData.getSize()));
+    _DBG("CtrlrLinux::exportWithDefaultPanel - After exportPanel:");
+    _DBG("  panelExportData size: " + STR((int32)panelExportData.getSize()));
+    _DBG("  panelResourcesData size: " + STR((int32)panelResourcesData.getSize()));
 
-// Debug: Check the restricted value before writing
-ValueTree testTree = ValueTree::readFromGZIPData(panelExportData.getData(), panelExportData.getSize());
-if (testTree.isValid()) {
-    var restrictedValue = testTree.getProperty(Ids::restricted);
-    _DBG("CtrlrLinux::exportWithDefaultPanel - restricted value before write: " + restrictedValue.toString());
-}
+    // Debug: Check the restricted value before writing
+    ValueTree testTree = ValueTree::readFromGZIPData(panelExportData.getData(), panelExportData.getSize());
+    if (testTree.isValid()) {
+        var restrictedValue = testTree.getProperty(Ids::restricted);
+        _DBG("CtrlrLinux::exportWithDefaultPanel - restricted value before write: " + restrictedValue.toString());
+    }
+    
+    // Perform binary patching for VST3
+    if (isVST3) {
+        _DBG("CtrlrLinux::exportWithDefaultPanel - Performing VST3 binary patching");
+        
+        String pluginName = panelToWrite->getProperty(Ids::name).toString();
+        String pluginCode = panelToWrite->getProperty(Ids::panelInstanceUID).toString();
+        String manufacturerName = panelToWrite->getProperty(Ids::panelAuthorName).toString();
+        String manufacturerCode = panelToWrite->getProperty(Ids::panelInstanceManufacturerID).toString();
+        
+        _DBG("Plugin Name: " + pluginName);
+        _DBG("Plugin Code: " + pluginCode);
+        _DBG("Manufacturer: " + manufacturerName);
+        
+        // Load the binary into memory
+        MemoryBlock binaryData;
+        if (newMe.loadFileAsData(binaryData)) {
+            // Create padded/truncated versions
+            MemoryBlock pluginNameBytes = stringToFixedBytes(pluginName, 32);
+            MemoryBlock pluginCodeBytes = stringToFixedBytes(pluginCode, 4);
+            MemoryBlock manufacturerNameBytes = stringToFixedBytes(manufacturerName, 16);
+            MemoryBlock manufacturerCodeBytes = stringToFixedBytes(manufacturerCode, 4);
+            
+            // Search patterns (original CtrlrX identifiers)
+            MemoryBlock searchPluginName = hexToBytes("43 74 72 6C 72 58 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20");
+            MemoryBlock searchPluginCode = hexToBytes("63 54 72 58");
+            MemoryBlock searchManufacturerName = hexToBytes("43 74 72 6C 72 58 20 50 72 6F 6A 65 63 74 20 20");
+            MemoryBlock searchManufacturerCode = hexToBytes("63 54 72 6C");
+            
+            int totalReplacements = 0;
+            totalReplacements += replaceAllOccurrences(binaryData, searchPluginName, pluginNameBytes);
+            totalReplacements += replaceAllOccurrences(binaryData, searchPluginCode, pluginCodeBytes);
+            totalReplacements += replaceAllOccurrences(binaryData, searchManufacturerName, manufacturerNameBytes);
+            totalReplacements += replaceAllOccurrences(binaryData, searchManufacturerCode, manufacturerCodeBytes);
+            
+            _DBG("CtrlrLinux::exportWithDefaultPanel - Made " + String(totalReplacements) + " total binary patches");
+            
+            // Write the patched binary back
+            if (!newMe.replaceWithData(binaryData.getData(), binaryData.getSize())) {
+                return (Result::fail("Failed to write patched binary"));
+            }
+        } else {
+            return (Result::fail("Failed to load binary for patching"));
+        }
+    }
     
     // Use Simple manager instead of libr
     SimpleEmbeddedDataManager dataManager(newMe.getFullPathName().toStdString());
+    
+    // IMPORTANT: Initialize to read existing sections (even if there are none yet)
+    if (!dataManager.initialize()) {
+        _DBG("CtrlrLinux::exportWithDefaultPanel - no existing sections found, will create new ones");
+    }
     
     // Write panel data
     if (!dataManager.writeSection(CTRLR_INTERNAL_PANEL_SECTION, panelExportData))
@@ -306,7 +490,6 @@ if (testTree.isValid()) {
     _DBG("CtrlrLinux::exportWithDefaultPanel (Simple) wrote panel data to binary size [" + STR((int32)panelExportData.getSize()) + "]");
 
     // Write resources if any
-    // dataManager.writeSection(CTRLR_INTERNAL_RESOURCES_SECTION, panelResourcesData);
     if (panelResourcesData.getSize() > 0)
     {
         if (!dataManager.writeSection(CTRLR_INTERNAL_RESOURCES_SECTION, panelResourcesData))
@@ -315,7 +498,6 @@ if (testTree.isValid()) {
         }
         else
         {
-            _DBG("WE SHOULD BE WRITING RESOURCES OUT HERE");
             _DBG("CtrlrLinux::exportWithDefaultPanel (Simple) wrote resources, size: " + _STR((int)panelResourcesData.getSize()));
         }
     }
@@ -329,6 +511,88 @@ if (testTree.isValid()) {
     return (Result::ok());
 }
 
+// Helper functions - add these as static functions or class members
+
+// Helper: Convert hex string like "43 74 72" to MemoryBlock
+// static MemoryBlock hexToBytes(const String& hexString) {
+//     MemoryBlock result;
+//     String cleaned = hexString.removeCharacters(" \t\r\n");
+    
+//     for (int i = 0; i < cleaned.length(); i += 2) {
+//         if (i + 1 < cleaned.length()) {
+//             String byteStr = cleaned.substring(i, i + 2);
+//             uint8 byte = (uint8)byteStr.getHexValue32();
+//             result.append(&byte, 1);
+//         }
+//     }
+//     return result;
+// }
+
+// Helper: Convert string to fixed-size byte array (pad or truncate)
+// static MemoryBlock stringToFixedBytes(const String& str, int fixedSize) {
+//     MemoryBlock result;
+//     result.setSize(fixedSize, true); // Initialize with zeros
+    
+//     const char* chars = str.toUTF8();
+//     int copySize = jmin(fixedSize, (int)strlen(chars));
+//     memcpy(result.getData(), chars, copySize);
+    
+//     return result;
+// }
+
+// Helper: Replace all occurrences and return count
+// static int replaceAllOccurrences(MemoryBlock& target, const MemoryBlock& search, const MemoryBlock& replace) {
+//     if (search.getSize() != replace.getSize() || search.getSize() == 0) {
+//         return 0;
+//     }
+    
+//     int count = 0;
+//     const uint8* data = static_cast<const uint8*>(target.getData());
+//     size_t dataSize = target.getSize();
+//     size_t searchSize = search.getSize();
+    
+//     for (size_t i = 0; i <= dataSize - searchSize; ++i) {
+//         if (memcmp(data + i, search.getData(), searchSize) == 0) {
+//             target.copyFrom(replace.getData(), (int)i, replace.getSize());
+//             data = static_cast<const uint8*>(target.getData());
+//             count++;
+//         }
+//     }
+    
+//     _DBG("BinaryPatcher: Made " + String(count) + " replacement(s)");
+//     return count;
+// }
+
+// Function to get the actual VST3 plugin path
+// static File getVST3PluginPath()
+// {
+//     // On Linux, we can read /proc/self/maps to find our .so file
+//     std::ifstream maps("/proc/self/maps");
+//     std::string line;
+    
+//     while (std::getline(maps, line)) {
+//         // Look for lines containing our plugin .so path
+//         if (line.find(".vst3/Contents/") != std::string::npos && 
+//             line.find(".so") != std::string::npos) {
+            
+//             // Extract the path (after the permission flags and addresses)
+//             size_t pathStart = line.find('/');
+//             if (pathStart != std::string::npos) {
+//                 std::string path = line.substr(pathStart);
+//                 // Remove everything after .so
+//                 size_t soEnd = path.find(".so");
+//                 if (soEnd != std::string::npos) {
+//                     path = path.substr(0, soEnd + 3); // Include ".so"
+//                     return File(String(path));
+//                 }
+//             }
+//         }
+//     }
+    
+    // Fallback to current application (for standalone)
+//     return File::getSpecialLocation(File::currentApplicationFile);
+// }
+/************************************************************************************************************/
 const Result CtrlrLinux::getDefaultPanel(MemoryBlock& dataToWrite)
 {
 #ifdef DEBUG_INSTANCE
