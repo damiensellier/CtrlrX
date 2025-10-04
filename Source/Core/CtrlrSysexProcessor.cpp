@@ -441,7 +441,6 @@ void CtrlrSysexProcessor::checksumTechnics(const CtrlrSysexToken token, MidiMess
 
 void CtrlrSysexProcessor::checksumRolandJp8080(const CtrlrSysexToken token, MidiMessage &m) // Update v5.6.34. Thanks to @dnaldoog
 {
-	_DBG("I am Roland");
 	const int startByte = token.getPosition() - token.getAdditionalData();
 	uint8 chTotal		= 0;
 	uint8 *ptr	= (uint8 *)m.getRawData();

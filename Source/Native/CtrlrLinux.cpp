@@ -39,71 +39,99 @@ private:
     std::string filePath;
     
     bool findSections(std::ifstream& file) {
-        sections.clear();
+    sections.clear();
+    size_t originalFileSize;  // ← THIS LINE MUST BE HERE
+    bool hasEmbeddedData;      // ← AND THIS LINE
+    file.seekg(0, std::ios::end);
+    size_t fileSize = file.tellg();
+    
+    // Search backwards from the end for the section delimiter first
+    // The directory is always at the very end of the file
+    size_t searchSize = std::min((size_t)8192, fileSize); // Search last 8KB
+    size_t searchStart = fileSize - searchSize;
+    
+    file.seekg(searchStart);
+    std::string buffer(searchSize, '\0');
+    file.read(&buffer[0], searchSize);
+    
+    // Find the LAST occurrence of MAGIC_HEADER (should be near the end)
+    size_t headerPos = buffer.rfind(MAGIC_HEADER);
+    
+    if (headerPos != std::string::npos) {
+        size_t absolutePos = searchStart + headerPos;
+        hasEmbeddedData = true;
         
-        // Look for our magic header
-        file.seekg(0, std::ios::end);
-        size_t fileSize = file.tellg();
-        file.seekg(0, std::ios::beg);
+        _DBG("SimpleEmbeddedDataManager::findSections - Found magic header at file position: " + std::to_string(absolutePos));
         
-        std::string buffer(4096, '\0');
-        size_t searchPos = 0;
-        
-        while (searchPos < fileSize) {
-            file.seekg(searchPos);
-            file.read(&buffer[0], std::min(buffer.size(), fileSize - searchPos));
-            size_t bytesRead = file.gcount();
-            
-            size_t headerPos = buffer.find(MAGIC_HEADER);
-            if (headerPos != std::string::npos) {
-                size_t absolutePos = searchPos + headerPos + MAGIC_HEADER.length();
-                return parseSections(file, absolutePos);
+        // Parse sections starting right after the magic header
+        if (parseSections(file, absolutePos + MAGIC_HEADER.length())) {
+            // Find the earliest section offset to determine original file size
+            originalFileSize = fileSize;
+            for (const auto& section : sections) {
+                if (section.offset < originalFileSize) {
+                    originalFileSize = section.offset;
+                }
             }
-            
-            searchPos += bytesRead - MAGIC_HEADER.length();
-            if (searchPos >= fileSize) break;
+            return true;
         }
-        
-        return false;
     }
     
-    bool parseSections(std::ifstream& file, size_t startPos) {
-        file.seekg(startPos);
-        std::string line;
+    _DBG("SimpleEmbeddedDataManager::findSections - No magic header found");
+    
+    // No embedded data found
+    originalFileSize = fileSize;
+    return false;
+}
+   bool parseSections(std::ifstream& file, size_t startPos) {
+    file.seekg(startPos);
+    std::string line;
+    
+    _DBG("SimpleEmbeddedDataManager::parseSections - starting at position " + std::to_string(startPos));
+    
+    while (std::getline(file, line)) {
+        _DBG("SimpleEmbeddedDataManager::parseSections - read line: [" + line + "]");
         
-        while (std::getline(file, line)) {
-            if (line == SECTION_DELIMITER) break;
-            
-            // Parse section info: "NAME:OFFSET:SIZE:COMPRESSED"
-            std::istringstream iss(line);
-            std::string name, offsetStr, sizeStr, compressedStr;
-            
-            if (std::getline(iss, name, ':') &&
-                std::getline(iss, offsetStr, ':') &&
-                std::getline(iss, sizeStr, ':') &&
-                std::getline(iss, compressedStr)) {
-                
-                // Validate strings before conversion
-                if (name.empty() || offsetStr.empty() || sizeStr.empty() || compressedStr.empty()) {
-                    continue; // Skip invalid entries
-                }
-                
-                try {
-                    DataSection section;
-                    section.name = name;
-                    section.offset = std::stoull(offsetStr);
-                    section.size = std::stoull(sizeStr);
-                    section.compressed = (compressedStr == "1");
-                    sections.push_back(section);
-                } catch (const std::exception& e) {
-                    // Skip invalid numeric conversions
-                    continue;
-                }
-            }
+        if (line == SECTION_DELIMITER) {
+            _DBG("SimpleEmbeddedDataManager::parseSections - found delimiter, stopping");
+            break;
         }
         
-        return !sections.empty();
+        // Parse section info: "NAME:OFFSET:SIZE:COMPRESSED"
+        std::istringstream iss(line);
+        std::string name, offsetStr, sizeStr, compressedStr;
+        
+        if (std::getline(iss, name, ':') &&
+            std::getline(iss, offsetStr, ':') &&
+            std::getline(iss, sizeStr, ':') &&
+            std::getline(iss, compressedStr)) {
+            
+            // Validate strings before conversion
+            if (name.empty() || offsetStr.empty() || sizeStr.empty() || compressedStr.empty()) {
+                _DBG("SimpleEmbeddedDataManager::parseSections - skipping invalid entry (empty field)");
+                continue;
+            }
+            
+            try {
+                DataSection section;
+                section.name = name;
+                section.offset = std::stoull(offsetStr);
+                section.size = std::stoull(sizeStr);
+                section.compressed = (compressedStr == "1");
+                sections.push_back(section);
+                _DBG("SimpleEmbeddedDataManager::parseSections - added section: " + name + 
+                     " offset=" + std::to_string(section.offset) + 
+                     " size=" + std::to_string(section.size));
+            } catch (const std::exception& e) {
+                _DBG("SimpleEmbeddedDataManager::parseSections - exception: " + std::string(e.what()));
+                continue;
+            }
+        }
     }
+    
+    _DBG("SimpleEmbeddedDataManager::parseSections - total sections found: " + std::to_string(sections.size()));
+    
+    return !sections.empty();
+}
     
 public:
     SimpleEmbeddedDataManager(const std::string& path) : filePath(path) {}
@@ -255,12 +283,16 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
         return Result::fail("CtrlrPanel::exportPanel failed: " + error);
     }
 
-    // Debug: Check the restricted value before writing
-    ValueTree testTree = ValueTree::readFromGZIPData(panelExportData.getData(), panelExportData.getSize());
-    if (testTree.isValid()) {
-        var restrictedValue = testTree.getProperty(Ids::restricted);
-        _DBG("CtrlrLinux::exportWithDefaultPanel - restricted value before write: " + restrictedValue.toString());
-    }
+_DBG("CtrlrLinux::exportWithDefaultPanel - After exportPanel:");
+_DBG("  panelExportData size: " + STR((int32)panelExportData.getSize()));
+_DBG("  panelResourcesData size: " + STR((int32)panelResourcesData.getSize()));
+
+// Debug: Check the restricted value before writing
+ValueTree testTree = ValueTree::readFromGZIPData(panelExportData.getData(), panelExportData.getSize());
+if (testTree.isValid()) {
+    var restrictedValue = testTree.getProperty(Ids::restricted);
+    _DBG("CtrlrLinux::exportWithDefaultPanel - restricted value before write: " + restrictedValue.toString());
+}
     
     // Use Simple manager instead of libr
     SimpleEmbeddedDataManager dataManager(newMe.getFullPathName().toStdString());
@@ -274,6 +306,7 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
     _DBG("CtrlrLinux::exportWithDefaultPanel (Simple) wrote panel data to binary size [" + STR((int32)panelExportData.getSize()) + "]");
 
     // Write resources if any
+    // dataManager.writeSection(CTRLR_INTERNAL_RESOURCES_SECTION, panelResourcesData);
     if (panelResourcesData.getSize() > 0)
     {
         if (!dataManager.writeSection(CTRLR_INTERNAL_RESOURCES_SECTION, panelResourcesData))
@@ -282,6 +315,7 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
         }
         else
         {
+            _DBG("WE SHOULD BE WRITING RESOURCES OUT HERE");
             _DBG("CtrlrLinux::exportWithDefaultPanel (Simple) wrote resources, size: " + _STR((int)panelResourcesData.getSize()));
         }
     }
@@ -355,43 +389,22 @@ const Result CtrlrLinux::getDefaultPanel(MemoryBlock& dataToWrite)
 
 const Result CtrlrLinux::getDefaultResources(MemoryBlock& dataToWrite)
 {
-#ifdef DEBUG_INSTANCE
-    File temp("/home/r.kubiak/devel/debug.bpanelz");
-    MemoryBlock data;
-    {
-        ScopedPointer <FileInputStream> fis (temp.createInputStream());
-        fis->readIntoMemoryBlock (data);
-    }
-
-    ValueTree t = ValueTree::readFromGZIPData(data.getData(), data.getSize());
-
-    if (t.isValid())
-    {
-        ValueTree r = t.getChildWithName (Ids::resourceExportList);
-        if (r.isValid())
-        {
-            MemoryOutputStream mos (dataToWrite, false);
-            {
-                GZIPCompressorOutputStream gzipOutputStream (&mos);
-                r.writeToStream(gzipOutputStream);
-                gzipOutputStream.flush();
-            }
-            return (Result::ok());
-        }
-    }
-    else
-    {
-        return (Result::fail("Linux Native: getDefaultResources got data but couldn't parse it as a compressed ValueTree"));
-    }
-#endif
-
+    _DBG("CtrlrLinux::getDefaultResources - ENTRY");
+    
     // Try new format first
     SimpleEmbeddedDataManager dataManager(File::getSpecialLocation(File::hostApplicationPath).getFullPathName().toStdString());
     
-    if (dataManager.initialize() && dataManager.readSection(CTRLR_INTERNAL_RESOURCES_SECTION, dataToWrite))
-    {
-        _DBG("CtrlrLinux::getDefaultResources (Simple), read resource data size [" + STR((int32)dataToWrite.getSize()) + "]");
-        return (Result::ok());
+    if (dataManager.initialize()) {
+        _DBG("CtrlrLinux::getDefaultResources - SimpleEmbeddedDataManager initialized successfully");
+        
+        if (dataManager.readSection(CTRLR_INTERNAL_RESOURCES_SECTION, dataToWrite)) {
+            _DBG("CtrlrLinux::getDefaultResources (Simple), read resource data size [" + STR((int32)dataToWrite.getSize()) + "]");
+            return (Result::ok());
+        } else {
+            _DBG("CtrlrLinux::getDefaultResources - SimpleEmbeddedDataManager found no resources section");
+        }
+    } else {
+        _DBG("CtrlrLinux::getDefaultResources - SimpleEmbeddedDataManager initialize failed");
     }
     
     // Fall back to libr if new format not found
@@ -401,6 +414,7 @@ const Result CtrlrLinux::getDefaultResources(MemoryBlock& dataToWrite)
 
     if (handle == nullptr)
     {
+        _DBG("CtrlrLinux::getDefaultResources - libr_open FAILED");
         return (Result::fail("Linux native, libr_open failed to open binary [self]"));
     }
     else
@@ -413,20 +427,22 @@ const Result CtrlrLinux::getDefaultResources(MemoryBlock& dataToWrite)
 
     if (panelResourcesData == nullptr)
     {
+        _DBG("CtrlrLinux::getDefaultResources - libr_malloc returned NULL (no resources found)");
         libr_close(handle);
         return (Result::fail("Linux native, libr_malloc didn't find embedded panel resources in binary"));
     }
     else
     {
-        _DBG("CtrlrLinux::getDefaultResources, libr_malloc returned data for panel size [" + STR((int32)panelResourcesDataSize) + "]");
+        _DBG("CtrlrLinux::getDefaultResources, libr_malloc returned data for resources size [" + STR((int32)panelResourcesDataSize) + "]");
     }
 
     dataToWrite.append(panelResourcesData, panelResourcesDataSize);
     libr_close(handle);
+    
+    _DBG("CtrlrLinux::getDefaultResources - EXIT with Result::ok(), dataToWrite size = " + STR((int32)dataToWrite.getSize()));
 
     return (Result::ok());
 }
-
 const Result CtrlrLinux::getSignature(MemoryBlock &dataToWrite)
 {
     libr_file *handle = libr_open (File::getSpecialLocation(File::hostApplicationPath).getFullPathName().toUTF8().getAddress(), LIBR_READ);
