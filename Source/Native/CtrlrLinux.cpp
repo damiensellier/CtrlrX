@@ -17,6 +17,7 @@
 
 extern "C"
 {
+    // Keep libr included for getSignature, but will remove from resource retrieval
     #include "libr.h"
 }
 
@@ -70,7 +71,7 @@ static int replaceAllOccurrences(MemoryBlock& target, const MemoryBlock& search,
     return count;
 }
 
-// Function to get the actual VST3 plugin path
+// Function to get the actual VST3 plugin path (This is correct)
 static File getVST3PluginPath()
 {
     std::ifstream maps("/proc/self/maps");
@@ -115,99 +116,92 @@ private:
     std::string filePath;
     
     bool findSections(std::ifstream& file) {
-    sections.clear();
-    size_t originalFileSize;  // ← THIS LINE MUST BE HERE
-    bool hasEmbeddedData;      // ← AND THIS LINE
-    file.seekg(0, std::ios::end);
-    size_t fileSize = file.tellg();
-    
-    // Search backwards from the end for the section delimiter first
-    // The directory is always at the very end of the file
-    size_t searchSize = std::min((size_t)8192, fileSize); // Search last 8KB
-    size_t searchStart = fileSize - searchSize;
-    
-    file.seekg(searchStart);
-    std::string buffer(searchSize, '\0');
-    file.read(&buffer[0], searchSize);
-    
-    // Find the LAST occurrence of MAGIC_HEADER (should be near the end)
-    size_t headerPos = buffer.rfind(MAGIC_HEADER);
-    
-    if (headerPos != std::string::npos) {
-        size_t absolutePos = searchStart + headerPos;
-        hasEmbeddedData = true;
+        sections.clear();
+        size_t originalFileSize;  
+        bool hasEmbeddedData;      
+        file.seekg(0, std::ios::end);
+        size_t fileSize = file.tellg();
         
-        _DBG("SimpleEmbeddedDataManager::findSections - Found magic header at file position: " + std::to_string(absolutePos));
+        // Search backwards from the end for the section delimiter first
+        size_t searchSize = std::min((size_t)8192, fileSize); // Search last 8KB
+        size_t searchStart = fileSize - searchSize;
         
-        // Parse sections starting right after the magic header
-        if (parseSections(file, absolutePos + MAGIC_HEADER.length())) {
-            // Find the earliest section offset to determine original file size
-            originalFileSize = fileSize;
-            for (const auto& section : sections) {
-                if (section.offset < originalFileSize) {
-                    originalFileSize = section.offset;
+        file.seekg(searchStart);
+        std::string buffer(searchSize, '\0');
+        file.read(&buffer[0], searchSize);
+        
+        // Find the LAST occurrence of MAGIC_HEADER (should be near the end)
+        size_t headerPos = buffer.rfind(MAGIC_HEADER);
+        
+        if (headerPos != std::string::npos) {
+            size_t absolutePos = searchStart + headerPos;
+            hasEmbeddedData = true;
+            
+            // _DBG("SimpleEmbeddedDataManager::findSections - Found magic header at file position: " + std::to_string(absolutePos));
+            
+            if (parseSections(file, absolutePos + MAGIC_HEADER.length())) {
+                originalFileSize = fileSize;
+                for (const auto& section : sections) {
+                    if (section.offset < originalFileSize) {
+                        originalFileSize = section.offset;
+                    }
+                }
+                return true;
+            }
+        }
+        
+        _DBG("SimpleEmbeddedDataManager::findSections - No magic header found");
+        
+        originalFileSize = fileSize;
+        return false;
+    }
+
+    bool parseSections(std::ifstream& file, size_t startPos) {
+        file.seekg(startPos);
+        std::string line;
+        
+        // _DBG("SimpleEmbeddedDataManager::parseSections - starting at position " + std::to_string(startPos));
+        
+        while (std::getline(file, line)) {
+            // _DBG("SimpleEmbeddedDataManager::parseSections - read line: [" + line + "]"); // Removed: Too verbose
+            
+            if (line == SECTION_DELIMITER) {
+                // _DBG("SimpleEmbeddedDataManager::parseSections - found delimiter, stopping");
+                break;
+            }
+            
+            // Parse section info: "NAME:OFFSET:SIZE:COMPRESSED"
+            std::istringstream iss(line);
+            std::string name, offsetStr, sizeStr, compressedStr;
+            
+            if (std::getline(iss, name, ':') &&
+                std::getline(iss, offsetStr, ':') &&
+                std::getline(iss, sizeStr, ':') &&
+                std::getline(iss, compressedStr)) {
+                
+                if (name.empty() || offsetStr.empty() || sizeStr.empty() || compressedStr.empty()) {
+                    continue;
+                }
+                
+                try {
+                    DataSection section;
+                    section.name = name;
+                    section.offset = std::stoull(offsetStr);
+                    section.size = std::stoull(sizeStr);
+                    section.compressed = (compressedStr == "1");
+                    sections.push_back(section);
+                    // _DBG("SimpleEmbeddedDataManager::parseSections - added section: " + name + " size=" + std::to_string(section.size)); // Removed: Too verbose
+                } catch (const std::exception& e) {
+                    // _DBG("SimpleEmbeddedDataManager::parseSections - exception: " + std::string(e.what())); // Removed: Only log on true errors
+                    continue;
                 }
             }
-            return true;
         }
+        
+        _DBG("SimpleEmbeddedDataManager::parseSections - total sections found: " + std::to_string(sections.size()));
+        
+        return !sections.empty();
     }
-    
-    _DBG("SimpleEmbeddedDataManager::findSections - No magic header found");
-    
-    // No embedded data found
-    originalFileSize = fileSize;
-    return false;
-}
-   bool parseSections(std::ifstream& file, size_t startPos) {
-    file.seekg(startPos);
-    std::string line;
-    
-    _DBG("SimpleEmbeddedDataManager::parseSections - starting at position " + std::to_string(startPos));
-    
-    while (std::getline(file, line)) {
-        _DBG("SimpleEmbeddedDataManager::parseSections - read line: [" + line + "]");
-        
-        if (line == SECTION_DELIMITER) {
-            _DBG("SimpleEmbeddedDataManager::parseSections - found delimiter, stopping");
-            break;
-        }
-        
-        // Parse section info: "NAME:OFFSET:SIZE:COMPRESSED"
-        std::istringstream iss(line);
-        std::string name, offsetStr, sizeStr, compressedStr;
-        
-        if (std::getline(iss, name, ':') &&
-            std::getline(iss, offsetStr, ':') &&
-            std::getline(iss, sizeStr, ':') &&
-            std::getline(iss, compressedStr)) {
-            
-            // Validate strings before conversion
-            if (name.empty() || offsetStr.empty() || sizeStr.empty() || compressedStr.empty()) {
-                _DBG("SimpleEmbeddedDataManager::parseSections - skipping invalid entry (empty field)");
-                continue;
-            }
-            
-            try {
-                DataSection section;
-                section.name = name;
-                section.offset = std::stoull(offsetStr);
-                section.size = std::stoull(sizeStr);
-                section.compressed = (compressedStr == "1");
-                sections.push_back(section);
-                _DBG("SimpleEmbeddedDataManager::parseSections - added section: " + name + 
-                     " offset=" + std::to_string(section.offset) + 
-                     " size=" + std::to_string(section.size));
-            } catch (const std::exception& e) {
-                _DBG("SimpleEmbeddedDataManager::parseSections - exception: " + std::string(e.what()));
-                continue;
-            }
-        }
-    }
-    
-    _DBG("SimpleEmbeddedDataManager::parseSections - total sections found: " + std::to_string(sections.size()));
-    
-    return !sections.empty();
-}
     
 public:
     SimpleEmbeddedDataManager(const std::string& path) : filePath(path) {}
@@ -230,12 +224,7 @@ public:
                 rawData.setSize(section.size, false);
                 file.read(static_cast<char*>(rawData.getData()), section.size);
                 
-                if (section.compressed) {
-                    // Data is already compressed, just copy it
-                    output = rawData;
-                } else {
-                    output = rawData;
-                }
+                output = rawData;
                 return true;
             }
         }
@@ -338,9 +327,9 @@ CtrlrLinux::~CtrlrLinux()
 
     bool isVST3 = bundleDir.getFileName().endsWith(".vst3");
 
-    _DBG("CtrlrLinux::exportWithDefaultPanel - Detected type: " + String(isVST3 ? "VST3" : "Standalone"));
-    _DBG("  Current binary: " + me.getFullPathName());
-    _DBG("  Bundle dir: " + bundleDir.getFullPathName());
+    // _DBG("CtrlrLinux::exportWithDefaultPanel - Detected type: " + String(isVST3 ? "VST3" : "Standalone")); // Removed: Less spam
+    // _DBG("  Current binary: " + me.getFullPathName()); // Removed: Less spam
+    // _DBG("  Bundle dir: " + bundleDir.getFullPathName()); // Removed: Less spam
     
     String panelName = File::createLegalFileName(panelToWrite->getProperty(Ids::name));
     
@@ -376,10 +365,13 @@ CtrlrLinux::~CtrlrLinux()
             File bundleDir = chosenFile;
             File contentsDir = bundleDir.getChildFile("Contents");
             File binaryDir = contentsDir.getChildFile("x86_64-linux");
-            File binaryFile = binaryDir.getChildFile(panelName + ".so");
+            
+            // FIX: Use the VST3 bundle name for the internal .so file name.
+            String binaryName = bundleDir.getFileNameWithoutExtension() + ".so"; 
+            File binaryFile = binaryDir.getChildFile(binaryName);
             
             _DBG("CtrlrLinux::exportWithDefaultPanel creating VST3 bundle at: " + bundleDir.getFullPathName());
-            _DBG("  Binary will be at: " + binaryFile.getFullPathName());
+            // _DBG("  Binary will be at: " + binaryFile.getFullPathName() + " (using derived name: " + binaryName + ")"); // Removed: Less spam
             
             // Create directories
             if (!binaryDir.createDirectory()) {
@@ -410,6 +402,7 @@ CtrlrLinux::~CtrlrLinux()
 
     // Export panel data
     CtrlrPanel p(owner, "", 0);
+    // Note: panelExportData will contain compressed/gzipped data
     String error = p.exportPanel(panelToWrite, File(), newMe, &panelExportData, &panelResourcesData, isRestricted);
 
     if (error != "")
@@ -425,7 +418,7 @@ CtrlrLinux::~CtrlrLinux()
     ValueTree testTree = ValueTree::readFromGZIPData(panelExportData.getData(), panelExportData.getSize());
     if (testTree.isValid()) {
         var restrictedValue = testTree.getProperty(Ids::restricted);
-        _DBG("CtrlrLinux::exportWithDefaultPanel - restricted value before write: " + restrictedValue.toString());
+        // _DBG("CtrlrLinux::exportWithDefaultPanel - restricted value before write: " + restrictedValue.toString()); // Removed: Less spam
     }
     
     // Perform binary patching for VST3
@@ -503,95 +496,13 @@ CtrlrLinux::~CtrlrLinux()
     }
 
     // Set executable permissions
-    if (chmod(newMe.getFullPathName().toUTF8().getAddress(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH))
+    if (chmod(newMe.getFullPathName().toUTF8().getAddress(), S_IRUSR | S_IWUSR | S_IXUSR | S_IXOTH | S_IRGRP | S_IXGRP | S_IROTH))
     {
         return (Result::fail("Linux native, chmod failed on destination binary [" + newMe.getFullPathName() + "]"));
     }
 
     return (Result::ok());
 }
-
-// Helper functions - add these as static functions or class members
-
-// Helper: Convert hex string like "43 74 72" to MemoryBlock
-// static MemoryBlock hexToBytes(const String& hexString) {
-//     MemoryBlock result;
-//     String cleaned = hexString.removeCharacters(" \t\r\n");
-    
-//     for (int i = 0; i < cleaned.length(); i += 2) {
-//         if (i + 1 < cleaned.length()) {
-//             String byteStr = cleaned.substring(i, i + 2);
-//             uint8 byte = (uint8)byteStr.getHexValue32();
-//             result.append(&byte, 1);
-//         }
-//     }
-//     return result;
-// }
-
-// Helper: Convert string to fixed-size byte array (pad or truncate)
-// static MemoryBlock stringToFixedBytes(const String& str, int fixedSize) {
-//     MemoryBlock result;
-//     result.setSize(fixedSize, true); // Initialize with zeros
-    
-//     const char* chars = str.toUTF8();
-//     int copySize = jmin(fixedSize, (int)strlen(chars));
-//     memcpy(result.getData(), chars, copySize);
-    
-//     return result;
-// }
-
-// Helper: Replace all occurrences and return count
-// static int replaceAllOccurrences(MemoryBlock& target, const MemoryBlock& search, const MemoryBlock& replace) {
-//     if (search.getSize() != replace.getSize() || search.getSize() == 0) {
-//         return 0;
-//     }
-    
-//     int count = 0;
-//     const uint8* data = static_cast<const uint8*>(target.getData());
-//     size_t dataSize = target.getSize();
-//     size_t searchSize = search.getSize();
-    
-//     for (size_t i = 0; i <= dataSize - searchSize; ++i) {
-//         if (memcmp(data + i, search.getData(), searchSize) == 0) {
-//             target.copyFrom(replace.getData(), (int)i, replace.getSize());
-//             data = static_cast<const uint8*>(target.getData());
-//             count++;
-//         }
-//     }
-    
-//     _DBG("BinaryPatcher: Made " + String(count) + " replacement(s)");
-//     return count;
-// }
-
-// Function to get the actual VST3 plugin path
-// static File getVST3PluginPath()
-// {
-//     // On Linux, we can read /proc/self/maps to find our .so file
-//     std::ifstream maps("/proc/self/maps");
-//     std::string line;
-    
-//     while (std::getline(maps, line)) {
-//         // Look for lines containing our plugin .so path
-//         if (line.find(".vst3/Contents/") != std::string::npos && 
-//             line.find(".so") != std::string::npos) {
-            
-//             // Extract the path (after the permission flags and addresses)
-//             size_t pathStart = line.find('/');
-//             if (pathStart != std::string::npos) {
-//                 std::string path = line.substr(pathStart);
-//                 // Remove everything after .so
-//                 size_t soEnd = path.find(".so");
-//                 if (soEnd != std::string::npos) {
-//                     path = path.substr(0, soEnd + 3); // Include ".so"
-//                     return File(String(path));
-//                 }
-//             }
-//         }
-//     }
-    
-    // Fallback to current application (for standalone)
-//     return File::getSpecialLocation(File::currentApplicationFile);
-// }
 /************************************************************************************************************/
 const Result CtrlrLinux::getDefaultPanel(MemoryBlock& dataToWrite)
 {
@@ -601,8 +512,19 @@ const Result CtrlrLinux::getDefaultPanel(MemoryBlock& dataToWrite)
     return (Result::ok());
 #endif
 
-    // Try new format first
-    SimpleEmbeddedDataManager dataManager(File::getSpecialLocation(File::hostApplicationPath).getFullPathName().toStdString());
+    // Get the actual plugin binary path.
+    File pluginBinary = getVST3PluginPath();
+    const String pluginPath = pluginBinary.getFullPathName();
+    
+    _DBG("CtrlrLinux::getDefaultPanel - Attempting to read panel data from path: " + pluginPath);
+
+    if (!pluginBinary.existsAsFile()) {
+        _DBG("CtrlrLinux::getDefaultPanel - ERROR: Plugin binary path does not exist!");
+        return (Result::fail("Plugin binary path is invalid or does not exist: " + pluginPath));
+    }
+
+    // Try new format first (SimpleEmbeddedDataManager)
+    SimpleEmbeddedDataManager dataManager(pluginPath.toStdString());
     
     if (dataManager.initialize() && dataManager.readSection(CTRLR_INTERNAL_PANEL_SECTION, dataToWrite))
     {
@@ -612,108 +534,67 @@ const Result CtrlrLinux::getDefaultPanel(MemoryBlock& dataToWrite)
         ValueTree testTree = ValueTree::readFromGZIPData(dataToWrite.getData(), dataToWrite.getSize());
         if (testTree.isValid()) {
             var restrictedValue = testTree.getProperty(Ids::restricted);
-            _DBG("CtrlrLinux::getDefaultPanel (Simple) - restricted value after read: " + restrictedValue.toString());
+            // _DBG("CtrlrLinux::getDefaultPanel (Simple) - restricted value after read: " + restrictedValue.toString()); // Removed: Less spam
         }
         
         return (Result::ok());
     }
     
-    // Fall back to libr if new format not found
-    _DBG("CtrlrLinux::getDefaultPanel - falling back to libr");
+    // CRASH FIX: Temporarily removing the old libr fallback to isolate the crash source.
+    _DBG("CtrlrLinux::getDefaultPanel - SimpleEmbeddedDataManager failed. Aborting resource retrieval.");
     
-    libr_file *handle = libr_open(File::getSpecialLocation(File::hostApplicationPath).getFullPathName().toUTF8().getAddress(), LIBR_READ);
-
-    if (handle == nullptr)
-    {
-        return (Result::fail("Linux native, libr_open failed to open binary [self]"));
-    }
-    else
-    {
-        _DBG("CtrlrLinux::getDefaultPanel, libr_open succeeded for binary [self]");
-    }
-
-    size_t panelDataSize;
-    char *panelData = (char *)libr_malloc(handle, (char *)CTRLR_INTERNAL_PANEL_SECTION, &panelDataSize);
-
-    if (panelData == nullptr)
-    {
-        libr_close(handle);
-        return (Result::fail("Linux native, libr_malloc didn't find embedded panel in binary"));
-    }
-    else
-    {
-        _DBG("CtrlrLinux::getDefaultPanel, libr_malloc returned data for panel size [" + STR((int32)panelDataSize) + "]");
-    }
-
-    dataToWrite.append(panelData, panelDataSize);
-    libr_close(handle);
-
-    return (Result::ok());
+    return (Result::fail("CtrlrLinux: Failed to retrieve default panel data using Simple Embedded Manager."));
 }
 
 const Result CtrlrLinux::getDefaultResources(MemoryBlock& dataToWrite)
 {
     _DBG("CtrlrLinux::getDefaultResources - ENTRY");
     
-    // Try new format first
-    SimpleEmbeddedDataManager dataManager(File::getSpecialLocation(File::hostApplicationPath).getFullPathName().toStdString());
+    // Get the actual plugin binary path.
+    File pluginBinary = getVST3PluginPath();
+    const String pluginPath = pluginBinary.getFullPathName();
+    
+    _DBG("CtrlrLinux::getDefaultResources - Attempting to read resource data from path: " + pluginPath);
+    
+    if (!pluginBinary.existsAsFile()) {
+        _DBG("CtrlrLinux::getDefaultResources - ERROR: Plugin binary path does not exist!");
+        return (Result::fail("Plugin binary path is invalid or does not exist: " + pluginPath));
+    }
+    
+    // Try new format first (SimpleEmbeddedDataManager)
+    SimpleEmbeddedDataManager dataManager(pluginPath.toStdString());
     
     if (dataManager.initialize()) {
-        _DBG("CtrlrLinux::getDefaultResources - SimpleEmbeddedDataManager initialized successfully");
+        // _DBG("CtrlrLinux::getDefaultResources - SimpleEmbeddedDataManager initialized successfully"); // Removed: Less spam
         
         if (dataManager.readSection(CTRLR_INTERNAL_RESOURCES_SECTION, dataToWrite)) {
             _DBG("CtrlrLinux::getDefaultResources (Simple), read resource data size [" + STR((int32)dataToWrite.getSize()) + "]");
             return (Result::ok());
         } else {
-            _DBG("CtrlrLinux::getDefaultResources - SimpleEmbeddedDataManager found no resources section");
+            // _DBG("CtrlrLinux::getDefaultResources - SimpleEmbeddedDataManager found no resources section."); // Removed: Less spam
         }
     } else {
-        _DBG("CtrlrLinux::getDefaultResources - SimpleEmbeddedDataManager initialize failed");
+        _DBG("CtrlrLinux::getDefaultResources - SimpleEmbeddedDataManager initialize failed.");
     }
     
-    // Fall back to libr if new format not found
-    _DBG("CtrlrLinux::getDefaultResources - falling back to libr");
+    // CRASH FIX: Temporarily removing the old libr fallback to isolate the crash source.
+    _DBG("CtrlrLinux::getDefaultResources - SimpleEmbeddedDataManager failed. Aborting resource retrieval.");
     
-    libr_file *handle = libr_open(File::getSpecialLocation(File::hostApplicationPath).getFullPathName().toUTF8().getAddress(), LIBR_READ);
-
-    if (handle == nullptr)
-    {
-        _DBG("CtrlrLinux::getDefaultResources - libr_open FAILED");
-        return (Result::fail("Linux native, libr_open failed to open binary [self]"));
-    }
-    else
-    {
-        _DBG("CtrlrLinux::getDefaultResources, libr_open succeeded for binary [self]");
-    }
-
-    size_t panelResourcesDataSize;
-    char *panelResourcesData = (char *)libr_malloc(handle, (char *)CTRLR_INTERNAL_RESOURCES_SECTION, &panelResourcesDataSize);
-
-    if (panelResourcesData == nullptr)
-    {
-        _DBG("CtrlrLinux::getDefaultResources - libr_malloc returned NULL (no resources found)");
-        libr_close(handle);
-        return (Result::fail("Linux native, libr_malloc didn't find embedded panel resources in binary"));
-    }
-    else
-    {
-        _DBG("CtrlrLinux::getDefaultResources, libr_malloc returned data for resources size [" + STR((int32)panelResourcesDataSize) + "]");
-    }
-
-    dataToWrite.append(panelResourcesData, panelResourcesDataSize);
-    libr_close(handle);
-    
-    _DBG("CtrlrLinux::getDefaultResources - EXIT with Result::ok(), dataToWrite size = " + STR((int32)dataToWrite.getSize()));
-
-    return (Result::ok());
+    return (Result::fail("CtrlrLinux: Failed to retrieve default resources data using Simple Embedded Manager."));
 }
 const Result CtrlrLinux::getSignature(MemoryBlock &dataToWrite)
 {
-    libr_file *handle = libr_open (File::getSpecialLocation(File::hostApplicationPath).getFullPathName().toUTF8().getAddress(), LIBR_READ);
+    // The signature function still uses libr, so we must use the correct path here.
+    File pluginBinary = getVST3PluginPath();
+    const String pluginPath = pluginBinary.getFullPathName();
+    
+    _DBG("CtrlrLinux::getSignature - Attempting to read signature from path: " + pluginPath);
+    
+    libr_file *handle = libr_open (pluginPath.toUTF8().getAddress(), LIBR_READ);
 
     if (handle == nullptr)
     {
-        return (Result::fail ("Linux native, libr_open failed to open binary [self]"));
+        return (Result::fail ("Linux native, libr_open failed to open binary [self] at path: " + pluginPath));
     }
     else
     {
