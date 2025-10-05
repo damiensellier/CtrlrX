@@ -13,14 +13,14 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <cstring>  // ADDED: For strlen, memcpy
+#include <cstring>  // For strlen, memcpy
 
 extern "C"
 {
     #include "libr.h"
 }
 
-
+// --- Utility Functions ---
 
 static MemoryBlock hexToBytes(const String& hexString) {
     MemoryBlock result;
@@ -65,20 +65,20 @@ static int replaceAllOccurrences(MemoryBlock& target, const MemoryBlock& search,
         }
     }
     
-    if (count > 0) {
-        _DBG("BinaryPatcher: Made " + String(count) + " replacement(s)");
-    }
     return count;
 }
 
+// FIX: Improved detection logic for VST2 .so files on Linux
 static File getVST3PluginPath()
 {
     std::ifstream maps("/proc/self/maps");
     std::string line;
     
+    // Get the path of the host executable (REAPER in this case)
+    File hostExe = File::getSpecialLocation(File::currentApplicationFile);
+    
     while (std::getline(maps, line)) {
-        if (line.find(".vst3/Contents/") != std::string::npos && 
-            line.find(".so") != std::string::npos) {
+        if (line.find(".so") != std::string::npos) {
             
             size_t pathStart = line.find('/');
             if (pathStart != std::string::npos) {
@@ -86,26 +86,46 @@ static File getVST3PluginPath()
                 size_t soEnd = path.find(".so");
                 if (soEnd != std::string::npos) {
                     path = path.substr(0, soEnd + 3);
-                    return File(String(path));
+                    File currentFile = File(String(path));
+                    
+                    // 1. VST3 detection (high confidence, return immediately)
+                    if (path.find(".vst3/Contents/") != std::string::npos) {
+                        _DBG("Detection: Found VST3 path: " + currentFile.getFullPathName());
+                        return currentFile;
+                    }
+
+                    // 2. VST2 detection: It must be a loaded .so file and NOT the host executable.
+                    if (currentFile != hostExe) {
+                        // Check if the path contains common VST paths or user paths (to exclude system libs like libc.so)
+                        if (currentFile.getFullPathName().contains("/.vst/") || 
+                            currentFile.getFullPathName().contains("/vst/") ||
+                            currentFile.getFullPathName().contains("/plugins/") ||
+                            currentFile.getFullPathName().contains("CtrlrX.so")) 
+                        {
+                            _DBG("Detection: Found VST2 path: " + currentFile.getFullPathName());
+                            return currentFile;
+                        }
+                    }
                 }
             }
         }
     }
     
-    return File::getSpecialLocation(File::currentApplicationFile);
+    // Fallback: Returns the host executable path if no plugin is found (this is the standalone case).
+    return hostExe;
 }
 
 static bool isVST2Plugin() {
     File me = getVST3PluginPath();
-    // VST2: Check if we're in ~/.vst or similar VST2 directory AND not in a .vst3 bundle
-    return me.hasFileExtension(".so") && 
-           !me.getFullPathName().contains(".vst3/") &&
-           (me.getParentDirectory().getFullPathName().contains("/.vst") || 
-            me.getParentDirectory().getFullPathName().contains("/vst"));
+    bool hasSOExtension = me.hasFileExtension(".so");
+    bool notInVST3 = !me.getFullPathName().contains(".vst3/");
+    // Also explicitly check if the path is NOT the host executable path
+    bool isNotHost = (me != File::getSpecialLocation(File::currentApplicationFile));
+    
+    return isNotHost && hasSOExtension && notInVST3;
 }
 
-
-// SimpleEmbeddedDataManager class
+// --- SimpleEmbeddedDataManager Class ---
 class SimpleEmbeddedDataManager
 {
 public:
@@ -266,9 +286,12 @@ public:
 const std::string SimpleEmbeddedDataManager::MAGIC_HEADER = "\n\n__CTRLR_EMBEDDED_DATA_V2__\n";
 const std::string SimpleEmbeddedDataManager::SECTION_DELIMITER = "__END_SECTIONS__";
 
-// Class implementation
+
+// --- CtrlrLinux Implementation ---
+
 CtrlrLinux::CtrlrLinux(CtrlrManager &_owner) : owner(_owner) {}
 CtrlrLinux::~CtrlrLinux() {}
+
 const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const bool isRestricted, const bool signPanel)
 {
     if (panelToWrite == nullptr) {
@@ -279,12 +302,17 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
     File newMe;
     MemoryBlock panelExportData, panelResourcesData;
     
+    // Check if the current binary is running as VST3 or VST2/Standalone
     File parentDir = me.getParentDirectory();
     File contentsDir = parentDir.getParentDirectory();
     File bundleDir = contentsDir.getParentDirectory();
     
     bool isVST3 = bundleDir.getFileName().endsWith(".vst3");
-    bool isVST2 = isVST2Plugin(); // Detect VST2
+    bool isVST2 = isVST2Plugin(); 
+    
+    // Cast bool to int to fix the compile error
+    _DBG("Export detection: isVST3=" + String((int)isVST3) + ", isVST2=" + String((int)isVST2));
+    _DBG("Current binary path: " + me.getFullPathName());
     
     String panelName = File::createLegalFileName(panelToWrite->getProperty(Ids::name));
     
@@ -296,13 +324,15 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
         suggestedFile = bundleDir.getParentDirectory().getChildFile(panelName + ".vst3");
         filePattern = ".vst3";
     } else if (isVST2) {
+        // VST2: Suggest and enforce .so
         suggestedFile = me.getParentDirectory().getChildFile(panelName + ".so");
         filePattern = "*.so";
-        _DBG("VST2: suggestedFile = " + suggestedFile.getFullPathName());
+        _DBG("VST2 export detected. suggestedFile = " + suggestedFile.getFullPathName());
     } else {
-        // Standalone
-        suggestedFile = me.getParentDirectory().getChildFile(panelName).withFileExtension(me.getFileExtension());
-        filePattern = me.getFileExtension();
+        // STANDALONE (isVST3=0, isVST2=0): Suggest and export without extension
+        suggestedFile = me.getParentDirectory().getChildFile(panelName); 
+        filePattern = "*"; // No required pattern
+        _DBG("Standalone export detected. suggestedFile = " + suggestedFile.getFullPathName());
     }
 
     FileChooser fc(CTRLR_NEW_INSTANCE_DIALOG_TITLE, suggestedFile, filePattern,
@@ -311,7 +341,7 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
     if (fc.browseForFileToSave(true))
     {
         File chosenFile = fc.getResult();
-        _DBG("FileChooser returned: " + chosenFile.getFullPathName()); // Debug what FileChooser gives us
+        _DBG("FileChooser returned: " + chosenFile.getFullPathName());
         
         if (isVST3) {
             if (!chosenFile.getFileName().endsWith(".vst3")) {
@@ -328,36 +358,34 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
             }
             
             if (!me.copyFileTo(binaryFile)) {
-                return Result::fail("Linux native, copyFileTo failed");
+                return Result::fail("Linux native, VST3 copyFileTo failed");
             }
             
             newMe = binaryFile;
         } 
-else if (isVST2) {
-    _DBG("VST2 export: chosenFile from FileChooser = " + chosenFile.getFullPathName());
-    
-    // ALWAYS ensure .so extension for VST2
-    if (!chosenFile.getFileName().endsWith(".so")) {
-        chosenFile = File(chosenFile.getFullPathName() + ".so");
-        _DBG("VST2 export: Added .so extension, now = " + chosenFile.getFullPathName());
-    } else {
-        _DBG("VST2 export: Already has .so extension");
-    }
-    
-    newMe = chosenFile;
-    
-    if (!me.copyFileTo(newMe)) {
-        return Result::fail("Linux native, copyFileTo failed");
-    }
-    
-    _DBG("VST2 export: Final file created = " + newMe.getFullPathName());
-}
         else {
-            // Standalone
-            newMe = chosenFile;
-            if (!me.copyFileTo(newMe)) {
-                return Result::fail("Linux native, copyFileTo failed");
+            // --- Logic for VST2 (isVST2=1) and Standalone (isVST2=0) ---
+            
+            newMe = chosenFile; // Start with the file the user chose
+            
+            if (isVST2) {
+                // If VST2, we MUST ensure it has the .so extension
+                if (!newMe.getFullPathName().endsWith(".so")) {
+                    newMe = newMe.withFileExtension(".so");
+                    _DBG("VST2 export: Added missing .so extension, now = " + newMe.getFullPathName());
+                } else {
+                    _DBG("VST2 export: Already has .so extension");
+                }
+            } else {
+                // If Standalone, we keep the file name exactly as chosen (no forced extension)
+                _DBG("Standalone export: Final file created without extension = " + newMe.getFullPathName());
             }
+
+            if (!me.copyFileTo(newMe)) {
+                return Result::fail("Linux native, Standalone/VST2 copyFileTo failed");
+            }
+            
+            _DBG("VST2/Standalone export: Final file created = " + newMe.getFullPathName());
         }
     }
     else
@@ -374,13 +402,14 @@ else if (isVST2) {
 
     // Perform binary patching for VST3 AND VST2
     if (isVST3 || isVST2) {
-        String pluginName = panelToWrite->getProperty(Ids::name).toString();
-        String pluginCode = panelToWrite->getProperty(Ids::panelInstanceUID).toString();
-        String manufacturerName = panelToWrite->getProperty(Ids::panelAuthorName).toString();
-        String manufacturerCode = panelToWrite->getProperty(Ids::panelInstanceManufacturerID).toString();
         
         MemoryBlock binaryData;
         if (newMe.loadFileAsData(binaryData)) {
+            String pluginName = panelToWrite->getProperty(Ids::name).toString();
+            String pluginCode = panelToWrite->getProperty(Ids::panelInstanceUID).toString();
+            String manufacturerName = panelToWrite->getProperty(Ids::panelAuthorName).toString();
+            String manufacturerCode = panelToWrite->getProperty(Ids::panelInstanceManufacturerID).toString();
+            
             MemoryBlock pluginNameBytes = stringToFixedBytes(pluginName, 32);
             MemoryBlock pluginCodeBytes = stringToFixedBytes(pluginCode, 4);
             MemoryBlock manufacturerNameBytes = stringToFixedBytes(manufacturerName, 16);
@@ -419,13 +448,18 @@ else if (isVST2) {
         }
     }
 
-    if (chmod(newMe.getFullPathName().toUTF8().getAddress(), 
-              S_IRUSR | S_IWUSR | S_IXUSR | S_IXOTH | S_IRGRP | S_IXGRP | S_IROTH)) {
-        return Result::fail("chmod failed");
+    // Ensure the executable bit is set for all non-VST3 exports
+    if (!isVST3) {
+        if (chmod(newMe.getFullPathName().toUTF8().getAddress(), 
+                  S_IRUSR | S_IWUSR | S_IXUSR | S_IXOTH | S_IRGRP | S_IXGRP | S_IROTH)) {
+            return Result::fail("chmod failed");
+        }
     }
 
     return Result::ok();
 }
+
+// --- Getter functions (unchanged logic) ---
 
 const Result CtrlrLinux::getDefaultPanel(MemoryBlock& dataToWrite)
 {
