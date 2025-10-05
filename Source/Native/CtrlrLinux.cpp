@@ -97,8 +97,11 @@ static File getVST3PluginPath()
 
 static bool isVST2Plugin() {
     File me = getVST3PluginPath();
-    // VST2 is just a .so file in ~/.vst or similar, not inside a .vst3 bundle
-    return me.hasFileExtension(".so") && !me.getFullPathName().contains(".vst3/");
+    // VST2: Check if we're in ~/.vst or similar VST2 directory AND not in a .vst3 bundle
+    return me.hasFileExtension(".so") && 
+           !me.getFullPathName().contains(".vst3/") &&
+           (me.getParentDirectory().getFullPathName().contains("/.vst") || 
+            me.getParentDirectory().getFullPathName().contains("/vst"));
 }
 
 
@@ -266,7 +269,6 @@ const std::string SimpleEmbeddedDataManager::SECTION_DELIMITER = "__END_SECTIONS
 // Class implementation
 CtrlrLinux::CtrlrLinux(CtrlrManager &_owner) : owner(_owner) {}
 CtrlrLinux::~CtrlrLinux() {}
-
 const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const bool isRestricted, const bool signPanel)
 {
     if (panelToWrite == nullptr) {
@@ -282,7 +284,7 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
     File bundleDir = contentsDir.getParentDirectory();
     
     bool isVST3 = bundleDir.getFileName().endsWith(".vst3");
-   bool isVST2 = isVST2Plugin();// Detect VST2
+    bool isVST2 = isVST2Plugin(); // Detect VST2
     
     String panelName = File::createLegalFileName(panelToWrite->getProperty(Ids::name));
     
@@ -296,6 +298,7 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
     } else if (isVST2) {
         suggestedFile = me.getParentDirectory().getChildFile(panelName + ".so");
         filePattern = "*.so";
+        _DBG("VST2: suggestedFile = " + suggestedFile.getFullPathName());
     } else {
         // Standalone
         suggestedFile = me.getParentDirectory().getChildFile(panelName).withFileExtension(me.getFileExtension());
@@ -308,9 +311,9 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
     if (fc.browseForFileToSave(true))
     {
         File chosenFile = fc.getResult();
+        _DBG("FileChooser returned: " + chosenFile.getFullPathName()); // Debug what FileChooser gives us
         
         if (isVST3) {
-            // VST3 bundle creation (your existing code)
             if (!chosenFile.getFileName().endsWith(".vst3")) {
                 chosenFile = chosenFile.withFileExtension(".vst3");
             }
@@ -330,17 +333,25 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
             
             newMe = binaryFile;
         } 
-        else if (isVST2) {
-            // VST2 - just copy the .so file directly
-            if (!chosenFile.hasFileExtension(".so")) {
-                chosenFile = chosenFile.withFileExtension(".so");
-            }
-            newMe = chosenFile;
-            
-            if (!me.copyFileTo(newMe)) {
-                return Result::fail("Linux native, copyFileTo failed");
-            }
-        }
+else if (isVST2) {
+    _DBG("VST2 export: chosenFile from FileChooser = " + chosenFile.getFullPathName());
+    
+    // ALWAYS ensure .so extension for VST2
+    if (!chosenFile.getFileName().endsWith(".so")) {
+        chosenFile = File(chosenFile.getFullPathName() + ".so");
+        _DBG("VST2 export: Added .so extension, now = " + chosenFile.getFullPathName());
+    } else {
+        _DBG("VST2 export: Already has .so extension");
+    }
+    
+    newMe = chosenFile;
+    
+    if (!me.copyFileTo(newMe)) {
+        return Result::fail("Linux native, copyFileTo failed");
+    }
+    
+    _DBG("VST2 export: Final file created = " + newMe.getFullPathName());
+}
         else {
             // Standalone
             newMe = chosenFile;
@@ -414,6 +425,24 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
     }
 
     return Result::ok();
+}
+
+const Result CtrlrLinux::getDefaultPanel(MemoryBlock& dataToWrite)
+{
+#ifdef DEBUG_INSTANCE
+    File temp("/home/r.kubiak/devel/debug.bpanelz");
+    temp.loadFileAsData(dataToWrite);
+    return Result::ok();
+#endif
+
+    File pluginBinary = getVST3PluginPath();
+    SimpleEmbeddedDataManager dataManager(pluginBinary.getFullPathName().toStdString());
+    
+    if (dataManager.initialize() && dataManager.readSection(CTRLR_INTERNAL_PANEL_SECTION, dataToWrite)) {
+        return Result::ok();
+    }
+    
+    return Result::fail("Failed to retrieve panel data");
 }
 
 const Result CtrlrLinux::getDefaultResources(MemoryBlock& dataToWrite)
