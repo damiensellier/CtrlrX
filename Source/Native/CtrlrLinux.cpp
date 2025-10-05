@@ -20,7 +20,8 @@ extern "C"
     #include "libr.h"
 }
 
-// Helper functions
+
+
 static MemoryBlock hexToBytes(const String& hexString) {
     MemoryBlock result;
     String cleaned = hexString.removeCharacters(" \t\r\n");
@@ -93,6 +94,13 @@ static File getVST3PluginPath()
     
     return File::getSpecialLocation(File::currentApplicationFile);
 }
+
+static bool isVST2Plugin() {
+    File me = getVST3PluginPath();
+    // VST2 is just a .so file in ~/.vst or similar, not inside a .vst3 bundle
+    return me.hasFileExtension(".so") && !me.getFullPathName().contains(".vst3/");
+}
+
 
 // SimpleEmbeddedDataManager class
 class SimpleEmbeddedDataManager
@@ -272,16 +280,29 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
     File parentDir = me.getParentDirectory();
     File contentsDir = parentDir.getParentDirectory();
     File bundleDir = contentsDir.getParentDirectory();
+    
     bool isVST3 = bundleDir.getFileName().endsWith(".vst3");
+   bool isVST2 = isVST2Plugin();// Detect VST2
     
     String panelName = File::createLegalFileName(panelToWrite->getProperty(Ids::name));
     
-    File suggestedFile = isVST3 
-        ? bundleDir.getParentDirectory().getChildFile(panelName + ".vst3")
-        : me.getParentDirectory().getChildFile(panelName).withFileExtension(me.getFileExtension());
+    // Build suggested file based on type
+    File suggestedFile;
+    String filePattern;
+    
+    if (isVST3) {
+        suggestedFile = bundleDir.getParentDirectory().getChildFile(panelName + ".vst3");
+        filePattern = ".vst3";
+    } else if (isVST2) {
+        suggestedFile = me.getParentDirectory().getChildFile(panelName + ".so");
+        filePattern = "*.so";
+    } else {
+        // Standalone
+        suggestedFile = me.getParentDirectory().getChildFile(panelName).withFileExtension(me.getFileExtension());
+        filePattern = me.getFileExtension();
+    }
 
-    FileChooser fc(CTRLR_NEW_INSTANCE_DIALOG_TITLE, suggestedFile,
-                   isVST3 ? ".vst3" : me.getFileExtension(),
+    FileChooser fc(CTRLR_NEW_INSTANCE_DIALOG_TITLE, suggestedFile, filePattern,
                    panelToWrite->getOwner().getProperty(Ids::ctrlrNativeFileDialogs));
 
     if (fc.browseForFileToSave(true))
@@ -289,6 +310,7 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
         File chosenFile = fc.getResult();
         
         if (isVST3) {
+            // VST3 bundle creation (your existing code)
             if (!chosenFile.getFileName().endsWith(".vst3")) {
                 chosenFile = chosenFile.withFileExtension(".vst3");
             }
@@ -307,7 +329,20 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
             }
             
             newMe = binaryFile;
-        } else {
+        } 
+        else if (isVST2) {
+            // VST2 - just copy the .so file directly
+            if (!chosenFile.hasFileExtension(".so")) {
+                chosenFile = chosenFile.withFileExtension(".so");
+            }
+            newMe = chosenFile;
+            
+            if (!me.copyFileTo(newMe)) {
+                return Result::fail("Linux native, copyFileTo failed");
+            }
+        }
+        else {
+            // Standalone
             newMe = chosenFile;
             if (!me.copyFileTo(newMe)) {
                 return Result::fail("Linux native, copyFileTo failed");
@@ -319,14 +354,15 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
         return Result::fail("User cancelled the export operation.");
     }
 
+    // Export panel data
     CtrlrPanel p(owner, "", 0);
     String error = p.exportPanel(panelToWrite, File(), newMe, &panelExportData, &panelResourcesData, isRestricted);
     if (error != "") {
         return Result::fail("CtrlrPanel::exportPanel failed: " + error);
     }
 
-    // Perform VST3 binary patching
-    if (isVST3) {
+    // Perform binary patching for VST3 AND VST2
+    if (isVST3 || isVST2) {
         String pluginName = panelToWrite->getProperty(Ids::name).toString();
         String pluginCode = panelToWrite->getProperty(Ids::panelInstanceUID).toString();
         String manufacturerName = panelToWrite->getProperty(Ids::panelAuthorName).toString();
@@ -350,16 +386,15 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
             totalReplacements += replaceAllOccurrences(binaryData, searchManufacturerName, manufacturerNameBytes);
             totalReplacements += replaceAllOccurrences(binaryData, searchManufacturerCode, manufacturerCodeBytes);
             
-            _DBG("VST3 binary patching complete: " + String(totalReplacements) + " replacements");
+            _DBG("Binary patching complete: " + String(totalReplacements) + " replacements");
             
             if (!newMe.replaceWithData(binaryData.getData(), binaryData.getSize())) {
                 return Result::fail("Failed to write patched binary");
             }
-        } else {
-            return Result::fail("Failed to load binary for patching");
         }
     }
     
+    // Embed data using SimpleEmbeddedDataManager
     SimpleEmbeddedDataManager dataManager(newMe.getFullPathName().toStdString());
     dataManager.initialize();
     
@@ -379,24 +414,6 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
     }
 
     return Result::ok();
-}
-
-const Result CtrlrLinux::getDefaultPanel(MemoryBlock& dataToWrite)
-{
-#ifdef DEBUG_INSTANCE
-    File temp("/home/r.kubiak/devel/debug.bpanelz");
-    temp.loadFileAsData(dataToWrite);
-    return Result::ok();
-#endif
-
-    File pluginBinary = getVST3PluginPath();
-    SimpleEmbeddedDataManager dataManager(pluginBinary.getFullPathName().toStdString());
-    
-    if (dataManager.initialize() && dataManager.readSection(CTRLR_INTERNAL_PANEL_SECTION, dataToWrite)) {
-        return Result::ok();
-    }
-    
-    return Result::fail("Failed to retrieve panel data");
 }
 
 const Result CtrlrLinux::getDefaultResources(MemoryBlock& dataToWrite)
