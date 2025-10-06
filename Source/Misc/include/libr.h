@@ -121,7 +121,10 @@
 #define DEPRECATED_FN           __attribute__ ((deprecated))
 #define ALIAS_FN(fn)            __attribute__ ((weak, alias (#fn)))
 
-#include <bfd.h>
+// The problematic line must be guarded:
+#if JUCE_LINUX
+#include <bfd.h> // <-- Only included when JUCE_LINUX is defined
+#endif
 
 /**
  * @addtogroup libr_status libr_status
@@ -226,31 +229,43 @@ void libr_close_internal(struct _libr_file *file_handle);
 #define RETURN_OK                     return SET_ERROR(LIBR_OK, NULL)
 #define PUBLIC_RETURN(code,message)   {SET_ERROR(code, message); return (code == LIBR_OK);}
 
+// Guard the BFD-dependent warnings
+#if JUCE_LINUX
 #if BFD_HOST_64BIT_LONG
-	#if defined(__i386)
-		#warning "Using incorrect binutils header file for architecture."
-	#endif
+    #if defined(__i386)
+        #warning "Using incorrect binutils header file for architecture."
+    #endif
 #else
-	#if defined(__amd64)
-		#warning "Using incorrect binutils header file for architecture."
-	#endif
+    #if defined(__amd64)
+        #warning "Using incorrect binutils header file for architecture."
+    #endif
 #endif
+#endif // JUCE_LINUX
 
+// Guard the BFD-dependent types inside the struct definition
 typedef struct _libr_file {
-	int fd_handle;
-	bfd *bfd_read;
-	bfd *bfd_write;
-	char *filename;
-	mode_t filemode;
-	uid_t fileowner;
-	gid_t filegroup;
-	char tempfile[LIBR_TEMPFILE_LEN];
-	libr_access_t access;
+    int fd_handle;
+#if JUCE_LINUX
+    bfd *bfd_read;
+    bfd *bfd_write;
+#endif
+    char *filename;
+    mode_t filemode;
+    uid_t fileowner;
+    gid_t filegroup;
+    char tempfile[LIBR_TEMPFILE_LEN];
+    libr_access_t access;
 } libr_file;
 
+// Guard the BFD-dependent internal API types
+#if JUCE_LINUX
 /* for a clean internal API */
 typedef asection libr_section;
-typedef void libr_data;
+#else
+/* Fallback on non-Linux to allow compilation on macOS */
+typedef void* libr_section;
+#endif
+typedef void libr_data; // This one is fine as 'void'
 
 libr_intstatus add_section(libr_file *file_handle, char *resource_name, libr_section **retscn);
 void *data_pointer(libr_section *scn, libr_data *data);
