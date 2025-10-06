@@ -157,6 +157,17 @@ file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/Plugin/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/Source/Plugin/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/Source/UIComponents/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/Source/UIComponents/*.h"
 )
+
+# -----------------------------------------------------------------------
+# FIX: Exclude CtrlrLinux files from the build unless we are compiling for Linux.
+# This prevents compilation errors on Mac/Windows due to missing headers like <bfd.h>
+if (NOT LINUX)
+    list(FILTER SourceFiles EXCLUDE REGEX "CtrlrLinux\\.cpp$")
+    list(FILTER SourceFiles EXCLUDE REGEX "CtrlrLinux\\.h$")
+endif()
+# -----------------------------------------------------------------------
+
+
 #list(FILTER SourceFiles EXCLUDE REGEX "exclude_regex")
 
 target_sources(SharedCode INTERFACE ${SourceFiles})
