@@ -226,6 +226,25 @@ StringArray CtrlrLuaUtils::getMidiOutputDevices()
 	return ( MidiOutput::getDevices() );
 }
 
+juce::String CtrlrLuaUtils::base64_encode(const juce::String& stringToEncode) // Added v5.6.34. Thanks to @dnaldoog
+{
+	return juce::Base64::toBase64(stringToEncode);
+}
+
+
+juce::String CtrlrLuaUtils::base64_decode(const juce::String& base64String) // Added v5.6.34. Thanks to @dnaldoog
+{
+	juce::MemoryOutputStream decodedStream;
+	if (juce::Base64::convertFromBase64(decodedStream, base64String))
+	{
+		const void* data = decodedStream.getData();
+		const size_t size = decodedStream.getDataSize();
+		if (size > 0)
+			return juce::String::fromUTF8(static_cast<const char*>(data), (int)size);
+	}
+	return juce::String();
+}
+
 void CtrlrLuaUtils::wrapForLua (lua_State *L)
 {
 	using namespace luabind;
