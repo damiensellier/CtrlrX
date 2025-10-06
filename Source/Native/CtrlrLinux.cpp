@@ -409,22 +409,27 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
             String pluginCode = panelToWrite->getProperty(Ids::panelInstanceUID).toString();
             String manufacturerName = panelToWrite->getProperty(Ids::panelAuthorName).toString();
             String manufacturerCode = panelToWrite->getProperty(Ids::panelInstanceManufacturerID).toString();
+            // --- NEW: Retrieve the plug type from the panel properties ---
+            String plugType = panelToWrite->getProperty(Ids::panelPlugType).toString(); 
             
             MemoryBlock pluginNameBytes = stringToFixedBytes(pluginName, 32);
             MemoryBlock pluginCodeBytes = stringToFixedBytes(pluginCode, 4);
             MemoryBlock manufacturerNameBytes = stringToFixedBytes(manufacturerName, 16);
             MemoryBlock manufacturerCodeBytes = stringToFixedBytes(manufacturerCode, 4);
+            MemoryBlock plugTypeBytes = stringToFixedBytes(plugType, 16);
             
             MemoryBlock searchPluginName = hexToBytes("43 74 72 6C 72 58 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20");
             MemoryBlock searchPluginCode = hexToBytes("63 54 72 58");
             MemoryBlock searchManufacturerName = hexToBytes("43 74 72 6C 72 58 20 50 72 6F 6A 65 63 74 20 20");
             MemoryBlock searchManufacturerCode = hexToBytes("63 54 72 6C");
+            MemoryBlock searchPlugTypeHex = hexToBytes("49 6E 73 74 72 75 6D 65 6E 74 7C 54 6F 6F 6C 73"); 
             
             int totalReplacements = 0;
             totalReplacements += replaceAllOccurrences(binaryData, searchPluginName, pluginNameBytes);
             totalReplacements += replaceAllOccurrences(binaryData, searchPluginCode, pluginCodeBytes);
             totalReplacements += replaceAllOccurrences(binaryData, searchManufacturerName, manufacturerNameBytes);
             totalReplacements += replaceAllOccurrences(binaryData, searchManufacturerCode, manufacturerCodeBytes);
+            totalReplacements += replaceAllOccurrences(binaryData, searchPlugTypeHex, plugTypeBytes);
             
             _DBG("Binary patching complete: " + String(totalReplacements) + " replacements");
             
