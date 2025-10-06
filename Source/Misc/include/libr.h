@@ -203,13 +203,16 @@ typedef enum {
 	typedef struct _libr_file libr_file;
 #endif /* __LIBR_BUILD__ */
 
-#define false                       0
-#define true                        1
-#define ERROR                      -1
-#define EXPORT_FN				   void
+#define false                      0
+#define true                       1
+// FIX: Add uppercase TRUE/FALSE definitions for C files like libr.c
+#define FALSE                      0
+#define TRUE                       1
+#define ERROR                     -1
+#define EXPORT_FN                   void
 #define INTERNAL_FN                void
-#define LIBR_TEMPFILE              "/tmp/libr-temp.XXXXXX"
-#define LIBR_TEMPFILE_LEN          21
+#define LIBR_TEMPFILE             "/tmp/libr-temp.XXXXXX"
+#define LIBR_TEMPFILE_LEN         21
 
 typedef struct {
 	char *message;

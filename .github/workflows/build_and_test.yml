@@ -48,7 +48,8 @@ jobs:
           - name: Linux
             os: ubuntu-24.04
             pluginval-binary: ./pluginval
-            extra-flags: -G Ninja
+            # FIX: Explicitly define JUCE_LINUX for the build to enable conditional BFD includes in libr.h/c
+            extra-flags: -G Ninja -DJUCE_LINUX=1
           - name: macOS
             os: macos-14
             pluginval-binary: pluginval.app/Contents/MacOS/pluginval
