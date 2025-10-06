@@ -252,5 +252,7 @@ void CtrlrLuaUtils::wrapForLua (lua_State *L)
 			.def("getPi", &CtrlrLuaUtils::getPi)
 	 		.def("get16bitSigned", &CtrlrLuaUtils::get16bitSigned) // Added v5.6.34. Thanks to @dnaldoog
 			.def("get8bitSigned", &CtrlrLuaUtils::get8bitSigned) // Added v5.6.34. Thanks to @dnaldoog
+			.def("base64_encode", &CtrlrLuaUtils::base64_encode) // Added v5.6.34. Thanks to @dnaldoog
+			.def("base64_decode", &CtrlrLuaUtils::base64_decode) // Added v5.6.34. Thanks to @dnaldoog
 	];
 }

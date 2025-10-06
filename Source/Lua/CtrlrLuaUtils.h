@@ -146,6 +146,9 @@ class CtrlrLuaUtils
             }
             return val;
         }
+        static juce::String base64_encode(const juce::String& stringToEncode); // Added v5.6.34. Thanks to @dnaldoog
+        static juce::String base64_decode(const juce::String& base64String); // Added v5.6.34. Thanks to @dnaldoog
+    
         static String getVersionString() { return (_STR(ctrlrRevision)); }
 		static StringArray getMidiInputDevices();
 		static StringArray getMidiOutputDevices();
