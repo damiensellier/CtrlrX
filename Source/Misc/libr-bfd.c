@@ -26,6 +26,12 @@
  */
 #ifdef LINUX
 #include "libr.h"
+
+// CRITICAL FIX: Including bfd.h provides the types and function prototypes (bfd, bfd_openr, etc.)
+#include <bfd.h>
+// RECOMMENDED FIX: Provides 'true' and 'false' boolean constants in C
+#include <stdbool.h>
+
 /* File access */
 #include <fcntl.h>
 
