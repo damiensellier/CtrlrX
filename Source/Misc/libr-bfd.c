@@ -27,34 +27,7 @@
 #ifdef LINUX
 #include "libr.h"
 
-// CRITICAL FIX: The structure definitions are needed here for member access.
-// These are the backend-specific implementations of the opaque types defined in libr.h
-
-// Fix 1: libr_section must be aliased to the BFD section type (asection)
-// so the compiler knows it's a struct and can access members like '->next' and '->size'.
-typedef asection libr_section;
-
-// Fix 2: The internal libr_file structure definition must include the BFD-specific fields
-// that the code attempts to access (bfd_read, bfd_write, etc.).
-// Assuming libr.h defines 'libr_file' as 'typedef struct _libr_file libr_file;'.
-struct _libr_file
-{
-    char *filename;
-    libr_access_t access;
-    
-    // BFD specific handles
-    bfd *bfd_read;
-    bfd *bfd_write;
-
-    // File metadata specific to the read/write process
-    char tempfile[1024]; // Using a safe buffer size for the temp file path
-    int fd_handle;
-    mode_t filemode;
-    uid_t fileowner;
-    gid_t filegroup;
-};
-
-// FIX: Added BFD and bool headers (from previous step)
+// --- Include BFD headers first so BFD types (bfd, asection) are known. ---
 #include <bfd.h>
 #include <stdbool.h>
 
@@ -68,6 +41,31 @@ struct _libr_file
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+// CRITICAL FIX: Removed the redundant 'typedef asection libr_section;'
+// as it is already conditionally defined in libr.h when JUCE_LINUX is set.
+
+
+// CRITICAL FIX: Defining the internal structure here, which includes the
+// BFD-specific fields, since this definition is not exposed by libr.h
+// when __LIBR_BUILD__ is defined.
+struct _libr_file
+{
+    char *filename;
+    libr_access_t access;
+
+    // BFD specific handles
+    bfd *bfd_read;
+    bfd *bfd_write;
+
+    // File metadata specific to the read/write process
+    // FIX: Using LIBR_TEMPFILE_LEN defined in libr.h for consistency
+    char tempfile[LIBR_TEMPFILE_LEN];
+    int fd_handle;
+    mode_t filemode;
+    uid_t fileowner;
+    gid_t filegroup;
+};
 
 /*
  * Build the libr_file handle for processing with libbfd
@@ -398,18 +396,21 @@ int safe_rename(const char *old, const char *new)
 {
     char buffer[1024];
     FILE *in, *out;
-    int read;
+    int read_count;
 
     in = fopen(old, "r");
     if(!in)
         return -1;
     out = fopen(new, "w");
     if(!out)
+    {
+        fclose(in);
         return -1;
+    }
     while(!feof(in) && !ferror(in))
     {
-        read = fread(buffer, 1, sizeof(buffer), in);
-        fwrite(buffer, read, 1, out);
+        read_count = fread(buffer, 1, sizeof(buffer), in);
+        fwrite(buffer, read_count, 1, out);
     }
     fclose(in);
     fclose(out);
@@ -451,7 +452,7 @@ int write_output(libr_file *file_handle)
             printf ("BFD::write_output closed file handle: file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
         }
 
-        if(file_handle->fd_handle != 0 && close(file_handle->fd_handle))
+        if(file_handle->fd_handle != 0 && close(file_handle->fd_handle) == ERROR)
         {
             write_ok = false;
             printf("BFD::write_output failed to close write file descriptor file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
@@ -468,13 +469,11 @@ int write_output(libr_file *file_handle)
     }
     else
     {
-        printf ("BFD::write_output  closed read handle: file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
+        printf ("BFD::write_output closed read handle: file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
     }
 
-    return (write_ok);
-
-    // Copy the temporary output over the input
-    /*
+    // FIX: Uncommenting the final file replacement and permission setting logic,
+    // and moving the return statement to the end of the function.
     if(write_ok)
     {
         if(rename(file_handle->tempfile, file_handle->filename) < 0)
@@ -507,7 +506,8 @@ int write_output(libr_file *file_handle)
             printf("BFD::write_output chown success file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
         }
     }
-    */
+
+    return (write_ok);
 }
 
 /*
