@@ -399,7 +399,7 @@ Tuturial coming soon.
 
 ## Changelog
 
-#### Version 5.6.34 | 2025.09.26
+#### Version 5.6.34 | 2025.10.06
 
 * **NEW** ProTools AAX plugin support (requires AAX SDK 2.8+ and codesigning via PACE)
 * **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
@@ -444,6 +444,7 @@ Tuturial coming soon.
 * **UPDATED** Layer manager complete redesign for clarity and convenience. `CtrlrPanelLayerList.cpp` & `.h`, `CtrlrPanelLayerListItem.cpp` & `.h`, `CtrlrPanelEditorIcon.cpp` & `.h`
 * **UPDATED** DEBIAN 12 and Fedora 42 build instructions. `README.md`
 * **NEW** GitHub CI/CD [Pamplejuce](https://github.com/sudara/pamplejuce) Release Workflow. Thanks to [sudara](https://github.com/sudara) & [Sgorpi](https://github.com/sgorpi)
+* **ADDED** VST3 Instance export support for Linux. Thanks to [John Goodland](https://github.com/dnaldoog).  `CtrlrLinux.cpp`
 
 #### Version 5.6.33 | 2025.05.28
 
