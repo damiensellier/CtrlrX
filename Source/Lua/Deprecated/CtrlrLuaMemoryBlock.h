@@ -139,8 +139,8 @@ class CtrlrLuaMemoryBlock
 		MemoryBlock &getMemoryBlock()			{ return (mb); }
 		const MemoryBlock getCopy()				const { return (mb); }
 		void *getData()					const	{ return ((void *)mb.getData()); }
-		String decompressGzip();  // Gzip support
-		CtrlrLuaMemoryBlock compressGzip(); //Gzip support
+		String decompressZlib();  // Zlib support
+		CtrlrLuaMemoryBlock compressZlib(); // Zlib support
 
 		JUCE_LEAK_DETECTOR(CtrlrLuaMemoryBlock)
 
