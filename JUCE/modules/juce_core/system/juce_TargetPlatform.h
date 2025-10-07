@@ -53,7 +53,7 @@
     a pre-v4.2 version of the Introjucer/Projucer, it's very easy to fix: just re-save
     your project with the latest version of the Projucer, and it'll magically fix this!
  */
- #error "No global header file was included!"
+#error "No global header file was included!"
 #endif
 
 //==============================================================================

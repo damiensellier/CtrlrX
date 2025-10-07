@@ -50,6 +50,7 @@
 #include "LRange.h"
 #include "LComponentPeer.h"
 #include "LGlyphArrangement.h"
+#include "LGZIP.h"
 #include "LZipFile.h"
 #include "LMemoryInputStream.h"
 #include "LInputStream.h"

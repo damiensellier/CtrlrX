@@ -1104,3 +1104,19 @@ void LInputStream::wrapForLua (lua_State *L) // Updated v5.6.34. Thanks to @dnal
                 .def("isExhausted", &InputStream::isExhausted)
         ];
 }
+
+void LGZIPDecompressorInputStream::wrapForLua(lua_State* L)
+{
+	// The base class InputStream MUST be wrapped before this is called
+	// Make sure LInputStream::wrapForLua(L) has been called first
+
+	using namespace luabind;
+	module(L)
+		[
+			class_<GZIPDecompressorInputStream, InputStream>("GZIPDecompressorInputStream")
+				.def(constructor<InputStream*, bool, GZIPDecompressorInputStream::Format>())
+				.def(constructor<InputStream*, bool>())
+				// Inherited methods from InputStream are automatically available
+				// You can add GZIPDecompressorInputStream-specific methods here if needed
+		];
+}
