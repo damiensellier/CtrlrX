@@ -255,3 +255,23 @@ bool CtrlrPanelResource::reloadFromSourceFile()
 
 	return (true);
 }
+// added for gzip support
+InputStream* CtrlrPanelResource::createInputStream()
+{
+	return resourceDataFile.createInputStream().release();
+}
+// added for gzip support
+const String CtrlrPanelResource::asGzipText()
+{
+	// Create input stream from the resource file
+	std::unique_ptr<InputStream> fileStream = resourceDataFile.createInputStream();
+
+	if (fileStream == nullptr)
+		return String();
+
+	// Wrap it with GZIP decompressor
+	GZIPDecompressorInputStream gzipStream(fileStream.release(), true);
+
+	// Read the decompressed content as string
+	return gzipStream.readEntireStreamAsString();
+}

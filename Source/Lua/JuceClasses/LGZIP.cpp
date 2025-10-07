@@ -1,15 +1,13 @@
-/*
-  ==============================================================================
-    LGZIP.cpp
-    Created: 7 Oct 2025 10:22:53am
-    Author:  zan64
-  ==============================================================================
-*/
 #include "JuceHeader.h" 
 #include "LGZIP.h"
 #include <luabind/luabind.hpp>
 
 using namespace juce;
+
+GZIPDecompressorInputStream* LGZIPDecompressorInputStream::create(InputStream* stream, bool deleteStream)
+{
+    return new GZIPDecompressorInputStream(stream, deleteStream);
+}
 
 void LGZIPDecompressorInputStream::wrapForLua(lua_State* L)
 {
@@ -17,7 +15,9 @@ void LGZIPDecompressorInputStream::wrapForLua(lua_State* L)
     module(L)
         [
             class_<GZIPDecompressorInputStream, InputStream>("GZIPDecompressorInputStream")
-                .def(constructor<InputStream*, bool, GZIPDecompressorInputStream::Format>())
-                .def(constructor<InputStream*, bool>())
+                .scope
+                [
+                    def("create", &LGZIPDecompressorInputStream::create)
+                ]
         ];
 }

@@ -10,6 +10,7 @@ class LGZIPDecompressorInputStream
 {
 public:
     static void wrapForLua(lua_State* L);
+    static GZIPDecompressorInputStream* create(InputStream* stream, bool deleteStream);
 };
 
 #endif // __L_GZIP

@@ -375,21 +375,27 @@ void CtrlrPanelResourceManager::wrapForLua(lua_State *L)
 			.def("asAudioFormat", &CtrlrPanelResource::asAudioFormat)
 			.def("asData", &CtrlrPanelResource::asData)
 			.def("getName", &CtrlrPanelResource::getName)
-			.def("getSize", (double (CtrlrPanelResource::*)() )&CtrlrPanelResource::getSize)
+			//.def("getSize", (double (CtrlrPanelResource::*)() )&CtrlrPanelResource::getSize)
+			.def("getSizeDouble", &CtrlrPanelResource::getSizeDouble)
 			.def("getHashCode", &CtrlrPanelResource::getHashCode)
 			.def("load", &CtrlrPanelResource::load)
 			.def("loadIfNeeded", &CtrlrPanelResource::loadIfNeeded)
 			.def("getType", &CtrlrPanelResource::getType)
 			.def("getTypeDescription", &CtrlrPanelResource::getTypeDescription)
 			.def("getFile", &CtrlrPanelResource::getFile)
+			.def("createInputStream", &CtrlrPanelResource::createInputStream) // gzip support
+			.def("asGzipText", &CtrlrPanelResource::asGzipText) // gzip support
 		,
 		class_<CtrlrPanelResourceManager>("CtrlrPanelResourceManager")
-			.def("getResource", (CtrlrPanelResource *(CtrlrPanelResourceManager::*)(const int))&CtrlrPanelResourceManager::getResource)
-			.def("getResource", (CtrlrPanelResource *(CtrlrPanelResourceManager::*)(const String &))&CtrlrPanelResourceManager::getResource)
+			.def("getResource", (CtrlrPanelResource * (CtrlrPanelResourceManager::*)(const int)) & CtrlrPanelResourceManager::getResource, dependency(result, _1))
+			.def("getResource", (CtrlrPanelResource * (CtrlrPanelResourceManager::*)(const String&)) & CtrlrPanelResourceManager::getResource, dependency(result, _1))
+			//.def("getResource", (CtrlrPanelResource *(CtrlrPanelResourceManager::*)(const int))&CtrlrPanelResourceManager::getResource)
+			//.def("getResource", (CtrlrPanelResource *(CtrlrPanelResourceManager::*)(const String &))&CtrlrPanelResourceManager::getResource)
 			.def("getNumResources", &CtrlrPanelResourceManager::getNumResources)
 			.def("getResourceIndex", &CtrlrPanelResourceManager::getResourceIndex)
 			.def("getResourceAsImage", &CtrlrPanelResourceManager::getResourceAsImage)
 			.def("getResourceAsFont", &CtrlrPanelResourceManager::getResourceAsFont)
+
 	];
 }
 
