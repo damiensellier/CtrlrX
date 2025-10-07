@@ -131,6 +131,85 @@ void CtrlrLuaMemoryBlock::removeSection (int startByte, int numBytesToRemove)
 	mb.removeSection (startByte, numBytesToRemove);
 }
 
+//String CtrlrLuaMemoryBlock::decompressGzip()
+//{
+//	try
+//	{
+//		if (getSize() == 0)
+//			return String("Error: Empty memory block");
+//
+//		// Check GZIP header
+//		if (getSize() < 2)
+//			return String("Error: File too small");
+//
+//		uint8 byte1 = ((uint8*)getData())[0];
+//		uint8 byte2 = ((uint8*)getData())[1];
+//
+//		if (byte1 != 0x1f || byte2 != 0x8b)
+//			return String("Error: Invalid GZIP header");
+//
+//		_DBG("decompressGzip: Creating stream with gzipFormat");
+//
+//		// Try with explicit gzipFormat
+//		GZIPDecompressorInputStream gzipStream(
+//			new MemoryInputStream(getData(), getSize(), false),
+//			true,
+//			GZIPDecompressorInputStream::gzipFormat
+//		);
+//
+//		_DBG("decompressGzip: Stream created, exhausted=" + String(gzipStream.isExhausted() ? "true" : "false"));
+//		_DBG("decompressGzip: Stream total length=" + String((int64)gzipStream.getTotalLength()));
+//
+//		// Read all at once
+//		String result = gzipStream.readEntireStreamAsString();
+//
+//		_DBG("decompressGzip: Result length=" + String(result.length()));
+//
+//		if (result.isEmpty())
+//		{
+//			// Try other formats
+//			_DBG("decompressGzip: Trying zlibFormat");
+//			GZIPDecompressorInputStream gzipStream2(
+//				new MemoryInputStream(getData(), getSize(), false),
+//				true,
+//				GZIPDecompressorInputStream::zlibFormat
+//			);
+//			result = gzipStream2.readEntireStreamAsString();
+//
+//			if (result.isEmpty())
+//			{
+//				_DBG("decompressGzip: Trying deflateFormat");
+//				GZIPDecompressorInputStream gzipStream3(
+//					new MemoryInputStream(getData(), getSize(), false),
+//					true,
+//					GZIPDecompressorInputStream::deflateFormat
+//				);
+//				result = gzipStream3.readEntireStreamAsString();
+//			}
+//		}
+//
+//		if (result.isEmpty())
+//			return String("Error: All decompression formats failed");
+//
+//		return result;
+//	}
+//	catch (const std::exception& e)
+//	{
+//		return String("Error: ") + e.what();
+//	}
+//	catch (...)
+//	{
+//		return String("Error: Unknown exception");
+//	}
+//}
+//
+//// Standalone function for Lua
+//String luaDecompressGzip(CtrlrLuaMemoryBlock& mb)
+//{
+//	return mb.decompressGzip();
+//}
+
+
 String CtrlrLuaMemoryBlock::decompressGzip()
 {
 	try
@@ -138,58 +217,55 @@ String CtrlrLuaMemoryBlock::decompressGzip()
 		if (getSize() == 0)
 			return String("Error: Empty memory block");
 
-		// Check GZIP header
-		if (getSize() < 2)
-			return String("Error: File too small");
+		// --- REMOVED: Strict GZIP Header Check (byte1 != 0x1f || byte2 != 0x8b) ---
+		// We assume the user might be opening a ZLIB stream (which starts with 0x78)
+		// or a GZIP file. We will rely on the GZIPDecompressorInputStream to handle it.
 
-		uint8 byte1 = ((uint8*)getData())[0];
-		uint8 byte2 = ((uint8*)getData())[1];
+		// Check for minimum size for any compressed data
+		if (getSize() < 4)
+			return String("Error: Data stream too small");
 
-		if (byte1 != 0x1f || byte2 != 0x8b)
-			return String("Error: Invalid GZIP header");
+		// --- 1. ATTEMPT DECOMPRESSION WITH ZLIB FORMAT (Most Likely Format from Your Save) ---
+		_DBG("decompressGzip: Attempting with zlibFormat");
 
-		_DBG("decompressGzip: Creating stream with gzipFormat");
-
-		// Try with explicit gzipFormat
-		GZIPDecompressorInputStream gzipStream(
+		// Note: The 'true' argument deletes the MemoryInputStream when done.
+		GZIPDecompressorInputStream zlibStream(
 			new MemoryInputStream(getData(), getSize(), false),
 			true,
-			GZIPDecompressorInputStream::gzipFormat
+			GZIPDecompressorInputStream::zlibFormat
 		);
 
-		_DBG("decompressGzip: Stream created, exhausted=" + String(gzipStream.isExhausted() ? "true" : "false"));
-		_DBG("decompressGzip: Stream total length=" + String((int64)gzipStream.getTotalLength()));
-
-		// Read all at once
-		String result = gzipStream.readEntireStreamAsString();
-
-		_DBG("decompressGzip: Result length=" + String(result.length()));
+		String result = zlibStream.readEntireStreamAsString();
 
 		if (result.isEmpty())
 		{
-			// Try other formats
-			_DBG("decompressGzip: Trying zlibFormat");
-			GZIPDecompressorInputStream gzipStream2(
+			// --- 2. FALLBACK TO GZIP FORMAT ---
+			_DBG("decompressGzip: zlibFormat failed. Trying gzipFormat for standard GZIP files.");
+			GZIPDecompressorInputStream gzipStream(
 				new MemoryInputStream(getData(), getSize(), false),
 				true,
-				GZIPDecompressorInputStream::zlibFormat
+				GZIPDecompressorInputStream::gzipFormat
 			);
-			result = gzipStream2.readEntireStreamAsString();
-
-			if (result.isEmpty())
-			{
-				_DBG("decompressGzip: Trying deflateFormat");
-				GZIPDecompressorInputStream gzipStream3(
-					new MemoryInputStream(getData(), getSize(), false),
-					true,
-					GZIPDecompressorInputStream::deflateFormat
-				);
-				result = gzipStream3.readEntireStreamAsString();
-			}
+			result = gzipStream.readEntireStreamAsString();
 		}
+
+		// --- 3. FALLBACK TO RAW DEFLATE FORMAT ---
+		if (result.isEmpty())
+		{
+			_DBG("decompressGzip: gzipFormat failed. Trying raw deflateFormat.");
+			GZIPDecompressorInputStream deflateStream(
+				new MemoryInputStream(getData(), getSize(), false),
+				true,
+				GZIPDecompressorInputStream::deflateFormat
+			);
+			result = deflateStream.readEntireStreamAsString();
+		}
+
 
 		if (result.isEmpty())
 			return String("Error: All decompression formats failed");
+
+		_DBG("decompressGzip: Successfully decompressed data. Result length=" + String(result.length()));
 
 		return result;
 	}
@@ -203,11 +279,12 @@ String CtrlrLuaMemoryBlock::decompressGzip()
 	}
 }
 
-// Standalone function for Lua
+// Standalone function for Lua (No change needed here)
 String luaDecompressGzip(CtrlrLuaMemoryBlock& mb)
 {
 	return mb.decompressGzip();
 }
+
 
 // Standalone function for Lua
 
@@ -218,45 +295,38 @@ CtrlrLuaMemoryBlock luaCompressGzip(CtrlrLuaMemoryBlock& mb)
 
 CtrlrLuaMemoryBlock CtrlrLuaMemoryBlock::compressGzip()
 {
-	try
+	// 1. INPUT CHECK (Should be the first operation)
+	if (getSize() == 0)
 	{
-		if (getSize() == 0)
-		{
-			_DBG("compressGzip: Empty input");
-			return CtrlrLuaMemoryBlock();
-		}
+		_DBG("compressGzip: Empty input");
+		return CtrlrLuaMemoryBlock(); // Return an empty block immediately
+	}
 
-		_DBG("compressGzip: Compressing " + String(getSize()) + " bytes");
+	_DBG("compressGzip: Compressing " + String(getSize()) + " bytes");
 
-		// Create output memory block
-		MemoryBlock outputBlock;
+	// 2. DECLARE OUTPUT BLOCK (Only once)
+	MemoryBlock outputBlock;
 
-		// Create a memory output stream for the compressed data
+	// 3. EXECUTE COMPRESSION IN A SCOPE BLOCK
+	{
+		// Create a memory output stream that writes to outputBlock (does NOT take ownership of outputBlock)
 		MemoryOutputStream outputStream(outputBlock, false);
 
-		// Create GZIP compressor (compression level 9 = best compression)
+		// Create GZIP compressor. The 3rd argument 'false' means it does NOT delete outputStream.
 		GZIPCompressorOutputStream gzipStream(&outputStream, 9, false);
 
 		// Write the input data to the compressor
 		gzipStream.write(getData(), getSize());
 
-		// Flush to ensure all data is written
-		gzipStream.flush();
+		// When 'gzipStream' goes out of scope here, its destructor is called, 
+		// which finalizes and writes the GZIP footer to 'outputStream'/'outputBlock'.
+	} // <-- Streams are destroyed, outputBlock is now fully populated.
 
-		_DBG("compressGzip: Compressed to " + String((int)outputBlock.getSize()) + " bytes");
+	_DBG("compressGzip: Compressed to " + String((int)outputBlock.getSize()) + " bytes");
 
-		return CtrlrLuaMemoryBlock(outputBlock);
-	}
-	catch (const std::exception& e)
-	{
-		_DBG("compressGzip: Exception: " + String(e.what()));
-		return CtrlrLuaMemoryBlock();
-	}
-	catch (...)
-	{
-		_DBG("compressGzip: Unknown exception");
-		return CtrlrLuaMemoryBlock();
-	}
+	// 4. RETURN RESULT
+	// Return a new Lua MemoryBlock wrapping the now-populated outputBlock
+	return CtrlrLuaMemoryBlock(outputBlock);
 }
 
 void CtrlrLuaMemoryBlock::wrapForLua (lua_State *L)
