@@ -209,6 +209,55 @@ String luaDecompressGzip(CtrlrLuaMemoryBlock& mb)
 	return mb.decompressGzip();
 }
 
+// Standalone function for Lua
+
+CtrlrLuaMemoryBlock luaCompressGzip(CtrlrLuaMemoryBlock& mb)
+{
+	return mb.compressGzip();
+}
+
+CtrlrLuaMemoryBlock CtrlrLuaMemoryBlock::compressGzip()
+{
+	try
+	{
+		if (getSize() == 0)
+		{
+			_DBG("compressGzip: Empty input");
+			return CtrlrLuaMemoryBlock();
+		}
+
+		_DBG("compressGzip: Compressing " + String(getSize()) + " bytes");
+
+		// Create output memory block
+		MemoryBlock outputBlock;
+
+		// Create a memory output stream for the compressed data
+		MemoryOutputStream outputStream(outputBlock, false);
+
+		// Create GZIP compressor (compression level 9 = best compression)
+		GZIPCompressorOutputStream gzipStream(&outputStream, 9, false);
+
+		// Write the input data to the compressor
+		gzipStream.write(getData(), getSize());
+
+		// Flush to ensure all data is written
+		gzipStream.flush();
+
+		_DBG("compressGzip: Compressed to " + String((int)outputBlock.getSize()) + " bytes");
+
+		return CtrlrLuaMemoryBlock(outputBlock);
+	}
+	catch (const std::exception& e)
+	{
+		_DBG("compressGzip: Exception: " + String(e.what()));
+		return CtrlrLuaMemoryBlock();
+	}
+	catch (...)
+	{
+		_DBG("compressGzip: Unknown exception");
+		return CtrlrLuaMemoryBlock();
+	}
+}
 
 void CtrlrLuaMemoryBlock::wrapForLua (lua_State *L)
 {
@@ -235,6 +284,8 @@ void CtrlrLuaMemoryBlock::wrapForLua (lua_State *L)
 			.def("insert", &CtrlrLuaMemoryBlock::insert)
 			.def("removeSection", &CtrlrLuaMemoryBlock::removeSection),
 			//.def("decompressGzip", &CtrlrLuaMemoryBlock::decompressGzip) // Gzip support
-			def("decompressGzip", &luaDecompressGzip) // Standalone function Gzip support
+			def("decompressGzip", &luaDecompressGzip), // Gzip support
+			def("compressGzip", &luaCompressGzip) //  Gzip support
+
 	];
 }
