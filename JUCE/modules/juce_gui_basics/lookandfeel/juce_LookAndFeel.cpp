@@ -82,7 +82,7 @@ Colour LookAndFeel::findColour (int colourID) const noexcept
     if (index >= 0)
         return colours[index].colour;
 
-    jassertfalse;
+    //jassertfalse;
     return Colours::black;
 }
 

@@ -131,6 +131,85 @@ void CtrlrLuaMemoryBlock::removeSection (int startByte, int numBytesToRemove)
 	mb.removeSection (startByte, numBytesToRemove);
 }
 
+String CtrlrLuaMemoryBlock::decompressGzip()
+{
+	try
+	{
+		if (getSize() == 0)
+			return String("Error: Empty memory block");
+
+		// Check GZIP header
+		if (getSize() < 2)
+			return String("Error: File too small");
+
+		uint8 byte1 = ((uint8*)getData())[0];
+		uint8 byte2 = ((uint8*)getData())[1];
+
+		if (byte1 != 0x1f || byte2 != 0x8b)
+			return String("Error: Invalid GZIP header");
+
+		_DBG("decompressGzip: Creating stream with gzipFormat");
+
+		// Try with explicit gzipFormat
+		GZIPDecompressorInputStream gzipStream(
+			new MemoryInputStream(getData(), getSize(), false),
+			true,
+			GZIPDecompressorInputStream::gzipFormat
+		);
+
+		_DBG("decompressGzip: Stream created, exhausted=" + String(gzipStream.isExhausted() ? "true" : "false"));
+		_DBG("decompressGzip: Stream total length=" + String((int64)gzipStream.getTotalLength()));
+
+		// Read all at once
+		String result = gzipStream.readEntireStreamAsString();
+
+		_DBG("decompressGzip: Result length=" + String(result.length()));
+
+		if (result.isEmpty())
+		{
+			// Try other formats
+			_DBG("decompressGzip: Trying zlibFormat");
+			GZIPDecompressorInputStream gzipStream2(
+				new MemoryInputStream(getData(), getSize(), false),
+				true,
+				GZIPDecompressorInputStream::zlibFormat
+			);
+			result = gzipStream2.readEntireStreamAsString();
+
+			if (result.isEmpty())
+			{
+				_DBG("decompressGzip: Trying deflateFormat");
+				GZIPDecompressorInputStream gzipStream3(
+					new MemoryInputStream(getData(), getSize(), false),
+					true,
+					GZIPDecompressorInputStream::deflateFormat
+				);
+				result = gzipStream3.readEntireStreamAsString();
+			}
+		}
+
+		if (result.isEmpty())
+			return String("Error: All decompression formats failed");
+
+		return result;
+	}
+	catch (const std::exception& e)
+	{
+		return String("Error: ") + e.what();
+	}
+	catch (...)
+	{
+		return String("Error: Unknown exception");
+	}
+}
+
+// Standalone function for Lua
+String luaDecompressGzip(CtrlrLuaMemoryBlock& mb)
+{
+	return mb.decompressGzip();
+}
+
+
 void CtrlrLuaMemoryBlock::wrapForLua (lua_State *L)
 {
 	using namespace luabind;
@@ -154,6 +233,8 @@ void CtrlrLuaMemoryBlock::wrapForLua (lua_State *L)
 			.def("copyFrom", (void(CtrlrLuaMemoryBlock::*)(CtrlrLuaMemoryBlock &, int, int))&CtrlrLuaMemoryBlock::copyFrom)
 			.def("copyTo",   (void(CtrlrLuaMemoryBlock::*)(CtrlrLuaMemoryBlock &, int, int))&CtrlrLuaMemoryBlock::copyTo)
 			.def("insert", &CtrlrLuaMemoryBlock::insert)
-			.def("removeSection", &CtrlrLuaMemoryBlock::removeSection)
+			.def("removeSection", &CtrlrLuaMemoryBlock::removeSection),
+			//.def("decompressGzip", &CtrlrLuaMemoryBlock::decompressGzip) // Gzip support
+			def("decompressGzip", &luaDecompressGzip) // Standalone function Gzip support
 	];
 }
