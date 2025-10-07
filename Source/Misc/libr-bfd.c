@@ -42,30 +42,40 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-// CRITICAL FIX: Removed the redundant 'typedef asection libr_section;'
-// as it is already conditionally defined in libr.h when JUCE_LINUX is set.
+// === FIX 1: Resolve the libr_section opaque type issue ===
+// The compiler reported 'libr_section' is a 'void *' (opaque type), but the code
+// attempts to access BFD members (->name, ->next, ->size).
+// We must locally override the opaque typedef in libr.h to the actual BFD type
+// 'asection' to allow member access via a pointer.
+#undef libr_section
+typedef asection libr_section;
 
-
-// CRITICAL FIX: Defining the internal structure here, which includes the
-// BFD-specific fields, since this definition is not exposed by libr.h
-// when __LIBR_BUILD__ is defined.
-struct _libr_file
+// === FIX 2: Resolve the struct _libr_file redefinition and missing member issue ===
+// The compiler reported a redefinition error because 'struct _libr_file' is defined
+// in 'libr.h' but without the BFD-specific members, causing the "no member named 'bfd_read'" errors.
+// We remove the explicit redefinition and define a new, internal-only structure.
+typedef struct _libr_file_bfd_internal
 {
+    // These fields must align with the start of the opaque struct _libr_file in libr.h
     char *filename;
     libr_access_t access;
 
-    // BFD specific handles
+    // BFD specific handles (these are the 'missing' members that must be included here)
     bfd *bfd_read;
     bfd *bfd_write;
 
     // File metadata specific to the read/write process
-    // FIX: Using LIBR_TEMPFILE_LEN defined in libr.h for consistency
     char tempfile[LIBR_TEMPFILE_LEN];
     int fd_handle;
     mode_t filemode;
     uid_t fileowner;
     gid_t filegroup;
-};
+} libr_file_internal;
+
+// Define a macro to safely cast the opaque 'libr_file *' to our internal structure,
+// allowing access to the BFD-specific members. All code below will use this cast.
+#define BFD_FILE_HANDLE(fh) ((libr_file_internal *)(fh))
+
 
 /*
  * Build the libr_file handle for processing with libbfd
@@ -73,6 +83,7 @@ struct _libr_file
 libr_intstatus open_handles(libr_file *file_handle, char *filename, libr_access_t access)
 {
     bfd *handle = NULL;
+    libr_file_internal *fh = BFD_FILE_HANDLE(file_handle);
 
     handle = bfd_openr(filename, "default");
     if(!handle)
@@ -82,9 +93,9 @@ libr_intstatus open_handles(libr_file *file_handle, char *filename, libr_access_
     if(bfd_get_flavour(handle) != bfd_target_elf_flavour)
         RETURN(LIBR_ERROR_WRONGFORMAT, "Invalid input file format: not an ELF file");
     bfd_set_error(bfd_error_no_error);
-    file_handle->filename = filename;
-    file_handle->bfd_read = handle;
-    file_handle->access = access;
+    fh->filename = filename;
+    fh->bfd_read = handle;
+    fh->access = access;
     if(access == LIBR_READ_WRITE)
     {
         struct stat file_stat;
@@ -98,26 +109,26 @@ libr_intstatus open_handles(libr_file *file_handle, char *filename, libr_access_
         /* Obtain the access mode of the input file */
         if(stat(filename, &file_stat) == ERROR)
             RETURN(LIBR_ERROR_NOSIZE, "Failed to obtain file size");
-        file_handle->filemode = file_stat.st_mode;
-        file_handle->fileowner = file_stat.st_uid;
-        file_handle->filegroup = file_stat.st_gid;
+        fh->filemode = file_stat.st_mode;
+        fh->fileowner = file_stat.st_uid;
+        fh->filegroup = file_stat.st_gid;
         /* Open a temporary file with the same settings as the input file */
-        strcpy(file_handle->tempfile, LIBR_TEMPFILE);
-        file_handle->fd_handle = mkstemp(file_handle->tempfile);
-        handle = bfd_openw(file_handle->tempfile, bfd_get_target(file_handle->bfd_read));
-        if(!bfd_set_format(handle, bfd_get_format(file_handle->bfd_read)))
+        strcpy(fh->tempfile, LIBR_TEMPFILE);
+        fh->fd_handle = mkstemp(fh->tempfile);
+        handle = bfd_openw(fh->tempfile, bfd_get_target(fh->bfd_read));
+        if(!bfd_set_format(handle, bfd_get_format(fh->bfd_read)))
             RETURN(LIBR_ERROR_SETFORMAT, "Failed to set output file format to input file format");
-        if(!bfd_set_arch_mach(handle, bfd_get_arch(file_handle->bfd_read), bfd_get_mach(file_handle->bfd_read)))
+        if(!bfd_set_arch_mach(handle, bfd_get_arch(fh->bfd_read), bfd_get_mach(fh->bfd_read)))
             RETURN(LIBR_ERROR_SETARCH, "Failed to set output file architecture to input file architecture");
         /* twice needed ? */
-        if(!bfd_set_format(handle, bfd_get_format(file_handle->bfd_read)))
+        if(!bfd_set_format(handle, bfd_get_format(fh->bfd_read)))
             RETURN(LIBR_ERROR_SETFORMAT, "Failed to set output file format to input file format");
-        file_handle->bfd_write = handle;
+        fh->bfd_write = handle;
     }
     else
     {
-        file_handle->fd_handle = 0;
-        file_handle->bfd_write = NULL;
+        fh->fd_handle = 0;
+        fh->bfd_write = NULL;
     }
     RETURN_OK;
 }
@@ -276,10 +287,11 @@ int setup_sections(bfd *ihandle, bfd *ohandle)
  */
 int build_output(libr_file *file_handle)
 {
+    libr_file_internal *fh = BFD_FILE_HANDLE(file_handle);
     void *symtab_buffer = NULL, *reloc_buffer = NULL, *buffer = NULL;
     bfd_size_type symtab_size, reloc_size, size;
-    bfd *ohandle = file_handle->bfd_write;
-    bfd *ihandle = file_handle->bfd_read;
+    bfd *ohandle = fh->bfd_write;
+    bfd *ihandle = fh->bfd_read;
     long symtab_count, reloc_count;
     libr_section *iscn, *oscn;
 
@@ -427,9 +439,10 @@ int safe_rename(const char *old, const char *new)
  */
 int write_output(libr_file *file_handle)
 {
+    libr_file_internal *fh = BFD_FILE_HANDLE(file_handle);
     int write_ok = false;
 
-    if(file_handle->bfd_write != NULL)
+    if(fh->bfd_write != NULL)
     {
         write_ok = true;
         if(!build_output(file_handle))
@@ -439,71 +452,71 @@ int write_output(libr_file *file_handle)
         }
         else
         {
-            printf("BFD::write_output built output file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
+            printf("BFD::write_output built output file: %s temp: %s\n", fh->filename, fh->tempfile);
         }
 
-        if(!bfd_close(file_handle->bfd_write))
+        if(!bfd_close(fh->bfd_write))
         {
             printf("BFD::write_output failed to close write handle.\n");
             write_ok = false;
         }
         else
         {
-            printf ("BFD::write_output closed file handle: file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
+            printf ("BFD::write_output closed file handle: file: %s temp: %s\n", fh->filename, fh->tempfile);
         }
 
-        if(file_handle->fd_handle != 0 && close(file_handle->fd_handle) == ERROR)
+        if(fh->fd_handle != 0 && close(fh->fd_handle) == ERROR)
         {
             write_ok = false;
-            printf("BFD::write_output failed to close write file descriptor file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
+            printf("BFD::write_output failed to close write file descriptor file: %s temp: %s\n", fh->filename, fh->tempfile);
         }
         else
         {
-            printf ("BFD::write_output closed file descriptor: file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
+            printf ("BFD::write_output closed file descriptor: file: %s temp: %s\n", fh->filename, fh->tempfile);
         }
     }
     /* The read handle must be closed last since it is used in the write process */
-    if(!bfd_close(file_handle->bfd_read))
+    if(!bfd_close(fh->bfd_read))
     {
-        printf("BFD::write_output failed to close read handle file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
+        printf("BFD::write_output failed to close read handle file: %s temp: %s\n", fh->filename, fh->tempfile);
     }
     else
     {
-        printf ("BFD::write_output closed read handle: file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
+        printf ("BFD::write_output closed read handle: file: %s temp: %s\n", fh->filename, fh->tempfile);
     }
 
     // FIX: Uncommenting the final file replacement and permission setting logic,
     // and moving the return statement to the end of the function.
     if(write_ok)
     {
-        if(rename(file_handle->tempfile, file_handle->filename) < 0)
+        if(rename(fh->tempfile, fh->filename) < 0)
         {
-            if(errno != EXDEV || safe_rename(file_handle->tempfile, file_handle->filename) < 0)
+            if(errno != EXDEV || safe_rename(fh->tempfile, fh->filename) < 0)
             {
-                printf("BFD::write_output failed to rename output file: %m (temp:%s->file:%s)\n", file_handle->tempfile, file_handle->filename);
+                printf("BFD::write_output failed to rename output file: %m (temp:%s->file:%s)\n", fh->tempfile, fh->filename);
             }
             else
             {
-                printf("BFD::write_output renamed (%s->%s)\n", file_handle->filename, file_handle->tempfile);
+                printf("BFD::write_output renamed (%s->%s)\n", fh->filename, fh->tempfile);
             }
         }
 
-        if(chmod(file_handle->filename, file_handle->filemode) < 0)
+        if(chmod(fh->filename, fh->filemode) < 0)
         {
-            printf("BFD::write_output failed to set file mode file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
+            printf("BFD::write_output failed to set file mode file: %s temp: %s\n", fh->filename, fh->tempfile);
         }
         else
         {
-            printf("BFD::write_output chmod success file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
+            printf("BFD::write_output chmod success file: %s temp: %s\n", fh->filename, fh->tempfile);
         }
 
-        if(chown(file_handle->filename, file_handle->fileowner, file_handle->filegroup) < 0)
+        if(chown(fh->filename, fh->fileowner, fh->filegroup) < 0)
         {
-            printf("BFD::write_output failed to set file ownership file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
+            printf("BFD::write_output failed to set file ownership file: %s temp: %s\n", fh->filename, fh->tempfile);
         }
         else
         {
-            printf("BFD::write_output chown success file: %s temp: %s\n", file_handle->filename, file_handle->tempfile);
+            printf("BFD::write_output chown success file: %s temp: %s\n", fh->filename, fh->tempfile);
         }
     }
 
@@ -515,9 +528,10 @@ int write_output(libr_file *file_handle)
  */
 libr_intstatus find_section(libr_file *file_handle, char *section_name, libr_section **retscn)
 {
+    libr_file_internal *fh = BFD_FILE_HANDLE(file_handle);
     libr_section *scn;
 
-    for(scn = file_handle->bfd_read->sections; scn != NULL; scn = scn->next)
+    for(scn = fh->bfd_read->sections; scn != NULL; scn = scn->next)
     {
         if(strcmp(scn->name, section_name) == 0)
         {
@@ -533,9 +547,10 @@ libr_intstatus find_section(libr_file *file_handle, char *section_name, libr_sec
  */
 libr_data *get_data(libr_file *file_handle, libr_section *scn)
 {
+    libr_file_internal *fh = BFD_FILE_HANDLE(file_handle);
     libr_data *data = malloc(scn->size);
 
-    if(!bfd_get_section_contents(file_handle->bfd_read, scn, data, 0, scn->size))
+    if(!bfd_get_section_contents(fh->bfd_read, scn, data, 0, scn->size))
     {
         free(data);
         data = NULL;
@@ -587,16 +602,17 @@ libr_intstatus set_data(libr_file *file_handle, libr_section *scn, libr_data *da
  */
 libr_intstatus add_section(libr_file *file_handle, char *resource_name, libr_section **retscn)
 {
+    libr_file_internal *fh = BFD_FILE_HANDLE(file_handle);
     libr_section *scn = NULL;
 
-    scn = bfd_make_section(file_handle->bfd_read, resource_name);
+    scn = bfd_make_section(fh->bfd_read, resource_name);
     if(scn == NULL)
         RETURN(LIBR_ERROR_NEWSECTION, "Failed to create new section");
     if(
         #ifdef HAVE_BFD_2_34
         !bfd_set_section_flags(scn, SEC_HAS_CONTENTS | SEC_DATA | SEC_IN_MEMORY)
         #else
-        !bfd_set_section_flags(file_handle->bfd_read, scn, SEC_HAS_CONTENTS | SEC_DATA | SEC_IN_MEMORY)
+        !bfd_set_section_flags(fh->bfd_read, scn, SEC_HAS_CONTENTS | SEC_DATA | SEC_IN_MEMORY)
         #endif
     )
     {
@@ -636,12 +652,14 @@ size_t data_size(libr_section *scn, libr_data *data)
  */
 libr_section *next_section(libr_file *file_handle, libr_section *scn)
 {
+    libr_file_internal *fh = BFD_FILE_HANDLE(file_handle);
+
     /* get the first section */
     if(scn == NULL)
     {
-        if(file_handle->bfd_read == NULL)
+        if(fh->bfd_read == NULL)
             return NULL;
-        return file_handle->bfd_read->sections;
+        return fh->bfd_read->sections;
     }
     return scn->next;
 }
