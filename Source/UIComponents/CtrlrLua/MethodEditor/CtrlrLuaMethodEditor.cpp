@@ -497,7 +497,7 @@ bool CtrlrLuaMethodEditor::canCloseWindow()
     }
     if (hasUnsavedChanges)
     {
-        int ret = AlertWindow::showYesNoCancelBox(AlertWindow::QuestionIcon, "Save changes ("+getOwner().getName()+")", "There are unsaved changes in Lua code. Do you want to save them berfore closing ?", "Save", "Discard", "Cancel", this);
+        int ret = AlertWindow::showYesNoCancelBox(AlertWindow::QuestionIcon, "Save changes ("+getOwner().getName()+")", "There are unsaved changes in Lua code. Do you want to save them before closing ?", "Save", "Discard", "Cancel", this);
         if (ret == 0)
         {    // Cancel
             return false;
