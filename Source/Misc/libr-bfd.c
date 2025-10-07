@@ -42,18 +42,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-// === FIX 1: Resolve the libr_section opaque type issue ===
-// The compiler reported 'libr_section' is a 'void *' (opaque type), but the code
-// attempts to access BFD members (->name, ->next, ->size).
-// We must locally override the opaque typedef in libr.h to the actual BFD type
-// 'asection' to allow member access via a pointer.
-#undef libr_section
-typedef asection libr_section;
-
-// === FIX 2: Resolve the struct _libr_file redefinition and missing member issue ===
+// === FIX 1: Resolve the libr_file missing member issue ===
 // The compiler reported a redefinition error because 'struct _libr_file' is defined
 // in 'libr.h' but without the BFD-specific members, causing the "no member named 'bfd_read'" errors.
-// We remove the explicit redefinition and define a new, internal-only structure.
+// We define a new, internal-only structure that mirrors the opaque type but includes our internal BFD handles.
 typedef struct _libr_file_bfd_internal
 {
     // These fields must align with the start of the opaque struct _libr_file in libr.h
@@ -73,8 +65,14 @@ typedef struct _libr_file_bfd_internal
 } libr_file_internal;
 
 // Define a macro to safely cast the opaque 'libr_file *' to our internal structure,
-// allowing access to the BFD-specific members. All code below will use this cast.
+// allowing access to the BFD-specific members. All file access code uses this macro.
 #define BFD_FILE_HANDLE(fh) ((libr_file_internal *)(fh))
+
+// === FIX 2: Resolve the libr_section opaque type issue ===
+// The compiler reported 'libr_section' is a 'void *', but the code attempts to access
+// BFD members (->name, ->next, ->size). We must cast the opaque pointer on every access.
+// We define a macro to safely cast the opaque 'libr_section' (void*) back to the actual BFD type 'asection *'.
+#define BFD_SECTION_HANDLE(scn) ((asection *)(scn))
 
 
 /*
@@ -141,16 +139,16 @@ int keep_symbol(libr_section *sections, libr_section *chkscn)
     libr_section *scn;
 
     /* Check that the section is publicly exposed */
-    for(scn = sections; scn != NULL; scn = scn->next)
+    for(scn = sections; scn != NULL; scn = BFD_SECTION_HANDLE(scn)->next)
     {
         if(scn == chkscn)
         {
             /* if it is, and has size zero, then it was marked for deletion */
             if(
                 #ifdef HAVE_BFD_2_34
-                bfd_section_size(chkscn) == 0
+                bfd_section_size(BFD_SECTION_HANDLE(chkscn)) == 0
                 #else
-                bfd_get_section_size(chkscn) == 0
+                bfd_get_section_size(BFD_SECTION_HANDLE(chkscn)) == 0
                 #endif
             )
             {
@@ -178,9 +176,9 @@ void remove_sections(libr_section *sections, void *symtab_buffer, long *symtab_c
         if(symbol != NULL)
         {
             #ifdef HAVE_BFD_2_34
-            chkscn = bfd_asymbol_section(symbol);
+            chkscn = (libr_section *)bfd_asymbol_section(symbol);
             #else
-            chkscn = bfd_get_section(symbol);
+            chkscn = (libr_section *)bfd_get_section(symbol);
             #endif
         }
         if(chkscn != NULL && !keep_symbol(sections, chkscn))
@@ -201,13 +199,13 @@ int setup_sections(bfd *ihandle, bfd *ohandle)
     libr_section *iscn, *oscn;
     bfd_vma vma;
 
-    for(iscn = ihandle->sections; iscn != NULL; iscn = iscn->next)
+    for(iscn = (libr_section *)ihandle->sections; iscn != NULL; iscn = BFD_SECTION_HANDLE(iscn)->next)
     {
         if(
             #ifdef HAVE_BFD_2_34
-            bfd_section_size(iscn) == 0
+            bfd_section_size(BFD_SECTION_HANDLE(iscn)) == 0
             #else
-            bfd_get_section_size(iscn) == 0
+            bfd_get_section_size(BFD_SECTION_HANDLE(iscn)) == 0
             #endif
         )
         {
@@ -218,13 +216,13 @@ int setup_sections(bfd *ihandle, bfd *ohandle)
         // Keep the ARM_ATTRIBUTES section type intact on armhf systems
         // If this is not done, readelf -A will not print any architecture information for the modified library,
         // and ldd will report that the library cannot be found
-        if (strcmp(iscn->name, ".ARM.attributes") == 0)
+        if (strcmp(BFD_SECTION_HANDLE(iscn)->name, ".ARM.attributes") == 0)
         {
-            oscn = bfd_make_section_anyway_with_flags(ohandle, iscn->name, iscn->flags);
+            oscn = (libr_section *)bfd_make_section_anyway_with_flags(ohandle, BFD_SECTION_HANDLE(iscn)->name, BFD_SECTION_HANDLE(iscn)->flags);
         }
         else
         {
-            oscn = bfd_make_section_anyway_with_flags(ohandle, iscn->name, iscn->flags | SEC_LINKER_CREATED);
+            oscn = (libr_section *)bfd_make_section_anyway_with_flags(ohandle, BFD_SECTION_HANDLE(iscn)->name, BFD_SECTION_HANDLE(iscn)->flags | SEC_LINKER_CREATED);
         }
         if(oscn == NULL)
         {
@@ -233,9 +231,9 @@ int setup_sections(bfd *ihandle, bfd *ohandle)
         }
         if(
             #ifdef HAVE_BFD_2_34
-            !bfd_set_section_size(oscn, iscn->size)
+            !bfd_set_section_size(BFD_SECTION_HANDLE(oscn), BFD_SECTION_HANDLE(iscn)->size)
             #else
-            !bfd_set_section_size(ohandle, oscn, iscn->size)
+            !bfd_set_section_size(ohandle, BFD_SECTION_HANDLE(oscn), BFD_SECTION_HANDLE(iscn)->size)
             #endif
         )
         {
@@ -243,37 +241,37 @@ int setup_sections(bfd *ihandle, bfd *ohandle)
             return false;
         }
         #ifdef HAVE_BFD_2_34
-        vma = bfd_section_vma(iscn);
+        vma = bfd_section_vma(BFD_SECTION_HANDLE(iscn));
         #else
-        vma = bfd_section_vma(ihandle, iscn);
+        vma = bfd_section_vma(ihandle, BFD_SECTION_HANDLE(iscn));
         #endif
         if(
             #ifdef HAVE_BFD_2_34
-            !bfd_set_section_vma(oscn, vma)
+            !bfd_set_section_vma(BFD_SECTION_HANDLE(oscn), vma)
             #else
-            !bfd_set_section_vma(ohandle, oscn, vma)
+            !bfd_set_section_vma(ohandle, BFD_SECTION_HANDLE(oscn), vma)
             #endif
         )
         {
             printf("failed to set virtual memory address: %s\n", bfd_errmsg(bfd_get_error()));
             return false;
         }
-        oscn->lma = iscn->lma;
+        BFD_SECTION_HANDLE(oscn)->lma = BFD_SECTION_HANDLE(iscn)->lma;
         if(
             #ifdef HAVE_BFD_2_34
-            !bfd_set_section_alignment(oscn, bfd_section_alignment(iscn))
+            !bfd_set_section_alignment(BFD_SECTION_HANDLE(oscn), bfd_section_alignment(BFD_SECTION_HANDLE(iscn)))
             #else
-            !bfd_set_section_alignment(ohandle, oscn, bfd_section_alignment(ihandle, iscn))
+            !bfd_set_section_alignment(ohandle, BFD_SECTION_HANDLE(oscn), bfd_section_alignment(ihandle, BFD_SECTION_HANDLE(iscn)))
             #endif
         )
         {
             printf("failed to compute section alignment: %s\n", bfd_errmsg(bfd_get_error()));
             return false;
         }
-        oscn->entsize = iscn->entsize;
-        iscn->output_section = oscn;
-        iscn->output_offset = vma;
-        if(!bfd_copy_private_section_data(ihandle, iscn, ohandle, oscn))
+        BFD_SECTION_HANDLE(oscn)->entsize = BFD_SECTION_HANDLE(iscn)->entsize;
+        BFD_SECTION_HANDLE(iscn)->output_section = BFD_SECTION_HANDLE(oscn);
+        BFD_SECTION_HANDLE(iscn)->output_offset = vma;
+        if(!bfd_copy_private_section_data(ihandle, BFD_SECTION_HANDLE(iscn), ohandle, BFD_SECTION_HANDLE(oscn)))
         {
             printf("failed to compute section alignment: %s\n", bfd_errmsg(bfd_get_error()));
             return false;
@@ -333,44 +331,44 @@ int build_output(libr_file *file_handle)
         return false;
     }
     /* Tweak the symbol table to remove sections that no-longer exist */
-    remove_sections(ihandle->sections, symtab_buffer, &symtab_count);
+    remove_sections((libr_section *)ihandle->sections, symtab_buffer, &symtab_count);
     bfd_set_symtab(ohandle, symtab_buffer, symtab_count);
     /* Actually copy section data */
-    for(iscn = ihandle->sections; iscn != NULL; iscn = iscn->next)
+    for(iscn = (libr_section *)ihandle->sections; iscn != NULL; iscn = BFD_SECTION_HANDLE(iscn)->next)
     {
         #ifdef HAVE_BFD_2_34
-        size = bfd_section_size(iscn);
+        size = bfd_section_size(BFD_SECTION_HANDLE(iscn));
         #else
-        size = bfd_get_section_size(iscn);
+        size = bfd_get_section_size(BFD_SECTION_HANDLE(iscn));
         #endif
         if(size == 0)
             continue; /* Section has been marked for deletion */
-        oscn = iscn->output_section;
-        reloc_size = bfd_get_reloc_upper_bound(ihandle, iscn);
+        oscn = (libr_section *)BFD_SECTION_HANDLE(iscn)->output_section;
+        reloc_size = bfd_get_reloc_upper_bound(ihandle, BFD_SECTION_HANDLE(iscn));
         if(reloc_size == 0)
-            bfd_set_reloc(ohandle, oscn, NULL, 0);
+            bfd_set_reloc(ohandle, BFD_SECTION_HANDLE(oscn), NULL, 0);
         else
         {
             reloc_buffer = malloc(reloc_size);
-            reloc_count = bfd_canonicalize_reloc(ihandle, iscn, reloc_buffer, symtab_buffer);
-            bfd_set_reloc(ohandle, oscn, reloc_buffer, reloc_count);
+            reloc_count = bfd_canonicalize_reloc(ihandle, BFD_SECTION_HANDLE(iscn), reloc_buffer, symtab_buffer);
+            bfd_set_reloc(ohandle, BFD_SECTION_HANDLE(oscn), reloc_buffer, reloc_count);
         }
 
         if(
             #ifdef HAVE_BFD_2_34
-            bfd_section_flags(iscn) & SEC_HAS_CONTENTS
+            bfd_section_flags(BFD_SECTION_HANDLE(iscn)) & SEC_HAS_CONTENTS
             #else
-            bfd_get_section_flags(ihandle, iscn) & SEC_HAS_CONTENTS
+            bfd_get_section_flags(ihandle, BFD_SECTION_HANDLE(iscn)) & SEC_HAS_CONTENTS
             #endif
         )
         {
             /* NOTE: if the section is just being copied then do that, otherwise grab
              * the user data for the section (stored previously by set_data)
              */
-            if(iscn->userdata == NULL)
+            if(BFD_SECTION_HANDLE(iscn)->userdata == NULL)
             {
                 buffer = malloc(size);
-                if(!bfd_get_section_contents(ihandle, iscn, buffer, 0, size))
+                if(!bfd_get_section_contents(ihandle, BFD_SECTION_HANDLE(iscn), buffer, 0, size))
                 {
                     printf("failed to get section contents: %s\n", bfd_errmsg(bfd_get_error()));
                     free(buffer);
@@ -378,15 +376,15 @@ int build_output(libr_file *file_handle)
                 }
             }
             else
-                buffer = iscn->userdata;
-            if(!bfd_set_section_contents(ohandle, oscn, buffer, 0, size))
+                buffer = BFD_SECTION_HANDLE(iscn)->userdata;
+            if(!bfd_set_section_contents(ohandle, BFD_SECTION_HANDLE(oscn), buffer, 0, size))
             {
                 printf("failed to set section contents: %s\n", bfd_errmsg(bfd_get_error()));
                 free(buffer);
                 return false;
             }
             free(buffer);
-            if(!bfd_copy_private_section_data(ihandle, iscn, ohandle, oscn))
+            if(!bfd_copy_private_section_data(ihandle, BFD_SECTION_HANDLE(iscn), ohandle, BFD_SECTION_HANDLE(oscn)))
             {
                 printf("failed to copy private section data: %s\n", bfd_errmsg(bfd_get_error()));
                 return false;
@@ -485,8 +483,6 @@ int write_output(libr_file *file_handle)
         printf ("BFD::write_output closed read handle: file: %s temp: %s\n", fh->filename, fh->tempfile);
     }
 
-    // FIX: Uncommenting the final file replacement and permission setting logic,
-    // and moving the return statement to the end of the function.
     if(write_ok)
     {
         if(rename(fh->tempfile, fh->filename) < 0)
@@ -531,9 +527,9 @@ libr_intstatus find_section(libr_file *file_handle, char *section_name, libr_sec
     libr_file_internal *fh = BFD_FILE_HANDLE(file_handle);
     libr_section *scn;
 
-    for(scn = fh->bfd_read->sections; scn != NULL; scn = scn->next)
+    for(scn = (libr_section *)fh->bfd_read->sections; scn != NULL; scn = BFD_SECTION_HANDLE(scn)->next)
     {
-        if(strcmp(scn->name, section_name) == 0)
+        if(strcmp(BFD_SECTION_HANDLE(scn)->name, section_name) == 0)
         {
             *retscn = scn;
             RETURN_OK;
@@ -548,14 +544,15 @@ libr_intstatus find_section(libr_file *file_handle, char *section_name, libr_sec
 libr_data *get_data(libr_file *file_handle, libr_section *scn)
 {
     libr_file_internal *fh = BFD_FILE_HANDLE(file_handle);
-    libr_data *data = malloc(scn->size);
+    size_t size = (size_t)BFD_SECTION_HANDLE(scn)->size;
+    libr_data *data = malloc(size);
 
-    if(!bfd_get_section_contents(fh->bfd_read, scn, data, 0, scn->size))
+    if(!bfd_get_section_contents(fh->bfd_read, BFD_SECTION_HANDLE(scn), data, 0, size))
     {
         free(data);
         data = NULL;
     }
-    scn->userdata = data;
+    BFD_SECTION_HANDLE(scn)->userdata = data;
     return data;
 }
 
@@ -565,11 +562,11 @@ libr_data *get_data(libr_file *file_handle, libr_section *scn)
 libr_data *new_data(libr_file *file_handle, libr_section *scn)
 {
     /* NOTE: expanding data is handled by set_data for libbfd */
-    if(scn->userdata != NULL)
-        return scn->userdata;
-    scn->size = 0;
-    scn->userdata = malloc(0);
-    return scn->userdata;
+    if(BFD_SECTION_HANDLE(scn)->userdata != NULL)
+        return BFD_SECTION_HANDLE(scn)->userdata;
+    BFD_SECTION_HANDLE(scn)->size = 0;
+    BFD_SECTION_HANDLE(scn)->userdata = malloc(0);
+    return BFD_SECTION_HANDLE(scn)->userdata;
 }
 
 /*
@@ -578,21 +575,22 @@ libr_data *new_data(libr_file *file_handle, libr_section *scn)
 libr_intstatus set_data(libr_file *file_handle, libr_section *scn, libr_data *data, off_t offset, char *buffer, size_t size)
 {
     char *intbuffer = NULL;
+    bfd_size_type new_size = offset + size;
 
     /* special case: clear buffer */
     if(buffer == NULL)
     {
-        scn->size = 0;
-        if(scn->userdata != NULL)
-            free(scn->userdata);
+        BFD_SECTION_HANDLE(scn)->size = 0;
+        if(BFD_SECTION_HANDLE(scn)->userdata != NULL)
+            free(BFD_SECTION_HANDLE(scn)->userdata);
         RETURN_OK;
     }
     /* normal case: add new data to the buffer */
-    scn->size = offset + size;
-    scn->userdata = realloc(data, scn->size);
-    if(scn->userdata == NULL)
+    BFD_SECTION_HANDLE(scn)->size = new_size;
+    BFD_SECTION_HANDLE(scn)->userdata = realloc(data, new_size);
+    if(BFD_SECTION_HANDLE(scn)->userdata == NULL)
         RETURN(LIBR_ERROR_MEMALLOC, "Failed to allocate memory for data");
-    intbuffer = scn->userdata;
+    intbuffer = BFD_SECTION_HANDLE(scn)->userdata;
     memcpy(&intbuffer[offset], buffer, size);
     RETURN_OK;
 }
@@ -605,14 +603,14 @@ libr_intstatus add_section(libr_file *file_handle, char *resource_name, libr_sec
     libr_file_internal *fh = BFD_FILE_HANDLE(file_handle);
     libr_section *scn = NULL;
 
-    scn = bfd_make_section(fh->bfd_read, resource_name);
+    scn = (libr_section *)bfd_make_section(fh->bfd_read, resource_name);
     if(scn == NULL)
         RETURN(LIBR_ERROR_NEWSECTION, "Failed to create new section");
     if(
         #ifdef HAVE_BFD_2_34
-        !bfd_set_section_flags(scn, SEC_HAS_CONTENTS | SEC_DATA | SEC_IN_MEMORY)
+        !bfd_set_section_flags(BFD_SECTION_HANDLE(scn), SEC_HAS_CONTENTS | SEC_DATA | SEC_IN_MEMORY)
         #else
-        !bfd_set_section_flags(fh->bfd_read, scn, SEC_HAS_CONTENTS | SEC_DATA | SEC_IN_MEMORY)
+        !bfd_set_section_flags(fh->bfd_read, BFD_SECTION_HANDLE(scn), SEC_HAS_CONTENTS | SEC_DATA | SEC_IN_MEMORY)
         #endif
     )
     {
@@ -627,7 +625,7 @@ libr_intstatus add_section(libr_file *file_handle, char *resource_name, libr_sec
  */
 libr_intstatus remove_section(libr_file *file_handle, libr_section *scn)
 {
-    scn->size = 0;
+    BFD_SECTION_HANDLE(scn)->size = 0;
     RETURN_OK;
 }
 
@@ -644,7 +642,7 @@ void *data_pointer(libr_section *scn, libr_data *data)
  */
 size_t data_size(libr_section *scn, libr_data *data)
 {
-    return scn->size;
+    return (size_t)BFD_SECTION_HANDLE(scn)->size;
 }
 
 /*
@@ -659,9 +657,9 @@ libr_section *next_section(libr_file *file_handle, libr_section *scn)
     {
         if(fh->bfd_read == NULL)
             return NULL;
-        return fh->bfd_read->sections;
+        return (libr_section *)fh->bfd_read->sections;
     }
-    return scn->next;
+    return (libr_section *)BFD_SECTION_HANDLE(scn)->next;
 }
 
 /*
@@ -669,7 +667,7 @@ libr_section *next_section(libr_file *file_handle, libr_section *scn)
  */
 char *section_name(libr_file *file_handle, libr_section *scn)
 {
-    return (char *) scn->name;
+    return (char *) BFD_SECTION_HANDLE(scn)->name;
 }
 
 /*
