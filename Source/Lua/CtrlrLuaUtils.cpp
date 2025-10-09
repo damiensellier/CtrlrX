@@ -3,6 +3,7 @@
 #include "CtrlrLuaUtils.h"
 #include "CtrlrLog.h"
 #include "JuceClasses/LMemoryBlock.h"
+#include <juce_core/juce_core.h>
 
 
 /*
@@ -226,6 +227,25 @@ StringArray CtrlrLuaUtils::getMidiOutputDevices()
 	return ( MidiOutput::getDevices() );
 }
 
+juce::String CtrlrLuaUtils::base64_encode(const juce::String& stringToEncode)
+{
+	return juce::Base64::toBase64(stringToEncode);
+}
+
+
+juce::String CtrlrLuaUtils::base64_decode(const juce::String& base64String)
+{
+	juce::MemoryOutputStream decodedStream;
+	if (juce::Base64::convertFromBase64(decodedStream, base64String))
+	{
+		const void* data = decodedStream.getData();
+		const size_t size = decodedStream.getDataSize();
+		if (size > 0)
+			return juce::String::fromUTF8(static_cast<const char*>(data), (int)size);
+	}
+	return juce::String();
+}
+
 void CtrlrLuaUtils::wrapForLua (lua_State *L)
 {
 	using namespace luabind;
@@ -252,5 +272,7 @@ void CtrlrLuaUtils::wrapForLua (lua_State *L)
 			.def("getPi", &CtrlrLuaUtils::getPi)
 	 		.def("get16bitSigned", &CtrlrLuaUtils::get16bitSigned) // Added v5.6.34. Thanks to @dnaldoog
 			.def("get8bitSigned", &CtrlrLuaUtils::get8bitSigned) // Added v5.6.34. Thanks to @dnaldoog
+			.def("base64_encode", &CtrlrLuaUtils::base64_encode)
+			.def("base64_decode", &CtrlrLuaUtils::base64_decode)
 	];
 }
