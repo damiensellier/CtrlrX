@@ -235,7 +235,7 @@ LMemoryBlock LMemoryBlock::compressZlib()
 		juce::MemoryOutputStream outputStream(outputBlock, false);
 
 		// Create ZLIB compressor (false = Zlib format)
-		juce::GZIPCompressorOutputStream gzipStream(&outputStream, 9, false);
+		juce::GZIPCompressorOutputStream gzipStream(&outputStream, 9, false,0);
 
 		gzipStream.write(getData(), getSize()); // Accesses data via member functions
 	}
@@ -296,24 +296,32 @@ LMemoryBlock LMemoryBlock::compressGzip()
 {
 	if (getSize() == 0)
 	{
-		// Return an empty block
 		return LMemoryBlock();
 	}
 
-	juce::MemoryBlock outputBlock;
+	juce::MemoryBlock outputBlock; // 1. Output block allocated on the stack (safe)
+
+	// CRITICAL: The scope ensures streams are destroyed immediately after use
 	{
+		// 2. Output Stream writes to outputBlock (does NOT take ownership)
 		juce::MemoryOutputStream outputStream(outputBlock, false);
 
-		// Create GZIP compressor with GZIP format (true = Gzip format)
-		juce::GZIPCompressorOutputStream gzipStream(&outputStream, 9, true);
+		// 3. Compressor Stream uses the address of outputStream (guaranteed valid in scope)
+		//    The 'false' argument here means it does NOT delete outputStream when done.
+		juce::GZIPCompressorOutputStream gzipStream(&outputStream, 9, false, juce::GZIPCompressorOutputStream::windowBitsGZIP);
 
-		gzipStream.write(getData(), getSize()); // Accesses data via member functions
-	}
+		// 4. Input data is accessed via member functions (getData(), getSize())
+		gzipStream.write(getData(), getSize());
+		gzipStream.flush();
+		//gzipStream.close();
+	} // <-- CRASH SPOT: Destructors for gzipStream and outputStream are called here. 
+	  //      If gzipStream's destructor tries to do something invalid, it crashes.
 
-	// Return a new LMemoryBlock initialized with the compressed data
+	// 5. Return the new block (Copying the data from outputBlock)
 	return LMemoryBlock(outputBlock.getData(), outputBlock.getSize());
-	/************************************************************************************************/
 }
+
+
 // Change return type to juce::String (as before)
 juce::String LMemoryBlock::decompressGzip()
 {
