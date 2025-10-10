@@ -12,6 +12,8 @@ class LMemoryBlock : public MemoryBlock
 		{}
 		LMemoryBlock(const MemoryBlock &other) : MemoryBlock(other)
 		{}
+		LMemoryBlock(const int initSize) : MemoryBlock((size_t)initSize, true)
+		{}
 		LMemoryBlock (const void *dataToInitialiseFrom, size_t sizeInBytes);
 		LMemoryBlock(const String &hexData);
 		LMemoryBlock(luabind::object const& table);
@@ -35,13 +37,9 @@ class LMemoryBlock : public MemoryBlock
 		void toLuaTable (luabind::object tableToWriteTo);
 		static LMemoryBlock fromLuaTable (luabind::object const& table);
 		static void wrapForLua (lua_State *L);
-		/** Compresses the block data using the Zlib format (not Gzip) and returns a new LMemoryBlock. */
 		LMemoryBlock compressZlib();
-		/** Decompresses the block data, prioritizing Zlib format, and returns the result as a String. */
 		juce::String decompressZlib();
-		/** Compresses the block data using the Gzip format and returns a new LMemoryBlock. */
 		LMemoryBlock compressGzip();
-		/** Decompresses the block data, prioritizing Gzip format, and returns the result as a String. */
 		juce::String decompressGzip();
 		static LMemoryBlock fromLuaString(const juce::String& data);
 		static LMemoryBlock fromLuaString(luabind::object const& self, const juce::String& strData);
