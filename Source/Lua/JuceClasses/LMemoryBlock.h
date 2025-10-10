@@ -43,6 +43,8 @@ class LMemoryBlock : public MemoryBlock
 		LMemoryBlock compressGzip();
 		/** Decompresses the block data, prioritizing Gzip format, and returns the result as a String. */
 		juce::String decompressGzip();
+		static LMemoryBlock fromLuaString(const juce::String& data);
+		static LMemoryBlock fromLuaString(luabind::object const& self, const juce::String& strData);
 };
 
 #endif

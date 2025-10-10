@@ -364,6 +364,16 @@ juce::String LMemoryBlock::decompressGzip()
 	}
 }
 /************************************************************************************************/
+LMemoryBlock LMemoryBlock::fromLuaString(const juce::String& strData)
+{
+	return LMemoryBlock(strData.toRawUTF8(), (size_t)strData.getNumBytesAsUTF8());
+}
+LMemoryBlock LMemoryBlock::fromLuaString(luabind::object const& self, const juce::String& strData)
+{
+	// NOTE: We ignore the 'self' object and call the core static method
+	return fromLuaString(strData);
+}
+/************************************************************************************************/
 
 void LMemoryBlock::wrapForLua (lua_State *L)
 {
@@ -411,7 +421,9 @@ void LMemoryBlock::wrapForLua (lua_State *L)
 				.def("decompressGzip", &LMemoryBlock::decompressGzip)
 				.scope
 				[
-					def("fromLuaTable", &LMemoryBlock::fromLuaTable)
+					def("fromLuaTable", &LMemoryBlock::fromLuaTable),
+					def("fromLuaString", (LMemoryBlock(*)(const juce::String&)) & LMemoryBlock::fromLuaString),
+					def("fromLuaString", (LMemoryBlock(*)(luabind::object const&, const juce::String&)) & LMemoryBlock::fromLuaString)
 				]
 	];
 }
