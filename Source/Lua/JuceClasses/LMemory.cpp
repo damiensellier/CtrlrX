@@ -244,7 +244,6 @@ LMemoryBlock LMemoryBlock::compressZlib()
 	return LMemoryBlock(outputBlock.getData(), outputBlock.getSize());
 }
 /************************************************************************************************/
-// Change return type to juce::String (as before)
 juce::String LMemoryBlock::decompressZlib()
 {
 	try
@@ -291,7 +290,6 @@ juce::String LMemoryBlock::decompressZlib()
 	}
 }
 /************************************************************************************************/
-// Change return type to LMemoryBlock (the type bound in Lua)
 LMemoryBlock LMemoryBlock::compressGzip()
 {
 	if (getSize() == 0)
@@ -309,20 +307,17 @@ LMemoryBlock LMemoryBlock::compressGzip()
 		// 3. Compressor Stream uses the address of outputStream (guaranteed valid in scope)
 		//    The 'false' argument here means it does NOT delete outputStream when done.
 		juce::GZIPCompressorOutputStream gzipStream(&outputStream, 9, false, juce::GZIPCompressorOutputStream::windowBitsGZIP);
+		// For GZIP add 31 to last parameter
 
-		// 4. Input data is accessed via member functions (getData(), getSize())
 		gzipStream.write(getData(), getSize());
 		gzipStream.flush();
 		//gzipStream.close();
-	} // <-- CRASH SPOT: Destructors for gzipStream and outputStream are called here. 
-	  //      If gzipStream's destructor tries to do something invalid, it crashes.
+	} 
 
 	// 5. Return the new block (Copying the data from outputBlock)
 	return LMemoryBlock(outputBlock.getData(), outputBlock.getSize());
 }
 
-
-// Change return type to juce::String (as before)
 juce::String LMemoryBlock::decompressGzip()
 {
 	try
