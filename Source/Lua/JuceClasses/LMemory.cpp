@@ -90,11 +90,6 @@ LMemoryBlock::LMemoryBlock(luabind::object const& table)
 	: MemoryBlock(luaArrayTomemoryBlock(table))
 {
 }
-//LMemoryBlock::LMemoryBlock(const int initSize) : MemoryBlock((size_t)initSize, true)
-//{
-//
-//}
-
 LMemoryBlock LMemoryBlock::fromLuaTable (luabind::object const& table)
 {
 	return (luaArrayTomemoryBlock(table));
@@ -388,12 +383,12 @@ void LMemoryBlock::wrapForLua (lua_State *L)
 		class_<MemoryBlock>("JMemoryBlock")
 		,
 		class_<LMemoryBlock,bases<MemoryBlock> >("MemoryBlock")
-			.def(constructor<>())
-			.def(constructor<const size_t, bool>())
-			.def(constructor<const int>())
-			.def(constructor<const MemoryBlock&>())
-			.def(constructor<luabind::object const&>())
-			.def(constructor<const String&>())
+				.def(constructor<>())
+				.def(constructor<const size_t, bool>())
+				.def(constructor<const int>())
+				.def(constructor<const MemoryBlock&>())
+				.def(constructor<luabind::object const&>())
+				.def(constructor<const String&>())
 				.def("insertIntoTable", &LMemoryBlock::insertIntoTable)
 				.def("createFromTable", &LMemoryBlock::createFromTable)
 				.def("getByte", &LMemoryBlock::getByte)
