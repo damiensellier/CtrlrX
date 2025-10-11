@@ -43,6 +43,7 @@ class LMemoryBlock : public MemoryBlock
 		juce::String decompressGzip();
 		static LMemoryBlock fromLuaString(const juce::String& data);
 		static LMemoryBlock fromLuaString(luabind::object const& self, const juce::String& strData);
+		static LMemoryBlock fromLuaBinaryString(luabind::object const& luaString);
 };
 
 #endif

@@ -372,6 +372,15 @@ LMemoryBlock LMemoryBlock::fromLuaString(luabind::object const& self, const juce
 	// NOTE: We ignore the 'self' object and call the core static method
 	return fromLuaString(strData);
 }
+LMemoryBlock LMemoryBlock::fromLuaBinaryString(luabind::object const& luaString)
+{
+	lua_State* L = luaString.interpreter();
+	luaString.push(L);
+	size_t len;
+	const char* data = lua_tolstring(L, -1, &len);  // This gets raw bytes, no UTF-8 conversion!
+	lua_pop(L, 1);
+	return LMemoryBlock(data, len);
+}
 /************************************************************************************************/
 
 void LMemoryBlock::wrapForLua (lua_State *L)
@@ -423,7 +432,8 @@ void LMemoryBlock::wrapForLua (lua_State *L)
 				[
 					def("fromLuaTable", &LMemoryBlock::fromLuaTable),
 					def("fromLuaString", (LMemoryBlock(*)(const juce::String&)) & LMemoryBlock::fromLuaString),
-					def("fromLuaString", (LMemoryBlock(*)(luabind::object const&, const juce::String&)) & LMemoryBlock::fromLuaString)
+					def("fromLuaString", (LMemoryBlock(*)(luabind::object const&, const juce::String&)) & LMemoryBlock::fromLuaString),
+					def("fromLuaBinaryString", &LMemoryBlock::fromLuaBinaryString)
 				]
 	];
 }
