@@ -44,6 +44,7 @@ class LMemoryBlock : public MemoryBlock
 		static LMemoryBlock fromLuaString(const juce::String& data);
 		static LMemoryBlock fromLuaString(luabind::object const& self, const juce::String& strData);
 		static LMemoryBlock fromLuaBinaryString(luabind::object const& luaString);
+		static LMemoryBlock fromLuaStringToAscii(const juce::String& strData);
 };
 
 #endif

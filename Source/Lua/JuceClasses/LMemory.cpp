@@ -381,6 +381,30 @@ LMemoryBlock LMemoryBlock::fromLuaBinaryString(luabind::object const& luaString)
 	lua_pop(L, 1);
 	return LMemoryBlock(data, len);
 }
+LMemoryBlock LMemoryBlock::fromLuaStringToAscii(const juce::String& strData)
+{
+	juce::MemoryBlock mb;
+
+	// Iterate through each Unicode character in the JUCE String
+	for (int i = 0; i < strData.length(); ++i)
+	{
+		juce_wchar c = strData[i];
+		if (c >= 0x20 && c <= 0x7E)          // Printable ASCII range
+		{
+			char ascii = static_cast<char>(c);
+			mb.append(&ascii, 1);
+		}
+		else
+		{
+			// Replace illegal characters with space or '?'
+			char replacement = ' ';
+			mb.append(&replacement, 1);
+		}
+	}
+
+	return LMemoryBlock(mb);
+}
+
 /************************************************************************************************/
 
 void LMemoryBlock::wrapForLua (lua_State *L)
@@ -433,7 +457,10 @@ void LMemoryBlock::wrapForLua (lua_State *L)
 					def("fromLuaTable", &LMemoryBlock::fromLuaTable),
 					def("fromLuaString", (LMemoryBlock(*)(const juce::String&)) & LMemoryBlock::fromLuaString),
 					def("fromLuaString", (LMemoryBlock(*)(luabind::object const&, const juce::String&)) & LMemoryBlock::fromLuaString),
+					def("fromLuaStringToAscii", (LMemoryBlock(*)(const juce::String&)) & LMemoryBlock::fromLuaStringToAscii),
+					def("fromLuaStringToAscii", (LMemoryBlock(*)(luabind::object const&, const juce::String&)) & LMemoryBlock::fromLuaStringToAscii),
 					def("fromLuaBinaryString", &LMemoryBlock::fromLuaBinaryString)
+
 				]
 	];
 }
