@@ -16,134 +16,138 @@ class CtrlrLuaObjectWrapper;
 */
 class CtrlrLuaMemoryBlock
 {
-	public:
-		CtrlrLuaMemoryBlock(const MemoryBlock &other);
-		CtrlrLuaMemoryBlock();
-		CtrlrLuaMemoryBlock(const int initialSize, bool zeroData);
-		CtrlrLuaMemoryBlock(const void *dataToInitialiseFrom, int sizeInBytes);
+    public:
+        CtrlrLuaMemoryBlock(const MemoryBlock &other);
+        CtrlrLuaMemoryBlock();
+        CtrlrLuaMemoryBlock(const int initialSize, bool zeroData);
+        CtrlrLuaMemoryBlock(const void *dataToInitialiseFrom, int sizeInBytes);
 
-		/** @brief Constructor that copies data from a LUA array
+        /** @brief Constructor that copies data from a LUA array
 
-			@param initialData			LUA array to read the data from
-		*/
-		CtrlrLuaMemoryBlock(luabind::object const &initialData);
+            @param initialData            LUA array to read the data from
+        */
+        CtrlrLuaMemoryBlock(luabind::object const &initialData);
 
-		/** @brief Destructor
+        /** @brief Destructor
 
-		*/
-		~CtrlrLuaMemoryBlock();
+        */
+        ~CtrlrLuaMemoryBlock();
 
-		/** @brief Internal
+        /** @brief Internal
 
-		*/
-		static void wrapForLua(lua_State *L);
+        */
+        static void wrapForLua(lua_State *L);
 
-		/** @brief Append some data to this block
+        /** @brief Append some data to this block
 
-			@param dataToAppend		array of data to append
-		*/
-		void append(const CtrlrLuaObjectWrapper &dataToAppend);
+            @param dataToAppend        array of data to append
+        */
+        void append(const CtrlrLuaObjectWrapper &dataToAppend);
 
-		/** @brief Append a byte to the block
+        /** @brief Append a byte to the block
 
-			@param byte		the byte to append
-		*/
-		void append(const uint8 byte);
+            @param byte        the byte to append
+        */
+        void append(const uint8 byte);
 
-		/** @brief Get a range of bytes from this block as a MemoryBlock
+        /** @brief Get a range of bytes from this block as a MemoryBlock
 
-			@param startByte	starting byte
-			@param numBytes		number of bytes
-		*/
-		const CtrlrLuaMemoryBlock getRange(const int startByte, const int numBytes) const;
+            @param startByte    starting byte
+            @param numBytes        number of bytes
+        */
+        const CtrlrLuaMemoryBlock getRange(const int startByte, const int numBytes) const;
 
-		/** @brief Convert the block to a HEX string
+        /** @brief Convert the block to a HEX string
 
-			@param groupSize	byte groups
-		*/
-		const String toHexString(const int groupSize=1) const;
+            @param groupSize    byte groups
+        */
+        const String toHexString(const int groupSize=1) const;
 
-		/** @brief Get one byte from the block
+        /** @brief Get one byte from the block
 
-			@param bytePosition		byte position
-		*/
-		const int getByte(const int bytePosition) const;
+            @param bytePosition        byte position
+        */
+        const int getByte(const int bytePosition) const;
 
-		/** @brief Set one of the bytes in the block
+        /** @brief Set one of the bytes in the block
 
-			@param bytePosition		byte position
-			@param byteValue		value to set for the byte
-		*/
-		void setByte(const unsigned int bytePosition, const int byteValue);
+            @param bytePosition        byte position
+            @param byteValue        value to set for the byte
+        */
+        void setByte(const unsigned int bytePosition, const int byteValue);
 
-		/** @brief Try to read the contents of this block as a utf8 encoded string
+        /** @brief Try to read the contents of this block as a utf8 encoded string
 
-			@return the string that was read, if any
-		*/
-		const String toString ();
+            @return the string that was read, if any
+        */
+        const String toString ();
 
-		/** @brief Try to read the contents of this block as a utf8 encoded string, and remove all non-printable characers
+        /** @brief Try to read the contents of this block as a utf8 encoded string, and remove all non-printable characers
 
-			@return the string that was read, if any
-		*/
-		const String toSafeString ();
+            @return the string that was read, if any
+        */
+        const String toSafeString ();
 
-		/** @brief Get the size of the block
+        /** @brief Get the size of the block
 
-			@return size of the block
-		*/
-		const int getSize() const;
+            @return size of the block
+        */
+        const int getSize() const;
 
-		/** @brief Load data to this block using a string, the string is parsed as hex numbers seperated by spaces
+        /** @brief Load data to this block using a string, the string is parsed as hex numbers seperated by spaces
 
-		*/
-		void loadFromHexString(const String &string);
+        */
+        void loadFromHexString(const String &string);
 
-		/** @brief Copy data to this block from another one, the first paramters is another MemoryBlock
+        /** @brief Copy data to this block from another one, the first paramters is another MemoryBlock
 
-			@param	sourceData			data to copy from
-			@param	destinationOffset	offset to put the data at
-			@param	numBytes			how many bytes to copy
-		*/
-		void copyFrom (CtrlrLuaMemoryBlock &sourceData, int destinationOffset, int numBytes);
+            @param    sourceData            data to copy from
+            @param    destinationOffset    offset to put the data at
+            @param    numBytes            how many bytes to copy
+        */
+        void copyFrom (CtrlrLuaMemoryBlock &sourceData, int destinationOffset, int numBytes);
 
-		/** @brief Copy data from this block to another, the first paramters is another MemoryBlock
+        /** @brief Copy data from this block to another, the first paramters is another MemoryBlock
 
-			@param	destinationData		data to copy to
-			@param	sourceOffset		source offset where to start reading
-			@param	numBytes			how many bytes to copy
-		*/
-		void copyTo (CtrlrLuaMemoryBlock &destinationData, int sourceOffset, int numBytes);
+            @param    destinationData        data to copy to
+            @param    sourceOffset        source offset where to start reading
+            @param    numBytes            how many bytes to copy
+        */
+        void copyTo (CtrlrLuaMemoryBlock &destinationData, int sourceOffset, int numBytes);
 
-		/** @brief Inserts some data into the block. The dataToInsert pointer must not be null.
-					This block's size will be increased accordingly.
-					If the insert position lies outside the valid range of the block, it will be clipped
-					to within the range before being used.
+        /** @brief Inserts some data into the block. The dataToInsert pointer must not be null.
+                    This block's size will be increased accordingly.
+                    If the insert position lies outside the valid range of the block, it will be clipped
+                    to within the range before being used.
 
-			@param	dataToInsert		data to insert
-			@param	numBytesToInsert	number of bytes to insert
-			@param	insertPosition		position to insert the data at
-		*/
-		void insert (CtrlrLuaMemoryBlock &dataToInsert, int numBytesToInsert, int insertPosition);
+            @param    dataToInsert        data to insert
+            @param    numBytesToInsert    number of bytes to insert
+            @param    insertPosition        position to insert the data at
+        */
+        void insert (CtrlrLuaMemoryBlock &dataToInsert, int numBytesToInsert, int insertPosition);
 
-		/** @brief Chops out a section of the block.
-					This will remove a section of the memory block and close the gap around it,
-					shifting any subsequent data downwards and reducing the size of the block.
-					If the range specified goes beyond the size of the block, it will be clipped.
+        /** @brief Chops out a section of the block.
+                    This will remove a section of the memory block and close the gap around it,
+                    shifting any subsequent data downwards and reducing the size of the block.
+                    If the range specified goes beyond the size of the block, it will be clipped.
 
-			@param startByte			start removal at this byte
-			@param numBytesToRemove		remove this many bytes
-		*/
-		void removeSection (int startByte, int numBytesToRemove);
+            @param startByte            start removal at this byte
+            @param numBytesToRemove        remove this many bytes
+        */
+        void removeSection (int startByte, int numBytesToRemove);
 
-		MemoryBlock &getMemoryBlock()			{ return (mb); }
-		const MemoryBlock getCopy()				const { return (mb); }
-		void *getData()					const	{ return ((void *)mb.getData()); }
+        MemoryBlock &getMemoryBlock()            { return (mb); }
+        const MemoryBlock getCopy()                const { return (mb); }
+        void *getData()                    const    { return ((void *)mb.getData()); }
+        String decompressZlib(); // Zlib support
+        CtrlrLuaMemoryBlock compressZlib(); // Zlib support
+        String decompressGzip(); // Gzip support
+        CtrlrLuaMemoryBlock compressGzip(); // Gzip support
 
-		JUCE_LEAK_DETECTOR(CtrlrLuaMemoryBlock)
+        JUCE_LEAK_DETECTOR(CtrlrLuaMemoryBlock)
 
-	private:
-		MemoryBlock mb;
+    private:
+        MemoryBlock mb;
 };
 
 #endif

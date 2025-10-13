@@ -343,9 +343,20 @@ static const unsigned char temp_binary_data_5[] =
 "#define __CTRLR_REVISION__\r\n"
 "\r\n"
 "static const char *ctrlrRevision              \t= \"%REVISION%\";\r\n"
-"static const char *ctrlrRevisionDate        \t= \"%REVISION_DATE%\";\r\n"
 "\r\n"
-"#endif\r\n";
+"#ifdef JUCE_MAC\r\n"
+"// macOS build: Use build script-generated timestamp\r\n"
+"#ifndef BUILD_TIMESTAMP\r\n"
+"#define BUILD_TIMESTAMP \"%REVISION_DATE%\"\r\n"
+"#endif\r\n"
+"static const char *ctrlrRevisionDate      = BUILD_TIMESTAMP; // Updated v5.6.32. FIX for Xcode not updating build time properly and keeping the first build timestamp as ref\r\n"
+"\r\n"
+"#else\r\n"
+"// All other platforms: Use __TIMESTAMP__\r\n"
+"static const char *ctrlrRevisionDate      = __TIMESTAMP__;\r\n"
+"#endif\r\n"
+"\r\n"
+"#endif // __CTRLR_REVISION__\r\n";
 
 const char* CtrlrRevision_template = (const char*) temp_binary_data_5;
 
@@ -19604,7 +19615,7 @@ const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)
         case 0x002b6dac:  numBytes = 2054; return INSTALL_txt;
         case 0x5a320952:  numBytes = 1207; return LICENSE_txt;
         case 0x64791dc8:  numBytes = 7469; return README_md;
-        case 0xcb59a7d7:  numBytes = 199; return CtrlrRevision_template;
+        case 0xcb59a7d7:  numBytes = 597; return CtrlrRevision_template;
         case 0x97c5c86b:  numBytes = 97264; return FONT_60sekuntia_ttf;
         case 0x02bc5c21:  numBytes = 39104; return FONT_Computerfont_ttf;
         case 0x376753c4:  numBytes = 13028; return FONT_Digit_ttf;

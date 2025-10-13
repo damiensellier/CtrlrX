@@ -3,6 +3,7 @@
 #include "CtrlrLuaUtils.h"
 #include "CtrlrLog.h"
 #include "JuceClasses/LMemoryBlock.h"
+#include <juce_core/juce_core.h>
 
 
 /*

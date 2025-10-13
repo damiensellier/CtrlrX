@@ -441,6 +441,8 @@
                 file="Source/Lua/JuceClasses/LGlyphArrangement.h"/>
           <FILE id="Pra0Cf" name="LGraphics.cpp" compile="1" resource="0" file="Source/Lua/JuceClasses/LGraphics.cpp"/>
           <FILE id="TlUqIn" name="LGraphics.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LGraphics.h"/>
+          <FILE id="Rh67Py" name="LGZIP.cpp" compile="1" resource="0" file="Source/Lua/JuceClasses/LGZIP.cpp"/>
+          <FILE id="lYLquB" name="LGZIP.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LGZIP.h"/>
           <FILE id="gNo4bK" name="LImage.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LImage.h"/>
           <FILE id="pB6Xwb" name="LInputStream.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LInputStream.h"/>
           <FILE id="mWg58s" name="LJuce.cpp" compile="1" resource="0" file="Source/Lua/JuceClasses/LJuce.cpp"/>

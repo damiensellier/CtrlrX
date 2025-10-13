@@ -47,6 +47,8 @@ class CtrlrPanelResource : public ValueTree::Listener
 		const var &getProperty (const Identifier& name) const											{ return resourceTree.getProperty (name); }
 		const var getProperty (const Identifier& name, const var &defaultReturnValue) const				{ return resourceTree.getProperty (name, defaultReturnValue); }
 		void calculateHash();
+		InputStream* createInputStream();  // NOT std::unique_ptr   // Added for gzip support
+		const String asGzipText();// Added for gzip support
 		JUCE_LEAK_DETECTOR(CtrlrPanelResource)
 
 	private:

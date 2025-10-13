@@ -256,7 +256,7 @@ cd ~/CtrlrX/Source/Plugin
 cp -av ~/ctrlr/Source/Misc/vst2sdk/pluginterfaces .
 
 cd ~/CtrlrX/Builds/LinuxMakefile
-./build.sh # or make
+./make CONFIG=Release
 # note "make clean" to clean and recompile
 ```
 
@@ -287,7 +287,7 @@ cd ~/CtrlrX/Source/Plugin
 cp -av ~/ctrlr/Source/Misc/vst2sdk/pluginterfaces .
 
 cd ~/CtrlrX/Builds/LinuxMakefile
-./build.sh # or make
+./make CONFIG=Release
 # note "make clean" to clean and recompile
 ```
 
@@ -399,7 +399,7 @@ Tuturial coming soon.
 
 ## Changelog
 
-#### Version 5.6.34 | 2025.10.06
+#### Version 5.6.34 | 2025.10.13
 
 * **NEW** ProTools AAX plugin support (requires AAX SDK 2.8+ and codesigning via PACE)
 * **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
@@ -445,6 +445,9 @@ Tuturial coming soon.
 * **UPDATED** DEBIAN 12 and Fedora 42 build instructions. `README.md`
 * **NEW** GitHub CI/CD [Pamplejuce](https://github.com/sudara/pamplejuce) Release Workflow. Thanks to [sudara](https://github.com/sudara) & [Sgorpi](https://github.com/sgorpi)
 * **ADDED** VST3 Instance export support for Linux. Thanks to [John Goodland](https://github.com/dnaldoog).  `CtrlrLinux.cpp`
+* **ADDED** ZLIB & GZIP Support with LuaBind. Thanks to [John Goodland](https://github.com/dnaldoog)
+* **ADDED** fromLuaString(), fromLuaStringToAscii() and MemoryBlock(int) init function to memoryBlock Class with LuaBind. Thanks to [John Goodland](https://github.com/dnaldoog)
+
 
 #### Version 5.6.33 | 2025.05.28
 
