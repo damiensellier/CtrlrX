@@ -447,6 +447,7 @@ Tuturial coming soon.
 * **ADDED** VST3 Instance export support for Linux. Thanks to [John Goodland](https://github.com/dnaldoog).  `CtrlrLinux.cpp`
 * **ADDED** ZLIB & GZIP Support with LuaBind. Thanks to [John Goodland](https://github.com/dnaldoog)
 * **ADDED** fromLuaString(), fromLuaStringToAscii() and MemoryBlock(int) init function to memoryBlock Class with LuaBind. Thanks to [John Goodland](https://github.com/dnaldoog)
+* **ADDED** Commits on GitHub by [Damien Sellier](https://github.com/DamienSellier) are now verified to prove authenticity.
 
 
 #### Version 5.6.33 | 2025.05.28
