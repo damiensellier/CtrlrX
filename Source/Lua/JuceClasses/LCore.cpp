@@ -1103,6 +1103,6 @@ void LInputStream::wrapForLua (lua_State *L) // Updated v5.6.34. Thanks to @dnal
                 .def("setPosition", &InputStream::setPosition)
                 .def("isExhausted", &InputStream::isExhausted)
         ];
-	LGZIPDecompressorInputStream::wrapForLua(L);
+	//LGZIPDecompressorInputStream::wrapForLua(L);
 }
 
