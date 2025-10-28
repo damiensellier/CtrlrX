@@ -399,7 +399,7 @@ Tuturial coming soon.
 
 ## Changelog
 
-#### Version 5.6.34 | 2025.10.13
+#### Version 5.6.34 | 2025.10.27
 
 * **NEW** ProTools AAX plugin support (requires AAX SDK 2.8+ and codesigning via PACE)
 * **UPDATED** LuaBind Drawable class. `LCore.cpp`, `LGraphics.cpp`
@@ -448,7 +448,8 @@ Tuturial coming soon.
 * **ADDED** ZLIB & GZIP Support with LuaBind. Thanks to [John Goodland](https://github.com/dnaldoog)
 * **ADDED** fromLuaString(), fromLuaStringToAscii() and MemoryBlock(int) init function to memoryBlock Class with LuaBind. Thanks to [John Goodland](https://github.com/dnaldoog)
 * **ADDED** Commits on GitHub by [Damien Sellier](https://github.com/DamienSellier) are now verified to prove authenticity.
-
+* **ADDED** macOS binaries and installers by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
+* **COMING SOON** Windows binaries and installers by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
 
 #### Version 5.6.33 | 2025.05.28
 
