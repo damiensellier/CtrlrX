@@ -18,6 +18,8 @@
 #include "CtrlrPanelSchemeMigration.h"
 #include "CtrlrPanel/CtrlrPanelCanvasLayer.h" // Added v5.6.34
 
+#include <fstream> // Added v5.6.32. Required for vst3 logger
+
 typedef WeakReference <CtrlrModulator>					ModulatorReference;
 typedef WeakReference <CtrlrComponent>					ComponentReference;
 typedef std::multimap<int,ComponentReference>::iterator	RadioIterator;

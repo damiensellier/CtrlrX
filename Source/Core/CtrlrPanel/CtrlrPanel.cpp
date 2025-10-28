@@ -437,14 +437,21 @@ void CtrlrPanel::setProperty (const Identifier& name, const var &newValue, const
 }
 
 
-juce::String CtrlrPanel::getCodeSigningIdentityFromPopup()
+juce::String CtrlrPanel::getCodeSigningIdentityFromPopup() // Updated v5.6.34. FIXED The Apple certificates where not showing up properly.
 {
+    juce::String debugType = "MAC_SIGNING";
+
     juce::StringArray commandParts;
     commandParts.add("security");
     commandParts.add("find-identity");
     commandParts.add("-v");
     commandParts.add("-p");
     commandParts.add("codesigning");
+
+    // --- DEBUG: Log the command being executed ---
+    juce::String command = commandParts.joinIntoString(" ");
+    std::cout << debugType << " - Executing command: " << command << std::endl;
+    // ----------------------------------------------
 
     juce::ChildProcess childProcess;
     if (childProcess.start(commandParts))
@@ -453,62 +460,83 @@ juce::String CtrlrPanel::getCodeSigningIdentityFromPopup()
 
         if (!childProcess.isRunning())
         {
-            if (childProcess.getExitCode() == 0)
+            int exitCode = childProcess.getExitCode();
+            juce::String output = childProcess.readAllProcessOutput();
+            
+            // --- DEBUG: Log the result of the command execution ---
+            std::cout << debugType << " - Command finished. Exit Code: " << exitCode << std::endl;
+            std::cout << debugType << " - Full Combined Output (Stdout + Stderr):\n" << output << std::endl;
+            // -----------------------------------------------------
+
+            if (exitCode == 0)
             {
-                juce::String output = childProcess.readAllProcessOutput();
+                // Parsing logic
                 juce::StringArray identities;
                 juce::StringArray lines;
                 lines.addLines(output);
 
                 for (auto& line : lines)
                 {
-                    if (line.contains("identity: "))
+                    // CRITICAL FIX: Look for the opening quote which signals the start of the identity name
+                    // and ensure the line is not the summary line ("X valid identities found")
+                    if (line.contains(" \"") && line.contains(" valid identities found") == false)
                     {
+                        // The identity name is always between the first and last double quotes
                         int startIndex = line.indexOf("\"") + 1;
                         int endIndex = line.lastIndexOf("\"");
-
+                        
                         if (startIndex != -1 && endIndex != -1 && startIndex < endIndex)
                         {
                             juce::String identity = line.substring(startIndex, endIndex);
                             identities.add(identity);
+                            
+                            // --- DEBUG: Log the successfully extracted identity ---
+                            std::cout << debugType << " - Successfully extracted identity: " << identity << std::endl;
+                            // ----------------------------------------------------
                         }
                     }
                 }
-
-                std::cout << "Code signing identities:" << std::endl;
-                for (const auto& identity : identities)
+                
+                // --- DEBUG: Log found identities or warn if none were found ---
+                if (identities.isEmpty())
                 {
-                    std::cout << identity << std::endl;
+                    std::cout << debugType << " - WARNING: Parsing completed, but no identities were extracted. Full output may contain only the fallback identity." << std::endl;
+                    
+                    // Since no real identities were found, we manually add the fallback identity
+                    // This is a necessary step because the original flow expects identities to populate the menu.
+                    identities.add("Developer ID Application: Ad-HocSigning (No Certificate)");
+                    
+                    // The menu will now be populated, but we have logged the parsing failure warning.
                 }
+                else
+                {
+                    std::cout << debugType << " - Found and parsed " << identities.size() << " identities. Launching popup." << std::endl;
+                }
+                // -------------------------------------------------------------
 
                 juce::PopupMenu menu;
-                menu.addItem(1, "Developer ID Application: Ad-Hoc Signing (No Certificate)"); // Add Ad-Hoc as the first item
-
                 for (int i = 0; i < identities.size(); ++i)
                 {
-                    menu.addItem(i + 2, identities[i]); // Add real identities, offset by 1
+                    menu.addItem(i + 1, identities[i]);
                 }
 
                 int result = menu.show();
 
-                if (result == 1) // Ad-Hoc selected
+                if (result > 0)
                 {
-                    return "-";
-                }
-                else if (result > 1) // Real identity selected
-                {
-                    return identities[result - 2]; // Correct index offset
-                }
-                else
-                {
-                    juce::Result::fail("Error: No identity selected.");
-                    return "";
+                    juce::String selected = identities[result - 1];
+                    std::cout << debugType << " - Selected Identity: " << selected << std::endl;
+                    return selected;
                 }
             }
             else
             {
-                juce::Result::fail("Error: Failed to retrieve code signing identities. Error code: " + juce::String(childProcess.getExitCode()));
-                return "";
+                // In case of a non-zero exit code, show the combined output for diagnosis
+                juce::AlertWindow::showMessageBoxAsync(
+                    juce::AlertWindow::WarningIcon,
+                    "Error",
+                    "Failed to retrieve code signing identities. Error code: " + juce::String(exitCode) +
+                    "\nCombined Output:\n" + output);
             }
         }
         else
@@ -523,8 +551,7 @@ juce::String CtrlrPanel::getCodeSigningIdentityFromPopup()
         return "";
     }
 
-    juce::Result::fail("Error: Unknown Error");
-    return "";
+    return juce::String();
 }
 
 void CtrlrPanel::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChanged, const Identifier &property)
@@ -634,6 +661,7 @@ void CtrlrPanel::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChange
         }
         return; // Handled this property, no need to check other conditions below.
     }
+    // 1. Handle the button click that launches the popup
     else if (property == Ids::panelCertificateMacSelectId) // Added v5.6.32. Returns the MAC certificate ID from the popupMenu
     {
         if (getRestoreState()) // Prevent showing up the popupMenu on load
@@ -651,6 +679,24 @@ void CtrlrPanel::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChange
                 }
             }
             setProperty(property, false);
+    }
+    // 2. Handle the change to the certificate identity property (Triggers GUI refresh)
+    else if (property == Ids::panelCertificateMacId) // Added v5.6.34.
+    {
+        // This property has just been set, update the properties window immediately.
+        if (ctrlrPanelEditor)
+        {
+            // Force the properties panel to repaint/refresh its contained components
+            ctrlrPanelEditor->getPropertiesPanel()->refreshAll();
+            
+            // If you have a selection manager (getSelection()) active, sending a change
+            // message here can trigger it to recalculate its visible position or content,
+            // ensuring the view doesn't jump or break.
+            if (ctrlrPanelEditor->getSelection())
+            {
+                ctrlrPanelEditor->getSelection()->sendChangeMessage();
+            }
+        }
     }
 	else if (property == Ids::luaPanelMidiReceived)
 	{
