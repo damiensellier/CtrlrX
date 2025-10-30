@@ -29,7 +29,10 @@ defaults:
   run:
     shell: bash
 
-# jobs are run in paralell on different machines
+# -----------------------------------------------------------------
+ # START OF ALL JOBS ON DIFFERENT MACHINES
+# -----------------------------------------------------------------
+# jobs are run in parallel on different machines
 # all steps run in series
 jobs:
   build_and_test:
@@ -165,16 +168,32 @@ jobs:
           echo "STANDALONE_PATH=$ARTIFACTS_PATH/Standalone/${{ env.PRODUCT_NAME }}.app" >> $GITHUB_ENV
           echo "ARTIFACT_NAME=${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-${{ matrix.name }}" >> $GITHUB_ENV
 
+      # -----------------------------------------------------------------
+      # PLUGINVAL TEST
+      # -----------------------------------------------------------------
+      # Step 1: Run the pluginval tool
       - name: Pluginval
+        id: pluginval
         run: |
           curl -LO "https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_${{ matrix.name }}.zip"
           7z x pluginval_${{ matrix.name }}.zip
           ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}"
-          
+
+      # Step 2: Track pluginval status
+      - name: Track Pluginval Status
+        if: always()
+        run: |
+          # Check the status of the PREVIOUS step: 'Pluginval'
+          if [ "${{ steps.pluginval.outcome }}" == "success" ]; then
+            echo "PLUGINVAL_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "PLUGINVAL_STATUS=failure" >> $GITHUB_ENV
+          fi
+
       # -----------------------------------------------------------------
       # APPLE CODESIGNING STEPS
       # -----------------------------------------------------------------
-      # Step 1: Import Merged Developer ID Certificates (This is confirmed working)
+      # Step 1: Import Merged Developer ID Certificates
       - name: Import Merged Developer ID Certificates
         if: ${{ matrix.name == 'macOS' }}
         uses: apple-actions/import-codesign-certs@v3
@@ -185,8 +204,8 @@ jobs:
           create-keychain: true 
           keychain: signing_temp
 
-      # Step 2: Final Keychain Configuration (Bypass all trust anchor imports)
-      - name: Final Keychain Configuration (Bypass Trust Anchor Import)
+      # Step 2: Final Keychain Configuration
+      - name: Final Keychain Configuration
         if: ${{ matrix.name == 'macOS' }}
         run: |
           KEYCHAIN_NAME="signing_temp"
@@ -197,6 +216,7 @@ jobs:
 
       # Step 3: Diagnostic and Codesign (The identity name is corrected here)
       - name: Codesign (macOS)
+        id: macos-codesign
         if: ${{ matrix.name == 'macOS' }}
         run: |
           APP_IDENTITY="${{ secrets.DEVELOPER_ID_APPLICATION }}"
@@ -210,17 +230,31 @@ jobs:
           codesign --force -s "$APP_IDENTITY" -v "${{ env.VST3_PATH }}" --deep --strict --options=runtime --timestamp
           # AU
           codesign --force -s "$APP_IDENTITY" -v "${{ env.AU_PATH }}" --deep --strict --options=runtime --timestamp
-    
+
           # CLAP (Added file existence check to prevent previous failure)
           if [ -f "${{ env.CLAP_PATH }}" ]; then
             codesign --force -s "$APP_IDENTITY" -v "${{ env.CLAP_PATH }}" --deep --strict --options=runtime --timestamp
           else
             echo "Skipping CLAP codesign: ${{ env.CLAP_PATH }} not found."
           fi
-    
+
           # Standalone
           codesign --force -s "$APP_IDENTITY" -v "${{ env.STANDALONE_PATH }}" --deep --strict --options=runtime --timestamp
-    
+
+      # Step 4: Track macOS Codesigning Status
+      - name: Track macOS Codesigning Status
+        if: ${{ always() && matrix.name == 'macOS' }}
+        run: |
+          if [ "${{ steps.macos-codesign.outcome }}" == "success" ]; then
+            echo "MACOS_SIGNING_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "MACOS_SIGNING_STATUS=failure" >> $GITHUB_ENV
+          fi
+
+      # -----------------------------------------------------------------
+      # APPLE ADDING CUSTOM ICONS
+      # -----------------------------------------------------------------
+                    
       - name: Add Custom Icons (macOS)
         if: ${{ matrix.name == 'macOS' }}
         run: |
@@ -244,6 +278,7 @@ jobs:
       # NEW STEP 1: Signed Packaging and Notarization (Full Process)
       # -----------------------------------------------------------------
       - name: Signed Packaging and Notarization (macOS)
+        id: signed-packaging-and-notarization
         if: ${{ matrix.name == 'macOS' && env.HAVE_DEV_ID_APP_CERT == 'true' && env.HAVE_DEV_ID_INSTALLER_CERT == 'true' }}
         timeout-minutes: 5
         run: |
@@ -264,6 +299,18 @@ jobs:
           # Notarization and Stapling
           xcrun notarytool submit "${{ env.ARTIFACT_NAME }}.pkg" --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --password ${{ secrets.NOTARIZATION_PASSWORD }} --team-id ${{ secrets.TEAM_ID }} --wait
           xcrun stapler staple "${{ env.ARTIFACT_NAME }}.pkg"
+          
+      # Step 5: Track macOS Notarization Status
+      - name: Track macOS Notarization Status
+        if: ${{ always() && matrix.name == 'macOS' }}
+        run: |
+          # The 'Signed Packaging and Notarization (macOS)' step contains the notarization
+          # If that step succeeded, we assume notarization and stapling succeeded.
+          if [ "${{ steps.signed-packaging-and-notarization.outcome }}" == "success" ]; then
+            echo "MACOS_NOTARIZED_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "MACOS_NOTARIZED_STATUS=failure" >> $GITHUB_ENV
+          fi
 
       # -----------------------------------------------------------------
       # NEW STEP 2: Unsigned Packaging (Fallback)
@@ -286,7 +333,7 @@ jobs:
           envsubst < ./Mac/distribution.xml.template > distribution.xml
           # UNSIGNED productbuild command (NO --sign or --timestamp)
           productbuild --resources ./resources --distribution distribution.xml "${{ env.ARTIFACT_NAME }}.pkg"
-          
+
       - name: Zip (Linux)
         if: ${{ matrix.name == 'Linux' }}
         working-directory: ${{ env.ARTIFACTS_PATH }}
@@ -299,6 +346,10 @@ jobs:
           find -iname "*.exe"
           mv "Packaging/Windows/Output/${{ env.ARTIFACT_NAME }}.exe" "${{ env.ARTIFACTS_PATH }}/"
 
+      # -----------------------------------------------------------------
+      # AZURE CODESIGNING STEP
+      # -----------------------------------------------------------------
+      # Step 1: Codesign with Azure Trusted Signing
       - name: Codesign with Azure Trusted Signing (Windows)
         if: ${{ matrix.name == 'Windows' && env.HAVE_AZURE_CLIENT_SECRET == 'true' }}
         uses: azure/trusted-signing-action@v0.5.1
@@ -325,6 +376,16 @@ jobs:
           files-folder: ${{ env.ARTIFACTS_PATH }}
           files-folder-filter: exe
 
+      # Step 2: Track Azure Signing Status
+      - name: Track Azure Signing Status
+        if: ${{ always() && matrix.name == 'Windows' }}
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "AZURE_SIGNING_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "AZURE_SIGNING_STATUS=failure" >> $GITHUB_ENV
+          fi
+          
       - name: Upload Exe (Windows)
         if: ${{ matrix.name == 'Windows' }}
         uses: actions/upload-artifact@v4
@@ -351,14 +412,44 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: ${{ failure() && (github.event_name == 'workflow_dispatch' && inputs.debug_enabled) || (runner.debug) }}
 
+      # -----------------------------------------------------------------
+      # CREATE STATUS ARTIFACT
+      # -----------------------------------------------------------------
+      - name: Create Status Artifact
+        run: |
+          # Use job.status to capture the overall job result
+          echo "BUILD_STATUS_${{ matrix.name }}=${{ job.status }}" > build_status.txt
+          echo "PLUGINVAL_STATUS=${{ env.PLUGINVAL_STATUS }}" >> build_status.txt
 
-  release:
-    if: contains(github.ref, 'tags/v')
+          # --- macOS ONLY STATUSES ---
+          if [ "${{ matrix.name }}" == "macOS" ]; then
+            echo "MACOS_SIGNING_STATUS=${{ env.MACOS_SIGNING_STATUS }}" >> build_status.txt
+            echo "MACOS_NOTARIZED_STATUS=${{ env.MACOS_NOTARIZED_STATUS }}" >> build_status.txt
+          fi
+
+          # --- Windows ONLY STATUSES ---
+          if [ "${{ matrix.name }}" == "Windows" ]; then
+            echo "AZURE_SIGNING_STATUS=${{ env.AZURE_SIGNING_STATUS }}" >> build_status.txt
+          fi
+          cat build_status.txt
+
+      - name: Upload Status Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-statuses-${{ matrix.name }}
+          path: build_status.txt
+
+      # -----------------------------------------------------------------
+      # END OF ALL MATRIX-SPECIFIC BUILD AND TEST STEPS
+      # START OF ALL README FILE UPDATE WITH BADGES STEPS
+      # -----------------------------------------------------------------
+
+  update_readme_badges:
     runs-on: ubuntu-latest
     needs: build_and_test
 
     steps:
-      - name: Get Readme
+      - name: Get Readme and VERSION content
         uses: actions/checkout@v4
         # (sparse) checkout needs to happen before getting artifacts, as it will 'clean' the directory.
         with:
@@ -366,27 +457,199 @@ jobs:
             README.md
             VERSION
           sparse-checkout-cone-mode: false
-
+          
+      - name: Read VERSION into Environment
+        id: read_version
+        run: |
+          # Reads the content of the VERSION file and sets it as an environment variable
+          VERSION_NUMBER=$(cat VERSION | tr -d '\n')
+          echo "VERSION=$VERSION_NUMBER" >> $GITHUB_ENV
+          echo "Set VERSION to: $VERSION_NUMBER"
+          
       - name: Get Artifacts
         uses: actions/download-artifact@v4
-  
-      - name: Compose release notes
-        # Extract the first sub section after '## Changelog' until the next subsection from the README
+        with:
+          path: build-statuses/ # This directory will now contain three subdirectories
+ 
+      - name: Set Badge Statuses from Artifact
+        id: set_statuses
         run: |
-          set +e  # ignore failures
+          find build-statuses/ -name "build_status.txt" -print0 | while IFS= read -r -d $'\0' status_file; do
+            PLATFORM=$(basename "$(dirname "$status_file")" | sed 's/build-statuses-//')
+            echo "Processing status for $PLATFORM"
+
+            # Load all variables from the artifact file into memory
+            source "$status_file"
+
+            # Now map the specific variables to the required format for the badge function
+            if [ "$PLATFORM" == "macOS" ]; then
+              echo "PLATFORM_macOS_PLUGINVAL_STATUS=$PLUGINVAL_STATUS" >> $GITHUB_ENV
+              # Only map macOS signing/notarization for macOS platform
+              echo "PLATFORM_macOS_CODESIGN_STATUS=$MACOS_SIGNING_STATUS" >> $GITHUB_ENV
+              echo "PLATFORM_macOS_NOTARIZED_STATUS=$MACOS_NOTARIZED_STATUS" >> $GITHUB_ENV
+            elif [ "$PLATFORM" == "Windows" ]; then
+              echo "PLATFORM_Windows_PLUGINVAL_STATUS=$PLUGINVAL_STATUS" >> $GITHUB_ENV
+              # Only map Azure signing for Windows platform
+              echo "PLATFORM_Windows_CODESIGN_STATUS=$AZURE_SIGNING_STATUS" >> $GITHUB_ENV
+            elif [ "$PLATFORM" == "Linux" ]; then
+              echo "PLATFORM_Linux_PLUGINVAL_STATUS=$PLUGINVAL_STATUS" >> $GITHUB_ENV
+            fi
+          done
+
+      - name: Generate Shields.io Badges
+        run: |
+          # Function to generate badge markdown for tracked statuses
+          generate_tracked_badge() {
+            local platform_label=$1 # e.g., macOS
+            local sub_label=$2 # e.g., Codesign
+            local env_var=$3
+            local status="${!env_var}"
+            local color="inactive"
+            # Use the full, readable label for the display: "macOS Pluginval"
+            local full_label="${platform_label} ${sub_label}" 
+             # URL-encoded label: "macOS%20Pluginval"
+            local url_label=$(echo "$full_label" | sed 's/ /%20/g') 
+            local message="N%2FA" # Default to N/A
+
+            if [ "$status" == "success" ]; then
+              color="brightgreen"
+              message="PASSED"
+            elif [ "$status" == "failure" ]; then
+              color="red"
+              message="FAILED"
+            fi
+             # Fixes the missing label in the badge URL
+            echo "[![${full_label} Status](https://img.shields.io/badge/${url_label}-${message}-${color}?style=flat&logo=github)]()"
+          }
+
+          # --- 1. CONSOLIDATE AND FORMAT ALL DYNAMIC BADGES INTO A FILE ---
+          ALL_BADGE_CONTENT_FILE="all_badges_content.txt"
+
+          # COMMON BADGES (Last Updated)
+          LAST_UPDATED_DATE=$(date +"%Y--%m--%d")
+          echo "[![Last Updated](https://img.shields.io/badge/Last%20Updated-${LAST_UPDATED_DATE}-blue?style=flat)]()" > "$ALL_BADGE_CONTENT_FILE"
+          echo "" >> "$ALL_BADGE_CONTENT_FILE"
+          echo "### Build and Validation Status" >> "$ALL_BADGE_CONTENT_FILE"
+          echo "" >> "$ALL_BADGE_CONTENT_FILE"
+
+          # MACOS BADGES
+          MACOS_BUILD_BADGE='[![macOS Build](https://github.com/damiensellier/CtrlrX/actions/workflows/build_and_test.yml/badge.svg?branch=${{ github.ref_name }}&job=macOS)](https://github.com/damiensellier/CtrlrX/actions/workflows/build_and_test.yml)'
+             # Updated to use 'Apple Codesign' as the sub-label
+          MACOS_CODESIGN_BADGE=$(generate_tracked_badge "macOS" "Apple Codesign" "PLATFORM_macOS_CODESIGN_STATUS")
+             # Updated to use 'Notarized' as the sub-label
+          MACOS_NOTARIZED_BADGE=$(generate_tracked_badge "macOS" "Notarized" "PLATFORM_macOS_NOTARIZED_STATUS")
+             # Updated to use 'Pluginval' as the sub-label
+          MACOS_PLUGINVAL_BADGE=$(generate_tracked_badge "macOS" "Pluginval" "PLATFORM_macOS_PLUGINVAL_STATUS")
+             # Added a newline after the macOS badge group
+          echo "$MACOS_BUILD_BADGE $MACOS_CODESIGN_BADGE $MACOS_NOTARIZED_BADGE $MACOS_PLUGINVAL_BADGE" >> "$ALL_BADGE_CONTENT_FILE"
+          echo "" >> "$ALL_BADGE_CONTENT_FILE" 
+
+          # WINDOWS BADGES
+          WINDOWS_BUILD_BADGE='[![Windows Build](https://github.com/damiensellier/CtrlrX/actions/workflows/build_and_test.yml/badge.svg?branch=${{ github.ref_name }}&job=Windows)](https://github.com/damiensellier/CtrlrX/actions/workflows/build_and_test.yml)'
+             # Updated to use 'Azure Codesign' as the sub-label
+          WINDOWS_CODESIGN_BADGE=$(generate_tracked_badge "Windows" "Azure Codesign" "PLATFORM_Windows_CODESIGN_STATUS")
+             # Updated to use 'Pluginval' as the sub-label
+          WINDOWS_PLUGINVAL_BADGE=$(generate_tracked_badge "Windows" "Pluginval" "PLATFORM_Windows_PLUGINVAL_STATUS")
+             # Added a newline after the Windows badge group
+          echo "$WINDOWS_BUILD_BADGE $WINDOWS_CODESIGN_BADGE $WINDOWS_PLUGINVAL_BADGE" >> "$ALL_BADGE_CONTENT_FILE"
+          echo "" >> "$ALL_BADGE_CONTENT_FILE" 
+
+          # LINUX BADGES
+          LINUX_BUILD_BADGE='[![Linux Build](https://github.com/damiensellier/CtrlrX/actions/workflows/build_and_test.yml/badge.svg?branch=${{ github.ref_name }}&job=Linux)](https://github.com/damiensellier/CtrlrX/actions/workflows/build_and_test.yml)'
+             # Updated to use 'Pluginval' as the sub-label
+          LINUX_PLUGINVAL_BADGE=$(generate_tracked_badge "Linux" "Pluginval" "PLATFORM_Linux_PLUGINVAL_STATUS")
+          echo "$LINUX_BUILD_BADGE $LINUX_PLUGINVAL_BADGE" >> "$ALL_BADGE_CONTENT_FILE"
+
+          echo "**" >> "$ALL_BADGE_CONTENT_FILE"
+          
+          # Print for diagnostic
+          cat "$ALL_BADGE_CONTENT_FILE"
+
+      - name: Insert Badges into README.md
+        run: |
+          # The multi-line badge content is in 'all_badges_content.txt'
+
+          # 1. Define the start and end markers
+          START_MARKER='**'
+          END_MARKER='## Table of Contents' # Use the static header as the end anchor
+
+          # 2. Extract content BEFORE the badge block, up to and including the original START_MARKER
+             # If the START_MARKER is missing, we re-add it before the new content.
+          sed -n '1,/'"$START_MARKER"'/p' README.md > temp_readme.md
+
+             # Check if the START_MARKER was found. If not, the file is currently missing the markers.
+             # In this case, we need to create a new START_MARKER before the badge content.
+             # If the content is currently missing the markers (like your case):
+          if ! grep -q "$START_MARKER" temp_readme.md; then
+                 # Fallback: Find the line *before* the badge content and insert START_MARKER
+                 # For now, let's just make sure the new content starts with the marker.
+              echo "$START_MARKER" > start_marker.txt
+              cat start_marker.txt all_badges_content.txt > final_badges_content.txt
+          else
+                 # If the marker was found, the output of sed already contains it.
+              cat all_badges_content.txt >> temp_readme.md
+              mv temp_readme.md final_badges_content.txt
+          fi
+             
+             # 3. Use the Table of Contents as the stable END anchor
+             # Find the line number of the Table of Contents
+          TOC_LINE_NO=$(grep -n "$END_MARKER" README.md | cut -d: -f1)
+             # Extract content AFTER the badge block (starting from the TOC line)
+          tail -n +$TOC_LINE_NO README.md >> final_badges_content.txt
+
+          # 4. Overwrite the old README
+          mv final_badges_content.txt README.md
+
+          # 6. Commit the updated README.md
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add README.md
+          git commit -m "${{ env.VERSION }} UPDATED Status Badges [skip ci]" || echo "No changes to commit"
+          git push
+
+      # -----------------------------------------------------------------
+      # END OF ALL README FILE UPDATE WITH BADGES STEPS
+      # START OF ALL RELEASE CREATION STEPS
+      # -----------------------------------------------------------------
+      
+  create_release:
+    if: contains(github.ref, 'tags/v') # Condition KEPT to only run on tags
+    runs-on: ubuntu-latest
+    # Now depends on both build and the badge update to ensure release notes are ready
+    needs: [build_and_test, update_readme_badges] 
+
+    steps:
+      # 1. Checkout README (for release notes)
+      # We re-checkout the README here because it might have been updated by the previous job
+      - name: Get Readme
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            README.md
+            VERSION
+          sparse-checkout-cone-mode: false
+        
+      # 2. Download ALL artifacts from the build_and_test job
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+
+      # 3. Compose release notes (using the just-checked-out README)
+      - name: Compose release notes
+        run: |
+          set +e
           echo '![alt text](/Source/Resources/Icons/CtrlrX-README-250x315.png?raw=true "CtrlrX")' > release_notes.txt
           echo -e "\n# CtrlrX ${GITHUB_REF_NAME} - Changelog" >> release_notes.txt
+          # The sed command should work on the checked-out README.md
           sed '0,/^## Changelog/d; 0,/^##/d; /##/,$d' README.md >> release_notes.txt
           cat release_notes.txt
 
+      # 4. Create Release
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           body_path: release_notes.txt
           prerelease: true
-          # download-artifact puts these files in their own dirs...
-          # Using globs sidesteps having to pass the version around
           files: |
-            */*.exe
-            */*.zip
-            */*.dmg
+            CtrlrX-*.exe/*.exe
+            CtrlrX-*.zip/*.zip
+            CtrlrX-*.pkg/*.pkg
