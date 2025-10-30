@@ -1,8 +1,15 @@
 ![alt text](/Source/Resources/Icons/CtrlrX-README-250x315.png?raw=true "CtrlrX")
 
-**
-**
+[![Last Updated](https://img.shields.io/badge/Last%20Updated-2025--10--30-blue?style=flat)]()
 
+### Build and Validation Status
+
+[![macOS Build](https://github.com/damiensellier/CtrlrX/actions/workflows/build_and_test.yml/badge.svg?branch=5.6.34-Maintenance-Apple-Codesign-Status-Badges&job=macOS)](https://github.com/damiensellier/CtrlrX/actions/workflows/build_and_test.yml) [![macOS Apple Codesign Status](https://img.shields.io/badge/macOS%20Apple%20Codesign-PASSED-brightgreen?style=flat&logo=github)]() [![macOS Notarized Status](https://img.shields.io/badge/macOS%20Notarized-PASSED-brightgreen?style=flat&logo=github)]() [![macOS Pluginval Status](https://img.shields.io/badge/macOS%20Pluginval-PASSED-brightgreen?style=flat&logo=github)]()
+
+[![Windows Build](https://github.com/damiensellier/CtrlrX/actions/workflows/build_and_test.yml/badge.svg?branch=5.6.34-Maintenance-Apple-Codesign-Status-Badges&job=Windows)](https://github.com/damiensellier/CtrlrX/actions/workflows/build_and_test.yml) [![Windows Azure Codesign Status](https://img.shields.io/badge/Windows%20Azure%20Codesign-PASSED-brightgreen?style=flat&logo=github)]() [![Windows Pluginval Status](https://img.shields.io/badge/Windows%20Pluginval-PASSED-brightgreen?style=flat&logo=github)]()
+
+[![Linux Build](https://github.com/damiensellier/CtrlrX/actions/workflows/build_and_test.yml/badge.svg?branch=5.6.34-Maintenance-Apple-Codesign-Status-Badges&job=Linux)](https://github.com/damiensellier/CtrlrX/actions/workflows/build_and_test.yml) [![Linux Pluginval Status](https://img.shields.io/badge/Linux%20Pluginval-PASSED-brightgreen?style=flat&logo=github)]()
+**
 ## Table of Contents
 * [About CtrlrX](#about-ctrlrx)
 * [Donations](#donations)
