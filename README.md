@@ -451,6 +451,7 @@ Tuturial coming soon.
 * **ADDED** macOS binaries and installers by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
 * **COMING SOON** Windows binaries and installers by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
 
+
 #### Version 5.6.33 | 2025.05.28
 
 * **FIXED** VST3 Host>CtrlrX interface. Sliders now react to Host automations of parameter values. Related Modulators send MIDI output messages. `CtrlrProcessor.cpp` & `CtrlrProcessor.h`, `CtrlrModulator.cpp` & `CtrlrModulator.h`, `CtrlrModulatorProcessor.cpp` & `CtrlrModulatorProcessor.h`
