@@ -449,7 +449,7 @@ Tuturial coming soon.
 * **ADDED** fromLuaString(), fromLuaStringToAscii() and MemoryBlock(int) init function to memoryBlock Class with LuaBind. Thanks to [John Goodland](https://github.com/dnaldoog)
 * **ADDED** Commits on GitHub by [Damien Sellier](https://github.com/DamienSellier) are now verified to prove authenticity.
 * **ADDED** macOS binaries and installers by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
-* **COMING SOON** Windows binaries and installers by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
+* **ADDED** Windows binaries and installers by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
 
 #### Version 5.6.33 | 2025.05.28
 
