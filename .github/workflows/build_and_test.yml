@@ -307,6 +307,9 @@ jobs:
         if: ${{ matrix.name == 'Windows' && env.HAVE_AZURE_CLIENT_SECRET == 'true' }}
         uses: azure/trusted-signing-action@v0.5.1
         with:
+        
+          # NOTE : Your Azure Trusted Signing Account also requires the "Trusted Signing Certificate Profile Signer" role.
+
           # The Azure Active Directory tenant (directory) ID.
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
 
