@@ -29,7 +29,7 @@ defaults:
   run:
     shell: bash
 
-# jobs are run in paralell on different machines
+# jobs are run in parallel on different machines
 # all steps run in series
 jobs:
   build_and_test:
@@ -241,7 +241,7 @@ jobs:
           # SetFile -a C "${{ env.CLAP_PATH }}"
 
       # -----------------------------------------------------------------
-      # NEW STEP 1: Signed Packaging and Notarization (Full Process)
+      # STEP 1: Signed Packaging and Notarization (Full Process)
       # -----------------------------------------------------------------
       - name: Signed Packaging and Notarization (macOS)
         if: ${{ matrix.name == 'macOS' && env.HAVE_DEV_ID_APP_CERT == 'true' && env.HAVE_DEV_ID_INSTALLER_CERT == 'true' }}
@@ -266,7 +266,7 @@ jobs:
           xcrun stapler staple "${{ env.ARTIFACT_NAME }}.pkg"
 
       # -----------------------------------------------------------------
-      # NEW STEP 2: Unsigned Packaging (Fallback)
+      # STEP 2: Unsigned Packaging (Fallback)
       # -----------------------------------------------------------------
       - name: Unsigned Packaging (macOS)
         if: ${{ matrix.name == 'macOS' && (env.HAVE_DEV_ID_APP_CERT != 'true' || env.HAVE_DEV_ID_INSTALLER_CERT != 'true') }}
@@ -292,18 +292,11 @@ jobs:
         working-directory: ${{ env.ARTIFACTS_PATH }}
         run: 7z a -tzip "${{ env.ARTIFACT_NAME }}.zip" "-xr!lib${{ env.PRODUCT_NAME }}_SharedCode.a" .
 
-      - name: Generate Installer (Windows)
-        if: ${{ matrix.name == 'Windows' }}
-        run: |
-          iscc "Packaging\Windows\installer.iss"
-          find -iname "*.exe"
-          mv "Packaging/Windows/Output/${{ env.ARTIFACT_NAME }}.exe" "${{ env.ARTIFACTS_PATH }}/"
-
       # -----------------------------------------------------------------
-      # WINDOWS AZURE CODESIGNING STEPS
+      # WINDOWS AZURE CODESIGNING STEP 1 (STANDALONE .EXE & .VST3)
       # -----------------------------------------------------------------
       
-      - name: Codesign with Azure Trusted Signing (Windows)
+      - name: Codesign with Azure Trusted Signing (Windows Plugins .EXE & .VST3)
         if: ${{ matrix.name == 'Windows' && env.HAVE_AZURE_CLIENT_SECRET == 'true' }}
         uses: azure/trusted-signing-action@v0.5.1
         with:
@@ -336,6 +329,55 @@ jobs:
 
           # Enable recursive search (The correct parameter)
           files-folder-recurse: true
+
+      # -----------------------------------------------------------------
+      # WINDOWS INSTALL .EXE
+      # -----------------------------------------------------------------
+
+      - name: Generate Installer (Windows)
+        if: ${{ matrix.name == 'Windows' }}
+        run: |
+          iscc "Packaging\Windows\installer.iss"
+          find -iname "*.exe"
+          mv "Packaging/Windows/Output/${{ env.ARTIFACT_NAME }}.exe" "${{ env.ARTIFACTS_PATH }}/"
+
+      # -----------------------------------------------------------------
+      # WINDOWS AZURE CODESIGNING STEP 2 (INSTALL .EXE)
+      # -----------------------------------------------------------------
+      
+      - name: Codesign with Azure Trusted Signing (Windows Installer)
+        if: ${{ matrix.name == 'Windows' && env.HAVE_AZURE_CLIENT_SECRET == 'true' }}
+        uses: azure/trusted-signing-action@v0.5.1
+        with:
+        
+          # NOTE : Your Azure Trusted Signing Account also requires the "Trusted Signing Certificate Profile Signer" role.
+
+          # The Azure Active Directory tenant (directory) ID.
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+
+          # The client (application) ID of an App Registration in the tenant.
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+
+          # A client secret that was generated for the App Registration.
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+          # The Code Signing Account endpoint. The URI value must have a URI that aligns to the region your Code Signing Account and Certificate Profile you are specifying were created in during the setup of these resources.
+          endpoint: ${{ secrets.AZURE_ENDPOINT }}
+
+          # The Code Signing Account name.
+          trusted-signing-account-name: ${{ secrets.AZURE_CODE_SIGNING_NAME }}
+
+          # The Certificate Profile name.
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE_NAME }}
+
+          # Target: ONLY the final installer EXE
+          files-folder: ${{ env.ARTIFACTS_PATH }}
+          files-folder-filter: "${{ env.ARTIFACT_NAME }}.exe"
+          files-folder-recurse: false # Do not recurse, just look in the main folder
+
+      # -----------------------------------------------------------------
+      # UPLOAD ARTEFACTS
+      # -----------------------------------------------------------------
 
       - name: Upload Exe (Windows)
         if: ${{ matrix.name == 'Windows' }}
