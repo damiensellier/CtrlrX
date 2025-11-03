@@ -299,6 +299,10 @@ jobs:
           find -iname "*.exe"
           mv "Packaging/Windows/Output/${{ env.ARTIFACT_NAME }}.exe" "${{ env.ARTIFACTS_PATH }}/"
 
+      # -----------------------------------------------------------------
+      # WINDOWS AZURE CODESIGNING STEPS
+      # -----------------------------------------------------------------
+      
       - name: Codesign with Azure Trusted Signing (Windows)
         if: ${{ matrix.name == 'Windows' && env.HAVE_AZURE_CLIENT_SECRET == 'true' }}
         uses: azure/trusted-signing-action@v0.5.1
@@ -323,7 +327,12 @@ jobs:
 
           # This signs all exes inside the folder
           files-folder: ${{ env.ARTIFACTS_PATH }}
-          files-folder-filter: exe
+
+          # Filter for the required file type
+          files-folder-filter: exe,dll,vst3
+
+          # Enable recursive search (The correct parameter)
+          **files-folder-recurse: true**
 
       - name: Upload Exe (Windows)
         if: ${{ matrix.name == 'Windows' }}
@@ -389,4 +398,4 @@ jobs:
           files: |
             */*.exe
             */*.zip
-            */*.dmg
+            */*.pkg
