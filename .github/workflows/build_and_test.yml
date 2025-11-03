@@ -332,7 +332,7 @@ jobs:
           files-folder-filter: exe,dll,vst3
 
           # Enable recursive search (The correct parameter)
-          **files-folder-recurse: true**
+          files-folder-recurse: true
 
       - name: Upload Exe (Windows)
         if: ${{ matrix.name == 'Windows' }}
