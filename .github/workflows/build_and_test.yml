@@ -325,8 +325,12 @@ jobs:
                     
       - name: Zip (Linux)
         if: ${{ matrix.name == 'Linux' }}
-        working-directory: ${{ env.ARTIFACTS_PATH }}
-        run: 7z a -tzip "${{ env.ARTIFACT_NAME }}.zip" "-xr!lib${{ env.PRODUCT_NAME }}_SharedCode.a" .
+        # REMOVED: working-directory: ${{ env.ARTIFACTS_PATH }}
+        # Now use explicit paths relative to the current working directory (repo root)
+        run: |
+          7z a -tzip "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.zip" \
+            "-xr!libCtrlrX_SharedCode.a" \
+            "${{ env.ARTIFACTS_PATH }}/*"
 
       # -----------------------------------------------------------------
       # WINDOWS AZURE CODESIGNING STEP 1 (STANDALONE .EXE & .VST3)

@@ -450,6 +450,7 @@ Tuturial coming soon.
 * **ADDED** Commits on GitHub by [Damien Sellier](https://github.com/DamienSellier) are now verified to prove authenticity.
 * **ADDED** macOS binaries and installers by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
 * **ADDED** Windows binaries and installers by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
+* **ADDED** LINUX binaries by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
 
 #### Version 5.6.33 | 2025.05.28
 
