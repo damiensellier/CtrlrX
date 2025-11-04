@@ -432,8 +432,8 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}.zip
           path: |
-            "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.zip"
-            "${{ env.ARTIFACTS_PATH }}/Standalone/${{ env.PRODUCT_NAME }}.sig"
+            ${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.zip
+            ${{ env.ARTIFACTS_PATH }}/Standalone/${{ env.PRODUCT_NAME }}.sig
 
       - name: Upload pkg (macOS)
         if: ${{ matrix.name == 'macOS' }}
