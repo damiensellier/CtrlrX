@@ -449,7 +449,7 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}.zip
           path: |
-            ${{ env.ARTIFACT_NAME }}.zip
+            ${{ github.workspace }}/${{ env.ARTIFACT_NAME }}.zip
 
       - name: Upload pkg (macOS)
         if: ${{ matrix.name == 'macOS' }}
