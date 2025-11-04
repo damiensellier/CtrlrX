@@ -340,7 +340,7 @@ jobs:
           cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}.sig" tmp_linux_archive/
 
           # CRITICAL FIX: Copy VST3 from its correct, separate VST3 folder (using the VST3_PATH env var)
-          cp "${{ env.VST3_PATH }}" tmp_linux_archive/
+          cp -r "${{ env.VST3_PATH }}" tmp_linux_archive/
 
           # 3. Change into the temporary directory
           cd tmp_linux_archive
@@ -452,7 +452,7 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}.zip
           path: |
-            {{ env.ARTIFACT_NAME }}.zip
+            ${{ env.ARTIFACT_NAME }}.zip
 
       - name: Upload pkg (macOS)
         if: ${{ matrix.name == 'macOS' }}
