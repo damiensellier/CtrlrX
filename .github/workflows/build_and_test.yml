@@ -324,6 +324,7 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
                     
       - name: Zip (Linux)
+        if: ${{ matrix.name == 'Linux' }}
         id: create_archive
         shell: bash
         run: |
