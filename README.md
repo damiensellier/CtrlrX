@@ -14,6 +14,11 @@
   * [Crucial Note for Commercial Distribution & App Store Submission of AU & AUv3 Plugins](#crucial-note-for-commercial-distribution--app-store-submission-of-au--auv3-plugins-including-those-based-on-this-project)
   * [VST3 Plugin-Specific Licensing & Steinberg SDK Terms](#vst3-plugin-specific-licensing--steinberg-sdk-terms)
   * [Crucial Note for Commercial Distribution of VST3 Plugins](#crucial-note-for-commercial-distribution-of-VST3-plugins-including-those-based-on-this-project)
+* [Installing CtrlrX](#installing-ctrlrx)
+  * [Windows](#windows)
+  * [macOS](#macos)
+  * [Linux](#linux)
+    * [Linux Signature Verification (GPG)](#linux-signature-verification-gpg)
 * [Compiling CtrlrX](#compiling-ctrlrx)
   * [Windows](#windows)
   * [macOS](#macos)
@@ -174,6 +179,59 @@ If you intend to commercially release a third-party plugin based on this project
 
 For detailed information on VST3 licensing, please refer to the official Steinberg VST 3 Licensing page:
 [https://steinbergmedia.github.io/vst3_dev_portal/pages/VST+3+Licensing/Index.html](https://steinbergmedia.github.io/vst3_dev_portal/pages/VST+3+Licensing/Index.html)
+
+---
+
+## Installing CtrlrX
+
+This section provides instructions on how to install CtrlrX on your computer.
+
+### Windows
+
+### macOS
+
+### Linux
+
+#### Linux Signature Verification (GPG)
+For security and integrity, you can verify the downloaded files using the detached **GPG signature (`.sig`)** file included in the release. This ensures the files have not been tampered with since they were signed.
+
+##### Prerequisites
+
+You must have **GnuPG** (often just `gpg`) installed on your system.
+
+##### 1. Import the Public Signing Key
+
+The files are signed with the **CtrlrX Project Key** (`FC9F02DE24F1BC96`). Fetch this key from a public keyserver:
+
+```bash
+gpg --keyserver hkps://keys.openpgp.org --recv-keys FC9F02DE24F1BC96
+```
+
+##### 2. Extract and Verify
+
+Download the main `CtrlrX-X.X.X-Linux.zip` file, which contains both the binary (e.g., `CtrlrX`) and the signature file (e.g., `CtrlrX.sig`).
+
+1.  Extract the archive:
+    ```bash
+    unzip CtrlrX-*.zip
+    # Navigate to the folder containing the binary and .sig file
+    ```
+
+2.  Run the verification command:
+
+    ```bash
+    gpg --verify CtrlrX.sig CtrlrX
+    ```
+
+##### Expected Output
+
+A successful verification will show the message **`Good signature from "CtrlrX Project (LINUX GPG Signing Key) <ctrlrx@ctrlrx.org>"`**:
+
+```
+gpg: Signature made Tue Nov 4 02:46:47 2025 UTC
+gpg:                using RSA key 643698F0E75E...24F1BC96
+gpg: Good signature from "CtrlrX Project (LINUX GPG Signing Key) <ctrlrx@ctrlrx.org>" [unknown]
+```
 
 ---
 
@@ -450,6 +508,7 @@ Tuturial coming soon.
 * **ADDED** Commits on GitHub by [Damien Sellier](https://github.com/DamienSellier) are now verified to prove authenticity.
 * **ADDED** macOS binaries and installers by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
 * **ADDED** Windows binaries and installers by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
+* **ADDED** LINUX binaries by [Damien Sellier](https://github.com/DamienSellier) on the GitHub official releases pages are now codesigned.
 
 #### Version 5.6.33 | 2025.05.28
 

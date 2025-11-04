@@ -286,11 +286,74 @@ jobs:
           envsubst < ./Mac/distribution.xml.template > distribution.xml
           # UNSIGNED productbuild command (NO --sign or --timestamp)
           productbuild --resources ./resources --distribution distribution.xml "${{ env.ARTIFACT_NAME }}.pkg"
-          
+
+      # -----------------------------------------------------------------
+      # LINUX GPG SIGNING
+      # -----------------------------------------------------------------
+      - name: Set up GnuPG and Import Key
+        if: ${{ matrix.name == 'Linux' }}
+        run: |
+          # 1. Install GnuPG (if not already installed on ubuntu-24.04 runner)
+          sudo apt-get update && sudo apt-get install -y gnupg
+          # 2. Import the secret key from the GitHub secret
+          echo "${{ secrets.GPG_SIGNING_KEY }}" | gpg --batch --import
+
+      - name: Sign the Linux Binary
+        if: ${{ matrix.name == 'Linux' }}
+        # The target file is the Standalone executable, which is typically what you sign.
+        # Based on your env setup, the Standalone binary is located at:
+        # ${{ env.ARTIFACTS_PATH }}/Standalone/${{ env.PRODUCT_NAME }} (no extension on Linux)
+        run: |
+          BINARY_PATH="${{ env.ARTIFACTS_PATH }}/Standalone/${{ env.PRODUCT_NAME }}"
+          SIGNATURE_PATH="${{ env.ARTIFACTS_PATH }}/Standalone/${{ env.PRODUCT_NAME }}.sig"
+
+          echo "Attempting to sign binary at: $BINARY_PATH"
+
+          # Use the GPG passphrase and key to create a detached signature (.sig file)
+          gpg --batch --yes --pinentry-mode loopback \
+              --passphrase "${{ secrets.GPG_SIGNING_PASSPHRASE }}" \
+              --default-key "CtrlrX Project" \
+              --output "$SIGNATURE_PATH" \
+              --detach-sign "$BINARY_PATH"
+
+          # Verification step (Optional but recommended)
+          gpg --verify "$SIGNATURE_PATH" "$BINARY_PATH"
+          echo "Signature created successfully at $SIGNATURE_PATH"
+
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+                    
       - name: Zip (Linux)
         if: ${{ matrix.name == 'Linux' }}
-        working-directory: ${{ env.ARTIFACTS_PATH }}
-        run: 7z a -tzip "${{ env.ARTIFACT_NAME }}.zip" "-xr!lib${{ env.PRODUCT_NAME }}_SharedCode.a" .
+        id: create_archive
+        shell: bash
+        run: |
+          ARTIFACT_DIR="${{ env.ARTIFACTS_PATH }}/Standalone"
+
+          # Define the internal folder name for the user's extraction
+          INTERNAL_FOLDER_NAME="${{ env.ARTIFACT_NAME }}-Signed"
+          
+          # Define the final output file name on the runner (use the simple, absolute path)
+          FINAL_ZIP_NAME="${{ env.ARTIFACT_NAME }}.zip"
+          ABSOLUTE_ZIP_PATH="${{ github.workspace }}/$FINAL_ZIP_NAME"
+
+          # 1. Create a temporary staging folder and the internal target folder
+          mkdir -p "tmp_linux_archive/$INTERNAL_FOLDER_NAME"
+
+          # 2. Copy final assets into the INTERNAL folder
+          cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}" "tmp_linux_archive/$INTERNAL_FOLDER_NAME/"
+          cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}.sig" "tmp_linux_archive/$INTERNAL_FOLDER_NAME/"
+          cp -r "build/CtrlrX_artefacts/Release/VST3/CtrlrX.vst3" "tmp_linux_archive/$INTERNAL_FOLDER_NAME/"
+
+          # 3. Change into the temporary staging directory (which contains ONE subfolder)
+          cd tmp_linux_archive
+
+          # 4. Create the final ZIP archive. 
+          # Zipping '*' from here includes the single subfolder and its contents.
+          zip -r "$ABSOLUTE_ZIP_PATH" *    
+
+          # Set output (harmless)
+          echo "ARCHIVE_PATH=$FINAL_ZIP_NAME" >> $GITHUB_OUTPUT
 
       # -----------------------------------------------------------------
       # WINDOWS AZURE CODESIGNING STEP 1 (STANDALONE .EXE & .VST3)
@@ -390,8 +453,11 @@ jobs:
         if: ${{ matrix.name == 'Linux' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}.zip
-          path: "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.zip"
+          # Use ARTIFACT_NAME only. GitHub will append .zip to the download name.
+          name: ${{ env.ARTIFACT_NAME }}
+          path: |
+            # Point to the file we created on the runner
+            ${{ github.workspace }}/${{ env.ARTIFACT_NAME }}.zip
 
       - name: Upload pkg (macOS)
         if: ${{ matrix.name == 'macOS' }}
@@ -442,5 +508,6 @@ jobs:
           # Using globs sidesteps having to pass the version around
           files: |
             */*.exe
-            */*.zip
+            **/*/*.zip
             */*.pkg
+            **/*Standalone/*.sig
