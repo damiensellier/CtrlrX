@@ -327,27 +327,25 @@ jobs:
         id: create_archive
         shell: bash
         run: |
-          # ARTIFACT_DIR is correctly defined to point to the Standalone folder
+          # 1. Define variables
           ARTIFACT_DIR="${{ env.ARTIFACTS_PATH }}/Standalone"
-          ARTIFACT_NAME="${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-Linux.zip" # Use ARTIFACT_NAME instead of ARCHIVE_NAME here
 
-          # 1. Create a temporary folder for the final, flat structure
+          # Create a temporary folder for the final, flat structure
           mkdir -p tmp_linux_archive
 
           # 2. Copy the final assets into the temporary folder
-          # Copy Standalone binary and its signature from the Standalone folder
           cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}" tmp_linux_archive/
           cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}.sig" tmp_linux_archive/
-
-          # CRITICAL FIX: Copy VST3 from its correct, separate VST3 folder (using the VST3_PATH env var)
+          # Recursive copy for VST3 directory
           cp -r "${{ env.VST3_PATH }}" tmp_linux_archive/
 
-          # 3. Change into the temporary directory
+          # Change into the temporary directory
           cd tmp_linux_archive
 
-          # 4. Create the final ZIP archive from the files, without the 'tmp_linux_archive' root folder.
-          # The '..' ensures the zip file is created one level up, in the workspace root.
-          zip -r "../../${{ env.ARTIFACT_NAME }}.zip" * # Use ARTIFACT_NAME env var
+          # Create ZIP file one level up, in the workspace root
+          # - The '..' ensures the zip file is created one level up.
+          # - The '*' correctly targets all files copied into this temp folder.
+          zip -r "../../${{ env.ARTIFACT_NAME }}.zip" *
 
           # Set output for use in the release job (if needed, but mainly for clarity)
           echo "ARCHIVE_PATH=${{ env.ARTIFACT_NAME }}.zip" >> $GITHUB_OUTPUT
