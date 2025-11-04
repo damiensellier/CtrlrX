@@ -453,8 +453,8 @@ jobs:
         if: ${{ matrix.name == 'Linux' }}
         uses: actions/upload-artifact@v4
         with:
-          # Use the desired final name with the extension
-          name: ${{ env.ARTIFACT_NAME }}.zip
+          # Use ARTIFACT_NAME only. GitHub will append .zip to the download name.
+          name: ${{ env.ARTIFACT_NAME }}
           path: |
             # Point to the file we created on the runner
             ${{ github.workspace }}/${{ env.ARTIFACT_NAME }}.zip
