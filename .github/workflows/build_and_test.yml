@@ -286,7 +286,43 @@ jobs:
           envsubst < ./Mac/distribution.xml.template > distribution.xml
           # UNSIGNED productbuild command (NO --sign or --timestamp)
           productbuild --resources ./resources --distribution distribution.xml "${{ env.ARTIFACT_NAME }}.pkg"
-          
+
+      # -----------------------------------------------------------------
+      # LINUX GPG SIGNING
+      # -----------------------------------------------------------------
+      - name: Set up GnuPG and Import Key
+        if: ${{ matrix.name == 'Linux' }}
+        run: |
+          # 1. Install GnuPG (if not already installed on ubuntu-24.04 runner)
+          sudo apt-get update && sudo apt-get install -y gnupg
+          # 2. Import the secret key from the GitHub secret
+          echo "${{ secrets.GPG_SIGNING_KEY }}" | gpg --batch --import
+
+      - name: Sign the Linux Binary
+        if: ${{ matrix.name == 'Linux' }}
+        # The target file is the Standalone executable, which is typically what you sign.
+        # Based on your env setup, the Standalone binary is located at:
+        # ${{ env.ARTIFACTS_PATH }}/Standalone/${{ env.PRODUCT_NAME }} (no extension on Linux)
+        run: |
+          BINARY_PATH="${{ env.ARTIFACTS_PATH }}/Standalone/${{ env.PRODUCT_NAME }}"
+          SIGNATURE_PATH="${{ env.ARTIFACTS_PATH }}/Standalone/${{ env.PRODUCT_NAME }}.sig"
+
+          echo "Attempting to sign binary at: $BINARY_PATH"
+
+          # Use the GPG passphrase and key to create a detached signature (.sig file)
+          gpg --batch --yes --pinentry-mode loopback \
+              --passphrase "${{ secrets.GPG_SIGNING_PASSPHRASE }}" \
+              --default-key "CtrlrX Project" \
+              --output "$SIGNATURE_PATH" \
+              --detach-sign "$BINARY_PATH"
+
+          # Verification step (Optional but recommended)
+          gpg --verify "$SIGNATURE_PATH" "$BINARY_PATH"
+          echo "Signature created successfully at $SIGNATURE_PATH"
+
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+                    
       - name: Zip (Linux)
         if: ${{ matrix.name == 'Linux' }}
         working-directory: ${{ env.ARTIFACTS_PATH }}
@@ -391,7 +427,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}.zip
-          path: "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.zip"
+          path: |
+            "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.zip"
+            "${{ env.ARTIFACTS_PATH }}/Standalone/${{ env.PRODUCT_NAME }}.sig"
 
       - name: Upload pkg (macOS)
         if: ${{ matrix.name == 'macOS' }}
@@ -444,3 +482,4 @@ jobs:
             */*.exe
             */*.zip
             */*.pkg
+            **/*Standalone/*.sig
