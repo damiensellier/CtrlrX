@@ -327,8 +327,10 @@ jobs:
         id: create_archive
         shell: bash
         run: |
-          ARTIFACT_DIR="Builds/LinuxMakefile/build/CtrlrX_artefacts/Release/Standalone"
-          ARCHIVE_NAME="CtrlrX-${{ env.VERSION_TAG }}-Linux.zip"
+          # Fix: Use environment variables instead of hardcoded/old path
+          ARTIFACT_DIR="${{ env.ARTIFACTS_PATH }}/Standalone"
+          # Note: You also need to fix ARCHIVE_NAME since env.VERSION_TAG is empty
+          ARCHIVE_NAME="${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-Linux.zip"
 
           # 1. Create a temporary folder for the final, flat structure
           mkdir -p tmp_linux_archive
