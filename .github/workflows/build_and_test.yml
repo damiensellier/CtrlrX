@@ -449,7 +449,7 @@ jobs:
         if: ${{ matrix.name == 'Linux' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}.zip
+          name: ${{ env.ARTIFACT_NAME }}
           path: |
             ${{ github.workspace }}/${{ env.ARTIFACT_NAME }}.zip
 
