@@ -327,31 +327,30 @@ jobs:
         id: create_archive
         shell: bash
         run: |
-          # Fix: Use environment variables instead of hardcoded/old path
+          # ARTIFACT_DIR is correctly defined to point to the Standalone folder
           ARTIFACT_DIR="${{ env.ARTIFACTS_PATH }}/Standalone"
-          # Note: You also need to fix ARCHIVE_NAME since env.VERSION_TAG is empty
-          ARCHIVE_NAME="${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-Linux.zip"
+          ARTIFACT_NAME="${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-Linux.zip" # Use ARTIFACT_NAME instead of ARCHIVE_NAME here
 
           # 1. Create a temporary folder for the final, flat structure
           mkdir -p tmp_linux_archive
 
           # 2. Copy the final assets into the temporary folder
-          cp "${ARTIFACT_DIR}/CtrlrX" tmp_linux_archive/
-          cp "${ARTIFACT_DIR}/CtrlrX.sig" tmp_linux_archive/
-          cp "${ARTIFACT_DIR}/CtrlrX.vst3" tmp_linux_archive/
+          # Copy Standalone binary and its signature from the Standalone folder
+          cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}" tmp_linux_archive/
+          cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}.sig" tmp_linux_archive/
+
+          # CRITICAL FIX: Copy VST3 from its correct, separate VST3 folder (using the VST3_PATH env var)
+          cp "${{ env.VST3_PATH }}" tmp_linux_archive/
 
           # 3. Change into the temporary directory
           cd tmp_linux_archive
 
           # 4. Create the final ZIP archive from the files, without the 'tmp_linux_archive' root folder.
           # The '..' ensures the zip file is created one level up, in the workspace root.
-          zip -r "../../${ARCHIVE_NAME}" *
+          zip -r "../../${{ env.ARTIFACT_NAME }}.zip" * # Use ARTIFACT_NAME env var
 
           # Set output for use in the release job (if needed, but mainly for clarity)
-          echo "ARCHIVE_PATH=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
-
-          # NOTE: The subsequent release job must reference the file created at the workspace root:
-          # path: CtrlrX-5.6.34-Linux.zip
+          echo "ARCHIVE_PATH=${{ env.ARTIFACT_NAME }}.zip" >> $GITHUB_OUTPUT
 
       # -----------------------------------------------------------------
       # WINDOWS AZURE CODESIGNING STEP 1 (STANDALONE .EXE & .VST3)
