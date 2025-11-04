@@ -327,26 +327,27 @@ jobs:
         id: create_archive
         shell: bash
         run: |
-          # 1. Define variables
           ARTIFACT_DIR="${{ env.ARTIFACTS_PATH }}/Standalone"
           FINAL_ZIP_NAME="${{ env.ARTIFACT_NAME }}.zip"
 
-          # 2. Create a temporary folder
+          # Define the ABSOLUTE path to the final ZIP file
+          ABSOLUTE_ZIP_PATH="${{ github.workspace }}/$FINAL_ZIP_NAME"
+
+          # Create a temporary folder
           mkdir -p tmp_linux_archive
 
-          # 3. Copy final assets (FIXES 1 & 2: Correct paths and recursive copy for VST3)
+          # Copy final assets (copy steps are correct)
           cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}" tmp_linux_archive/
           cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}.sig" tmp_linux_archive/
-          cp -r "${{ env.VST3_PATH }}" tmp_linux_archive/
+          cp -r "build/CtrlrX_artefacts/Release/VST3/CtrlrX.vst3" tmp_linux_archive/
 
-          # 4. Change into the temporary directory
+          # Change into the temporary directory
           cd tmp_linux_archive
 
-          # 5. Create the final ZIP archive in the workspace root.
-          # We explicitly use the variable defined above.
-          zip -r "../../$FINAL_ZIP_NAME" *    
+          # CRITICAL FIX: Use the ABSOLUTE PATH for the zip output file
+          zip -r "$ABSOLUTE_ZIP_PATH" *    
 
-          # 6. Set output for clarity
+          # Set output (now redundant, but harmless)
           echo "ARCHIVE_PATH=$FINAL_ZIP_NAME" >> $GITHUB_OUTPUT
 
       # -----------------------------------------------------------------
