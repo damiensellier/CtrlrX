@@ -329,26 +329,25 @@ jobs:
         run: |
           # 1. Define variables
           ARTIFACT_DIR="${{ env.ARTIFACTS_PATH }}/Standalone"
+          FINAL_ZIP_NAME="${{ env.ARTIFACT_NAME }}.zip"
 
-          # Create a temporary folder for the final, flat structure
+          # 2. Create a temporary folder
           mkdir -p tmp_linux_archive
 
-          # 2. Copy the final assets into the temporary folder
+          # 3. Copy final assets (FIXES 1 & 2: Correct paths and recursive copy for VST3)
           cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}" tmp_linux_archive/
           cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}.sig" tmp_linux_archive/
-          # Recursive copy for VST3 directory
           cp -r "${{ env.VST3_PATH }}" tmp_linux_archive/
 
-          # Change into the temporary directory
+          # 4. Change into the temporary directory
           cd tmp_linux_archive
 
-          # Create ZIP file one level up, in the workspace root
-          # - The '..' ensures the zip file is created one level up.
-          # - The '*' correctly targets all files copied into this temp folder.
-          zip -r "../../${{ env.ARTIFACT_NAME }}.zip" *
+          # 5. Create the final ZIP archive in the workspace root.
+          # We explicitly use the variable defined above.
+          zip -r "../../$FINAL_ZIP_NAME" *    
 
-          # Set output for use in the release job (if needed, but mainly for clarity)
-          echo "ARCHIVE_PATH=${{ env.ARTIFACT_NAME }}.zip" >> $GITHUB_OUTPUT
+          # 6. Set output for clarity
+          echo "ARCHIVE_PATH=$FINAL_ZIP_NAME" >> $GITHUB_OUTPUT
 
       # -----------------------------------------------------------------
       # WINDOWS AZURE CODESIGNING STEP 1 (STANDALONE .EXE & .VST3)
