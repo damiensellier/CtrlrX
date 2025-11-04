@@ -324,13 +324,32 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
                     
       - name: Zip (Linux)
-        if: ${{ matrix.name == 'Linux' }}
-        # REMOVED: working-directory: ${{ env.ARTIFACTS_PATH }}
-        # Now use explicit paths relative to the current working directory (repo root)
+        id: create_archive
+        shell: bash
         run: |
-          7z a -tzip "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.zip" \
-            "-xr!libCtrlrX_SharedCode.a" \
-            "${{ env.ARTIFACTS_PATH }}/*"
+          ARTIFACT_DIR="Builds/LinuxMakefile/build/CtrlrX_artefacts/Release/Standalone"
+          ARCHIVE_NAME="CtrlrX-${{ env.VERSION_TAG }}-Linux.zip"
+
+          # 1. Create a temporary folder for the final, flat structure
+          mkdir -p tmp_linux_archive
+
+          # 2. Copy the final assets into the temporary folder
+          cp "${ARTIFACT_DIR}/CtrlrX" tmp_linux_archive/
+          cp "${ARTIFACT_DIR}/CtrlrX.sig" tmp_linux_archive/
+          cp "${ARTIFACT_DIR}/CtrlrX.vst3" tmp_linux_archive/
+
+          # 3. Change into the temporary directory
+          cd tmp_linux_archive
+
+          # 4. Create the final ZIP archive from the files, without the 'tmp_linux_archive' root folder.
+          # The '..' ensures the zip file is created one level up, in the workspace root.
+          zip -r "../../${ARCHIVE_NAME}" *
+
+          # Set output for use in the release job (if needed, but mainly for clarity)
+          echo "ARCHIVE_PATH=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
+
+          # NOTE: The subsequent release job must reference the file created at the workspace root:
+          # path: CtrlrX-5.6.34-Linux.zip
 
       # -----------------------------------------------------------------
       # WINDOWS AZURE CODESIGNING STEP 1 (STANDALONE .EXE & .VST3)
@@ -432,8 +451,7 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}.zip
           path: |
-            ${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.zip
-            ${{ env.ARTIFACTS_PATH }}/Standalone/${{ env.PRODUCT_NAME }}.sig
+            {{ env.ARTIFACT_NAME }}.zip
 
       - name: Upload pkg (macOS)
         if: ${{ matrix.name == 'macOS' }}
@@ -484,6 +502,6 @@ jobs:
           # Using globs sidesteps having to pass the version around
           files: |
             */*.exe
-            */*.zip
+            **/*/*.zip
             */*.pkg
             **/*Standalone/*.sig
