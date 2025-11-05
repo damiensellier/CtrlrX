@@ -38,9 +38,10 @@ class LMemoryBlock : public MemoryBlock
 		static LMemoryBlock fromLuaTable (luabind::object const& table);
 		static void wrapForLua (lua_State *L);
 		LMemoryBlock compressZlib();
-		juce::String decompressZlib();
+		LMemoryBlock decompressZlib();
 		LMemoryBlock compressGzip();
-		juce::String decompressGzip();
+		LMemoryBlock decompressGzip();
+		luabind::object toBinaryString(lua_State* L) const;
 		static LMemoryBlock fromLuaString(const juce::String& data);
 		static LMemoryBlock fromLuaString(luabind::object const& self, const juce::String& strData);
 		static LMemoryBlock fromLuaBinaryString(luabind::object const& luaString);
