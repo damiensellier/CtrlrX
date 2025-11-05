@@ -276,7 +276,6 @@ LMemoryBlock LMemoryBlock::decompressZlib()
 	return {};
 }
 /************************************************************************************************/
-// CRITICAL FIX: Changed return type from juce::String to LMemoryBlock (binary-safe)
 LMemoryBlock LMemoryBlock::decompressGzip()
 {
 	juce::MemoryBlock resultBlock;
@@ -309,6 +308,7 @@ LMemoryBlock LMemoryBlock::decompressGzip()
 	// If all decompression attempts fail, return an empty block
 	return {};
 }
+/************************************************************************************************/
 LMemoryBlock LMemoryBlock::compressGzip()
 {
 	if (getSize() == 0)
@@ -338,7 +338,20 @@ LMemoryBlock LMemoryBlock::compressGzip()
 }
 // In header file
 
+/***********************************************************************************************
 
+
+Sometimes it appears a decompressed binary string may contain null bytes within it,so this function avoids a truncated result
+User has naming options depending on which is more meaningful
+				.def("toBinaryString", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+				.def("toRawString", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+				.def("toBinarySafeString", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+				.def("toLuaString", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+				.def("pushLString", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+				.def("toStringWithNulls", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+				.def("toStringNoTerminator", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+
+*/
 
 luabind::object LMemoryBlock::toBinaryString(lua_State* L) const
 {
@@ -434,6 +447,12 @@ void LMemoryBlock::wrapForLua (lua_State *L)
 				.def("toString", &MemoryBlock::toString)
 				.def("loadFromHexString", &MemoryBlock::loadFromHexString)
 				.def("toBinaryString", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+				.def("toRawString", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+				.def("toBinarySafeString", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+				.def("toLuaString", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+				.def("pushLString", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+				.def("toStringWithNulls", &LMemoryBlock::toBinaryString, luabind::raw(_2))
+				.def("toStringNoTerminator", &LMemoryBlock::toBinaryString, luabind::raw(_2))
 				.def("setBitRange", &LMemoryBlock::setBitRange)
 				.def("getBitRange", &LMemoryBlock::getBitRange)
 				.def("toBase64Encoding", &MemoryBlock::toBase64Encoding)
