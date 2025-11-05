@@ -186,11 +186,40 @@ For detailed information on VST3 licensing, please refer to the official Steinbe
 
 This section provides instructions on how to install CtrlrX on your computer.
 
+---
+
 ### Windows
+
+CtrlrX for Windows is distributed as a **signed $\text{.exe}$ installer**.
+
+1.  **Download** the latest $\text{CtrlrX-*.exe}$ installer from the Releases page.
+2.  **Double-click** the downloaded file to run the installer.
+3.  Follow the on-screen prompts. The installer will guide you through selecting the **type of plugin** (Standalone EXE, VST3, or AAX) you wish to install and will automatically place the files in the correct system directories.
+
+---
 
 ### macOS
 
+CtrlrX for macOS is distributed as a **notarized and codesigned $\text{.pkg}$ package installer**.
+
+1.  **Download** the latest $\text{CtrlrX-*.pkg}$ installer from the Releases page.
+2.  **Double-click** the downloaded file to launch the macOS installer.
+3.  Follow the on-screen prompts. The installer will automatically handle system security checks and guide you through selecting the **type of plugin** (Standalone APP, VST3, AU, or AAX) you wish to install.
+
+---
+
 ### Linux
+
+CtrlrX for Linux is distributed as a **signed $\text{.zip}$ archive** containing the necessary plugin files and libraries. Linux installations typically require manually extracting the files to the correct host application's plugin directory.
+
+1.  **Download** the $\text{CtrlrX-Linux.zip}$ archive and the corresponding $\text{.sig}$ file from the Releases page.
+2.  **Extract** the contents of the $\text{.zip}$ file. This will create a folder named `CtrlrX-*-Linux-Signed`.
+3.  **Locate Your Plugin Folder:** Determine the correct location for VST/VST3/AAX plugins used by your Digital Audio Workstation (DAW). Common user-level locations are:
+    * **VST:** `~/.vst/`
+    * **VST3:** `~/.vst3/`
+4.  **Copy the Plugin:** Move the contents of the extracted folder (or the necessary plugin files themselves) into the correct plugin directory for your DAW.
+
+---
 
 #### Linux Signature Verification (GPG)
 For security and integrity, you can verify the downloaded files using the detached **GPG signature (`.sig`)** file included in the release. This ensures the files have not been tampered with since they were signed.
