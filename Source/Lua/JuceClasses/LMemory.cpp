@@ -242,52 +242,76 @@ LMemoryBlock LMemoryBlock::compressZlib()
     // Return a new LMemoryBlock initialized with the compressed data
     return LMemoryBlock(outputBlock.getData(), outputBlock.getSize());
 }
+
 /************************************************************************************************/
-juce::String LMemoryBlock::decompressZlib()
+LMemoryBlock LMemoryBlock::decompressZlib()
 {
-    try
-    {
-        if (getSize() < 4)
-            return juce::String("Error: Data stream too small");
+	juce::MemoryBlock resultBlock;
 
-        // Use existing member functions: getData() and getSize()
+	if (getSize() == 0 || getSize() < 4)
+		return {}; // Return empty block on invalid input
 
-        // 1. ATTEMPT ZLIB FORMAT
-        juce::GZIPDecompressorInputStream zlibStream(
-            new juce::MemoryInputStream(getData(), getSize(), false), true, juce::GZIPDecompressorInputStream::zlibFormat);
+	// 1. ATTEMPT ZLIB FORMAT (Priority)
+	juce::GZIPDecompressorInputStream zlibStream(
+		new juce::MemoryInputStream(getData(), getSize(), false), true, juce::GZIPDecompressorInputStream::zlibFormat);
 
-        juce::String result = zlibStream.readEntireStreamAsString();
+	// CRITICAL FIX: Use readIntoMemoryBlock for binary safety
+	if (zlibStream.readIntoMemoryBlock(resultBlock))
+		return resultBlock;
 
-        // 2. FALLBACK TO GZIP FORMAT
-        if (result.isEmpty())
-        {
-            juce::GZIPDecompressorInputStream gzipStream(
-                new juce::MemoryInputStream(getData(), getSize(), false), true, juce::GZIPDecompressorInputStream::gzipFormat);
-            result = gzipStream.readEntireStreamAsString();
-        }
+	// 2. FALLBACK TO GZIP FORMAT
+	juce::GZIPDecompressorInputStream gzipStream(
+		new juce::MemoryInputStream(getData(), getSize(), false), true, juce::GZIPDecompressorInputStream::gzipFormat);
 
-        // 3. FALLBACK TO RAW DEFLATE FORMAT
-        if (result.isEmpty())
-        {
-            juce::GZIPDecompressorInputStream deflateStream(
-                new juce::MemoryInputStream(getData(), getSize(), false), true, juce::GZIPDecompressorInputStream::deflateFormat);
-            result = deflateStream.readEntireStreamAsString();
-        }
+	if (gzipStream.readIntoMemoryBlock(resultBlock))
+		return resultBlock;
 
-        if (result.isEmpty())
-            return juce::String("Error: All decompression formats failed");
+	// 3. FALLBACK TO RAW DEFLATE FORMAT
+	juce::GZIPDecompressorInputStream deflateStream(
+		new juce::MemoryInputStream(getData(), getSize(), false), true, juce::GZIPDecompressorInputStream::deflateFormat);
 
-        return result;
-    }
-    catch (const std::exception& e)
-    {
-        return juce::String("Error: ") + e.what();
-    }
-    catch (...)
-    {
-        return juce::String("Error: Unknown exception");
-    }
+	if (deflateStream.readIntoMemoryBlock(resultBlock))
+		return resultBlock;
+
+	// If all decompression attempts fail, return an empty block
+	return {};
 }
+
+/************************************************************************************************/
+// CRITICAL FIX: Changed return type from juce::String to LMemoryBlock (binary-safe)
+LMemoryBlock LMemoryBlock::decompressGzip()
+{
+	juce::MemoryBlock resultBlock;
+
+	if (getSize() == 0 || getSize() < 4)
+		return {}; // Return empty block on invalid input
+
+	// 1. ATTEMPT GZIP FORMAT (Priority)
+	juce::GZIPDecompressorInputStream gzipStream(
+		new juce::MemoryInputStream(getData(), getSize(), false), true, juce::GZIPDecompressorInputStream::gzipFormat);
+
+	// CRITICAL FIX: Use readIntoMemoryBlock for binary safety
+	if (gzipStream.readIntoMemoryBlock(resultBlock))
+		return resultBlock;
+
+	// 2. FALLBACK TO ZLIB FORMAT
+	juce::GZIPDecompressorInputStream zlibStream(
+		new juce::MemoryInputStream(getData(), getSize(), false), true, juce::GZIPDecompressorInputStream::zlibFormat);
+
+	if (zlibStream.readIntoMemoryBlock(resultBlock))
+		return resultBlock;
+
+	// 3. FALLBACK TO RAW DEFLATE FORMAT
+	juce::GZIPDecompressorInputStream deflateStream(
+		new juce::MemoryInputStream(getData(), getSize(), false), true, juce::GZIPDecompressorInputStream::deflateFormat);
+
+	if (deflateStream.readIntoMemoryBlock(resultBlock))
+		return resultBlock;
+
+	// If all decompression attempts fail, return an empty block
+	return {};
+}
+
 /************************************************************************************************/
 LMemoryBlock LMemoryBlock::compressGzip()
 {
@@ -316,52 +340,22 @@ LMemoryBlock LMemoryBlock::compressGzip()
     // 5. Return the new block (Copying the data from outputBlock)
     return LMemoryBlock(outputBlock.getData(), outputBlock.getSize());
 }
+// In header file
 
-juce::String LMemoryBlock::decompressGzip()
+/************************************************************************************************/
+luabind::object LMemoryBlock::toBinaryString(lua_State* L) const
 {
-    try
-    {
-        if (getSize() < 4)
-            return juce::String("Error: Data stream too small");
+	// Push binary-safe string directly to Lua (with explicit length)
+	lua_pushlstring(L,
+		static_cast<const char*>(getData()),
+		getSize());
 
-        // Use existing member functions: getData() and getSize()
-
-        // 1. ATTEMPT GZIP FORMAT (Priority)
-        juce::GZIPDecompressorInputStream gzipStream(
-            new juce::MemoryInputStream(getData(), getSize(), false), true, juce::GZIPDecompressorInputStream::gzipFormat);
-
-        juce::String result = gzipStream.readEntireStreamAsString();
-
-        // 2. FALLBACK TO ZLIB FORMAT
-        if (result.isEmpty())
-        {
-            juce::GZIPDecompressorInputStream zlibStream(
-                new juce::MemoryInputStream(getData(), getSize(), false), true, juce::GZIPDecompressorInputStream::zlibFormat);
-            result = zlibStream.readEntireStreamAsString();
-        }
-
-        // 3. FALLBACK TO RAW DEFLATE FORMAT
-        if (result.isEmpty())
-        {
-            juce::GZIPDecompressorInputStream deflateStream(
-                new juce::MemoryInputStream(getData(), getSize(), false), true, juce::GZIPDecompressorInputStream::deflateFormat);
-            result = deflateStream.readEntireStreamAsString();
-        }
-
-        if (result.isEmpty())
-            return juce::String("Error: All decompression formats failed");
-
-        return result;
-    }
-    catch (const std::exception& e)
-    {
-        return juce::String("Error: ") + e.what();
-    }
-    catch (...)
-    {
-        return juce::String("Error: Unknown exception");
-    }
+	// Return as luabind::object
+	luabind::object result(luabind::from_stack(L, -1));
+	lua_pop(L, 1);
+	return result;
 }
+
 /************************************************************************************************/
 LMemoryBlock LMemoryBlock::fromLuaString(const juce::String& strData)
 {
@@ -443,6 +437,7 @@ void LMemoryBlock::wrapForLua (lua_State *L)
                 .def("swapWith", &MemoryBlock::swapWith)
                 .def("toString", &MemoryBlock::toString)
                 .def("loadFromHexString", &MemoryBlock::loadFromHexString)
+                .def("toBinaryString", &LMemoryBlock::toBinaryString, luabind::raw(_2))
                 .def("setBitRange", &LMemoryBlock::setBitRange)
                 .def("getBitRange", &LMemoryBlock::getBitRange)
                 .def("toBase64Encoding", &MemoryBlock::toBase64Encoding)
