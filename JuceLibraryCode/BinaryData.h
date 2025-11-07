@@ -8,6 +8,144 @@
 
 namespace BinaryData
 {
+    extern const char*   DEMO__ADBSSR_Graphic_Envelope_panel;
+    const int            DEMO__ADBSSR_Graphic_Envelope_panelSize = 157260;
+
+    extern const char*   DEMO__Base_64_panel;
+    const int            DEMO__Base_64_panelSize = 113806;
+
+    extern const char*   DEMO__BG_Image_on_Tabs_bpanelz;
+    const int            DEMO__BG_Image_on_Tabs_bpanelzSize = 165852;
+
+    extern const char*   DEMO__Complex_expressions_panel;
+    const int            DEMO__Complex_expressions_panelSize = 11688;
+
+    extern const char*   DEMO__Component_Transforms_and_Animation_panel;
+    const int            DEMO__Component_Transforms_and_Animation_panelSize = 25375;
+
+    extern const char*   DEMO__Data_dump_utilities_panel;
+    const int            DEMO__Data_dump_utilities_panelSize = 41648;
+
+    extern const char*   DEMO__Dialog_Windows_bpanelz;
+    const int            DEMO__Dialog_Windows_bpanelzSize = 19030;
+
+    extern const char*   DEMO__Drag_And_Drop_bpanelz;
+    const int            DEMO__Drag_And_Drop_bpanelzSize = 15173;
+
+    extern const char*   DEMO__Files_panel;
+    const int            DEMO__Files_panelSize = 149415;
+
+    extern const char*   DEMO__Filter_graph_panel;
+    const int            DEMO__Filter_graph_panelSize = 128065;
+
+    extern const char*   DEMO__Global_keyboard_events_panel;
+    const int            DEMO__Global_keyboard_events_panelSize = 114694;
+
+    extern const char*   DEMO__Initialise_MemoryBlock_panel;
+    const int            DEMO__Initialise_MemoryBlock_panelSize = 104537;
+
+    extern const char*   DEMO___JSON__Gzip_or_Zlib_panel;
+    const int            DEMO___JSON__Gzip_or_Zlib_panelSize = 169370;
+
+    extern const char*   DEMO__Keyboard_events_panel;
+    const int            DEMO__Keyboard_events_panelSize = 17787;
+
+    extern const char*   DEMO__KORG_8_bit_conversion_panel;
+    const int            DEMO__KORG_8_bit_conversion_panelSize = 180141;
+
+    extern const char*   DEMO__Layers_and_Tabs_panel;
+    const int            DEMO__Layers_and_Tabs_panelSize = 46783;
+
+    extern const char*   DEMO__LCD_xpm_Matrix_panel;
+    const int            DEMO__LCD_xpm_Matrix_panelSize = 181416;
+
+    extern const char*   DEMO__ListBox_bpanelz;
+    const int            DEMO__ListBox_bpanelzSize = 18071;
+
+    extern const char*   DEMO__Load_SVG_Resources_panel;
+    const int            DEMO__Load_SVG_Resources_panelSize = 127544;
+
+    extern const char*   DEMO__Look_And_Feel_panel;
+    const int            DEMO__Look_And_Feel_panelSize = 61418;
+
+    extern const char*   DEMO__Modulator_link_many_to_one_panel;
+    const int            DEMO__Modulator_link_many_to_one_panelSize = 106446;
+
+    extern const char*   DEMO__Move_component_with_animation_panel;
+    const int            DEMO__Move_component_with_animation_panelSize = 13533;
+
+    extern const char*   DEMO__OSC_panel;
+    const int            DEMO__OSC_panelSize = 112581;
+
+    extern const char*   DEMO__PopupMenu_and_how_to_detect_method_availability_panel;
+    const int            DEMO__PopupMenu_and_how_to_detect_method_availability_panelSize = 114183;
+
+    extern const char*   DEMO__PopupMenu_bpanelz;
+    const int            DEMO__PopupMenu_bpanelzSize = 11138;
+
+    extern const char*   DEMO__ProgressBar_Example_panel;
+    const int            DEMO__ProgressBar_Example_panelSize = 120370;
+
+    extern const char*   DEMO__Render_bpanelz;
+    const int            DEMO__Render_bpanelzSize = 175408;
+
+    extern const char*   DEMO__Request_Program_panel;
+    const int            DEMO__Request_Program_panelSize = 14707;
+
+    extern const char*   DEMO__Save_JSON_panel;
+    const int            DEMO__Save_JSON_panelSize = 153618;
+
+    extern const char*   DEMO__Send_patch_name_panel;
+    const int            DEMO__Send_patch_name_panelSize = 22470;
+
+    extern const char*   DEMO__Switching_tabs_with_Lua_panel;
+    const int            DEMO__Switching_tabs_with_Lua_panelSize = 31808;
+
+    extern const char*   DEMO__Waveform_conversion_bpanelz;
+    const int            DEMO__Waveform_conversion_bpanelzSize = 97935;
+
+    extern const char*   README_md;
+    const int            README_mdSize = 139;
+
+    extern const char*   DSI__Evolver_panel;
+    const int            DSI__Evolver_panelSize = 10992;
+
+    extern const char*   DSI__Mopho_2_3_panel;
+    const int            DSI__Mopho_2_3_panelSize = 969219;
+
+    extern const char*   JoMoX__M_Brane_11_panel;
+    const int            JoMoX__M_Brane_11_panelSize = 193214;
+
+    extern const char*   MFB__Synth_Lite_II_panel;
+    const int            MFB__Synth_Lite_II_panelSize = 105598;
+
+    extern const char*   Mouge__Big_Skinny_panel;
+    const int            Mouge__Big_Skinny_panelSize = 229887;
+
+    extern const char*   Mouge__Voyeur_bpanelz;
+    const int            Mouge__Voyeur_bpanelzSize = 45484;
+
+    extern const char*   Mouge_Voyeur_panel;
+    const int            Mouge_Voyeur_panelSize = 229067;
+
+    extern const char*   Oberheim__Matrix_1000_panelz;
+    const int            Oberheim__Matrix_1000_panelzSize = 64416;
+
+    extern const char*   README_md2;
+    const int            README_md2Size = 271;
+
+    extern const char*   Roland__Juno106_2_0_bpanelz;
+    const int            Roland__Juno106_2_0_bpanelzSize = 420588;
+
+    extern const char*   Roland__JX8P_bpanelz;
+    const int            Roland__JX8P_bpanelzSize = 58679;
+
+    extern const char*   Yamaha__TX81Z_bpanelz;
+    const int            Yamaha__TX81Z_bpanelzSize = 663813;
+
+    extern const char*   README_md3;
+    const int            README_md3Size = 314;
+
     extern const char*   build_information_hpp_cmake_in;
     const int            build_information_hpp_cmake_inSize = 2087;
 
@@ -20,8 +158,8 @@ namespace BinaryData
     extern const char*   LICENSE_txt;
     const int            LICENSE_txtSize = 1230;
 
-    extern const char*   README_md;
-    const int            README_mdSize = 7609;
+    extern const char*   README_md4;
+    const int            README_md4Size = 7609;
 
     extern const char*   CtrlrRevision_template;
     const int            CtrlrRevision_templateSize = 199;
@@ -218,8 +356,8 @@ namespace BinaryData
     extern const char*   LICENSE;
     const int            LICENSESize = 1099;
 
-    extern const char*   README_md2;
-    const int            README_md2Size = 272;
+    extern const char*   README_md5;
+    const int            README_md5Size = 272;
 
     extern const char*   test_lua;
     const int            test_luaSize = 77;
@@ -285,7 +423,7 @@ namespace BinaryData
     const int            CtrlrMIDIVendors_xmlSize = 15061;
 
     // Number of elements in the namedResourceList and originalFileNames arrays.
-    const int namedResourceListSize = 92;
+    const int namedResourceListSize = 138;
 
     // Points to the start of a list of resource names.
     extern const char* namedResourceList[];
