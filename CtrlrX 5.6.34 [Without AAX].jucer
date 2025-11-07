@@ -15,101 +15,6 @@
               pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn,pluginProducesMidiOut,pluginEditorRequiresKeys"
               pluginAAXCategory="2048">
   <MAINGROUP id="SRLsFb" name="CtrlrX">
-    <GROUP id="{801BA977-6F31-5B06-C3F0-94ADE0669390}" name="Panels">
-      <GROUP id="{727F43C7-FF50-59B0-8144-29F78A7D77B0}" name="DEMO">
-        <FILE id="xptpi3" name="DEMO - ADBSSR Graphic Envelope.panel" compile="0"
-              resource="1" file="Panels/DEMO/DEMO - ADBSSR Graphic Envelope.panel"/>
-        <FILE id="wYJlDN" name="DEMO - Base 64.panel" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - Base 64.panel"/>
-        <FILE id="z3f1EA" name="DEMO - BG Image on Tabs.bpanelz" compile="0"
-              resource="1" file="Panels/DEMO/DEMO - BG Image on Tabs.bpanelz"/>
-        <FILE id="IEwZr8" name="DEMO - Complex expressions.panel" compile="0"
-              resource="1" file="Panels/DEMO/DEMO - Complex expressions.panel"/>
-        <FILE id="NmIEbV" name="DEMO - Component Transforms and Animation.panel"
-              compile="0" resource="1" file="Panels/DEMO/DEMO - Component Transforms and Animation.panel"/>
-        <FILE id="P6VWKY" name="DEMO - Data dump utilities.panel" compile="0"
-              resource="1" file="Panels/DEMO/DEMO - Data dump utilities.panel"/>
-        <FILE id="QPbVj4" name="DEMO - Dialog Windows.bpanelz" compile="0"
-              resource="1" file="Panels/DEMO/DEMO - Dialog Windows.bpanelz"/>
-        <FILE id="EAxmnf" name="DEMO - Drag And Drop.bpanelz" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - Drag And Drop.bpanelz"/>
-        <FILE id="r5B4Pb" name="DEMO - Files.panel" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - Files.panel"/>
-        <FILE id="OlFeiS" name="DEMO - Filter graph.panel" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - Filter graph.panel"/>
-        <FILE id="k4tfG9" name="DEMO - Global keyboard events.panel" compile="0"
-              resource="1" file="Panels/DEMO/DEMO - Global keyboard events.panel"/>
-        <FILE id="WBxkF0" name="DEMO - Initialise MemoryBlock.panel" compile="0"
-              resource="1" file="Panels/DEMO/DEMO - Initialise MemoryBlock.panel"/>
-        <FILE id="Q0qliN" name="DEMO -  JSON - Gzip or Zlib.panel" compile="0"
-              resource="1" file="Panels/DEMO/DEMO -  JSON - Gzip or Zlib.panel"/>
-        <FILE id="smga6e" name="DEMO - Keyboard events.panel" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - Keyboard events.panel"/>
-        <FILE id="WLDAs9" name="DEMO - KORG 8 bit conversion.panel" compile="0"
-              resource="1" file="Panels/DEMO/DEMO - KORG 8 bit conversion.panel"/>
-        <FILE id="CWevJb" name="DEMO - Layers and Tabs.panel" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - Layers and Tabs.panel"/>
-        <FILE id="XD0vyv" name="DEMO - LCD xpm Matrix.panel" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - LCD xpm Matrix.panel"/>
-        <FILE id="cSDPB5" name="DEMO - ListBox.bpanelz" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - ListBox.bpanelz"/>
-        <FILE id="gGn3H3" name="DEMO - Load SVG Resources.panel" compile="0"
-              resource="1" file="Panels/DEMO/DEMO - Load SVG Resources.panel"/>
-        <FILE id="aLet5a" name="DEMO - Look And Feel.panel" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - Look And Feel.panel"/>
-        <FILE id="yDRJsd" name="DEMO - Modulator link [many to one].panel"
-              compile="0" resource="1" file="Panels/DEMO/DEMO - Modulator link [many to one].panel"/>
-        <FILE id="w7Cf9b" name="DEMO - Move component with animation.panel"
-              compile="0" resource="1" file="Panels/DEMO/DEMO - Move component with animation.panel"/>
-        <FILE id="dgW0PT" name="DEMO - OSC.panel" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - OSC.panel"/>
-        <FILE id="ayRFzW" name="DEMO - PopupMenu and how to detect method availability.panel"
-              compile="0" resource="1" file="Panels/DEMO/DEMO - PopupMenu and how to detect method availability.panel"/>
-        <FILE id="CXPmYf" name="DEMO - PopupMenu.bpanelz" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - PopupMenu.bpanelz"/>
-        <FILE id="J9xDKP" name="DEMO - ProgressBar Example.panel" compile="0"
-              resource="1" file="Panels/DEMO/DEMO - ProgressBar Example.panel"/>
-        <FILE id="vfPQFu" name="DEMO - Render.bpanelz" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - Render.bpanelz"/>
-        <FILE id="xnGO6U" name="DEMO - Request Program.panel" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - Request Program.panel"/>
-        <FILE id="f5u1Yl" name="DEMO - Save JSON.panel" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - Save JSON.panel"/>
-        <FILE id="bXvfoA" name="DEMO - Send patch name.panel" compile="0" resource="1"
-              file="Panels/DEMO/DEMO - Send patch name.panel"/>
-        <FILE id="s4hD9i" name="DEMO - Switching tabs with Lua.panel" compile="0"
-              resource="1" file="Panels/DEMO/DEMO - Switching tabs with Lua.panel"/>
-        <FILE id="o17SqH" name="DEMO - Waveform conversion.bpanelz" compile="0"
-              resource="1" file="Panels/DEMO/DEMO - Waveform conversion.bpanelz"/>
-        <FILE id="nzAf1R" name="README.md" compile="0" resource="1" file="Panels/DEMO/README.md"/>
-      </GROUP>
-      <GROUP id="{4BE1D723-6040-2DAD-F4C0-6850A05DF820}" name="RomanKubiak">
-        <FILE id="vOf0WY" name="DSI - Evolver.panel" compile="0" resource="1"
-              file="Panels/RomanKubiak/DSI - Evolver.panel"/>
-        <FILE id="ZKODZt" name="DSI - Mopho 2.3.panel" compile="0" resource="1"
-              file="Panels/RomanKubiak/DSI - Mopho 2.3.panel"/>
-        <FILE id="p1ltdT" name="JoMoX - M.Brane 11.panel" compile="0" resource="1"
-              file="Panels/RomanKubiak/JoMoX - M.Brane 11.panel"/>
-        <FILE id="sP7Ehr" name="MFB - Synth Lite II.panel" compile="0" resource="1"
-              file="Panels/RomanKubiak/MFB - Synth Lite II.panel"/>
-        <FILE id="ohmqrV" name="Mouge - Big Skinny.panel" compile="0" resource="1"
-              file="Panels/RomanKubiak/Mouge - Big Skinny.panel"/>
-        <FILE id="d8y66l" name="Mouge - Voyeur.bpanelz" compile="0" resource="1"
-              file="Panels/RomanKubiak/Mouge - Voyeur.bpanelz"/>
-        <FILE id="J8rf5J" name="Mouge Voyeur.panel" compile="0" resource="1"
-              file="Panels/RomanKubiak/Mouge Voyeur.panel"/>
-        <FILE id="V4hGyA" name="Oberheim - Matrix 1000.panelz" compile="0"
-              resource="1" file="Panels/RomanKubiak/Oberheim - Matrix 1000.panelz"/>
-        <FILE id="x7CJ42" name="README.md" compile="0" resource="1" file="Panels/RomanKubiak/README.md"/>
-        <FILE id="yjk6Ty" name="Roland - Juno106 2.0.bpanelz" compile="0" resource="1"
-              file="Panels/RomanKubiak/Roland - Juno106 2.0.bpanelz"/>
-        <FILE id="KRfT63" name="Roland - JX8P.bpanelz" compile="0" resource="1"
-              file="Panels/RomanKubiak/Roland - JX8P.bpanelz"/>
-        <FILE id="rNnmcW" name="Yamaha - TX81Z.bpanelz" compile="0" resource="1"
-              file="Panels/RomanKubiak/Yamaha - TX81Z.bpanelz"/>
-      </GROUP>
-      <FILE id="nFl8Pz" name="README.md" compile="0" resource="1" file="Panels/README.md"/>
-    </GROUP>
     <GROUP id="{BE407432-92DD-AEAB-3C70-AAE03FCD0B1D}" name="Source">
       <GROUP id="{F4D7C0F1-7F03-CB3F-30C6-F728F0E39FE2}" name="Misc">
         <GROUP id="{E0E4DD68-0D44-4709-7B14-B00F9E7420BF}" name="luabind">
@@ -536,6 +441,8 @@
                 file="Source/Lua/JuceClasses/LGlyphArrangement.h"/>
           <FILE id="Pra0Cf" name="LGraphics.cpp" compile="1" resource="0" file="Source/Lua/JuceClasses/LGraphics.cpp"/>
           <FILE id="TlUqIn" name="LGraphics.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LGraphics.h"/>
+          <FILE id="Rh67Py" name="LGZIP.cpp" compile="1" resource="0" file="Source/Lua/JuceClasses/LGZIP.cpp"/>
+          <FILE id="lYLquB" name="LGZIP.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LGZIP.h"/>
           <FILE id="gNo4bK" name="LImage.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LImage.h"/>
           <FILE id="pB6Xwb" name="LInputStream.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LInputStream.h"/>
           <FILE id="mWg58s" name="LJuce.cpp" compile="1" resource="0" file="Source/Lua/JuceClasses/LJuce.cpp"/>
