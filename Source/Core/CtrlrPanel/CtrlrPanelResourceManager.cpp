@@ -375,7 +375,7 @@ void CtrlrPanelResourceManager::wrapForLua(lua_State *L)
 			.def("asAudioFormat", &CtrlrPanelResource::asAudioFormat)
 			.def("asData", &CtrlrPanelResource::asData)
 			.def("getName", &CtrlrPanelResource::getName)
-			.def("getSize", (double (CtrlrPanelResource::*)() )&CtrlrPanelResource::getSize)
+			//.def("getSize", (double (CtrlrPanelResource::*)() )&CtrlrPanelResource::getSize)
 			.def("getSizeDouble", &CtrlrPanelResource::getSizeDouble) // Added v5.6.34.
 			.def("getHashCode", &CtrlrPanelResource::getHashCode)
 			.def("load", &CtrlrPanelResource::load)
@@ -387,10 +387,10 @@ void CtrlrPanelResourceManager::wrapForLua(lua_State *L)
 			.def("asGzipText", &CtrlrPanelResource::asGzipText) //  Added v5.6.34. gzip support
 		,
 		class_<CtrlrPanelResourceManager>("CtrlrPanelResourceManager")
-			// .def("getResource", (CtrlrPanelResource *(CtrlrPanelResourceManager::*)(const int))&CtrlrPanelResourceManager::getResource)
-			// .def("getResource", (CtrlrPanelResource *(CtrlrPanelResourceManager::*)(const String &))&CtrlrPanelResourceManager::getResource)
-			.def("getResource", (CtrlrPanelResource * (CtrlrPanelResourceManager::*)(const int)) & CtrlrPanelResourceManager::getResource, dependency(result, _1)) // Updated v5.6.34.
-			.def("getResource", (CtrlrPanelResource * (CtrlrPanelResourceManager::*)(const String&)) &  CtrlrPanelResourceManager::getResource, dependency(result, _1)) // Updated v5.6.34.
+			.def("getResource", (CtrlrPanelResource * (CtrlrPanelResourceManager::*)(const int)) & CtrlrPanelResourceManager::getResource, dependency(result, _1))
+			.def("getResource", (CtrlrPanelResource * (CtrlrPanelResourceManager::*)(const String&)) & CtrlrPanelResourceManager::getResource, dependency(result, _1))
+			//.def("getResource", (CtrlrPanelResource *(CtrlrPanelResourceManager::*)(const int))&CtrlrPanelResourceManager::getResource)
+			//.def("getResource", (CtrlrPanelResource *(CtrlrPanelResourceManager::*)(const String &))&CtrlrPanelResourceManager::getResource)
 			.def("getNumResources", &CtrlrPanelResourceManager::getNumResources)
 			.def("getResourceIndex", &CtrlrPanelResourceManager::getResourceIndex)
 			.def("getResourceAsImage", &CtrlrPanelResourceManager::getResourceAsImage)

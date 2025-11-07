@@ -37,15 +37,15 @@ class LMemoryBlock : public MemoryBlock
 		void toLuaTable (luabind::object tableToWriteTo);
 		static LMemoryBlock fromLuaTable (luabind::object const& table);
 		static void wrapForLua (lua_State *L);
-		LMemoryBlock compressZlib(); // Added v5.6.34
-		LMemoryBlock decompressZlib(); // Added v5.6.34
-		LMemoryBlock compressGzip(); // Added v5.6.34
-		LMemoryBlock decompressGzip(); // Added v5.6.34
-		luabind::object toBinaryString(lua_State* L) const; // Added v5.6.34
-		static LMemoryBlock fromLuaString(const juce::String& data); // Added v5.6.34
-		static LMemoryBlock fromLuaString(luabind::object const& self, const juce::String& strData); // Added v5.6.34
-		static LMemoryBlock fromLuaBinaryString(luabind::object const& luaString); // Added v5.6.34
-		static LMemoryBlock fromLuaStringToAscii(const juce::String& strData); // Added v5.6.34
+		LMemoryBlock compressZlib();
+		LMemoryBlock decompressZlib();
+		LMemoryBlock compressGzip();
+		LMemoryBlock decompressGzip();
+		luabind::object toBinaryString(lua_State* L) const;
+		static LMemoryBlock fromLuaString(const juce::String& data);
+		static LMemoryBlock fromLuaString(luabind::object const& self, const juce::String& strData);
+		static LMemoryBlock fromLuaBinaryString(luabind::object const& luaString);
+		static LMemoryBlock fromLuaStringToAscii(const juce::String& strData);
 };
 
 #endif
