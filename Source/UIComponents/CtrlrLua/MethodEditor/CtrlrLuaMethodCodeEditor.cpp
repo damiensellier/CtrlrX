@@ -1253,7 +1253,7 @@ void CtrlrLuaMethodCodeEditor::toggleLineComment() // Updated v5.6.34
     }
     
     int startLine = startPos.getLineNumber();
-    int endLine = endPos.getLineNumber() - 1;
+    int endLine = endPos.getLineNumber();
 
     document.newTransaction();
 

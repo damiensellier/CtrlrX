@@ -375,6 +375,7 @@ LMemoryBlock LMemoryBlock::fromLuaBinaryString(luabind::object const& luaString)
     lua_pop(L, 1);
     return LMemoryBlock(data, len);
 }
+/************************************************************************************************/
 LMemoryBlock LMemoryBlock::fromLuaStringToAscii(const juce::String& strData)
 {
     juce::MemoryBlock mb;
@@ -458,6 +459,7 @@ void LMemoryBlock::wrapForLua (lua_State *L)
                     def("fromLuaTable", &LMemoryBlock::fromLuaTable),
                     def("fromLuaString", (LMemoryBlock(*)(const juce::String&)) & LMemoryBlock::fromLuaString),
                     def("fromLuaString", (LMemoryBlock(*)(luabind::object const&, const juce::String&)) & LMemoryBlock::fromLuaString),
+                    def("fromLuaBinaryString", &LMemoryBlock::fromLuaBinaryString),
                     def("fromLuaStringToAscii", (LMemoryBlock(*)(const juce::String&)) & LMemoryBlock::fromLuaStringToAscii),
                     def("fromLuaStringToAscii", (LMemoryBlock(*)(luabind::object const&, const juce::String&)) & LMemoryBlock::fromLuaStringToAscii),
                     def("fromLuaBinaryString", &LMemoryBlock::fromLuaBinaryString)
