@@ -110,6 +110,21 @@ juce_add_plugin("${PROJECT_NAME}"
     PRODUCT_NAME "${PRODUCT_NAME}"
 )
 
+# -------------------------------------------------------------------
+# CRITICAL FIX: LINUX RPATH (Runpath) for Bundled Dependencies
+# This tells the executable to look for shared libraries in a 'lib' folder
+# relative to the executable's location (which we will create in the ZIP).
+if(LINUX)
+    set_target_properties(${PROJECT_NAME}
+        PROPERTIES
+        INSTALL_RPATH "$ORIGIN/lib"
+        BUILD_RPATH "$ORIGIN/lib"
+        # The next line ensures the RPATH is used during linking
+        LINK_FLAGS "-Wl,-rpath,'$$ORIGIN/lib'"
+    )
+endif()
+# -------------------------------------------------------------------
+
 # --- VST3 Dynamic Name/Manufacturer Override ---
 # This block is essential for controlling the final VST3 plugin name
 # (which includes the trailing space from PLUGIN_DISPLAY_NAME) and manufacturer.
