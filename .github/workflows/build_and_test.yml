@@ -44,30 +44,33 @@ jobs:
     strategy:
       fail-fast: false # show all errors for each platform (vs. cancel jobs on error)
       matrix:
-        libsframe-soname: [1] # Default to 1 (will be overridden for Linux)
         include:
           # --- Linux Job 1: Build for Older Systems (libsframe.so.1) ---
-          - name: Linux
+          - name: Linux (libsframe.so.1)
             os: ubuntu-24.04
             pluginval-binary: ./pluginval
             extra-flags: -G Ninja -DJUCE_LINUX=1
             libsframe-soname: 1
           
           # --- Linux Job 2: Build for Newer Systems (libsframe.so.2) ---
-          - name: Linux
+          - name: Linux (libsframe.so.2)
             os: ubuntu-24.04
             pluginval-binary: ./pluginval
             extra-flags: -G Ninja -DJUCE_LINUX=1
             libsframe-soname: 2
 
+          # --- macOS Job (FIXED: Added libsframe-soname key) ---
           - name: macOS
             os: macos-14
             pluginval-binary: pluginval.app/Contents/MacOS/pluginval
             extra-flags: -G Ninja -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+            libsframe-soname: 0 # Dummy value
 
+          # --- Windows Job (FIXED: Added libsframe-soname key) ---
           - name: Windows
             os: windows-2022
             pluginval-binary: ./pluginval.exe
+            libsframe-soname: 0 # Dummy value
 
     steps:
       # Setup MSVC toolchain and developer command prompt (Windows)
