@@ -141,6 +141,16 @@ jobs:
             popd
           fi
 
+      - name: Create libsframe.so.2 compatibility symlink
+        run: |
+          # Check if .so.1 exists before creating the link
+          if [ -f "/usr/lib/x86_64-linux-gnu/libsframe.so.1" ]; then
+            echo "Creating compatibility link: libsframe.so.1 -> libsframe.so.2"
+            sudo ln -sf /usr/lib/x86_64-linux-gnu/libsframe.so.1 /usr/lib/x86_64-linux-gnu/libsframe.so.2
+          else
+            echo "libsframe.so.1 not found. Cannot create compatibility link. Build may fail."
+          fi
+    
       - name: Cache the build
         uses: mozilla-actions/sccache-action@v0.0.9
 
