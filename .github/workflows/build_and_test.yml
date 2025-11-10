@@ -347,7 +347,7 @@ jobs:
       # LINUX GPG SIGNING
       # -----------------------------------------------------------------
       - name: Set up GnuPG and Import Key
-        if: ${{ matrix.name == 'Linux' }}
+        if: runner.os == 'Linux'
         run: |
           # 1. Install GnuPG (if not already installed on ubuntu-24.04 runner)
           sudo apt-get update && sudo apt-get install -y gnupg
@@ -355,7 +355,7 @@ jobs:
           echo "${{ secrets.GPG_SIGNING_KEY }}" | gpg --batch --import
 
       - name: Sign the Linux Binary
-        if: ${{ matrix.name == 'Linux' }}
+        if: runner.os == 'Linux'
         # The target file is the Standalone executable, which is typically what you sign.
         # Based on your env setup, the Standalone binary is located at:
         # ${{ env.ARTIFACTS_PATH }}/Standalone/${{ env.PRODUCT_NAME }} (no extension on Linux)
@@ -380,7 +380,7 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
                     
       - name: Zip (Linux)
-        if: ${{ matrix.name == 'Linux' }}
+        if: runner.os == 'Linux'
         id: create_archive
         shell: bash
         run: |
@@ -506,7 +506,7 @@ jobs:
           path: "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.exe"
 
       - name: Upload Zip (Linux)
-        if: ${{ matrix.name == 'Linux' }}
+        if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
         with:
           # Use ARTIFACT_NAME only. GitHub will append .zip to the download name.
