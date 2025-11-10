@@ -150,7 +150,16 @@ jobs:
           else
             echo "libsframe.so.1 not found. Cannot create compatibility link. Build may fail."
           fi
-    
+
+      - name: Check Final Binary Dependencies
+        if: success()
+        run: |
+          echo "--- Checking dynamic libraries required by CtrlrX ---"
+          # Assuming executable is ./build/CtrlrX
+          ldd ./build/CtrlrX | grep libsframe
+          ldd ./build/CtrlrX | grep NOT
+          echo "----------------------------------------------------"
+
       - name: Cache the build
         uses: mozilla-actions/sccache-action@v0.0.9
 
