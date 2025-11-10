@@ -152,7 +152,7 @@ jobs:
           fi
 
       - name: Check Final Binary Dependencies
-        if: success()
+        if: runner.os == 'Linux' && success()
         run: |
           echo "--- Checking dynamic libraries required by CtrlrX ---"
           # Assuming executable is ./build/CtrlrX
