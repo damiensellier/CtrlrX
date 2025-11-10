@@ -86,7 +86,7 @@ jobs:
         if: runner.os == 'Linux'
         # Thanks to McMartin & co https://forum.juce.com/t/list-of-juce-dependencies-under-linux/15121/44
         run: |
-          sudo apt-get update && sudo apt install libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libglu1-mesa-dev xvfb ninja-build
+          sudo apt-get update && sudo apt install libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libglu1-mesa-dev xvfb **ninja-build**
           sudo /usr/bin/Xvfb $DISPLAY &
 
       - name: Install IPP (Windows)
@@ -214,10 +214,19 @@ jobs:
 
       - name: Pluginval
         run: |
-          curl -LO "https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_${{ matrix.name }}.zip"
-          7z x pluginval_${{ matrix.name }}.zip
-          ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}"
+          # 1. Use runner.os (e.g., 'Linux') for the download URL, NOT matrix.name
+          # This URL is clean and points to the correct, existing asset.
+          curl -LO "https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_${{ runner.os }}.zip"
 
+          # 2. Extract the archive. We need to install 7z first on Linux.
+          if [ "${{ runner.os }}" == "Linux" ]; then
+            sudo apt-get install -y p7zip-full
+          fi
+          7z x pluginval_${{ runner.os }}.zip
+
+          # 3. Validate using the binary defined in the matrix
+          ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}"
+          
       # -----------------------------------------------------------------
       # APPLE CODESIGNING STEPS
       # -----------------------------------------------------------------
