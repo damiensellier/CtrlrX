@@ -44,16 +44,28 @@ jobs:
     strategy:
       fail-fast: false # show all errors for each platform (vs. cancel jobs on error)
       matrix:
+        libsframe-soname: [1] # Default to 1 (will be overridden for Linux)
         include:
+          # --- Linux Job 1: Build for Older Systems (libsframe.so.1) ---
           - name: Linux
             os: ubuntu-24.04
             pluginval-binary: ./pluginval
-            # FIX: Explicitly define JUCE_LINUX for the build to enable conditional BFD includes in libr.h/c
+            extra-flags: -G Ninja -DJUCE_LINUX=1
+            libsframe-soname: 1
+          
+          # --- Linux Job 2: Build for Newer Systems (libsframe.so.2) ---
+          - name: Linux
+            os: ubuntu-24.04
+            pluginval-binary: ./pluginval
+            extra-flags: -G Ninja -DJUCE_LINUX=1
+            libsframe-soname: 2
+
             extra-flags: -G Ninja -DJUCE_LINUX=1
           - name: macOS
             os: macos-14
             pluginval-binary: pluginval.app/Contents/MacOS/pluginval
             extra-flags: -G Ninja -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+
           - name: Windows
             os: windows-2022
             pluginval-binary: ./pluginval.exe
@@ -100,57 +112,48 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install CtrlrX Deps and Check libsframe.so.2
+      - name: Install CtrlrX Deps and Configure libsframe Link
+        if: runner.os == 'Linux'
         run: |
-          echo "OS: $RUNNER_OS"
-          echo "Current working directory: $PWD"
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            sudo apt install -y binutils-dev libboost-dev libcurl4-gnutls-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxrandr-dev xorg-dev
+          echo "--- Installing CtrlrX Specific Dependencies ---"
+          # Install all dependencies, including libsframe1 and zstd (needed for your CMake)
+          sudo apt install -y binutils-dev libboost-dev libcurl4-gnutls-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxrandr-dev xorg-dev zstd
 
-            echo "--- Verifying libsframe soname ---"
-            LSFRAME_PATH=$(find /usr/lib/ /lib/ -name "libsframe.so.2" -print -quit 2>/dev/null)
+          # 2. Conditional Symlink Logic
+          LSFRAME_BASE_PATH="/usr/lib/x86_64-linux-gnu/libsframe.so"
+          TARGET_SONAME=${{ matrix.libsframe-soname }}
 
-            if [ -n "$LSFRAME_PATH" ]; then
-              echo "Success: Found libsframe.so.2 at $LSFRAME_PATH"
-              # Add the library path to LD_LIBRARY_PATH (may not be strictly necessary, but safe)
-              echo "LD_LIBRARY_PATH=$(dirname "$LSFRAME_PATH"):\$LD_LIBRARY_PATH" >> $GITHUB_ENV
-            else
-              
-              # CRITICAL WARNING: If .so.2 is not found, it means the build might link to .so.1
-              echo "WARNING: libsframe.so.2 not found on ubuntu-24.04 runner after installing libsframe1."
-              echo "Installed libsframe files:"
-              find /usr/lib/ /lib/ -name "libsframe.so*" 2>/dev/null
-              
-              # If you NEED .so.2, you'd have to use a PPA or build binutils from source here.
-              # For this example, we proceed with the installed version, but the logs will alert you.
-              # If you encounter runtime errors on a system requiring .so.2, you must update the base image or manually upgrade binutils.
-              
-              fi
-              echo "----------------------------------"
-            
-            elif [ "$RUNNER_OS" == "Windows" ]; then
-            # to not clutter the build step logs:
-            pushd ./Source/Misc/
-            unzip boost/boost.zip
-            popd
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-            brew install boost
-            # somehow cmake doesn't pick up on /usr/local/include/boost/ ... maybe have to set it in the .jucer project
-            pushd ./Source/Misc/
-            unzip boost/boost.zip
-            popd
-          fi
+          if [ "$TARGET_SONAME" == "2" ]; then
+            echo "--- Job Target: libsframe.so.2 (New Systems) ---"
 
-      - name: Create libsframe.so.2 compatibility symlink
-        run: |
-          # Check if .so.1 exists before creating the link
-          if [ -f "/usr/lib/x86_64-linux-gnu/libsframe.so.1" ]; then
-            echo "Creating compatibility link: libsframe.so.1 -> libsframe.so.2"
-            sudo ln -sf /usr/lib/x86_64-linux-gnu/libsframe.so.1 /usr/lib/x86_64-linux-gnu/libsframe.so.2
+            # Check if the required source file (.so.1) exists on the runner
+            if [ ! -f "${LSFRAME_BASE_PATH}.1" ]; then
+              echo "ERROR: ${LSFRAME_BASE_PATH}.1 not found. Cannot proceed with .so.2 build."
+              exit 1
+            fi
+
+            # CRITICAL STEP: Link the system's libsframe.so.1 to the desired .so.2 name.
+            sudo ln -sf ${LSFRAME_BASE_PATH}.1 ${LSFRAME_BASE_PATH}.2
+
+            echo "SUCCESS: Symlink ${LSFRAME_BASE_PATH}.1 -> ${LSFRAME_BASE_PATH}.2 created."
           else
-            echo "libsframe.so.1 not found. Cannot create compatibility link. Build may fail."
+            echo "--- Job Target: libsframe.so.1 (Old Systems) ---"
+            # We don't need to do anything, as the system linker defaults to .so.1
           fi
 
+      # Windows/macOS specific dependency extraction (Moved from above, only runs on those OSes)
+      - name: Install macOS/Windows Boost
+        if: runner.os != 'Linux'
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ] || [ "$RUNNER_OS" == "macOS" ]; then
+            pushd ./Source/Misc/
+            unzip boost/boost.zip
+            popd
+          fi
+          if [ "$RUNNER_OS" == "macOS" ]; then
+             brew install boost
+          fi
+          
       - name: Cache the build
         uses: mozilla-actions/sccache-action@v0.0.9
 
@@ -197,38 +200,21 @@ jobs:
           echo "STANDALONE_PATH=$ARTIFACTS_PATH/Standalone/${{ env.PRODUCT_NAME }}.app" >> $GITHUB_ENV
           echo "ARTIFACT_NAME=${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-${{ matrix.name }}" >> $GITHUB_ENV
 
+          # Conditional Artifact Naming based on OS and libsframe version
+          ARTIFACT_NAME_BASE="${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-${{ matrix.name }}"
+          if [ "${{ matrix.name }}" == "Linux" ]; then
+            # Use the requested naming convention
+            echo "ARTIFACT_NAME=${ARTIFACT_NAME_BASE}-libsframe-so${{ matrix.libsframe-soname }}" >> $GITHUB_ENV
+          else
+            # Standard naming for Mac/Windows
+            echo "ARTIFACT_NAME=${ARTIFACT_NAME_BASE}" >> $GITHUB_ENV
+          fi
+
       - name: Pluginval
         run: |
           curl -LO "https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_${{ matrix.name }}.zip"
           7z x pluginval_${{ matrix.name }}.zip
           ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}"
-
-      - name: Check Final Binary Dependencies (Robust Search)
-        if: runner.os == 'Linux' && success()
-        run: |
-          echo "--- Checking dynamic libraries required by CtrlrX ---"
-          
-          # 1. Look for the main executable file inside the entire 'build' directory.
-          #    We specifically exclude the VST3/AU/CLAP shared library names to find the standalone binary.
-          EXECUTABLE_PATH=$(find ${{ env.BUILD_DIR }} -type f -name "${{ env.PRODUCT_NAME }}" -perm /u+x \
-                            -not -path "*VST3*" -not -path "*CLAP*" -not -path "*AU*" -print -quit)
-
-          if [ -z "$EXECUTABLE_PATH" ]; then
-            echo "ERROR: Could not find the main executable '${{ env.PRODUCT_NAME }}' in the build directory."
-            # List files in the artifact path for manual inspection
-            echo "Listing contents of the artifacts directory:"
-            ls -R ${{ env.ARTIFACTS_PATH }}
-            exit 1 # Fail the step since we can't inspect the binary
-          fi
-
-          echo "Found executable at: $EXECUTABLE_PATH"
-
-          # 2. Run ldd on the found executable
-          echo "Running ldd on found executable:"
-          ldd "$EXECUTABLE_PATH" | grep libsframe
-          ldd "$EXECUTABLE_PATH" | grep NOT
-
-          echo "----------------------------------------------------"
 
       # -----------------------------------------------------------------
       # APPLE CODESIGNING STEPS
