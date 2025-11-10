@@ -203,15 +203,33 @@ jobs:
           7z x pluginval_${{ matrix.name }}.zip
           ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}"
 
-      - name: Check Final Binary Dependencies
+      - name: Check Final Binary Dependencies (Robust Search)
         if: runner.os == 'Linux' && success()
         run: |
           echo "--- Checking dynamic libraries required by CtrlrX ---"
-          # Assuming executable is ./build/CtrlrX
-          ldd ./build/CtrlrX | grep libsframe
-          ldd ./build/CtrlrX | grep NOT
+          
+          # 1. Look for the main executable file inside the entire 'build' directory.
+          #    We specifically exclude the VST3/AU/CLAP shared library names to find the standalone binary.
+          EXECUTABLE_PATH=$(find ${{ env.BUILD_DIR }} -type f -name "${{ env.PRODUCT_NAME }}" -perm /u+x \
+                            -not -path "*VST3*" -not -path "*CLAP*" -not -path "*AU*" -print -quit)
+
+          if [ -z "$EXECUTABLE_PATH" ]; then
+            echo "ERROR: Could not find the main executable '${{ env.PRODUCT_NAME }}' in the build directory."
+            # List files in the artifact path for manual inspection
+            echo "Listing contents of the artifacts directory:"
+            ls -R ${{ env.ARTIFACTS_PATH }}
+            exit 1 # Fail the step since we can't inspect the binary
+          fi
+
+          echo "Found executable at: $EXECUTABLE_PATH"
+
+          # 2. Run ldd on the found executable
+          echo "Running ldd on found executable:"
+          ldd "$EXECUTABLE_PATH" | grep libsframe
+          ldd "$EXECUTABLE_PATH" | grep NOT
+
           echo "----------------------------------------------------"
-                    
+
       # -----------------------------------------------------------------
       # APPLE CODESIGNING STEPS
       # -----------------------------------------------------------------
