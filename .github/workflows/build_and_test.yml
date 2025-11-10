@@ -100,13 +100,35 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install CtrlrX Deps
+      - name: Install CtrlrX Deps and Check libsframe.so.2
         run: |
           echo "OS: $RUNNER_OS"
           echo "Current working directory: $PWD"
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt install -y binutils-dev libboost-dev libcurl4-gnutls-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxrandr-dev xorg-dev
-          elif [ "$RUNNER_OS" == "Windows" ]; then
+
+            echo "--- Verifying libsframe soname ---"
+            LSFRAME_PATH=$(find /usr/lib/ /lib/ -name "libsframe.so.2" -print -quit 2>/dev/null)
+
+            if [ -n "$LSFRAME_PATH" ]; then
+              echo "Success: Found libsframe.so.2 at $LSFRAME_PATH"
+              # Add the library path to LD_LIBRARY_PATH (may not be strictly necessary, but safe)
+              echo "LD_LIBRARY_PATH=$(dirname "$LSFRAME_PATH"):\$LD_LIBRARY_PATH" >> $GITHUB_ENV
+            else
+              
+              # CRITICAL WARNING: If .so.2 is not found, it means the build might link to .so.1
+              echo "WARNING: libsframe.so.2 not found on ubuntu-24.04 runner after installing libsframe1."
+              echo "Installed libsframe files:"
+              find /usr/lib/ /lib/ -name "libsframe.so*" 2>/dev/null
+              
+              # If you NEED .so.2, you'd have to use a PPA or build binutils from source here.
+              # For this example, we proceed with the installed version, but the logs will alert you.
+              # If you encounter runtime errors on a system requiring .so.2, you must update the base image or manually upgrade binutils.
+              
+              fi
+              echo "----------------------------------"
+            
+            elif [ "$RUNNER_OS" == "Windows" ]; then
             # to not clutter the build step logs:
             pushd ./Source/Misc/
             unzip boost/boost.zip
