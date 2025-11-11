@@ -521,11 +521,6 @@ const Result CtrlrWindows::getDefaultResources(MemoryBlock& dataToWrite)
 	return (readResource (nullptr, MAKEINTRESOURCE(CTRLR_INTERNAL_RESOURCES_RESID), RT_RCDATA, dataToWrite));
 }
 
-const Result CtrlrWindows::getSignature(MemoryBlock &dataToWrite)
-{
-	return (readResource (nullptr, MAKEINTRESOURCE(CTRLR_INTERNAL_SIGNATURE_RESID), RT_RCDATA, dataToWrite));
-}
-
 const Result CtrlrWindows::registerFileHandler()
 {
 	if (!JUCEApplication::isStandaloneApp())

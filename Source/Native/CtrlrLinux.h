@@ -13,7 +13,6 @@ class CtrlrLinux : public CtrlrNative
 		const Result exportWithDefaultPanel(CtrlrPanel*  panelToWrite, const bool isRestricted=false, const bool signPanel=false);
 		const Result getDefaultPanel(MemoryBlock& dataToWrite);
 		const Result getDefaultResources(MemoryBlock& dataToWrite);
-		const Result getSignature(MemoryBlock &dataToWrite);
         const Result sendKeyPressEvent(const KeyPress &event);
     private:
         CtrlrManager &owner;

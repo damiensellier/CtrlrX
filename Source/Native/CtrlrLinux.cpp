@@ -496,29 +496,6 @@ const Result CtrlrLinux::getDefaultResources(MemoryBlock& dataToWrite)
     return Result::fail("Failed to retrieve resources");
 }
 
-const Result CtrlrLinux::getSignature(MemoryBlock &dataToWrite)
-{
-    File pluginBinary = getVST3PluginPath();
-    libr_file *handle = libr_open(pluginBinary.getFullPathName().toUTF8().getAddress(), LIBR_READ);
-    
-    if (handle == nullptr) {
-        return Result::fail("libr_open failed");
-    }
-    
-    size_t signatureDataSize;
-    char *signatureData = (char *)libr_malloc(handle, (char *)CTRLR_INTERNAL_RESOURCES_SECTION, &signatureDataSize);
-    
-    if (signatureData == nullptr) {
-        libr_close(handle);
-        return Result::fail("libr_malloc didn't find signature");
-    }
-    
-    dataToWrite.append(signatureData, signatureDataSize);
-    libr_close(handle);
-    
-    return Result::ok();
-}
-
 const Result CtrlrLinux::sendKeyPressEvent(const KeyPress &event)
 {
     return ctrlr_sendKeyPressEvent(event);
