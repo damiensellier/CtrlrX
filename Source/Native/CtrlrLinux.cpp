@@ -15,11 +15,6 @@
 #include <vector>
 #include <cstring>  // For strlen, memcpy
 
-extern "C"
-{
-#include "libr.h"
-}
-
 // --- Utility Functions ---
 
 static MemoryBlock hexToBytes(const String& hexString) {
