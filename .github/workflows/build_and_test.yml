@@ -41,6 +41,7 @@ jobs:
       HAVE_DEV_ID_APP_CERT: ${{ secrets.DEV_ID_APP_CERT != '' }}
       HAVE_DEV_ID_INSTALLER_CERT: ${{ secrets.DEV_ID_INSTALLER_CERT != '' }}
       HAVE_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET != '' }}
+      HAVE_GPG_KEY: ${{ secrets.GPG_SIGNING_KEY != '' }}
     strategy:
       fail-fast: false # show all errors for each platform (vs. cancel jobs on error)
       matrix:
@@ -291,7 +292,7 @@ jobs:
       # LINUX GPG SIGNING
       # -----------------------------------------------------------------
       - name: Set up GnuPG and Import Key
-        if: ${{ matrix.name == 'Linux' }}
+        if: ${{ matrix.name == 'Linux' && env.HAVE_GPG_KEY == 'true' }}
         run: |
           # 1. Install GnuPG (if not already installed on ubuntu-24.04 runner)
           sudo apt-get update && sudo apt-get install -y gnupg
@@ -299,7 +300,7 @@ jobs:
           echo "${{ secrets.GPG_SIGNING_KEY }}" | gpg --batch --import
 
       - name: Sign the Linux Binary
-        if: ${{ matrix.name == 'Linux' }}
+        if: ${{ matrix.name == 'Linux' && env.HAVE_GPG_KEY == 'true' }}
         # The target file is the Standalone executable, which is typically what you sign.
         # Based on your env setup, the Standalone binary is located at:
         # ${{ env.ARTIFACTS_PATH }}/Standalone/${{ env.PRODUCT_NAME }} (no extension on Linux)
@@ -323,8 +324,8 @@ jobs:
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
                     
-      - name: Zip (Linux)
-        if: ${{ matrix.name == 'Linux' }}
+      - name: Zip (Linux) - GPG Signed
+        if: ${{ matrix.name == 'Linux' && env.HAVE_GPG_KEY == 'true' }}
         id: create_archive
         shell: bash
         run: |
@@ -343,6 +344,40 @@ jobs:
           # 2. Copy final assets into the INTERNAL folder
           cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}" "tmp_linux_archive/$INTERNAL_FOLDER_NAME/"
           cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}.sig" "tmp_linux_archive/$INTERNAL_FOLDER_NAME/"
+          cp -r "build/CtrlrX_artefacts/Release/VST3/CtrlrX.vst3" "tmp_linux_archive/$INTERNAL_FOLDER_NAME/"
+
+          # 3. Change into the temporary staging directory (which contains ONE subfolder)
+          cd tmp_linux_archive
+
+          # 4. Create the final ZIP archive. 
+          # Zipping '*' from here includes the single subfolder and its contents.
+          zip -r "$ABSOLUTE_ZIP_PATH" *    
+
+          # Set output (harmless)
+          echo "ARCHIVE_PATH=$FINAL_ZIP_NAME" >> $GITHUB_OUTPUT
+
+      # -----------------------------------------------------------------
+      # Unsigned Packaging (Fallback)
+      # -----------------------------------------------------------------
+      - name: Zip (Linux) - GPG Unsigned Fallback
+        if: ${{ matrix.name == 'Linux' && env.HAVE_GPG_KEY != 'true' }}
+        id: create_archive
+        shell: bash
+        run: |
+          ARTIFACT_DIR="${{ env.ARTIFACTS_PATH }}/Standalone"
+
+          # Define the internal folder name for the user's extraction
+          INTERNAL_FOLDER_NAME="${{ env.ARTIFACT_NAME }}" # NO "-Signed" suffix
+          
+          # Define the final output file name on the runner (use the simple, absolute path)
+          FINAL_ZIP_NAME="${{ env.ARTIFACT_NAME }}.zip"
+          ABSOLUTE_ZIP_PATH="${{ github.workspace }}/$FINAL_ZIP_NAME"
+
+          # 1. Create a temporary staging folder and the internal target folder
+          mkdir -p "tmp_linux_archive/$INTERNAL_FOLDER_NAME"
+
+          # 2. Copy final assets into the INTERNAL folder
+          cp "${ARTIFACT_DIR}/${{ env.PRODUCT_NAME }}" "tmp_linux_archive/$INTERNAL_FOLDER_NAME/"
           cp -r "build/CtrlrX_artefacts/Release/VST3/CtrlrX.vst3" "tmp_linux_archive/$INTERNAL_FOLDER_NAME/"
 
           # 3. Change into the temporary staging directory (which contains ONE subfolder)
