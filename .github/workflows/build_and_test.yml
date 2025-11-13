@@ -326,7 +326,7 @@ jobs:
                     
       - name: Zip (Linux) - GPG Signed
         if: ${{ matrix.name == 'Linux' && env.HAVE_GPG_KEY == 'true' }}
-        id: create_archive
+        id: create_archive_signed
         shell: bash
         run: |
           ARTIFACT_DIR="${{ env.ARTIFACTS_PATH }}/Standalone"
@@ -361,7 +361,7 @@ jobs:
       # -----------------------------------------------------------------
       - name: Zip (Linux) - GPG Unsigned Fallback
         if: ${{ matrix.name == 'Linux' && env.HAVE_GPG_KEY != 'true' }}
-        id: create_archive
+        id: create_archive_unsigned
         shell: bash
         run: |
           ARTIFACT_DIR="${{ env.ARTIFACTS_PATH }}/Standalone"
