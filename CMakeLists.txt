@@ -255,32 +255,20 @@ target_link_libraries(SharedCode
     juce::juce_recommended_warning_flags)
 
 if(LINUX)
-    set(LIBBFD_USE_STATIC_LIBS TRUE)
-    find_package(libbfd REQUIRED)
-    find_package(zstd REQUIRED)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(libudev REQUIRED libudev)
     pkg_check_modules(x11 REQUIRED x11)
     pkg_check_modules(zlib REQUIRED zlib)
 
-    # AFAIK there's no cmake config (FindXYZ) yet for these.
-    # Replace with find_package once available...
-    # find_library(sframe_LIBRARY NAMES sframe)
-
     message(STATUS "libudev version: ${libudev_VERSION}")
     message(STATUS "libX11 version: ${x11_VERSION}")
     message(STATUS "libz version: ${zlib_VERSION}")
-    message(STATUS "libbfd found: ${LIBBFD_FOUND}")
-    # message(STATUS "libsframe at: ${sframe_LIBRARY}")
 
     target_link_libraries(SharedCode
         INTERFACE
         ${libudev_LIBRARIES}
-        ${LIBBFD_LIBRARIES}
         ${zlib_LIBRARIES}
         ${x11_LIBRARIES}
-        # ${sframe_LIBRARY} #
-        zstd::libzstd_shared
     )
 endif()
 
