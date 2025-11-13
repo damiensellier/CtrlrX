@@ -60,8 +60,19 @@ project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 # On Github Actions, this is done as a part of actions/checkout
 add_subdirectory(JUCE)
 
-# Add CLAP format
-#add_subdirectory(modules/clap-juce-extensions EXCLUDE_FROM_ALL)
+# ---------------------------------------------------
+if ("VST" IN_LIST FORMATS)
+    # Set VST2 path relative to the project root
+    juce_set_vst2_sdk_path("${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/vst2sdk")
+endif()
+# ---------------------------------------------------
+
+# ---------------------------------------------------
+if ("AAX" IN_LIST FORMATS)
+    # Set AAX path relative to the project root
+    juce_set_aax_sdk_path("${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/aax-sdk-2-8-1")
+endif()
+# ---------------------------------------------------
 
 # Add any other modules you want modules here, before the juce_add_plugin call
 # juce_add_module(modules/my_module)
@@ -132,12 +143,21 @@ endif()
 # Without running into ODR violations
 add_library(SharedCode INTERFACE)
 
-#clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
-#    CLAP_ID "${BUNDLE_ID}"
-#    CLAP_FEATURES audio-effect)
 
 # Enable fast math, C++20 and a few other target defaults
 include(SharedCodeDefaults)
+
+
+#Add this if the Release version is crashing due to over optimisation of LuaBind
+# -----------------------------------------------------------------------
+# --- FIX: Disable optimization for the crashing LuaBind file ---
+# This uses COMPILE_FLAGS to correctly pass the -O0 flag to the compiler, 
+# bypassing the optimization bug in Release/RelWithDebInfo builds.
+set_source_files_properties(
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/luabind/src/object_rep.cpp"
+    PROPERTIES COMPILE_FLAGS "-O0"
+)
+# -----------------------------------------------------------------------
 
 
 # Manually list all .h and .cpp files for the plugin
