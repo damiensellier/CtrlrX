@@ -255,7 +255,6 @@ target_link_libraries(SharedCode
     juce::juce_recommended_warning_flags)
 
 if(LINUX)
-    find_package(zstd REQUIRED)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(libudev REQUIRED libudev)
     pkg_check_modules(x11 REQUIRED x11)
@@ -270,7 +269,6 @@ if(LINUX)
         ${libudev_LIBRARIES}
         ${zlib_LIBRARIES}
         ${x11_LIBRARIES}
-        zstd::libzstd_shared
     )
 endif()
 
