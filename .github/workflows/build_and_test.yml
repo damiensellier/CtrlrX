@@ -40,6 +40,7 @@ jobs:
     env:
       HAVE_DEV_ID_APP_CERT: ${{ secrets.DEV_ID_APP_CERT != '' }}
       HAVE_DEV_ID_INSTALLER_CERT: ${{ secrets.DEV_ID_INSTALLER_CERT != '' }}
+      HAVE_MACOS_SIGNING_SECRETS: ${{ secrets.DEV_ID_COMBO_CERT != '' && secrets.DEVELOPER_ID_APPLICATION != '' && secrets.NOTARIZATION_PASSWORD != '' }}
       HAVE_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET != '' }}
       HAVE_GPG_KEY: ${{ secrets.GPG_SIGNING_KEY != '' }}
     strategy:
@@ -177,7 +178,7 @@ jobs:
       # -----------------------------------------------------------------
       # Step 1: Import Merged Developer ID Certificates (This is confirmed working)
       - name: Import Merged Developer ID Certificates
-        if: ${{ matrix.name == 'macOS' }}
+        if: ${{ matrix.name == 'macOS' && env.HAVE_MACOS_SIGNING_SECRETS == 'true' }}
         uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.DEV_ID_COMBO_CERT }}
@@ -188,7 +189,7 @@ jobs:
 
       # Step 2: Final Keychain Configuration (Bypass all trust anchor imports)
       - name: Final Keychain Configuration (Bypass Trust Anchor Import)
-        if: ${{ matrix.name == 'macOS' }}
+        if: ${{ matrix.name == 'macOS' && env.HAVE_MACOS_SIGNING_SECRETS == 'true' }}
         run: |
           KEYCHAIN_NAME="signing_temp"
           KEYCHAIN_ABS_PATH="/Users/runner/Library/Keychains/${KEYCHAIN_NAME}.keychain-db"
@@ -198,7 +199,7 @@ jobs:
 
       # Step 3: Diagnostic and Codesign (The identity name is corrected here)
       - name: Codesign (macOS)
-        if: ${{ matrix.name == 'macOS' }}
+        if: ${{ matrix.name == 'macOS' && env.HAVE_MACOS_SIGNING_SECRETS == 'true' }}
         run: |
           APP_IDENTITY="${{ secrets.DEVELOPER_ID_APPLICATION }}"
 
@@ -245,7 +246,7 @@ jobs:
       # STEP 1: Signed Packaging and Notarization (Full Process)
       # -----------------------------------------------------------------
       - name: Signed Packaging and Notarization (macOS)
-        if: ${{ matrix.name == 'macOS' && env.HAVE_DEV_ID_APP_CERT == 'true' && env.HAVE_DEV_ID_INSTALLER_CERT == 'true' }}
+        if: ${{ matrix.name == 'macOS' && env.HAVE_MACOS_SIGNING_SECRETS == 'true' }}
         timeout-minutes: 5
         run: |
           pkgbuild --identifier "${{ env.BUNDLE_ID }}.au.pkg" --version $VERSION --component "${{ env.AU_PATH }}" --install-location "/Library/Audio/Plug-Ins/Components"  "Packaging/${{ env.PRODUCT_NAME }}.au.pkg"
@@ -270,7 +271,7 @@ jobs:
       # STEP 2: Unsigned Packaging (Fallback)
       # -----------------------------------------------------------------
       - name: Unsigned Packaging (macOS)
-        if: ${{ matrix.name == 'macOS' && (env.HAVE_DEV_ID_APP_CERT != 'true' || env.HAVE_DEV_ID_INSTALLER_CERT != 'true') }}
+        if: ${{ matrix.name == 'macOS' && env.HAVE_MACOS_SIGNING_SECRETS != 'true' }}
         timeout-minutes: 5
         run: |
           echo "WARNING: Codesigning secrets not found. Building unsigned package only."
