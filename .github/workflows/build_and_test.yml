@@ -39,7 +39,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       # macOS certificates need to be combined as a single p12 file.
-      # DEV_ID_COMBO_CERT : p12 coombined certificate
+      # DEV_ID_COMBO_CERT : p12 combined certificates (Developer ID Installer & Developer ID Application)
       # DEV_ID_COMBO_PASSWORD : p12 certificate password
       # DEVELOPER_ID_APPLICATION : Apple DEV Application ID for codesigning
       # DEVELOPER_ID_INSTALLER : Apple DEV identity name used for signing the final PKG installer
