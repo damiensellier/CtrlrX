@@ -38,9 +38,16 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     env:
-      HAVE_DEV_ID_APP_CERT: ${{ secrets.DEV_ID_APP_CERT != '' }}
-      HAVE_DEV_ID_INSTALLER_CERT: ${{ secrets.DEV_ID_INSTALLER_CERT != '' }}
-      HAVE_MACOS_SIGNING_SECRETS: ${{ secrets.DEV_ID_COMBO_CERT != '' && secrets.DEVELOPER_ID_APPLICATION != '' && secrets.NOTARIZATION_PASSWORD != '' }}
+      # macOS certificates need to be combined as a single p12 file.
+      HAVE_MACOS_SIGNING_SECRETS: ${{ 
+        secrets.DEV_ID_COMBO_CERT != '' && # p12 coombined certificate
+        secrets.DEV_ID_COMBO_PASSWORD != '' && # p12 certificate password
+        secrets.DEVELOPER_ID_APPLICATION != '' && # Apple DEV Application ID for codesigning
+        secrets.DEVELOPER_ID_INSTALLER != '' && # Apple DEV identity name used for signing the final PKG installer
+        secrets.NOTARIZATION_USERNAME != '' && # Apple DEV account username for Notarization
+        secrets.NOTARIZATION_PASSWORD != '' && # App-Specific Password (appleid.apple.com) used for the Notarization submission
+        secrets.TEAM_ID != '' # Apple DEV account username Team ID
+      }}
       HAVE_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET != '' }}
       HAVE_GPG_KEY: ${{ secrets.GPG_SIGNING_KEY != '' }}
     strategy:
