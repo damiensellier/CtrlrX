@@ -39,7 +39,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       # macOS certificates need to be combined as a single p12 file.
-      HAVE_MACOS_SIGNING_SECRETS: ${{ 
+      HAVE_MACOS_SIGNING_SECRETS: ${{
         secrets.DEV_ID_COMBO_CERT != '' && # p12 coombined certificate
         secrets.DEV_ID_COMBO_PASSWORD != '' && # p12 certificate password
         secrets.DEVELOPER_ID_APPLICATION != '' && # Apple DEV Application ID for codesigning
