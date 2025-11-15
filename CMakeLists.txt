@@ -108,13 +108,11 @@ juce_add_plugin("${PROJECT_NAME}"
 
     # See JUCE/docs/CMake API.md
     # --- CORE PLUGIN CHARACTERISTICS FROM PROJUCER ---
-    IS_SYNTH FALSE
+    IS_SYNTH TRUE
     IS_MIDI_EFFECT TRUE
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT TRUE
     EDITOR_WANTS_KEYBOARD_FOCUS TRUE
-    VST3_CATEGORIES "Fx External NoOfflineProcess"
-    AU_MAIN_TYPE "kAudioUnitType_MIDIProcessor"
     # -------------------------------------------------
 
     # FIX: VST3 Category is set using the official plural argument (VST3_CATEGORIES)
