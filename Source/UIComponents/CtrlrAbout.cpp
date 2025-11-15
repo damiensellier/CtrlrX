@@ -327,7 +327,9 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
         instanceVersion->setText (owner.getActivePanel()->getVersionString(false, false, "."), dontSendNotification);
         instanceAuthor->setText (owner.getActivePanel()->getProperty(Ids::panelAuthorName).toString(), dontSendNotification);
         instanceUrl->setButtonText (owner.getActivePanel()->getProperty(Ids::panelAuthorUrl));
-        instanceUrl->setURL(URL(owner.getActivePanel()->getProperty(Ids::panelAuthorUrl)));
+        #if ! JUCE_LINUX
+        instanceUrl->setURL(URL(owner.getActivePanel()->getProperty(Ids::panelAuthorUrl))); // Updated 5.6.34. Added condition for LINUX to prevent crash from the About window.
+        #endif
         instanceDescription->setText (owner.getActivePanel()->getProperty(Ids::panelAuthorDesc).toString(), dontSendNotification);
     }
     
