@@ -29,13 +29,13 @@ CPMAddPackage("gh:catchorg/Catch2@3.8.1")
 
 # Setup the test executable, again C++20 please
 add_executable(Tests ${TestFiles})
-target_compile_features(Tests PRIVATE cxx_std_20)
+target_compile_features(Tests PRIVATE cxx_std_14)
 
 # Our test executable also wants to know about our plugin code...
-target_include_directories(Tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source)
+#target_include_directories(Tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 
 # Copy over compile definitions from our plugin target so it has all the JUCEy goodness
-target_compile_definitions(Tests PRIVATE $<TARGET_PROPERTY:${PROJECT_NAME},COMPILE_DEFINITIONS>)
+#target_compile_definitions(Tests PRIVATE $<TARGET_PROPERTY:${PROJECT_NAME},COMPILE_DEFINITIONS>)
 
 # And give tests access to our shared code
 target_link_libraries(Tests PRIVATE SharedCode Catch2::Catch2)

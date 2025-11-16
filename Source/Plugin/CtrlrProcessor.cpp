@@ -15,12 +15,12 @@ const uint32 magicXmlNumber = 0x00001040;
 CtrlrProcessor::CtrlrProcessor() :
                                     #ifndef JucePlugin_PreferredChannelConfigurations
                                     AudioProcessor (BusesProperties()
-                                        #if ! JucePlugin_IsMidiEffect
+                                        //#if ! JucePlugin_IsMidiEffect
                                         //#if ! JucePlugin_IsSynth // Removed v5.6.32. Was disabling all required Inputs for Audio Channel Insert FX Mode
                                                     .withInput  ("Input",  AudioChannelSet::stereo(), true)
                                         //#endif
                                                     .withOutput ("Output", AudioChannelSet::stereo(), true)
-                                        #endif
+                                        //#endif
                                                     ),
                                         #endif
 
