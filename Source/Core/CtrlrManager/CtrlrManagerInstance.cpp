@@ -176,7 +176,7 @@ const String CtrlrManager::getInstanceNameForHost() const
 {
 	if (getInstanceMode() == InstanceSingle || getInstanceMode() == InstanceSingleRestriced)
 	{
-        #ifdef JucePlugin_Build_AAX
+        #if JucePlugin_Build_AAX
             // This code runs ONLY when building for AAX.
             return (ctrlrPlayerInstanceTree.getProperty(Ids::name).toString());
         #else

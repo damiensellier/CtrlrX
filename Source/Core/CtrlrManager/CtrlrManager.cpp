@@ -216,17 +216,17 @@ void CtrlrManager::restoreState (const ValueTree &savedTree)
     _DBG("CtrlrManager::restoreState (ValueTree) enter");
 
     // --- Start: Conditional MessageManagerLock for Thread Safety ---
-    #ifndef JucePlugin_Build_AAX
-        // This lock is often necessary for thread safety in other plugin formats (VST/AU/Standalone)
-        // when setStateInformation might involve direct UI updates or MessageManager interactions.
-        // It's REMOVED for AAX builds because AAX calls setStateInformation on a host thread
-        // where acquiring this lock directly can cause deadlocks in newer JUCE versions (v4+).
-        MessageManagerLock mmlock;
-        _DBG("CtrlrManager::restoreState: MessageManagerLock acquired (non-AAX build).");
+    #if JucePlugin_Build_AAX
+		// For AAX builds, the lock is bypassed to prevent deadlock.
+		// Any UI-touching code below MUST be marshalled to the Message Thread via callAsync.
+		_DBG("CtrlrManager::restoreState: MessageManagerLock skipped (AAX build).");
     #else
-        // For AAX builds, the lock is bypassed to prevent deadlock.
-        // Any UI-touching code below MUST be marshalled to the Message Thread via callAsync.
-        _DBG("CtrlrManager::restoreState: MessageManagerLock skipped (AAX build).");
+		// This lock is often necessary for thread safety in other plugin formats (VST/AU/Standalone)
+		// when setStateInformation might involve direct UI updates or MessageManager interactions.
+		// It's REMOVED for AAX builds because AAX calls setStateInformation on a host thread
+		// where acquiring this lock directly can cause deadlocks in newer JUCE versions (v4+).
+		MessageManagerLock mmlock;
+		_DBG("CtrlrManager::restoreState: MessageManagerLock acquired (non-AAX build).");
     #endif
     // --- End: Conditional MessageManagerLock ---
 
@@ -301,7 +301,7 @@ void CtrlrManager::restoreState (const ValueTree &savedTree)
         // --- CRITICAL SECTION FOR AAX UI-RELATED WORK ---
         // If restoreEditorState() (or anything it calls) involves creating/modifying JUCE UI components,
         // it MUST be explicitly marshalled to the JUCE Message Manager thread for AAX builds.
-        #ifdef JucePlugin_Build_AAX
+        #if JucePlugin_Build_AAX
             _DBG("CtrlrManager::restoreState: AAX build - scheduling restoreEditorState on Message Thread.");
             juce::MessageManager::callAsync ([this]() {
                 // This lambda (the code inside {}) will be executed on the JUCE Message Manager thread.
