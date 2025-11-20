@@ -26,17 +26,13 @@ TEST_F(ProcessorInstance, midi_processing_pass_through)
     // expecting pass-through behavior:
     ASSERT_EQ(midiMessages.getNumEvents(), 2);
 
-    MidiMessage m;
-    int sample_pos;
-    MidiBuffer::Iterator midi_iter(midiMessages);
+    auto midi_iter = midiMessages.begin();
+    EXPECT_TRUE((*midi_iter).getMessage().isNoteOn());
+    EXPECT_EQ((*midi_iter).samplePosition, 0) << "First midi event should be at sample position 0";
 
-    midi_iter.getNextEvent(m, sample_pos);
-    EXPECT_TRUE(m.isNoteOn());
-    EXPECT_EQ(sample_pos, 0) << "First midi event should be at sample position 0";
-
-    midi_iter.getNextEvent(m, sample_pos);
-    EXPECT_TRUE(m.isNoteOff());
-    EXPECT_EQ(sample_pos, 128) << "Second midi event should be at sample position 128";
+    midi_iter++;
+    EXPECT_TRUE((*midi_iter).getMessage().isNoteOff());
+    EXPECT_EQ((*midi_iter).samplePosition, 128) << "Second midi event should be at sample position 128";
 }
 
 TEST_F(ProcessorInstance, audio_processing_clears_audio_buffer)
