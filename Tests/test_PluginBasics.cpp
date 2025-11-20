@@ -1,8 +1,11 @@
 #include "test_fixture.h"
 
 
-TEST_F(ProcessorInstance, all_ok)
+TEST_F(ProcessorInstance, basic_processor_properties)
 {
+    EXPECT_EQ(processor.getName().toStdString(), "CtrlrX");
+    EXPECT_EQ(processor.getTotalNumInputChannels(), 2);
+    EXPECT_EQ(processor.getTotalNumOutputChannels(), 2);
 }
 
 TEST_F(ProcessorInstance, midi_io_capabilities)

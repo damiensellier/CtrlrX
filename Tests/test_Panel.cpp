@@ -22,7 +22,6 @@ class PrintToStdOutListener : public CtrlrLog::Listener {
 
 TEST_F(ProcessorInstance, test_panel_loads_ok)
 {
-    //ASSERT_TRUE(std::filesystem::exists("test.panel")); // only since c++17
     ASSERT_TRUE(file_exists("test.panel"));
 
     // to get some extra output for the Release build:
@@ -31,6 +30,8 @@ TEST_F(ProcessorInstance, test_panel_loads_ok)
     ASSERT_NO_THROW(processor.openFileFromCli(File("test.panel")));
 
     ASSERT_EQ(processor.getManager().getNumPanels(), 1) << "Expected 1 panel to be loaded";
+    
+    EXPECT_EQ(processor.getName().toStdString(), "CtrlrX");
     
     CtrlrPanel* panel = processor.getManager().getPanel("Test Panel");
     ASSERT_NE(panel, nullptr) << "CtrlrX can't find the panel 'Test Panel'...";

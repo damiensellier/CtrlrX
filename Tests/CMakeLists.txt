@@ -2,6 +2,7 @@ find_package(GTest)
 
 if(GTest_FOUND)
     include(GoogleTest)
+    message(STATUS "Tests enabled")
 
     # Copy the test panel to the build directory
     configure_file("test.panel" "test.panel" COPYONLY)
@@ -19,6 +20,10 @@ if(GTest_FOUND)
         ${PROJECT_NAME})
     target_compile_definitions(Tests PRIVATE $<TARGET_PROPERTY:${PROJECT_NAME},COMPILE_DEFINITIONS>)
     target_include_directories(Tests PRIVATE $<TARGET_PROPERTY:${PROJECT_NAME},INCLUDE_DIRECTORIES>)
+    target_compile_features(Tests PRIVATE cxx_std_14)
+    if ((DEFINED ENV{CI}))
+        target_compile_definitions(Tests PUBLIC CI=1)
+    endif ()
 
     gtest_discover_tests(Tests)
 endif()
