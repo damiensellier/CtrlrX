@@ -17,22 +17,22 @@ class CtrlrPanelCanvasLayer :   public Component,
 	public:
 		CtrlrPanelCanvasLayer(CtrlrPanelCanvas &_owner);
 		~CtrlrPanelCanvasLayer();
-		void paint (Graphics &g);
-		void valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChanged, const Identifier &property);
+		void paint (Graphics &g) override;
+		void valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChanged, const Identifier &property) override;
 		void valueTreeChildrenChanged (ValueTree &/*treeWhoseChildHasChanged*/){}
-		void valueTreeParentChanged (ValueTree &/*treeWhoseParentHasChanged*/){}
-		void valueTreeChildAdded (ValueTree& /*parentTree*/, ValueTree& /*childWhichHasBeenAdded*/){}
-        void valueTreeChildRemoved (ValueTree& /*parentTree*/, ValueTree& /*childWhichHasBeenRemoved*/, int){}
-        void valueTreeChildOrderChanged (ValueTree& /*parentTreeWhoseChildrenHaveMoved*/, int, int){}
+		void valueTreeParentChanged (ValueTree &/*treeWhoseParentHasChanged*/) override {}
+		void valueTreeChildAdded (ValueTree& /*parentTree*/, ValueTree& /*childWhichHasBeenAdded*/) override {}
+        void valueTreeChildRemoved (ValueTree& /*parentTree*/, ValueTree& /*childWhichHasBeenRemoved*/, int) override {}
+        void valueTreeChildOrderChanged (ValueTree& /*parentTreeWhoseChildrenHaveMoved*/, int, int) override {}
 		void restoreState (const ValueTree &savedState);
-		ValueTree &getObjectTree();
+		ValueTree &getObjectTree() override;
 		void setProperty (const Identifier& name, const var &newValue, const bool isUndoable=false);
-		const var &getProperty (const Identifier& name) const;
+		const var &getProperty (const Identifier& name) const override;
 		const var getProperty (const Identifier& name, const var &defaultReturnValue) const;
 		static void wrapForLua(lua_State *L);
 		void moveUp();
 		void moveDown();
-		void resized();
+		void resized() override;
 		void setVisible(bool shouldBeVisible) override; // to override Component::setVisible and update the ValueTree property too
 		void setCustomLookAndFeel(const luabind::object &customLookAndFeel);
         void setCustomLookAndFeel (LookAndFeelBase *customLookAndFeel);
