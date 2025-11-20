@@ -157,18 +157,15 @@ jobs:
       - name: Test & Benchmarks
         # for now, if tests fail, we do continue...
         continue-on-error: true
-        working-directory: ${{ env.BUILD_DIR }}
+        working-directory: ${{ env.BUILD_DIR }}/Tests
         run: |
           pwd
-          ls -lh Tests
           echo "------------- test method: -----------"
           ctest --verbose --output-on-failure
           echo ""
           echo "------------- other test method: -----------"
           echo ""
-          pushd Tests
           ./Tests
-          popd
 
 
       - name: Read in .env from CMake # see GitHubENV.cmake
