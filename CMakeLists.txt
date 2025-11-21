@@ -309,8 +309,8 @@ include(PamplejuceIPP)
 
 # Everything related to the tests target
 #include(Tests) # This would use the Catch2 framework and recompile the source-code...
-add_subdirectory(Tests)
 enable_testing()
+add_subdirectory(Tests)
 
 # A separate target for Benchmarks (keeps the Tests target fast)
 #include(Benchmarks) # enable once we have benchmarks...
