@@ -421,7 +421,7 @@ void LMemoryBlock::wrapForLua (lua_State *L)
 		class_<LMemoryBlock,bases<MemoryBlock> >("MemoryBlock")
 				.def(constructor<>())
 				.def(constructor<const size_t, bool>())
-				.def(constructor<const int>())
+				// .def(constructor<const int>()) // Useless and returns size x2. SEE: https://github.com/damiensellier/CtrlrX/issues/196#issuecomment-3555426383
 				.def(constructor<const MemoryBlock&>())
 				.def(constructor<luabind::object const&>())
 				.def(constructor<const String&>())
