@@ -1,6 +1,5 @@
 #include "stdafx.h"
-#define LINUX
-#ifdef LINUX
+#ifdef __linux__ // Updated v5.6.35. Thanks to @dnaldoog. SEE: https://github.com/damiensellier/CtrlrX/pull/193#issuecomment-3561230356
 #define PACKAGE "Ctrlr"
 
 #include "CtrlrMacros.h"
