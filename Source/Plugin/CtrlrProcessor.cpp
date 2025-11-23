@@ -26,7 +26,8 @@ CtrlrProcessor::CtrlrProcessor() :
 
                                     overridesTree (Ids::ctrlrOverrides),
                                     ctrlrManager (nullptr),
-                                    ctrlrLog (nullptr) // Added v5.6.34. Could be useful
+                                    ctrlrLog (nullptr), // Added v5.6.34. Could be useful
+                                    sample_to_seconds(1.0/SAMPLERATE)
 {
 	_DBG("CtrlrProcessor::ctor");
 
@@ -123,6 +124,8 @@ const String CtrlrProcessor::getName() const
 
 void CtrlrProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    sample_to_seconds = 1.0/sampleRate;
+    lastMidiCollectorOutputTimeMs = Time::getMillisecondCounterHiRes() - 1000.0 * samplesPerBlock * sample_to_seconds;
     midiCollector.reset (sampleRate);
     leftoverBuffer.ensureSize (8192);
 }
@@ -167,16 +170,15 @@ void CtrlrProcessor::processBlock (juce::AudioSampleBuffer& buffer, juce::MidiBu
         getPlayHead()->getCurrentPosition(info);
     }
 
+    
     // 3. Add incoming host MIDI to your collector via your custom function
-    // This will now apply the 0-timestamp workaround inside addMidiToOutputQueue (const MidiBuffer &buffer)
     if (midiMessages.getNumEvents() > 0) // Only process if there are events
     {
+        // if we add the midi output here, then the "midi thru" (panelMidiThruH2H) options of any panels are ignored.
+        // We should only do this for the 'leftOver' messages from the panels...
         addMidiToOutputQueue (midiMessages);
-    }
 
-    // 4. Call processPanels with the raw host input (as you had it)
-    if (midiMessages.getNumEvents() > 0)
-    {
+        // 4. Call processPanels with the raw host input (as you had it)
         processPanels(midiMessages, info);
     }
 
@@ -186,6 +188,7 @@ void CtrlrProcessor::processBlock (juce::AudioSampleBuffer& buffer, juce::MidiBu
     // 6. Get MIDI messages from the collector for output
     // (This part of midiCollector should still work as intended for output)
     midiCollector.removeNextBlockOfMessages (midiMessages, buffer.getNumSamples());
+    lastMidiCollectorOutputTimeMs = Time::getMillisecondCounterHiRes();
 
     // 7. Log outgoing MIDI (if enabled and declared locally)
     /*
@@ -434,25 +437,27 @@ void CtrlrProcessor::addMidiToOutputQueue (const MidiBuffer &buffer) // Updated 
 {
     MidiBuffer::Iterator i(buffer);
     MidiMessage m;
-    int time;
+    int samplePosition;
 
-    while (i.getNextEvent (m, time))
+    while (i.getNextEvent (m, samplePosition))
     {
-        // WORKAROUND FOR JASSERT IN JUCE'S INTERNAL MidiMessageCollector::addMessageToQueue
-        // If the message is at sample position 0, we temporarily shift it to 1
-        // to bypass the strict jassert.
-        if (time == 0)
-            time = 1;
-
-        // Use the only available method, applying the corrected 'time'
-        // JUCE's addMessageToQueue *expects* the message's timestamp to be set.
-        m.setTimeStamp(time); // Set the timestamp of the MidiMessage itself
+        // To counter the effects of the MidiMessageCollector we have to set a timestamp in relation 
+        // to the 'last' call to removeNextBlockOfMessages.
+        m.setTimeStamp(samplePosition * sample_to_seconds + 0.001 * lastMidiCollectorOutputTimeMs); // Set the timestamp of the MidiMessage itself
+        // JUCE's MidiMessageCollector::addMessageToQueue *expects* the message's timestamp to be set as timestamp, not as sample number.
+        // The MidiMessageCollector does: 
+        //     sampleNumber = (int) ((message.getTimeStamp() - 0.001 * lastCallbackTime) * sampleRate);
+        // Thus, assume all MidiMessages to have a timestamp relative to lastCallbackTime
         midiCollector.addMessageToQueue (m);
     }
 }
 
 //==============================================================================
 
+/**
+ * Pass the MIDI messages from the Host to all panels
+ * \post {midiMessages contains the left-overs not processed by the last panel.}
+*/
 void CtrlrProcessor::processPanels(MidiBuffer &midiMessages, const AudioPlayHead::CurrentPositionInfo &positionInfo)
 {
 	leftoverBuffer.clear();

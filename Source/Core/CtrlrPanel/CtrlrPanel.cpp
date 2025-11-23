@@ -1308,9 +1308,9 @@ void CtrlrPanel::panelReceivedMidi(const MidiBuffer &buffer, const CtrlrMIDIDevi
 {
 	MidiBuffer::Iterator i(buffer);
 	MidiMessage m;
-	int time;
+	int samplePosition;
 
-	while (i.getNextEvent(m,time))
+	while (i.getNextEvent(m, samplePosition))
 	{
 		midiMessageCollector.addMessageToQueue (m);
 	}

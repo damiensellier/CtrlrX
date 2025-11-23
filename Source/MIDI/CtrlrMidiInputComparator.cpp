@@ -33,9 +33,9 @@ void CtrlrMidiInputComparator::match (const MidiBuffer &buffer)
 
 	MidiBuffer::Iterator i(buffer);
 	MidiMessage m;
-	int time;
+	int samplePosition;
 
-	while (i.getNextEvent(m,time))
+	while (i.getNextEvent(m, samplePosition))
 	{
 		comparatorSingle.match(m);
 		comparatorMulti.match(m);

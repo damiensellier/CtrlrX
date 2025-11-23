@@ -157,6 +157,8 @@ class CtrlrProcessor : public AudioProcessor, public ChangeBroadcaster
 		int logSamplePos;
 		ValueTree overridesTree;
 		MidiMessageCollector midiCollector;
+		double sample_to_seconds;
+		double lastMidiCollectorOutputTimeMs;
 		Array <PanelProcessorReference,CriticalSection> panelProcessors;
 		Array <CtrlrParameterFromHost,CriticalSection> parameterUpdates;
 		bool	thruHostToHost,
