@@ -26,12 +26,14 @@ TEST_F(ProcessorInstance, midi_io_capabilities)
  */
 void ProcessorInstance::test_midi_block_processing()
 {
+    int SAMPLE_RATE=44100;
     int ALLOWED_DELTA = 3; // 4 samples < 0.1ms
+    int FIRST_SAMPLE_POS=0;
     int SECOND_SAMPLE_POS = 512;
-    midiMessages.addEvent(juce::MidiMessage::noteOn(1,2, 1.0f), 0);
+    midiMessages.addEvent(juce::MidiMessage::noteOn(1,2, 1.0f), FIRST_SAMPLE_POS);
     midiMessages.addEvent(juce::MidiMessage::noteOff(2,3, 0.5f), SECOND_SAMPLE_POS);
     
-    processor->prepareToPlay(44100, BLOCK_SIZE);
+    processor->prepareToPlay(SAMPLE_RATE, BLOCK_SIZE);
     // Function under test:
     processor->processBlock(buffer, midiMessages);
     
@@ -40,7 +42,7 @@ void ProcessorInstance::test_midi_block_processing()
     ASSERT_EQ(midiMessages.getNumEvents(), 2);
     auto midi_iter = midiMessages.begin();
     EXPECT_TRUE((*midi_iter).getMessage().isNoteOn());
-    EXPECT_EQ((*midi_iter).samplePosition, 0) << "First midi event after reset should be at sample position 0";
+    EXPECT_EQ((*midi_iter).samplePosition, FIRST_SAMPLE_POS) << "First midi event after reset should be at sample position 0";
 
     midi_iter++;
     EXPECT_TRUE((*midi_iter).getMessage().isNoteOff());
@@ -53,8 +55,23 @@ void ProcessorInstance::test_midi_block_processing()
     //////////////////////////////////////////
     using namespace std::chrono_literals;
     double time_start = Time::getMillisecondCounterHiRes();
-    std::this_thread::sleep_for(23.18ms);
+    std::this_thread::sleep_for(23.22ms);
     double time_finish = Time::getMillisecondCounterHiRes();
+
+    // Since MidiMessageCollector depends on a 'real time' counter (getMillisecondCounterHiRes), 
+    // and sleeping is never super accurate, we correct the FIRST_/SECOND_SAMPLE_POS for the actual time slept.
+    double block_time = static_cast<double>(BLOCK_SIZE) / SAMPLE_RATE * 1000.0f; // in ms
+    int samples_shifted_wrt_sleep = SAMPLE_RATE * (block_time - (time_finish - time_start)) / 1000.0f;
+    if (samples_shifted_wrt_sleep < 0)
+        samples_shifted_wrt_sleep /= 2; // half of what you'd expect if we sleep longer?
+    FIRST_SAMPLE_POS += samples_shifted_wrt_sleep;
+    SECOND_SAMPLE_POS += samples_shifted_wrt_sleep;
+    // clamp to 0, BLOCKSIZE:
+    FIRST_SAMPLE_POS = juce::jlimit(0, BLOCK_SIZE, FIRST_SAMPLE_POS);
+    SECOND_SAMPLE_POS = juce::jlimit(0, BLOCK_SIZE, SECOND_SAMPLE_POS);
+    // std::cout << "Samples shifted wrt sleep = " << samples_shifted_wrt_sleep << std::endl;
+    // std::cout << "FIRST_SAMPLE_POS after sleep = " << FIRST_SAMPLE_POS << std::endl;
+    // std::cout << "SECOND_SAMPLE_POS after sleep = " << SECOND_SAMPLE_POS << std::endl;
     
     // Re-using the same midiMessages
     // Function under test:
@@ -64,16 +81,13 @@ void ProcessorInstance::test_midi_block_processing()
     ASSERT_EQ(midiMessages.getNumEvents(), 2);
     midi_iter = midiMessages.begin();
     EXPECT_TRUE((*midi_iter).getMessage().isNoteOn());
-    EXPECT_LE((*midi_iter).samplePosition, ALLOWED_DELTA) << "First midi event of next processBlock should be at sample position 0";
+    EXPECT_LE((*midi_iter).samplePosition, FIRST_SAMPLE_POS + ALLOWED_DELTA) << "First midi event of next processBlock should be at sample position 0";
     
-    // Since MidiMessageCollector depends on a 'real time' counter (getMillisecondCounterHiRes), 
-    // and sleeping is never super accurate, we allow some more delta for the second message to make the test as stable as possible.
-    ALLOWED_DELTA += 3;
 
     midi_iter++;
     EXPECT_TRUE((*midi_iter).getMessage().isNoteOff());
-    std::cout << "Time slept = " << (time_finish - time_start) << std::endl;
-    std::cout << "sample pos = " << (*midi_iter).samplePosition << std::endl;
+    // std::cout << "Time slept = " << (time_finish - time_start) << std::endl;
+    // std::cout << "sample pos = " << (*midi_iter).samplePosition << std::endl;
     EXPECT_GE((*midi_iter).samplePosition, SECOND_SAMPLE_POS - ALLOWED_DELTA) << "Second midi event of next processBlock should be around sample position " << SECOND_SAMPLE_POS;
     EXPECT_LE((*midi_iter).samplePosition, SECOND_SAMPLE_POS + ALLOWED_DELTA) << "Second midi event of next processBlock should be around sample position " << SECOND_SAMPLE_POS;
 }
