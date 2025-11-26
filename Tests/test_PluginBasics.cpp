@@ -34,6 +34,9 @@ void ProcessorInstance::test_midi_block_processing()
     midiMessages.addEvent(juce::MidiMessage::noteOff(2,3, 0.5f), SECOND_SAMPLE_POS);
     
     processor->prepareToPlay(SAMPLE_RATE, BLOCK_SIZE);
+    ///////////// Round 1 ////////////////////
+    // host midi messages directly after a 'prepareToPlay'
+    //////////////////////////////////////////
     // Function under test:
     processor->processBlock(buffer, midiMessages);
     
@@ -50,6 +53,7 @@ void ProcessorInstance::test_midi_block_processing()
     EXPECT_LE((*midi_iter).samplePosition, SECOND_SAMPLE_POS + ALLOWED_DELTA) << "Second midi event after reset should be around sample position " << SECOND_SAMPLE_POS;
 
     ///////////// Round 2 ////////////////////
+    // host midi messages after a previous 'processBlock'
     // 1024 samples at 44100 is about 23.22ms.
     // Sleeping longer means the event comes 'earlier' in terms of sample position.
     //////////////////////////////////////////
@@ -90,6 +94,31 @@ void ProcessorInstance::test_midi_block_processing()
     // std::cout << "sample pos = " << (*midi_iter).samplePosition << std::endl;
     EXPECT_GE((*midi_iter).samplePosition, SECOND_SAMPLE_POS - ALLOWED_DELTA) << "Second midi event of next processBlock should be around sample position " << SECOND_SAMPLE_POS;
     EXPECT_LE((*midi_iter).samplePosition, SECOND_SAMPLE_POS + ALLOWED_DELTA) << "Second midi event of next processBlock should be around sample position " << SECOND_SAMPLE_POS;
+
+    ///////////// Round 3 ////////////////////
+    // no more host messages.
+    // don't care for the timing, just need to know that there were no more midi messages to the host...
+    // 1024 samples at 44100 is about 23.22ms.
+    //////////////////////////////////////////
+    midiMessages.clear();
+    std::this_thread::sleep_for(23.22ms);
+
+    // Function under test:
+    processor->processBlock(buffer, midiMessages);
+    EXPECT_EQ(midiMessages.getNumEvents(), 0) << "Was not expecting more midi messages, because the host didn't send anything";
+
+    ///////////// Round 4 ////////////////////
+    // no more host messages.
+    // don't care for the timing, just need to know that there were no more midi messages to the host...
+    // 1024 samples at 44100 is about 23.22ms.
+    // Sleeping longer means the event comes 'earlier' in terms of sample position.
+    //////////////////////////////////////////
+    midiMessages.clear();
+    std::this_thread::sleep_for(23.22ms);
+
+    // Function under test:
+    processor->processBlock(buffer, midiMessages);
+    EXPECT_EQ(midiMessages.getNumEvents(), 0) << "Was not expecting more midi messages, because the host didn't send anything";
 }
 
 TEST_F(ProcessorInstance, midi_block_processing_without_panel)

@@ -56,10 +56,15 @@ TEST_F(ProcessorInstance, test_panel_midi_block_processing)
     load_test_panel();
 
     CtrlrPanel* panel = processor->getManager().getPanel("Test Panel");
-
+    
     // we want to make sure that the panel will pass through the MIDI data:
+    ASSERT_FALSE(panel->isMidiInPaused());
+    ASSERT_FALSE(panel->isMidiOutPaused());
     ASSERT_TRUE(panel->getMidiOptionBool(panelMidiThruH2H));
+    ASSERT_TRUE(panel->getMidiOptionBool(panelMidiOutputToHost));
     EXPECT_FALSE(panel->getMidiOptionBool(panelMidiThruH2HChannelize));
+
+    panel->setProperty(Ids::panelMidiGlobalDelay, 5.0, false); // set 5 ms global delay
 
     test_midi_block_processing();
 }
