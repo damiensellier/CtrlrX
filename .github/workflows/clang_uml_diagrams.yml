@@ -77,9 +77,9 @@ jobs:
         run: |
           if [ "${{ inputs.diagrams_to_generate }}" = "all" -o -z "${{ inputs.diagrams_to_generate }}" ]
           then
-            clang-uml --progress --thread-count 0  --generator plantuml 
+            clang-uml --thread-count 0  --generator plantuml 
           else
-            clang-uml --progress --thread-count 0  --generator plantuml --diagram-name ${{ inputs.diagrams_to_generate }}
+            clang-uml --thread-count 0  --generator plantuml --diagram-name ${{ inputs.diagrams_to_generate }}
           fi
 
           ls -lh Doc/
@@ -112,8 +112,8 @@ jobs:
         with:
           name: Diagrams.zip
           path: |
-            "Doc/diagrams/*.svg"
-            "Doc/diagrams/*.puml"
+            Doc/diagrams/*.svg
+            Doc/diagrams/*.puml
 
       # Enable tmate debugging of manually-triggered workflows if the input option was provided
       - name: Setup tmate session if failed
