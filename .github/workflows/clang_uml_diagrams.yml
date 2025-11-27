@@ -82,6 +82,9 @@ jobs:
             clang-uml --progress --thread-count 0  --generator plantuml --diagram-name ${{ inputs.diagrams_to_generate }}
           fi
 
+          ls -lh Doc/
+          ls -lh Doc/diagrams/
+
       - name: "Work-around: Remove double (return) arrows"
         run: |
           for F in Doc/diagrams/*.puml
@@ -89,13 +92,16 @@ jobs:
               NEW_F=`echo "$F" | sed 's/.puml/.uniq.puml/'`
               if [[ $F != *'uniq.puml'* ]]
               then
+                echo "- $F"
                 # Use `uniq` to get rid of repeated (return) statements as workaround
                 uniq $F $NEW_F
               fi
           done
       
       - name: "Convert PlantUML to SVG"
-        run: plantuml -tsvg Doc/diagrams/*.uniq.puml
+        run: |
+          plantuml -tsvg Doc/diagrams/*.uniq.puml
+          ls -lh Doc/diagrams/
                     
       # -----------------------------------------------------------------
       # UPLOAD ARTEFACTS
