@@ -1,0 +1,116 @@
+name: Make diagrams
+
+on:
+  workflow_dispatch: # lets you run a build from the UI
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+      diagrams_to_generate:
+        type: string
+        description: "Which diagrams to generate? Provide a space-separated list of diagrams found in .clang-uml or 'all')"
+        required: true
+        default: "all"
+
+# When pushing new commits, cancel any running builds on that branch
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BUILD_TYPE: Release
+  BUILD_DIR: build
+
+defaults:
+  run:
+    shell: bash
+
+# jobs are run in parallel on different machines
+# all steps run in series
+jobs:
+  clang_uml_diagrams:
+    # don't double run on PRs
+    name: Linux
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: "Check if input is given"
+        run: |
+          [[ "${{ inputs.diagrams_to_generate }}" ]] || { echo "diagrams_to_generate input is empty" ; exit 1; }
+      
+      # Use clang on Linux so we don't introduce a 3rd compiler (Windows and macOS use MSVC and Clang)
+      - name: Set up Clang
+        if: runner.os == 'Linux'
+        uses: egor-tensin/setup-clang@v1
+
+      # we need the 'configure' step to pass, thus install the dependencies (and include those for clang-uml)
+      - name: Install JUCE's Linux Deps
+        if: runner.os == 'Linux'
+        # Thanks to McMartin & co https://forum.juce.com/t/list-of-juce-dependencies-under-linux/15121/44
+        run: |
+          sudo add-apt-repository -y ppa:bkryza/clang-uml
+          sudo apt-get update
+          sudo apt install -y libasound2-dev libx11-dev libxinerama-dev libxext-dev libfreetype6-dev libglu1-mesa-dev xvfb ninja-build
+          sudo apt install -y binutils-dev libboost-dev libcurl4-gnutls-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxrandr-dev xorg-dev
+          sudo apt install -y graphviz plantuml clang-uml
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure
+        run: >
+          cmake -B ${{ env.BUILD_DIR }}
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}}
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          .
+
+      # We don't need to build in order to get the compile_commands.json, so save resources
+      # - name: Build
+      #   run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
+
+      # clang uses 1 thread per diagram...
+      - name: "Make PlantUML diagrams"
+        run: |
+          if [ "${{ inputs.diagrams_to_generate }}" = "all" -o -z "${{ inputs.diagrams_to_generate }}" ]
+          then
+            clang-uml --progress --thread-count 0  --generator plantuml 
+          else
+            clang-uml --progress --thread-count 0  --generator plantuml --diagram-name ${{ inputs.diagrams_to_generate }}
+          fi
+
+      - name: "Work-around: Remove double (return) arrows"
+        run: |
+          for F in Doc/diagrams/*.puml
+          do
+              NEW_F=`echo "$F" | sed 's/.puml/.uniq.puml/'`
+              if [[ $F != *'uniq.puml'* ]]
+              then
+                # Use `uniq` to get rid of repeated (return) statements as workaround
+                uniq $F $NEW_F
+              fi
+          done
+      
+      - name: "Convert PlantUML to SVG"
+        run: plantuml -tsvg Doc/diagrams/*.uniq.puml
+                    
+      # -----------------------------------------------------------------
+      # UPLOAD ARTEFACTS
+      # -----------------------------------------------------------------
+
+      - name: Upload diagrams
+        uses: actions/upload-artifact@v4
+        with:
+          name: Diagrams.zip
+          path: |
+            "Doc/diagrams/*.svg"
+            "Doc/diagrams/*.puml"
+
+      # Enable tmate debugging of manually-triggered workflows if the input option was provided
+      - name: Setup tmate session if failed
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ failure() && (github.event_name == 'workflow_dispatch' && inputs.debug_enabled) || (runner.debug) }}
+

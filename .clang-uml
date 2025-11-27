@@ -1,0 +1,144 @@
+# Compile using cmake with -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+# For example:
+#    cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON  .
+#    cmake --build build --config Release -j 12
+# With that, the diagrams can be generated with clang-uml.
+compilation_database_dir: build
+output_directory: Doc/diagrams
+generate_links:
+  #link: "https://github.com/damiensellier/CtrlrX/blob/{{ git.commit }}/{{ element.source.path}}#L{{ element.source.line }}"
+  tooltip: "{{ element.source.path}}#L{{ element.source.line }}"
+diagrams:
+  CtrlrProcessor:
+    type: class
+    glob:
+      - Source/**/*.h
+      - Source/**/*.cpp
+    include:
+      context:
+        - match:
+            radius: 1
+            pattern: CtrlrProcessor
+    exclude:
+      paths:
+        - Source/Lua/
+        - Source/Misc/
+        - Source/Resources/
+      namespaces:
+        - juce
+        - std
+      elements:
+        - LeakedObjectDetector
+      access:
+        - private
+        - protected
+        - public
+  CtrlrMIDIDevice:
+    type: class
+    glob:
+      - Source/**/*.h
+      - Source/**/*.cpp
+    include:
+      context:
+        - match:
+            radius: 1
+            pattern: CtrlrMIDIDevice
+    exclude:
+      paths:
+        - Source/Lua/
+        - Source/Misc/
+        - Source/Resources/
+      namespaces:
+        - juce
+        - std
+      elements:
+        - LeakedObjectDetector
+      access:
+        - private
+        - protected
+        - public
+  CtrlrMIDIDeviceManager:
+    type: class
+    glob:
+      - Source/**/*.h
+      - Source/**/*.cpp
+    include:
+      context:
+        - match:
+            radius: 1
+            pattern: CtrlrMIDIDeviceManager
+    exclude:
+      paths:
+        - Source/Lua/
+        - Source/Misc/
+        - Source/Resources/
+      namespaces:
+        - juce
+        - std
+      elements:
+        - LeakedObjectDetector
+      access:
+        - private
+        - protected
+        - public
+  CtrlrProcessor_processBlock:
+    type: sequence
+    glob:
+      - Source/**/*.h
+      - Source/**/*.cpp
+    combine_free_functions_into_file_participants: true
+    inline_lambda_messages: false
+    generate_message_comments: true
+    generate_return_types: true
+    generate_return_values: true
+    generate_condition_statements: true
+    fold_repeated_activities: true
+    include:
+      context:
+        - match:
+            radius: 4
+            pattern: CtrlrProcessor
+    exclude:
+      paths:
+        - Source/Lua/
+        - Source/Misc/
+        - Source/Resources/
+      namespaces:
+        - juce
+        - std
+      elements:
+        - LeakedObjectDetector
+        - CtrlrLog
+    from:
+      - function: "CtrlrProcessor::processBlock(juce::AudioSampleBuffer &,juce::MidiBuffer &)"
+  CtrlrPanel_sendMidi_usecases:
+    type: sequence
+    glob:
+      - Source/**/*.h
+      - Source/**/*.cpp
+    combine_free_functions_into_file_participants: true
+    inline_lambda_messages: false
+    generate_message_comments: true
+    generate_return_types: true
+    generate_return_values: true
+    generate_condition_statements: true
+    fold_repeated_activities: true
+    include:
+      context:
+        - match:
+            radius: 6
+            pattern: CtrlrPanel
+    exclude:
+      paths:
+        - Source/Lua/
+        - Source/Misc/
+        - Source/Resources/
+      namespaces:
+        - juce
+        - std
+      elements:
+        - LeakedObjectDetector
+        - CtrlrLog
+    to:
+      - function:
+          r: "CtrlrPanel::sendMidi\\(.*"
