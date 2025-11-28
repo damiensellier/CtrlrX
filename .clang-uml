@@ -1,9 +1,19 @@
-# Compile using cmake with -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+# Configure using cmake with -DCMAKE_EXPORT_COMPILE_COMMANDS=ON to get compile_commands.json in the build directory.
 # For example:
 #    cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON  .
-#    cmake --build build --config Release -j 12
 # With that, the diagrams can be generated with clang-uml.
+#
+# NOTE: The more you restrict the 'glob', the faster diagrams are created. 
+# But you might need to experiment a bit to ensure all elements are found
+
 compilation_database_dir: build
+#debug_mode: true
+# We're not interested in additional code for debugging...
+remove_compile_flags:
+  - -DDEBUG=1
+  - -D_DEBUG=1
+
+
 output_directory: Doc/diagrams
 generate_links:
   #link: "https://github.com/damiensellier/CtrlrX/blob/{{ git.commit }}/{{ element.source.path}}#L{{ element.source.line }}"
@@ -12,80 +22,181 @@ diagrams:
   CtrlrProcessor:
     type: class
     glob:
-      - Source/**/*.h
-      - Source/**/*.cpp
+      include:
+        - Source/**/*.h
+        - Source/Core/**/*.cpp
+        - Source/Plugin/**/*.cpp
+      exclude:
+        - Source/Lua/**/*
+        - Source/Misc/**/*
+        - Source/Resources/**/*
+        - Source/UIComponents/**/*
     include:
       context:
         - match:
             radius: 1
             pattern: CtrlrProcessor
     exclude:
-      paths:
-        - Source/Lua/
-        - Source/Misc/
-        - Source/Resources/
       namespaces:
         - juce
         - std
-      elements:
-        - LeakedObjectDetector
+      element_types:
+        - enum        
       access:
         - private
         - protected
         - public
+
+
   CtrlrMIDIDevice:
     type: class
     glob:
-      - Source/**/*.h
-      - Source/**/*.cpp
+      include:
+        - Source/**/*.h
+        - Source/**/*.cpp
+      exclude:
+        - Source/Lua/**/*
+        - Source/Misc/**/*
+        - Source/Resources/**/*
+        - Source/UIComponents/**/*
     include:
       context:
         - match:
             radius: 1
             pattern: CtrlrMIDIDevice
     exclude:
-      paths:
-        - Source/Lua/
-        - Source/Misc/
-        - Source/Resources/
       namespaces:
         - juce
         - std
-      elements:
-        - LeakedObjectDetector
+      element_types:
+        - enum        
       access:
         - private
         - protected
         - public
+
+
   CtrlrMIDIDeviceManager:
     type: class
     glob:
-      - Source/**/*.h
-      - Source/**/*.cpp
+      include:
+        - Source/**/*.h
+        - Source/**/*.cpp
+      exclude:
+        - Source/Lua/**/*
+        - Source/Misc/**/*
+        - Source/Resources/**/*
+        - Source/UIComponents/**/*
     include:
       context:
         - match:
             radius: 1
             pattern: CtrlrMIDIDeviceManager
     exclude:
-      paths:
-        - Source/Lua/
-        - Source/Misc/
-        - Source/Resources/
       namespaces:
         - juce
         - std
-      elements:
-        - LeakedObjectDetector
+      element_types:
+        - enum        
       access:
         - private
         - protected
         - public
+
+
+  CtrlrPanel:
+    type: class
+    glob:
+      include:
+        - Source/**/*.h
+        - Source/Core/**/*.cpp
+    include:
+      context:
+        - match:
+            radius: 1
+            pattern: CtrlrPanel
+    exclude:
+      paths:
+        - Source/Lua/
+        - Source/Misc/
+        - Source/Resources/
+        - Source/UIComponents/
+      namespaces:
+        - juce
+        - std
+      element_types:
+        - enum        
+      access:
+        - private
+        - protected
+        - public
+
+
+  CtrlrEditor:
+    type: class
+    glob:
+      include:
+        - Source/**/*.h
+        - Source/UIComponents/CtrlrApplicationWindow/**/*.cpp
+      exclude:
+        - Source/Lua/**/*
+        - Source/Misc/**/*
+        - Source/Resources/**/*
+    include:
+      context:
+        - match:
+            radius: 1
+            pattern: CtrlrEditor
+    exclude:
+      namespaces:
+        - juce
+        - std
+      element_types:
+        - enum        
+      access:
+        - private
+        - protected
+        - public
+
+
+  CtrlrPanelEditor:
+    type: class
+    glob:
+      include:
+        - Source/**/*.h
+        - Source/UIComponents/CtrlrPanel/**/*.cpp
+      exclude:
+        - Source/Lua/**/*
+        - Source/Misc/**/*
+        - Source/Resources/**/*
+    include:
+      context:
+        - match:
+            radius: 1
+            pattern: CtrlrPanelEditor
+    exclude:
+      namespaces:
+        - juce
+        - std
+      element_types:
+        - enum        
+      access:
+        - private
+        - protected
+        - public
+
+
   CtrlrProcessor_processBlock:
     type: sequence
     glob:
-      - Source/**/*.h
-      - Source/**/*.cpp
+      include:
+        - Source/**/*.h
+        - Source/**/*.cpp
+      exclude:
+        - Source/Lua/**/*
+        - Source/Misc/**/*
+        - Source/Resources/**/*
+        - Source/UIComponents/**/*
     combine_free_functions_into_file_participants: true
     inline_lambda_messages: false
     generate_message_comments: true
@@ -99,23 +210,26 @@ diagrams:
             radius: 4
             pattern: CtrlrProcessor
     exclude:
-      paths:
-        - Source/Lua/
-        - Source/Misc/
-        - Source/Resources/
       namespaces:
         - juce
         - std
       elements:
-        - LeakedObjectDetector
         - CtrlrLog
     from:
       - function: "CtrlrProcessor::processBlock(juce::AudioSampleBuffer &,juce::MidiBuffer &)"
+
+
   CtrlrPanel_sendMidi_usecases:
     type: sequence
     glob:
-      - Source/**/*.h
-      - Source/**/*.cpp
+      include:
+        - Source/**/*.h
+        - Source/**/*.cpp
+      exclude:
+        - Source/Lua/**/*
+        - Source/Misc/**/*
+        - Source/Resources/**/*
+        - Source/UIComponents/**/*
     combine_free_functions_into_file_participants: true
     inline_lambda_messages: false
     generate_message_comments: true
@@ -129,15 +243,10 @@ diagrams:
             radius: 6
             pattern: CtrlrPanel
     exclude:
-      paths:
-        - Source/Lua/
-        - Source/Misc/
-        - Source/Resources/
       namespaces:
         - juce
         - std
       elements:
-        - LeakedObjectDetector
         - CtrlrLog
     to:
       - function:
