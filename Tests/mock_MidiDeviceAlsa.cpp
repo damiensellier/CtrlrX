@@ -13,8 +13,11 @@ InformMockMidiOfSubsystem mockMidiSubsystem;
 #include <tuple>
 
 /**
- * This mock overwrites the methods that JUCE seems to be using (see juce_linux_Midi.cpp)
- * each application is a 'client', which can open a 'handle' to the sequencer subsystem.
+ * This mock re-implements the ALSA methods that JUCE seems to be using (see juce_linux_Midi.cpp).
+ * This works because the libasound is linked dynamically, which means that if the (ALSA) symbol
+ * was already defined in the binary, it'll use that i.s.o. the one in the dynamic library.
+ * 
+ * In ALSA each application is a 'client', which can open a 'handle' to the sequencer subsystem.
  * with that handle, you can open one or more 'ports'.
  * you can also subscribe to 'ports' of other clients (or hardware) for both reading and writing
  */
