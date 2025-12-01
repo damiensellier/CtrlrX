@@ -100,12 +100,7 @@ void ProcessorInstance::test_midi_block_processing()
     // don't care for the timing, just need to know that there were no more midi messages to the host...
     // 1024 samples at 44100 is about 23.22ms.
     //////////////////////////////////////////
-    midiMessages.clear();
-    std::this_thread::sleep_for(23.22ms);
-
-    // Function under test:
-    processor->processBlock(buffer, midiMessages);
-    EXPECT_EQ(midiMessages.getNumEvents(), 0) << "Was not expecting more midi messages, because the host didn't send anything";
+    process_block_without_midi_messages_and_expect_no_midi_output("in round 3");
 
     ///////////// Round 4 ////////////////////
     // no more host messages.
@@ -113,12 +108,22 @@ void ProcessorInstance::test_midi_block_processing()
     // 1024 samples at 44100 is about 23.22ms.
     // Sleeping longer means the event comes 'earlier' in terms of sample position.
     //////////////////////////////////////////
+    process_block_without_midi_messages_and_expect_no_midi_output("in round 4");
+}
+
+/**
+ * This test will check that after a 23.22ms wait, there are no more midi message in the output to the host.
+ * (note: output to devices is checked by having a StrictMock)
+ */
+void ProcessorInstance::process_block_without_midi_messages_and_expect_no_midi_output(std::string message) {
     midiMessages.clear();
+
+    using namespace std::chrono_literals;
     std::this_thread::sleep_for(23.22ms);
 
     // Function under test:
     processor->processBlock(buffer, midiMessages);
-    EXPECT_EQ(midiMessages.getNumEvents(), 0) << "Was not expecting more midi messages, because the host didn't send anything";
+    EXPECT_EQ(midiMessages.getNumEvents(), 0) << "Unexpected midi event " << message;
 }
 
 TEST_F(ProcessorInstance, midi_block_processing_without_panel)

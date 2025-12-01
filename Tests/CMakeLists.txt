@@ -23,6 +23,7 @@ add_executable(Tests ${TestFiles})
 target_link_libraries(Tests
     PRIVATE
     gtest_main
+    gmock_main
     ${PROJECT_NAME})
 target_compile_definitions(Tests PRIVATE $<TARGET_PROPERTY:${PROJECT_NAME},COMPILE_DEFINITIONS>)
 target_include_directories(Tests PRIVATE $<TARGET_PROPERTY:${PROJECT_NAME},INCLUDE_DIRECTORIES>)

@@ -5,11 +5,24 @@
 #include "CtrlrPanel.h"
 #include "CtrlrModulator.h"
 
+#include <chrono>
 #include <fstream>
+#include <thread>
 
 bool file_exists(const std::string& name) {
     std::ifstream f(name.c_str());
     return f.good();
+}
+
+// outside operator overloading
+namespace juce {
+    bool operator==(const MidiMessage& lhs, const MidiMessage& rhs)
+    {
+        bool equal_data = true;
+        for (size_t idx = 0; idx < lhs.getRawDataSize() && idx < rhs.getRawDataSize(); idx++)
+            equal_data &= (lhs.getRawData()[idx] == rhs.getRawData()[idx]);
+        return (lhs.getRawDataSize() == rhs.getRawDataSize()) && equal_data;
+    }
 }
 
 
@@ -28,7 +41,7 @@ void ProcessorInstance::load_test_panel()
     // to get some extra output for the Release build:
     processor->getCtrlrLog().addListener(new PrintToStdOutListener());
     
-    ASSERT_NO_THROW(processor->openFileFromCli(File("test.panel")));
+    ASSERT_NO_THROW(processor->openFileFromCli(File::getCurrentWorkingDirectory().getChildFile ("test.panel")));
     
     ASSERT_EQ(processor->getManager().getNumPanels(), 1) << "Expected 1 panel to be loaded";
 }
@@ -36,6 +49,13 @@ void ProcessorInstance::load_test_panel()
 
 TEST_F(ProcessorInstance, test_panel_loads_ok)
 {
+    // first, set expectations, if we've implemented the mock for the OS's midi subsystem
+    if (midi_mock.hasSubsystemMock()) {
+        std::cout << "Mock is implemented, setting hardware device expectations" << std::endl;
+        EXPECT_CALL(midi_mock, openOutput(0, 1));
+    }
+    
+    // then act:
     load_test_panel();
 
     EXPECT_EQ(processor->getName().toStdString(), "CtrlrX");
@@ -53,6 +73,12 @@ TEST_F(ProcessorInstance, test_panel_loads_ok)
 
 TEST_F(ProcessorInstance, test_panel_midi_block_processing)
 {
+    // first, set expectations, if we've implemented the mock for the OS's midi subsystem
+    if (midi_mock.hasSubsystemMock()) {
+        std::cout << "Mock is implemented, setting hardware device expectations" << std::endl;
+        EXPECT_CALL(midi_mock, openOutput(0, 1));
+    }
+    // then act:
     load_test_panel();
 
     CtrlrPanel* panel = processor->getManager().getPanel("Test Panel");
@@ -69,15 +95,23 @@ TEST_F(ProcessorInstance, test_panel_midi_block_processing)
     test_midi_block_processing();
 }
 
-TEST_F(ProcessorInstance, test_panel_sends_midi_to_host_after_value_change)
+TEST_F(ProcessorInstance, test_panel_sends_midi_to_host_and_device_after_value_change)
 {
+    // first, set expectations, if we've implemented the mock for the OS's midi subsystem
+    if (midi_mock.hasSubsystemMock()) {
+        std::cout << "Mock is implemented, setting hardware device expectations" << std::endl;
+        EXPECT_CALL(midi_mock, openOutput(0, 1));
+        EXPECT_CALL(midi_mock, sendMidiEvent(0, 1, juce::MidiMessage::controllerEvent(4, 3, 64))).Times(1);
+    }
+    // then act:
     load_test_panel();
     
     processor->prepareToPlay(44100, BLOCK_SIZE);
 
+    std::cout << "Host sending parameter change" << std::endl;
     // Functions under test:
     processor->setParameter(1, 0.5);
-    processor->processBlock(buffer, midiMessages);    
+    processor->processBlock(buffer, midiMessages);
 
     // Expecting a midi event at the first sample position
     ASSERT_EQ(midiMessages.getNumEvents(), 1) << "Didn't receive the vent in the first process block after setting the parameter";
@@ -86,4 +120,5 @@ TEST_F(ProcessorInstance, test_panel_sends_midi_to_host_after_value_change)
     EXPECT_TRUE((*midi_iter).getMessage().isController());
     EXPECT_EQ((*midi_iter).samplePosition, 0);
 
+    process_block_without_midi_messages_and_expect_no_midi_output("in round 2");
 }

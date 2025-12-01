@@ -10,7 +10,7 @@
        panelMidiSnapshotDelay="10.0" panelMidiSnapshotShowProgress="0"
        panelMidiInputDevice="-- None" panelMidiInputChannelDevice="2"
        panelMidiControllerDevice="-- None" panelMidiControllerChannelDevice="3"
-       panelMidiOutputDevice="-- None" panelMidiOutputChannelDevice="4"
+       panelMidiOutputDevice="Device 00, port 01" panelMidiOutputChannelDevice="4"
        panelMidiInputFromHost="1" panelMidiInputChannelHost="0" panelMidiInputFromHostCompare="1"
        panelMidiOutputToHost="1" panelMidiOutputChannelHost="1" panelMidiThruH2H="1"
        panelMidiThruH2HChannelize="0" panelMidiThruH2D="0" panelMidiThruH2DChannelize="0"
