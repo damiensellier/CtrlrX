@@ -425,15 +425,42 @@ void CtrlrEditor::performRecentFileOpen(const int menuItemID)
 
 void CtrlrEditor::performShowKeyboardMappingDialog(const int menuItemID)
 {
-	ScopedPointer <KeyMappingEditorComponent> keys (new KeyMappingEditorComponent (*owner.getCommandManager().getKeyMappings(), true));
-	owner.getWindowManager().showModalDialog ("Keyboard mapping", keys, true, this);
+    #if JUCE_LINUX
+        // Non-modal on Linux to avoid Wayland crashes
+        auto* keys = new KeyMappingEditorComponent(*owner.getCommandManager().getKeyMappings(), true);
+        keys->setSize(600, 400); // Set an initial size for the component
+        DialogWindow::LaunchOptions options;
+        options.content.setOwned(keys);
+        options.dialogTitle = "Keyboard mapping";
+        options.resizable = true;
+        options.useNativeTitleBar = true;
+        options.dialogBackgroundColour = Colours::lightgrey;
+        options.escapeKeyTriggersCloseButton = true;
+        options.componentToCentreAround = this;
+        
+        options.launchAsync();
+        
+        // Save the key mappings when dialog closes
+        MessageManager::callAsync([this]() {
+            ScopedPointer<XmlElement> keysXml(owner.getCommandManager().getKeyMappings()->createXml(true).release());
+            
+            if (keysXml)
+            {
+                owner.setProperty(Ids::ctrlrKeyboardMapping, keysXml->createDocument(""));
+            }
+        });
+    #else
+        // Modal on other platforms (original code)
+        ScopedPointer<KeyMappingEditorComponent> keys(new KeyMappingEditorComponent(*owner.getCommandManager().getKeyMappings(), true));
+        owner.getWindowManager().showModalDialog("Keyboard mapping", keys, true, this);
 
-	ScopedPointer <XmlElement> keysXml (owner.getCommandManager().getKeyMappings()->createXml (true).release());
+        ScopedPointer<XmlElement> keysXml(owner.getCommandManager().getKeyMappings()->createXml(true).release());
 
-	if (keysXml)
-	{
-		owner.setProperty (Ids::ctrlrKeyboardMapping, keysXml->createDocument(""));
-	}
+        if (keysXml)
+        {
+            owner.setProperty(Ids::ctrlrKeyboardMapping, keysXml->createDocument(""));
+        }
+    #endif
 }
 
 void CtrlrEditor::performMidiChannelChange(const int menuItemID)
