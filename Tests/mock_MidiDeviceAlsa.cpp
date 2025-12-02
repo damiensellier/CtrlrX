@@ -1,5 +1,5 @@
 #include "mock_MidiDevice.h"
-#if JUCE_ALSA
+#if JUCE_LINUX && JUCE_ALSA
 
 InformMockMidiOfSubsystem mockMidiSubsystem;
 

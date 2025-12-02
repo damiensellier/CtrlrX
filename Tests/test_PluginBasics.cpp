@@ -2,8 +2,6 @@
 #include <chrono>
 #include <thread>
 
-
-
 TEST_F(ProcessorInstance, basic_processor_properties)
 {
     EXPECT_EQ(processor->getName().toStdString(), "CtrlrX");
@@ -18,39 +16,42 @@ TEST_F(ProcessorInstance, midi_io_capabilities)
     EXPECT_FALSE(processor->isMidiEffect());
 }
 
-
 /**
  * This test will check that for incoming midi messages from the host, the message and the timing are preserved at the output to the host.
  * The problem is that MidiMessageCollector depends on a 'real time' counter (juce::Time::getMillisecondCounterHiRes).
  * Therefore, we allow some delta in the answers, as we can't mock juce::Time::getMillisecondCounterHiRes
  */
-void ProcessorInstance::test_midi_block_processing()
+void ProcessorInstance::test_midi_block_processing(const juce::MidiBuffer messages_to_send)
 {
-    int SAMPLE_RATE=44100;
+    int SAMPLE_RATE = 44100;
     int ALLOWED_DELTA = 3; // 4 samples < 0.1ms
-    int FIRST_SAMPLE_POS=0;
-    int SECOND_SAMPLE_POS = 512;
-    midiMessages.addEvent(juce::MidiMessage::noteOn(1,2, 1.0f), FIRST_SAMPLE_POS);
-    midiMessages.addEvent(juce::MidiMessage::noteOff(2,3, 0.5f), SECOND_SAMPLE_POS);
-    
+
+    for (auto msg = messages_to_send.begin(); msg != messages_to_send.end(); msg++)
+    {
+        midiMessages.addEvent((*msg).getMessage(), (*msg).samplePosition);
+    }
+    // midiMessages.addEvent(juce::MidiMessage::noteOn(1,2, 1.0f), FIRST_SAMPLE_POS);
+    // midiMessages.addEvent(juce::MidiMessage::noteOff(2,3, 0.5f), SECOND_SAMPLE_POS);
+
     processor->prepareToPlay(SAMPLE_RATE, BLOCK_SIZE);
     ///////////// Round 1 ////////////////////
     // host midi messages directly after a 'prepareToPlay'
     //////////////////////////////////////////
     // Function under test:
     processor->processBlock(buffer, midiMessages);
-    
-    // Expecting pass-through behavior. 
-    // Since MidiMessageCollector depends on a 'real time' counter (getMillisecondCounterHiRes), we allow some delta...
-    ASSERT_EQ(midiMessages.getNumEvents(), 2);
-    auto midi_iter = midiMessages.begin();
-    EXPECT_TRUE((*midi_iter).getMessage().isNoteOn());
-    EXPECT_EQ((*midi_iter).samplePosition, FIRST_SAMPLE_POS) << "First midi event after reset should be at sample position 0";
 
-    midi_iter++;
-    EXPECT_TRUE((*midi_iter).getMessage().isNoteOff());
-    EXPECT_GE((*midi_iter).samplePosition, SECOND_SAMPLE_POS - ALLOWED_DELTA) << "Second midi event after reset should be around sample position " << SECOND_SAMPLE_POS;
-    EXPECT_LE((*midi_iter).samplePosition, SECOND_SAMPLE_POS + ALLOWED_DELTA) << "Second midi event after reset should be around sample position " << SECOND_SAMPLE_POS;
+    // Expecting pass-through behavior.
+    // Since MidiMessageCollector depends on a 'real time' counter (getMillisecondCounterHiRes), we allow some delta...
+    ASSERT_EQ(midiMessages.getNumEvents(), messages_to_send.getNumEvents());
+    for (auto expected_message = messages_to_send.begin(), received_message = midiMessages.begin()
+        ; expected_message != messages_to_send.end()
+        ; expected_message++, received_message++)
+    {
+        int expected_samplePosition = (*expected_message).samplePosition;
+        EXPECT_EQ((*received_message).getMessage(), (*expected_message).getMessage());
+        EXPECT_GE((*received_message).samplePosition, expected_samplePosition - ALLOWED_DELTA) << "midi event of first processBlock should be around sample position " << expected_samplePosition;
+        EXPECT_LE((*received_message).samplePosition, expected_samplePosition + ALLOWED_DELTA) << "midi event of first processBlock should be around sample position " << expected_samplePosition;
+    }
 
     ///////////// Round 2 ////////////////////
     // host midi messages after a previous 'processBlock'
@@ -62,63 +63,59 @@ void ProcessorInstance::test_midi_block_processing()
     std::this_thread::sleep_for(23.22ms);
     double time_finish = Time::getMillisecondCounterHiRes();
 
-    // Since MidiMessageCollector depends on a 'real time' counter (getMillisecondCounterHiRes), 
+    // Since MidiMessageCollector depends on a 'real time' counter (getMillisecondCounterHiRes),
     // and sleeping is never super accurate, we correct the FIRST_/SECOND_SAMPLE_POS for the actual time slept.
     double block_time = static_cast<double>(BLOCK_SIZE) / SAMPLE_RATE * 1000.0f; // in ms
     int samples_shifted_wrt_sleep = SAMPLE_RATE * (block_time - (time_finish - time_start)) / 1000.0f;
     if (samples_shifted_wrt_sleep < 0)
         samples_shifted_wrt_sleep /= 2; // half of what you'd expect if we sleep longer?
-    FIRST_SAMPLE_POS += samples_shifted_wrt_sleep;
-    SECOND_SAMPLE_POS += samples_shifted_wrt_sleep;
-    // clamp to 0, BLOCKSIZE:
-    FIRST_SAMPLE_POS = juce::jlimit(0, BLOCK_SIZE, FIRST_SAMPLE_POS);
-    SECOND_SAMPLE_POS = juce::jlimit(0, BLOCK_SIZE, SECOND_SAMPLE_POS);
     // std::cout << "Samples shifted wrt sleep = " << samples_shifted_wrt_sleep << std::endl;
     // std::cout << "FIRST_SAMPLE_POS after sleep = " << FIRST_SAMPLE_POS << std::endl;
     // std::cout << "SECOND_SAMPLE_POS after sleep = " << SECOND_SAMPLE_POS << std::endl;
-    
+
     // Re-using the same midiMessages
     // Function under test:
     processor->processBlock(buffer, midiMessages);
-    
-    // Expecting pass-through behavior again:
-    ASSERT_EQ(midiMessages.getNumEvents(), 2);
-    midi_iter = midiMessages.begin();
-    EXPECT_TRUE((*midi_iter).getMessage().isNoteOn());
-    EXPECT_LE((*midi_iter).samplePosition, FIRST_SAMPLE_POS + ALLOWED_DELTA) << "First midi event of next processBlock should be at sample position 0";
-    
 
-    midi_iter++;
-    EXPECT_TRUE((*midi_iter).getMessage().isNoteOff());
-    // std::cout << "Time slept = " << (time_finish - time_start) << std::endl;
-    // std::cout << "sample pos = " << (*midi_iter).samplePosition << std::endl;
-    EXPECT_GE((*midi_iter).samplePosition, SECOND_SAMPLE_POS - ALLOWED_DELTA) << "Second midi event of next processBlock should be around sample position " << SECOND_SAMPLE_POS;
-    EXPECT_LE((*midi_iter).samplePosition, SECOND_SAMPLE_POS + ALLOWED_DELTA) << "Second midi event of next processBlock should be around sample position " << SECOND_SAMPLE_POS;
+    // Expecting pass-through behavior again:
+    ASSERT_EQ(midiMessages.getNumEvents(), messages_to_send.getNumEvents());
+
+    for (auto expected_message = messages_to_send.begin(), received_message = midiMessages.begin()
+        ; expected_message != messages_to_send.end()
+        ; expected_message++, received_message++)
+    {
+        int expected_samplePosition = (*expected_message).samplePosition;
+        expected_samplePosition += samples_shifted_wrt_sleep;
+        expected_samplePosition = juce::jlimit(0, BLOCK_SIZE, expected_samplePosition);
+
+        EXPECT_EQ((*received_message).getMessage(), (*expected_message).getMessage());
+        EXPECT_GE((*received_message).samplePosition, expected_samplePosition - ALLOWED_DELTA) << "midi event of next processBlock should be around sample position " << expected_samplePosition;
+        EXPECT_LE((*received_message).samplePosition, expected_samplePosition + ALLOWED_DELTA) << "midi event of next processBlock should be around sample position " << expected_samplePosition;
+    }
 
     ///////////// Round 3 ////////////////////
     // no more host messages.
-    // don't care for the timing, just need to know that there were no more midi messages to the host...
-    // 1024 samples at 44100 is about 23.22ms.
-    //////////////////////////////////////////
     process_block_without_midi_messages_and_expect_no_midi_output("in round 3");
 
     ///////////// Round 4 ////////////////////
     // no more host messages.
-    // don't care for the timing, just need to know that there were no more midi messages to the host...
-    // 1024 samples at 44100 is about 23.22ms.
-    // Sleeping longer means the event comes 'earlier' in terms of sample position.
-    //////////////////////////////////////////
     process_block_without_midi_messages_and_expect_no_midi_output("in round 4");
+    ///////////// Round 4 ////////////////////
+    // no more host messages.
+    process_block_without_midi_messages_and_expect_no_midi_output("in round 5");
 }
 
 /**
  * This test will check that after a 23.22ms wait, there are no more midi message in the output to the host.
  * (note: output to devices is checked by having a StrictMock)
  */
-void ProcessorInstance::process_block_without_midi_messages_and_expect_no_midi_output(std::string message) {
+void ProcessorInstance::process_block_without_midi_messages_and_expect_no_midi_output(std::string message)
+{
     midiMessages.clear();
 
     using namespace std::chrono_literals;
+    // don't care for the timing, just need to know that there were no more midi messages to the host...
+    // 1024 samples at 44100 is about 23.22ms.
     std::this_thread::sleep_for(23.22ms);
 
     // Function under test:
@@ -128,7 +125,10 @@ void ProcessorInstance::process_block_without_midi_messages_and_expect_no_midi_o
 
 TEST_F(ProcessorInstance, midi_block_processing_without_panel)
 {
-    test_midi_block_processing();
+    juce::MidiBuffer messages_to_send;
+    messages_to_send.addEvent(juce::MidiMessage::noteOn(1, 2, 1.0f), 0);
+    messages_to_send.addEvent(juce::MidiMessage::noteOff(2, 3, 0.5f), BLOCK_SIZE / 2);
+    test_midi_block_processing(messages_to_send);
 }
 
 TEST_F(ProcessorInstance, audio_processing_clears_audio_buffer)
@@ -143,5 +143,3 @@ TEST_F(ProcessorInstance, audio_processing_clears_audio_buffer)
         ASSERT_DOUBLE_EQ(buffer.getSample(1, i), 0.0f);
     }
 }
-
-

@@ -44,7 +44,17 @@ protected:
 
     void load_test_panel();
 
-    void test_midi_block_processing();
+    void test_midi_block_processing(const juce::MidiBuffer messages_to_send);
     void process_block_without_midi_messages_and_expect_no_midi_output(std::string message = "");
 };
 
+// outside operator overloading
+namespace juce {
+    inline bool operator==(const MidiMessage& lhs, const MidiMessage& rhs)
+    {
+        bool equal_data = true;
+        for (size_t idx = 0; idx < lhs.getRawDataSize() && idx < rhs.getRawDataSize(); idx++)
+            equal_data &= (lhs.getRawData()[idx] == rhs.getRawData()[idx]);
+        return (lhs.getRawDataSize() == rhs.getRawDataSize()) && equal_data;
+    }
+}
