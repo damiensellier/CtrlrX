@@ -1376,12 +1376,24 @@ void CtrlrMultiMidiPropertyComponent::resized()
 
 void CtrlrMultiMidiPropertyComponent::buttonClicked (Button* buttonThatWasClicked)
 {
-    if (buttonThatWasClicked == add)
-    {
-		CtrlrManagerWindowManager::showModalDialog("Add MIDI message", &questionWindow, false, this);
-		values.add (questionWindow.getValue().trim());
-		valueToControl = values.joinIntoString (":");
-    }
+	if (buttonThatWasClicked == add)
+{
+    auto* alert = new MultiMidiAlert();
+    alert->enterModalState(true, ModalCallbackFunction::create([this, alert](int result) {
+        if (result == 1) {
+            values.add(alert->getValue().trim());
+            valueToControl = values.joinIntoString(":");
+            if (list) list->updateContent();
+        }
+        delete alert;
+    }), true);
+}
+    // if (buttonThatWasClicked == add) This will crash Linux Wayland builds
+    // {
+	// 	CtrlrManagerWindowManager::showModalDialog("Add MIDI message", &questionWindow, false, this);
+	// 	values.add (questionWindow.getValue().trim());
+	// 	valueToControl = values.joinIntoString (":");
+    // }
     else if (buttonThatWasClicked == remove)
     {
 		values.remove (list->getSelectedRow());

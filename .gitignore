@@ -88,7 +88,7 @@ Builds/VisualStudio2022/
 # add them here, but be careful not to ignore essential source code.
 
 # Boost library (ignore everything except boost.zip)
-#Source/Misc/boost/
+Source/Misc/boost/
 #!Source/Misc/boost/boost.zip
 #!Source/Misc/boost/boost-version-info.txt
 #.DS_Store
