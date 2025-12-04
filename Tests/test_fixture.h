@@ -36,16 +36,23 @@ protected:
         }
         // clear the midi buffer
         midiMessages.clear();
-
+        std::cout << "-------- setup done --------" << std::endl;
     }
     virtual void TearDown() override {
+        std::cout << "-------- teardown starting --------" << std::endl;
         midiMessages.clear();
     }
 
     void load_test_panel();
+    void expect_no_midi_messages_in_buffer(std::string message);
 
-    void test_midi_block_processing(const juce::MidiBuffer messages_to_send);
-    void process_block_without_midi_messages_and_expect_no_midi_output(std::string message = "");
+    void test_midi_block_processing(
+        const juce::MidiBuffer messages_to_send, 
+        const std::function <void (std::string)>& function_to_call_after_idle_processing = nullptr,
+        int num_iterations_to_idle = 3);
+    void process_block_without_midi_messages(
+        std::string message = "", 
+        const std::function <void (std::string)>& function_to_call_after_processing = nullptr);
 };
 
 // outside operator overloading

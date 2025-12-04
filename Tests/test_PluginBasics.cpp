@@ -16,12 +16,27 @@ TEST_F(ProcessorInstance, midi_io_capabilities)
     EXPECT_FALSE(processor->isMidiEffect());
 }
 
+void ProcessorInstance::expect_no_midi_messages_in_buffer(std::string message) {
+    EXPECT_EQ(midiMessages.getNumEvents(), 0) << "Unexpected midi events " << message;
+    // print, to help to debug:
+    for (auto it = midiMessages.begin(); it != midiMessages.end(); it++) {
+        std::cout << "at sample " << (*it).samplePosition << ": " << (*it).getMessage().getDescription() << std::endl;
+    }
+}
+
 /**
- * This test will check that for incoming midi messages from the host, the message and the timing are preserved at the output to the host.
+ * This test will check that for incoming midi messages from the host, 
+ * - the message and the timing are preserved at the output to the host, 
+ * - and are not echoed in later processing blocks.
  * The problem is that MidiMessageCollector depends on a 'real time' counter (juce::Time::getMillisecondCounterHiRes).
  * Therefore, we allow some delta in the answers, as we can't mock juce::Time::getMillisecondCounterHiRes
+ * 
+ * The client of this function can indicate how many 'idle' processBlocks can be called and what to check then.
  */
-void ProcessorInstance::test_midi_block_processing(const juce::MidiBuffer messages_to_send)
+void ProcessorInstance::test_midi_block_processing(
+    const juce::MidiBuffer messages_to_send, 
+    const std::function <void (std::string)>& function_to_call_after_idle_processing,
+    int num_iterations_to_idle)
 {
     int SAMPLE_RATE = 44100;
     int ALLOWED_DELTA = 3; // 4 samples < 0.1ms
@@ -42,9 +57,9 @@ void ProcessorInstance::test_midi_block_processing(const juce::MidiBuffer messag
 
     // Expecting pass-through behavior.
     // Since MidiMessageCollector depends on a 'real time' counter (getMillisecondCounterHiRes), we allow some delta...
-    ASSERT_EQ(midiMessages.getNumEvents(), messages_to_send.getNumEvents());
+    EXPECT_EQ(midiMessages.getNumEvents(), messages_to_send.getNumEvents()) << "Was expecting midi events back after we have sent them";
     for (auto expected_message = messages_to_send.begin(), received_message = midiMessages.begin()
-        ; expected_message != messages_to_send.end()
+        ; expected_message != messages_to_send.end() && received_message != midiMessages.end()
         ; expected_message++, received_message++)
     {
         int expected_samplePosition = (*expected_message).samplePosition;
@@ -78,10 +93,10 @@ void ProcessorInstance::test_midi_block_processing(const juce::MidiBuffer messag
     processor->processBlock(buffer, midiMessages);
 
     // Expecting pass-through behavior again:
-    ASSERT_EQ(midiMessages.getNumEvents(), messages_to_send.getNumEvents());
+    EXPECT_EQ(midiMessages.getNumEvents(), messages_to_send.getNumEvents()) << "Was expecting midi events back after we have sent them again...";
 
     for (auto expected_message = messages_to_send.begin(), received_message = midiMessages.begin()
-        ; expected_message != messages_to_send.end()
+        ; expected_message != messages_to_send.end() && received_message != midiMessages.end()
         ; expected_message++, received_message++)
     {
         int expected_samplePosition = (*expected_message).samplePosition;
@@ -93,23 +108,20 @@ void ProcessorInstance::test_midi_block_processing(const juce::MidiBuffer messag
         EXPECT_LE((*received_message).samplePosition, expected_samplePosition + ALLOWED_DELTA) << "midi event of next processBlock should be around sample position " << expected_samplePosition;
     }
 
-    ///////////// Round 3 ////////////////////
-    // no more host messages.
-    process_block_without_midi_messages_and_expect_no_midi_output("in round 3");
-
-    ///////////// Round 4 ////////////////////
-    // no more host messages.
-    process_block_without_midi_messages_and_expect_no_midi_output("in round 4");
-    ///////////// Round 4 ////////////////////
-    // no more host messages.
-    process_block_without_midi_messages_and_expect_no_midi_output("in round 5");
+    ///////////// Round 3 -- 3+num_iterations_to_wait ////////////////////
+    // no more host messages, see what processing does
+    for (int i = 0; i < num_iterations_to_idle; i++) {
+        process_block_without_midi_messages("in idle round " + std::to_string(i), function_to_call_after_idle_processing);
+    }
 }
 
 /**
- * This test will check that after a 23.22ms wait, there are no more midi message in the output to the host.
+ * This test will check that calling processBlock after a 23.22ms wait some expectations hold.
  * (note: output to devices is checked by having a StrictMock)
  */
-void ProcessorInstance::process_block_without_midi_messages_and_expect_no_midi_output(std::string message)
+void ProcessorInstance::process_block_without_midi_messages(
+    std::string message,
+    const std::function <void (std::string)>& function_to_call_after_processing)
 {
     midiMessages.clear();
 
@@ -120,7 +132,9 @@ void ProcessorInstance::process_block_without_midi_messages_and_expect_no_midi_o
 
     // Function under test:
     processor->processBlock(buffer, midiMessages);
-    EXPECT_EQ(midiMessages.getNumEvents(), 0) << "Unexpected midi event " << message;
+
+    if (function_to_call_after_processing)
+        function_to_call_after_processing(message);
 }
 
 TEST_F(ProcessorInstance, midi_block_processing_without_panel)
@@ -128,7 +142,9 @@ TEST_F(ProcessorInstance, midi_block_processing_without_panel)
     juce::MidiBuffer messages_to_send;
     messages_to_send.addEvent(juce::MidiMessage::noteOn(1, 2, 1.0f), 0);
     messages_to_send.addEvent(juce::MidiMessage::noteOff(2, 3, 0.5f), BLOCK_SIZE / 2);
-    test_midi_block_processing(messages_to_send);
+    test_midi_block_processing(messages_to_send, [=](std::string msg) {
+        this->expect_no_midi_messages_in_buffer(msg);
+    });
 }
 
 TEST_F(ProcessorInstance, audio_processing_clears_audio_buffer)
