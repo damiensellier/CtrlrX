@@ -1,4 +1,4 @@
-#include "test_fixture.h"
+#include "test_ProcessorFixture.h"
 #include <chrono>
 #include <thread>
 
@@ -57,7 +57,7 @@ void ProcessorInstance::test_midi_block_processing(
 
     // Expecting pass-through behavior.
     // Since MidiMessageCollector depends on a 'real time' counter (getMillisecondCounterHiRes), we allow some delta...
-    EXPECT_EQ(midiMessages.getNumEvents(), messages_to_send.getNumEvents()) << "Was expecting midi events back after we have sent them";
+    EXPECT_EQ(midiMessages.getNumEvents(), messages_to_send.getNumEvents()) << "Was expecting an equal amount of midi events back after we have sent them";
     for (auto expected_message = messages_to_send.begin(), received_message = midiMessages.begin()
         ; expected_message != messages_to_send.end() && received_message != midiMessages.end()
         ; expected_message++, received_message++)

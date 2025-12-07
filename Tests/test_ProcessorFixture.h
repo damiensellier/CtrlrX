@@ -1,4 +1,6 @@
 #include <iostream>
+#include <tuple>
+#include <string>
 
 #include "gtest/gtest.h"
 
@@ -43,7 +45,6 @@ protected:
         midiMessages.clear();
     }
 
-    void load_test_panel();
     void expect_no_midi_messages_in_buffer(std::string message);
 
     void test_midi_block_processing(
@@ -53,6 +54,20 @@ protected:
     void process_block_without_midi_messages(
         std::string message = "", 
         const std::function <void (std::string)>& function_to_call_after_processing = nullptr);
+};
+
+/**
+ * parameterized ProcessorInstance, parameters:
+ * - panel filename
+ * - expected panel title
+ */
+class ProcessorInstanceWithPanel 
+    : public ProcessorInstance
+    , public testing::WithParamInterface<std::tuple<std::string, std::string>> 
+{
+    public:
+        void load_test_panel();
+
 };
 
 // outside operator overloading
