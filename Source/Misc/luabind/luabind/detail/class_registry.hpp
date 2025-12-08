@@ -60,7 +60,7 @@ namespace luabind { namespace detail
 
     private:
 
-        std::map<type_id, class_rep*> m_classes;
+        std::map<type_id, class_rep*> m_classes = {};
 
         // this is a lua reference that points to the lua table
         // that is to be used as meta table for all C++ class

@@ -973,7 +973,7 @@ private:
         uint8 asBytes[sizeof (uint8*)];
     };
 
-    PackedData packedData;
+    PackedData packedData = {};
     double timeStamp = 0;
     int size;
    #endif

@@ -16,6 +16,7 @@ CtrlrManager::CtrlrManager(CtrlrProcessor *_owner, CtrlrLog &_ctrlrLog)
 		ctrlrMidiDeviceManager(*this),
 		ctrlrDocumentPanel(nullptr),
 		ctrlrManagerVst(nullptr),
+		ctrlrNativeObject(nullptr),
 		audioThumbnailCache(256),
 		ctrlrPlayerInstanceMode(InstanceMulti),
 		ctrlrManagerRestoring(false),

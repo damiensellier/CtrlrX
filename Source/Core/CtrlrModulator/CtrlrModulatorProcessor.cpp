@@ -18,6 +18,7 @@ CtrlrModulatorProcessor::CtrlrModulatorProcessor(CtrlrModulator &_owner)
 		minValue(0),
 		maxValue(127),
 		usingValueMap(false),
+		linkedToGlobal(false),
 		ctrlrMidiMessage(nullptr),
 		ctrlrMidiControllerMessage(nullptr),
 		isMute(false)

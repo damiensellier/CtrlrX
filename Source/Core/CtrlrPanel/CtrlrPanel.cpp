@@ -18,6 +18,7 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner)
 		: owner(_owner),
 		panelTree(Ids::panel),
 		panelWindowManager(*this),
+		globalVariables({}),
 		ctrlrSysexProcessor(*this),
 		processor(*this),
 		snapshot(*this),
@@ -871,8 +872,8 @@ void CtrlrPanel::removeModulator (CtrlrModulator *modulatorToDelete)
 
 		listeners.call (&CtrlrPanel::Listener::modulatorRemoved, modulatorToDelete);
 
-		ctrlrModulators.removeObject (modulatorToDelete);
 		panelTree.removeChild (modulatorToDelete->getModulatorTree(), 0);
+		ctrlrModulators.removeObject (modulatorToDelete);
 	}
 }
 
@@ -1321,9 +1322,9 @@ void CtrlrPanel::panelReceivedMidi(const MidiBuffer &buffer, const CtrlrMIDIDevi
 {
 	MidiBuffer::Iterator i(buffer);
 	MidiMessage m;
-	int time;
+	int samplePosition;
 
-	while (i.getNextEvent(m,time))
+	while (i.getNextEvent(m, samplePosition))
 	{
 		midiMessageCollector.addMessageToQueue (m);
 	}

@@ -71,6 +71,10 @@ public:
 
     bool operator<(type_id const& other) const
     {
+        if (!m_id) // there are still situations where "this" is a bad pointer, looks like its getting memory location values in the ASCII range...
+            return false;
+        if (!other.m_id)
+            return true;
 # ifdef LUABIND_SAFE_TYPEID
         return std::strcmp(m_id->name(), other.m_id->name()) < 0;
 # else
@@ -89,6 +93,8 @@ public:
             return demangled_name;
         }
 # endif
+        if (!m_id)
+            throw std::bad_typeid();
         return m_id->name();
     }
 

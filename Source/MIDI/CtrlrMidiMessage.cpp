@@ -9,7 +9,7 @@
 #include "JuceClasses/LMemoryBlock.h"
 
 CtrlrMidiMessage::CtrlrMidiMessage()
-	:	midiTree(Ids::midi), multiMasterValue(1),
+	:	messageType(None), midiTree(Ids::midi), multiMasterValue(1),
 		multiMasterNumber(1), messagePattern(0,true), restoring(false),
 		initializationResult(Result::ok())
 {
@@ -17,7 +17,7 @@ CtrlrMidiMessage::CtrlrMidiMessage()
 }
 
 CtrlrMidiMessage::CtrlrMidiMessage (const String& hexData)
-	:	midiTree(Ids::midi), multiMasterValue(1),
+	:	messageType(None), midiTree(Ids::midi), multiMasterValue(1),
 		multiMasterNumber(1), messagePattern(0,true),
 		initializationResult(Result::ok())
 {
@@ -58,7 +58,7 @@ CtrlrMidiMessage::CtrlrMidiMessage (const String& hexData)
 }
 
 CtrlrMidiMessage::CtrlrMidiMessage (const MidiMessage& other)
-	:	midiTree(Ids::midi), messagePattern(0,true),
+	:	messageType(None), midiTree(Ids::midi), messagePattern(0,true),
 		initializationResult(Result::ok())
 {
 	initializeEmptyMessage();
@@ -79,7 +79,7 @@ CtrlrMidiMessage::CtrlrMidiMessage (const MidiMessage& other)
 }
 
 CtrlrMidiMessage::CtrlrMidiMessage (MemoryBlock& other)
-	:	midiTree(Ids::midi), messagePattern(0,true), initializationResult(Result::ok())
+	:	messageType(None), midiTree(Ids::midi), messagePattern(0,true), initializationResult(Result::ok())
 {
 	initializeEmptyMessage();
 
@@ -105,7 +105,7 @@ CtrlrMidiMessage::CtrlrMidiMessage (MemoryBlock& other)
 }
 
 CtrlrMidiMessage::CtrlrMidiMessage (const CtrlrLuaObjectWrapper &luaArray)
-	:	midiTree(Ids::midi), multiMasterValue(1),
+	:	messageType(None), midiTree(Ids::midi), multiMasterValue(1),
 		multiMasterNumber(1), messagePattern(0,true),
 		initializationResult(Result::ok())
 {
@@ -141,7 +141,7 @@ CtrlrMidiMessage::CtrlrMidiMessage (const CtrlrLuaObjectWrapper &luaArray)
 }
 
 CtrlrMidiMessage::CtrlrMidiMessage (const CtrlrMidiMessage &other)
-	: midiTree(other.midiTree), initializationResult(Result::ok()),
+	: messageType(None), midiTree(other.midiTree), initializationResult(Result::ok()),
 		messageArray(other.messageArray)
 {
 
@@ -150,7 +150,7 @@ CtrlrMidiMessage::CtrlrMidiMessage (const CtrlrMidiMessage &other)
 }
 
 CtrlrMidiMessage::CtrlrMidiMessage (const Identifier &treeType)
-    : midiTree(treeType), messagePattern(0,true), initializationResult(Result::ok())
+    : messageType(None), midiTree(treeType), messagePattern(0,true), initializationResult(Result::ok())
 {
     initializeEmptyMessage();
 }
@@ -162,7 +162,7 @@ CtrlrMidiMessage::~CtrlrMidiMessage()
 
 void CtrlrMidiMessage::initializeEmptyMessage()
 {
-	setProperty (Ids::midiMessageType, 9);
+	setProperty (Ids::midiMessageType, None);
 	setProperty (Ids::midiMessageChannelOverride, false);
 	setProperty (Ids::midiMessageChannel, 1);
 	setProperty (Ids::midiMessageCtrlrNumber, 1);

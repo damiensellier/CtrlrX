@@ -216,7 +216,7 @@ private:
 
     static bool isEmptyString (StringHolder* other)
     {
-        return (other->refCount.get() & 0x30000000) != 0;
+        return static_cast<void*>(other) == &emptyString;
     }
 
     void compileTimeChecks()
