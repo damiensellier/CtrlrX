@@ -86,8 +86,8 @@ TEST_P(ProcessorInstanceWithPanel, test_panel_midi_block_processing_with_notes)
     ASSERT_NE(panel, nullptr) << "CtrlrX can't find the panel '" << std::get<1>(GetParam()) << "'...";
     ASSERT_FALSE(panel->isMidiInPaused());
     ASSERT_FALSE(panel->isMidiOutPaused());
-    ASSERT_TRUE(panel->getMidiOptionBool(panelMidiThruH2H));
-    ASSERT_TRUE(panel->getMidiOptionBool(panelMidiOutputToHost));
+    EXPECT_TRUE(panel->getMidiOptionBool(panelMidiThruH2H));
+    EXPECT_TRUE(panel->getMidiOptionBool(panelMidiOutputToHost));
     EXPECT_FALSE(panel->getMidiOptionBool(panelMidiThruH2HChannelize));
     EXPECT_TRUE(panel->getMidiOptionBool(panelMidiInputFromHostCompare)); // if input comparator matches or sth then it can via a midicollector back to the host...
 
@@ -140,7 +140,6 @@ TEST_P(ProcessorInstanceWithPanel, test_panel_midi_block_processing_with_cc_as_d
 
 TEST_P(ProcessorInstanceWithPanel, test_panel_sends_midi_to_host_and_device_after_value_change)
 {
-    GTEST_SKIP() << "not relevant for test2 panel";
     // first, set expectations, if we've implemented the mock for the OS's midi subsystem
     if (midi_mock.hasSubsystemMock()) {
         std::cout << "MIDI mock is implemented, setting hardware device expectations" << std::endl;
@@ -176,6 +175,9 @@ INSTANTIATE_TEST_SUITE_P(
     ProcessorInstanceWithPanel,
     ::testing::Values(
         /* parameters:   filename,     panel name */
-        std::make_tuple("test.panel", "Test Panel")
+        std::make_tuple("test.panel", "Test Panel"),
+        std::make_tuple("test2.panel","Test Panel Host2Device")
+        //std::make_tuple("test2.bpanelz", "Jomox_Airbase99"),
+        //std::make_tuple("test3.panel", "Jomox_Airbase99")
     )
 );

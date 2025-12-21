@@ -13,6 +13,7 @@ message(STATUS "Tests enabled")
 
 # Copy the test panel to the build directory
 configure_file("test.panel" "test.panel" COPYONLY)
+configure_file("test2.panel" "test2.panel" COPYONLY)
 
 # find all test sources
 file(GLOB_RECURSE MockFiles CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/mock*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/mock*.h")

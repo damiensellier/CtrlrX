@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<panel name="Test Panel" panelShowDialogs="1" panelMessageTime="2000.0"
+<panel name="Test Panel Host2Device" panelShowDialogs="1" panelMessageTime="2000.0"
        panelAuthorName="Sgorpi" panelAuthorEmail="" panelAuthorDonateUrl=""
        panelAuthorUrl="" panelAuthorDesc="" panelVersionMajor="1" panelVersionMinor="0"
        panelVersionName="1" panelVendor="test" panelDevice="test" panelCertificateWinSelectPath=""
@@ -13,7 +13,7 @@
        panelMidiOutputDevice="Device 00, port 01" panelMidiOutputChannelDevice="4"
        panelMidiInputFromHost="1" panelMidiInputChannelHost="0" panelMidiInputFromHostCompare="1"
        panelMidiOutputToHost="1" panelMidiOutputChannelHost="1" panelMidiThruH2H="1"
-       panelMidiThruH2HChannelize="0" panelMidiThruH2D="0" panelMidiThruH2DChannelize="0"
+       panelMidiThruH2HChannelize="0" panelMidiThruH2D="1" panelMidiThruH2DChannelize="0"
        panelMidiThruD2H="1" panelMidiThruD2HChannelize="0" panelMidiThruD2D="1"
        panelMidiThruD2DChannelize="0" panelMidiRealtimeIgnore="0" panelMidiInputThreadPriority="7.0"
        panelMidiProgram="0" panelMidiBankLsb="0" panelMidiBankMsb="0"
