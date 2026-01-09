@@ -45,9 +45,18 @@ set(COMPANY_NAME "CtrlrX Project")
 # This variable is now set using the clean BASE_ID_NAME to ensure the bundle identifier is valid.
 set(BUNDLE_ID "com.${BASE_ID_NAME}.${PROJECT_NAME}")
 
+# --- FORMAT CONFIGURATION ---
 # Change me! Set the plugin formats you want built
 # Valid choices: AAX Unity VST VST3 AU AUv3 Standalone
+# Default formats for Desktop (Windows/Mac/Linux)
 set(FORMATS Standalone AU VST3)
+
+if(ANDROID)
+    # Android only supports Standalone. Overwriting the list here is correct.
+    set(FORMATS Standalone)
+    message(STATUS "Android build detected: Limiting formats to Standalone only.")
+endif()
+# ----------------------------
 
 # For simplicity, the name of the CMake project is also the name of the target
 # CURRENT_VERSION is from the VERSION file and shall contain non-negative integer components,
@@ -113,6 +122,16 @@ juce_add_plugin("${PROJECT_NAME}"
     NEEDS_MIDI_OUTPUT TRUE
     EDITOR_WANTS_KEYBOARD_FOCUS TRUE
     # -------------------------------------------------
+    
+    # -------------------------------------------------
+    # Android Specifics: Matching Desktop Capabilities
+    ANDROID_ACTIVITY_CLASS_NAME "com.ctrlrx.CtrlrXActivity"
+    CUSTOM_MANIFEST_DEFINITIONS
+        "<uses-permission android:name=\"android.permission.RECORD_AUDIO\" />"
+        "<uses-permission android:name=\"android.permission.MODIFY_AUDIO_SETTINGS\" />"
+        "<uses-permission android:name=\"android.permission.BLUETOOTH\" />"
+        "<uses-permission android:name=\"android.permission.BLUETOOTH_ADMIN\" />"
+    # -------------------------------------------------    
 
     # FIX: VST3 Category is set using the official plural argument (VST3_CATEGORIES)
     # This is the most reliable, clean way to set the VST3 category.
@@ -182,7 +201,7 @@ file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS
 # -----------------------------------------------------------------------
 # FIX: Exclude CtrlrLinux files from the build unless we are compiling for Linux.
 # This prevents compilation errors on Mac/Windows due to missing headers like <bfd.h>
-if (NOT LINUX)
+if (NOT LINUX OR ANDROID)
     list(FILTER SourceFiles EXCLUDE REGEX "CtrlrLinux\\.cpp$")
     list(FILTER SourceFiles EXCLUDE REGEX "CtrlrLinux\\.h$")
 endif()
@@ -275,7 +294,7 @@ target_link_libraries(SharedCode
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags)
 
-if(LINUX)
+if(LINUX AND NOT ANDROID)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(libudev REQUIRED libudev)
     pkg_check_modules(x11 REQUIRED x11)

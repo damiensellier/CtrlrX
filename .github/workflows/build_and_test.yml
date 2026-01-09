@@ -49,6 +49,7 @@ jobs:
       HAVE_MACOS_SIGNING_SECRETS: ${{ secrets.DEV_ID_COMBO_CERT != '' && secrets.DEV_ID_COMBO_PASSWORD != '' && secrets.DEVELOPER_ID_APPLICATION != '' && secrets.DEVELOPER_ID_INSTALLER != '' && secrets.NOTARIZATION_USERNAME != '' && secrets.NOTARIZATION_PASSWORD != '' && secrets.TEAM_ID != '' }}
       HAVE_AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET != '' }}
       HAVE_GPG_KEY: ${{ secrets.GPG_SIGNING_KEY != '' }}
+      HAVE_ANDROID_SIGNING_SECRETS: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_ALIAS != '' && secrets.ANDROID_KEYSTORE_PASS != '' }}
     strategy:
       fail-fast: false # show all errors for each platform (vs. cancel jobs on error)
       matrix:
@@ -65,6 +66,9 @@ jobs:
           - name: Windows
             os: windows-2022
             pluginval-binary: ./pluginval.exe
+          - name: Android
+            os: ubuntu-latest
+            extra-flags: "-DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-24 -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake"
 
     steps:
       # Setup MSVC toolchain and developer command prompt (Windows)
@@ -143,13 +147,27 @@ jobs:
           done 3< <(find . -name "Ctrlr*.jucer" -type f -print0)
           cat VERSION
       
+      - name: Set up Java and Android SDK
+        if: matrix.name == 'Android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      # The Android SDK/NDK is pre-installed on ubuntu-latest, 
+      # but we ensure the environment variables are ready.
+      - name: Export NDK Path
+        if: matrix.name == 'Android'
+        run: echo "ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> $GITHUB_ENV
+        
       - name: Configure
+        shell: bash
         run: >
-          cmake -B ${{ env.BUILD_DIR }}
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE}}
+          cmake -S . -B ${{ env.BUILD_DIR }}
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
           -DCMAKE_C_COMPILER_LAUNCHER=sccache
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
-          ${{ matrix.extra-flags }} .
+          ${{ matrix.extra-flags }}
 
       - name: Build
         run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
@@ -172,13 +190,45 @@ jobs:
           echo "CLAP_PATH=$ARTIFACTS_PATH/CLAP/${{ env.PRODUCT_NAME }}.clap" >> $GITHUB_ENV
           echo "STANDALONE_PATH=$ARTIFACTS_PATH/Standalone/${{ env.PRODUCT_NAME }}.app" >> $GITHUB_ENV
           echo "ARTIFACT_NAME=${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-${{ matrix.name }}" >> $GITHUB_ENV
-
+          # Use the actual Gradle output location for the APK_PATH
+          echo "APK_PATH=${{ env.BUILD_DIR }}/${{ env.PROJECT_NAME }}_Android/app/build/outputs/apk/release/app-release-unsigned.apk" >> $GITHUB_ENV
+          
       - name: Pluginval
+        if: matrix.name != 'Android'
         run: |
           curl -LO "https://github.com/Tracktion/pluginval/releases/download/v1.0.3/pluginval_${{ matrix.name }}.zip"
           7z x pluginval_${{ matrix.name }}.zip
           ${{ matrix.pluginval-binary }} --strictness-level 10 --verbose --validate "${{ env.VST3_PATH }}"
-          
+
+      # -----------------------------------------------------------------         
+      # ANDROID POST-BUILD: VERIFY & FALLBACK
+      # -----------------------------------------------------------------
+
+      - name: Verify Android Build
+        if: matrix.name == 'Android'
+        run: |
+          APK_PATH="${{ env.BUILD_DIR }}/${{ env.PROJECT_NAME }}_Android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          if [ ! -f "$APK_PATH" ]; then
+            echo "Error: APK not found at $APK_PATH"
+            exit 1
+          fi
+
+      - name: Sign Android APK
+        if: matrix.name == 'Android' && env.HAVE_ANDROID_SIGNING_SECRETS == 'true'
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          apksigner sign --ks release.keystore \
+            --ks-key-alias "${{ secrets.ANDROID_ALIAS }}" \
+            --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASS }}" \
+            --out "${{ env.ARTIFACTS_PATH }}/${{ env.PRODUCT_NAME }}.apk" \
+            ${{ env.BUILD_DIR }}/${{ env.PROJECT_NAME }}_Android/app/build/outputs/apk/release/app-release-unsigned.apk
+
+      - name: Handle Unsigned APK (Fallback)
+        if: matrix.name == 'Android' && env.HAVE_ANDROID_SIGNING_SECRETS != 'true'
+        run: |
+          mkdir -p "${{ env.ARTIFACTS_PATH }}"
+          cp "${{ env.BUILD_DIR }}/${{ env.PROJECT_NAME }}_Android/app/build/outputs/apk/release/app-release-unsigned.apk" "${{ env.ARTIFACTS_PATH }}/${{ env.PRODUCT_NAME }}.apk"
+
       # -----------------------------------------------------------------
       # APPLE CODESIGNING STEPS
       # -----------------------------------------------------------------
@@ -499,6 +549,13 @@ jobs:
             # Point to the file we created on the runner
             ${{ github.workspace }}/${{ env.ARTIFACT_NAME }}.zip
 
+      - name: Upload APK (Android)
+        if: matrix.name == 'Android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}.apk
+          path: "${{ env.ARTIFACTS_PATH }}/${{ env.PRODUCT_NAME }}.apk"
+ 
       - name: Upload pkg (macOS)
         if: ${{ matrix.name == 'macOS' }}
         uses: actions/upload-artifact@v4
@@ -550,4 +607,5 @@ jobs:
             */*.exe
             **/*/*.zip
             */*.pkg
+            */*.apk
             **/*Standalone/*.sig
