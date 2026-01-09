@@ -68,13 +68,14 @@ jobs:
             pluginval-binary: ./pluginval.exe
           - name: Android
             os: ubuntu-latest
+            # 1. We point to the folder we just unzipped
+            # 2. We define JUCE_ANDROID to fix the #error in juce_PluginHostType.h
             extra-flags: >
               -DANDROID_ABI=arm64-v8a 
               -DANDROID_PLATFORM=android-24 
               -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake
-              -D"WARN(x)=((void)0)"
-              -D"INFO(x,y)=((void)0)"
-              -D"SURE(x,y)=true"
+              -DCMAKE_CXX_FLAGS="-I${{ github.workspace }}/Source/Misc"
+              -DJUCE_ANDROID=1
 
     steps:
       # Setup MSVC toolchain and developer command prompt (Windows)
