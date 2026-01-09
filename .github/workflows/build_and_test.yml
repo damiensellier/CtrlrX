@@ -68,13 +68,13 @@ jobs:
             pluginval-binary: ./pluginval.exe
           - name: Android
             os: ubuntu-latest
-            # 1. -DJUCE_ANDROID=1 stops the #error in juce_PluginHostType.h
-            # 2. CMAKE_CXX_FLAGS includes the path to the unzipped Boost headers
             extra-flags: >
               -DANDROID_ABI=arm64-v8a 
               -DANDROID_PLATFORM=android-24 
               -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake
               -DJUCE_ANDROID=1
+              -DJUCE_PLUGINHOST_VST3=0
+              -DJUCE_PLUGINHOST_AU=0
               -DCMAKE_CXX_FLAGS="-I${{ github.workspace }}/Source/Misc"
 
     steps:
