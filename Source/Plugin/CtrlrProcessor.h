@@ -14,14 +14,9 @@
 #include <fstream> // Added v5.6.33. Required for vst3 logger
 
 #if JUCE_ANDROID // Added Hack for Android
-namespace juce {
-    class AlertWindow {
-    public:
-        enum AlertIconType { NoIcon, QuestionIcon, InfoIcon, WarningIcon };
-        static void showMessageBox (AlertIconType, const String&, const String&, const String& = String(), Component* = nullptr) {}
-        static void showNativeDialog (const String&, const String&, bool) {}
-    };
-}
+  // This tells the preprocessor: "Anytime you see showMessageBox, ignore everything until the closing bracket"
+  #define showMessageBox(...) ((void)0)
+  #define showNativeDialog(...) ((void)0)
 #endif
 
 class CtrlrLog;
