@@ -3,7 +3,9 @@
 
 #include "CtrlrProperties.h"
 #include "CtrlrPanel/CtrlrPanelProcessor.h"
-#include "juce_PluginHostType.h"
+#if !JUCE_ANDROID
+  #include "juce_PluginHostType.h"
+#endif
 #include "boost/bind.hpp"
 #include "boost/function.hpp"
 #include "CtrlrMacros.h"
@@ -147,7 +149,9 @@ class CtrlrProcessor : public AudioProcessor, public ChangeBroadcaster
 		void activePanelChanged();
     
 	private:
-        ::PluginHostType host;
+		#if !JUCE_ANDROID
+		::PluginHostType host;
+		#endif
 		MidiBuffer leftoverBuffer;
 		CtrlrLog *ctrlrLog;
 		ScopedPointer <CtrlrManager> ctrlrManager;
