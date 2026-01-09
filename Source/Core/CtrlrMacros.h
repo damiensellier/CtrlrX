@@ -49,9 +49,16 @@
 
 #define MENU_OFFSET_PROGRAM_LIST		0x80000
 
-#define WARN(x)													AlertWindow::showMessageBox (AlertWindow::WarningIcon, "WARNING", x, "OK", nullptr)
-#define INFO(x,y)												AlertWindow::showMessageBox (AlertWindow::InfoIcon, x, y, "OK", nullptr)
-#define SURE(x,y)												AlertWindow::showOkCancelBox (AlertWindow::QuestionIcon, "Are you sure?", x, "Yes", "No", y, nullptr)
+#if JUCE_ANDROID
+	#define WARN(x)												juce::Logger::writeToLog("WARNING: " + String(x))
+	#define INFO(x,y)											juce::Logger::writeToLog("INFO: " + String(x) + " - " + String(y))
+	#define SURE(x,y)											true
+#else
+	#define WARN(x)												AlertWindow::showMessageBox (AlertWindow::WarningIcon, "WARNING", x, "OK", nullptr)
+	#define INFO(x,y)											AlertWindow::showMessageBox (AlertWindow::InfoIcon, x, y, "OK", nullptr)
+	#define SURE(x,y)											AlertWindow::showOkCancelBox (AlertWindow::QuestionIcon, "Are you sure?", x, "Yes", "No", y, nullptr)
+#endif
+
 #define _STR(x)                                                 String(x)
 #define STR(x)													_STR(x)
 #define IMAGE(x)												ImageCache::getFromMemory(BinaryData::x, BinaryData::x ## Size)
