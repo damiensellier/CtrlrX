@@ -14,17 +14,17 @@
 #include <fstream> // Added v5.6.33. Required for vst3 logger
 
 #if JUCE_ANDROID
-    // We create a tiny helper class in the GLOBAL namespace
+    // 1. Define a dummy class that has the methods the compiler is looking for
     struct AndroidAlertHijack {
-        static void showMessageBox (int, const char*, const char*, ...) {}
-        static void showNativeDialog (...) {}
-        
-        // This matches the Icon types often used
         enum AlertIconType { NoIcon, QuestionIcon, InfoIcon, WarningIcon };
+        
+        static void showMessageBox (AlertIconType, const String&, const String&,
+                                   const String& = String(), Component* = nullptr) {}
+                                   
+        static void showNativeDialog (const String&, const String&, bool) {}
     };
 
-    // This is the "magic" line: it tells the preprocessor to replace
-    // the word "AlertWindow" with our hijack class.
+    // 2. Hijack the name: Replace 'AlertWindow' with our dummy struct
     #define AlertWindow AndroidAlertHijack
 #endif
 
