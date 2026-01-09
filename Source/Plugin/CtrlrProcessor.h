@@ -13,10 +13,19 @@
 
 #include <fstream> // Added v5.6.33. Required for vst3 logger
 
-#if JUCE_ANDROID // Added Hack for Android
-  // This tells the preprocessor: "Anytime you see showMessageBox, ignore everything until the closing bracket"
-  #define showMessageBox(...) ((void)0)
-  #define showNativeDialog(...) ((void)0)
+#if JUCE_ANDROID
+    // We create a tiny helper class in the GLOBAL namespace
+    struct AndroidAlertHijack {
+        static void showMessageBox (int, const char*, const char*, ...) {}
+        static void showNativeDialog (...) {}
+        
+        // This matches the Icon types often used
+        enum AlertIconType { NoIcon, QuestionIcon, InfoIcon, WarningIcon };
+    };
+
+    // This is the "magic" line: it tells the preprocessor to replace
+    // the word "AlertWindow" with our hijack class.
+    #define AlertWindow AndroidAlertHijack
 #endif
 
 class CtrlrLog;
