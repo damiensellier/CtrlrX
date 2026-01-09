@@ -145,6 +145,7 @@ File CtrlrLuaUtils::openFileWindow(const String &dialogBoxTitle, const File &ini
 									const String &filePatternsAllowed, bool useOSNativeDialogBox)
 {
 	FileChooser dialog(dialogBoxTitle, initialFileOrDirectory, filePatternsAllowed, useOSNativeDialogBox);
+#if !JUCE_ANDROID
 	if (dialog.browseForFileToOpen(0))
 	{
 		return (dialog.getResult());
@@ -153,6 +154,10 @@ File CtrlrLuaUtils::openFileWindow(const String &dialogBoxTitle, const File &ini
 	{
 		return (File());
 	}
+#else
+    // On Android, we just log it or do nothing for now
+    _DBG("File browsing is not yet implemented for Android");
+#endif
 }
 
 void CtrlrLuaUtils::openMultipleFilesWindow(const String &dialogBoxTitle, const File &initialFileOrDirectory,

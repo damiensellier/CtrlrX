@@ -816,11 +816,16 @@ void CtrlrFileProperty::buttonClicked (Button* buttonThatWasClicked)
 								"*.*",
 								false);
 
-        if (myChooser.browseForFileToOpen())
-        {
+#if !JUCE_ANDROID
+		if (myChooser.browseForFileToOpen())
+		{
 			valueToControl = myChooser.getResult().getFullPathName();
 			path->setText (valueToControl.toString(), dontSendNotification);
-        }
+		}
+#else
+		// On Android, we just log it or do nothing for now
+		_DBG("File browsing is not yet implemented for Android");
+#endif
     }
 }
 

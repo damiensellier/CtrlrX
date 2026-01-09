@@ -118,10 +118,15 @@ void CtrlrWaveform::handlePopupMenu (const int popupMenuItem)
 			FileChooser fc("Load a file", currentFile.getParentDirectory(),
 							owner.getOwnerPanel().getCtrlrManagerOwner().getAudioFormatManager().getWildcardForAllFormats(),
 							owner.getOwnerPanel().getCtrlrManagerOwner().getProperty(Ids::ctrlrNativeFileDialogs));
+#if !JUCE_ANDROID
 			if (fc.browseForFileToOpen())
 			{
 				loadFromFile (fc.getResult());
 			}
+#else
+			// On Android, we just log it or do nothing for now
+			_DBG("File browsing is not yet implemented for Android");
+#endif
 		}
 		else
 		{

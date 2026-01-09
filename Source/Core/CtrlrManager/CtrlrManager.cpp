@@ -574,11 +574,16 @@ void CtrlrManager::openPanelFromFile(Component *componentToAttachMenu)
 						"*.panel;*.panelz;*.bpanel;*.bpanelz;*.*",
 						(bool)getProperty(Ids::ctrlrNativeFileDialogs));
 
+#if !JUCE_ANDROID
 	if (fc.browseForFileToOpen())
 	{
 		openPanelInternal(fc.getResult());
 		panelFileOpened (fc.getResult());
 	}
+#else
+    // On Android, we just log it or do nothing for now
+    _DBG("File browsing is not yet implemented for Android");
+#endif
 }
 
 void CtrlrManager::panelFileOpened(const File &panelFile)

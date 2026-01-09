@@ -558,6 +558,7 @@ void CtrlrMIDIBuffer::buttonClicked (juce::Button* buttonThatWasClicked)
 const File CtrlrMIDIBuffer::browseForFile(const String &mask)
 {
 	FileChooser fc("Open file", lastBrowsedDirectory, mask, true);
+#if !JUCE_ANDROID
 	if (fc.browseForFileToOpen())
 	{
 		if (fc.getResult().existsAsFile())
@@ -566,6 +567,10 @@ const File CtrlrMIDIBuffer::browseForFile(const String &mask)
 			return (fc.getResult());
 		}
 	}
+#else
+	// On Android, we just log it or do nothing for now
+	_DBG("File browsing is not yet implemented for Android");
+#endif
 
 	return (File());
 }
