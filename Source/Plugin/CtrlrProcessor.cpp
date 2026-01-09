@@ -506,6 +506,10 @@ void CtrlrProcessor::activePanelChanged()
 
 bool CtrlrProcessor::useWrapper() // Updated v5.6.34. JUCE 6.0.8 has option "plugin requires keyboard focus" and the keyboard focus is handled better with VST3 than VST2 so Live Wrapper seems useless nowadays.
 {
+    #if JUCE_ANDROID
+     return false; // Android never uses the Live wrapper
+    #endif
+    
     File debugLog = File::getSpecialLocation(File::currentApplicationFile);
     String fileExt = debugLog.getFileExtension();
     // PluginLoggerVst3 logger(debugLog); // Create logger instance
