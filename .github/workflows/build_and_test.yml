@@ -68,14 +68,14 @@ jobs:
             pluginval-binary: ./pluginval.exe
           - name: Android
             os: ubuntu-latest
-            # 1. We point to the folder we just unzipped
-            # 2. We define JUCE_ANDROID to fix the #error in juce_PluginHostType.h
+            # 1. -DJUCE_ANDROID=1 stops the #error in juce_PluginHostType.h
+            # 2. CMAKE_CXX_FLAGS includes the path to the unzipped Boost headers
             extra-flags: >
               -DANDROID_ABI=arm64-v8a 
               -DANDROID_PLATFORM=android-24 
               -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake
-              -DCMAKE_CXX_FLAGS="-I${{ github.workspace }}/Source/Misc"
               -DJUCE_ANDROID=1
+              -DCMAKE_CXX_FLAGS="-I${{ github.workspace }}/Source/Misc"
 
     steps:
       # Setup MSVC toolchain and developer command prompt (Windows)
@@ -125,6 +125,11 @@ jobs:
           echo "Current working directory: $PWD"
           if [ "$RUNNER_OS" == "Linux" ]; then
             sudo apt install -y binutils-dev libboost-dev libcurl4-gnutls-dev libgl1-mesa-dev libglapi-mesa libiberty-dev libsframe1 libudev-dev libxcursor-dev libxrandr-dev xorg-dev
+            # ADD THIS: Unzip boost for the Android NDK to find it locally
+            pushd ./Source/Misc/
+            unzip -q boost/boost.zip
+            popd
+
           elif [ "$RUNNER_OS" == "Windows" ]; then
             # to not clutter the build step logs:
             pushd ./Source/Misc/
