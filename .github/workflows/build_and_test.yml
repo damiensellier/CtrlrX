@@ -68,8 +68,8 @@ jobs:
             pluginval-binary: ./pluginval.exe
           - name: Android
             os: ubuntu-latest
-            # Added -DJUCE_MODAL_LOOPS_PERMITTED=1 to resolve the AlertWindow error
-            extra-flags: "-DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-24 -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake -DJUCE_MODAL_LOOPS_PERMITTED=1"
+            # We add -D"WARN(x)=((void)0)" to effectively "delete" the warning popups on Android only
+            extra-flags: "-DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-24 -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_LATEST_HOME/build/cmake/android.toolchain.cmake -D\"WARN(x)=((void)0)\""
 
     steps:
       # Setup MSVC toolchain and developer command prompt (Windows)
