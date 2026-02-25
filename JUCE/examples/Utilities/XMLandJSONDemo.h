@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -31,7 +31,7 @@
 
  dependencies:     juce_core, juce_data_structures, juce_events, juce_graphics,
                    juce_gui_basics, juce_gui_extra
- exporters:        xcode_mac, vs2019, linux_make, androidstudio, xcode_iphone
+ exporters:        xcode_mac, vs2022, linux_make, androidstudio, xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -49,7 +49,7 @@
 #include "../Assets/DemoUtilities.h"
 
 //==============================================================================
-class XmlTreeItem  : public TreeViewItem
+class XmlTreeItem final : public TreeViewItem
 {
 public:
     XmlTreeItem (XmlElement& x)  : xml (x)    {}
@@ -96,10 +96,8 @@ public:
                 // each sub-element in the XML..
 
                 for (auto* child : xml.getChildIterator())
-                {
-                    jassert (child != nullptr);
-                    addSubItem (new XmlTreeItem (*child));
-                }
+                    if (child != nullptr)
+                        addSubItem (new XmlTreeItem (*child));
             }
         }
         else
@@ -117,7 +115,7 @@ private:
 };
 
 //==============================================================================
-class JsonTreeItem  : public TreeViewItem
+class JsonTreeItem final : public TreeViewItem
 {
 public:
     JsonTreeItem (Identifier i, var value)
@@ -230,8 +228,8 @@ private:
 };
 
 //==============================================================================
-class XMLandJSONDemo   : public Component,
-                         private CodeDocument::Listener
+class XMLandJSONDemo final : public Component,
+                             private CodeDocument::Listener
 {
 public:
     /** The type of database to parse. */
@@ -262,6 +260,7 @@ public:
         addAndMakeVisible (codeDocumentComponent);
         codeDocument.addListener (this);
 
+        resultsTree.setTitle ("Results");
         addAndMakeVisible (resultsTree);
         resultsTree.setColour (TreeView::backgroundColourId, Colours::white);
         resultsTree.setDefaultOpenness (true);
@@ -293,7 +292,7 @@ public:
         auto area = getLocalBounds();
 
         typeBox.setBounds (area.removeFromTop (36).removeFromRight (150).reduced (8));
-        codeDocumentComponent.setBounds (area.removeFromTop(area.getHeight() / 2).reduced (8));
+        codeDocumentComponent.setBounds (area.removeFromTop (area.getHeight() / 2).reduced (8));
         resultsTree          .setBounds (area.reduced (8));
         errorMessage         .setBounds (resultsTree.getBounds());
     }
@@ -313,12 +312,12 @@ private:
     {
         std::unique_ptr<XmlElement> openness;
 
-        if (rootItem.get() != nullptr)
+        if (rootItem != nullptr)
             openness = rootItem->getOpennessState();
 
         createNewRootNode();
 
-        if (openness.get() != nullptr && rootItem.get() != nullptr)
+        if (openness != nullptr && rootItem != nullptr)
             rootItem->restoreOpennessState (*openness);
     }
 
@@ -337,7 +336,7 @@ private:
         }
 
         // if we have a valid TreeViewItem hide any old error messages and set our TreeView to use it
-        if (rootItem.get() != nullptr)
+        if (rootItem != nullptr)
             errorMessage.clear();
 
         errorMessage.setVisible (! errorMessage.isEmpty());

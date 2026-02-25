@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -201,7 +201,7 @@ struct var::VariantType
     static int64  doubleToInt64  (const ValueUnion& data) noexcept   { return (int64) data.doubleValue; }
     static double doubleToDouble (const ValueUnion& data) noexcept   { return data.doubleValue; }
     static String doubleToString (const ValueUnion& data)            { return serialiseDouble (data.doubleValue); }
-    static bool   doubleToBool   (const ValueUnion& data) noexcept   { return data.doubleValue != 0.0; }
+    static bool   doubleToBool   (const ValueUnion& data) noexcept   { return ! exactlyEqual (data.doubleValue, 0.0); }
 
     static bool doubleEquals (const ValueUnion& data, const ValueUnion& otherData, const VariantType& otherType) noexcept
     {
@@ -314,7 +314,7 @@ struct var::VariantType
     static var objectClone (const var& original)
     {
         if (auto* d = original.getDynamicObject())
-            return d->clone().get();
+            return d->clone().release();
 
         jassertfalse; // can only clone DynamicObjects!
         return {};
@@ -401,7 +401,7 @@ struct var::VariantType
         }
     }
 
-    struct RefCountedArray  : public ReferenceCountedObject
+    struct RefCountedArray final : public ReferenceCountedObject
     {
         RefCountedArray (const Array<var>& a)  : array (a)  { incReferenceCount(); }
         RefCountedArray (Array<var>&& a)  : array (std::move (a)) { incReferenceCount(); }
@@ -493,24 +493,10 @@ struct var::Instance
     static constexpr VariantType attributesObject         { VariantType::ObjectTag{} };
 };
 
-constexpr var::VariantType var::Instance::attributesVoid;
-constexpr var::VariantType var::Instance::attributesUndefined;
-constexpr var::VariantType var::Instance::attributesInt;
-constexpr var::VariantType var::Instance::attributesInt64;
-constexpr var::VariantType var::Instance::attributesBool;
-constexpr var::VariantType var::Instance::attributesDouble;
-constexpr var::VariantType var::Instance::attributesMethod;
-constexpr var::VariantType var::Instance::attributesArray;
-constexpr var::VariantType var::Instance::attributesString;
-constexpr var::VariantType var::Instance::attributesBinary;
-constexpr var::VariantType var::Instance::attributesObject;
-
 //==============================================================================
 var::var() noexcept : type (&Instance::attributesVoid) {}
 var::var (const VariantType& t) noexcept  : type (&t) {}
 var::~var() noexcept  { type->cleanUp (value); }
-
-JUCE_DECLARE_DEPRECATED_STATIC (const var var::null;)
 
 //==============================================================================
 var::var (const var& valueToCopy)  : type (valueToCopy.type)
@@ -659,7 +645,7 @@ static int compare (const var& v1, const var& v2)
         return v1.toString().compare (v2.toString());
 
     auto diff = static_cast<double> (v1) - static_cast<double> (v2);
-    return diff == 0 ? 0 : (diff < 0 ? -1 : 1);
+    return exactlyEqual (diff, 0.0) ? 0 : (diff < 0 ? -1 : 1);
 }
 
 bool operator== (const var& v1, const var& v2)     { return v1.equals (v2); }
@@ -894,5 +880,18 @@ var::NativeFunctionArgs::NativeFunctionArgs (const var& t, const var* args, int 
     : thisObject (t), arguments (args), numArguments (numArgs)
 {
 }
+
+//==============================================================================
+#if JUCE_ALLOW_STATIC_NULL_VARIABLES
+
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wdeprecated-declarations")
+JUCE_BEGIN_IGNORE_WARNINGS_MSVC (4996)
+
+const var var::null;
+
+JUCE_END_IGNORE_WARNINGS_GCC_LIKE
+JUCE_END_IGNORE_WARNINGS_MSVC
+
+#endif
 
 } // namespace juce

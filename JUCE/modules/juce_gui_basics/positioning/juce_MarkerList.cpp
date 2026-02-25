@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -59,7 +59,7 @@ bool MarkerList::operator== (const MarkerList& other) const noexcept
 
     for (int i = markers.size(); --i >= 0;)
     {
-        const Marker* const m1 = markers.getUnchecked(i);
+        const Marker* const m1 = markers.getUnchecked (i);
         jassert (m1 != nullptr);
 
         const Marker* const m2 = other.getMarker (m1->name);
@@ -96,7 +96,7 @@ MarkerList::Marker* MarkerList::getMarkerByName (const String& name) const noexc
 {
     for (int i = 0; i < markers.size(); ++i)
     {
-        Marker* const m = markers.getUnchecked(i);
+        Marker* const m = markers.getUnchecked (i);
 
         if (m->name == name)
             return m;
@@ -135,7 +135,7 @@ void MarkerList::removeMarker (const String& name)
 {
     for (int i = 0; i < markers.size(); ++i)
     {
-        const Marker* const m = markers.getUnchecked(i);
+        const Marker* const m = markers.getUnchecked (i);
 
         if (m->name == name)
         {
@@ -278,7 +278,7 @@ void MarkerList::ValueTreeWrapper::readFrom (const MarkerList& markerList, UndoM
     state.removeAllChildren (undoManager);
 
     for (int i = 0; i < markerList.getNumMarkers(); ++i)
-        setMarker (*markerList.getMarker(i), undoManager);
+        setMarker (*markerList.getMarker (i), undoManager);
 }
 
 } // namespace juce

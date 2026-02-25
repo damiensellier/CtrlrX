@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -246,8 +246,10 @@ public:
         labelTextColourId           = 0x1003240,        /**< A colour to use for drawing the text under buttons
                                                              when the style is set to iconsWithText or textOnly. */
 
-        editingModeOutlineColourId  = 0x1003250   /**< A colour to use for an outline around buttons when
+        editingModeOutlineColourId  = 0x1003250,  /**< A colour to use for an outline around buttons when
                                                        the customisation dialog is active and the mouse moves over them. */
+
+        customisationDialogBackgroundColourId = 0x1003260 /**< A colour used to paint the background of the CustomisationDialog. */
     };
 
     //==============================================================================
@@ -310,6 +312,8 @@ public:
     static ToolbarItemComponent* createItem (ToolbarItemFactory&, int itemId);
     /** @internal */
     static const char* const toolbarDragDescriptor;
+    /** @internal */
+    std::unique_ptr<AccessibilityHandler> createAccessibilityHandler() override;
 
 private:
     //==============================================================================
@@ -322,6 +326,7 @@ private:
     class Spacer;
     class CustomisationDialog;
 
+    void initMissingItemButton();
     void showMissingItems();
     void addItemInternal (ToolbarItemFactory& factory, int itemId, int insertIndex);
 

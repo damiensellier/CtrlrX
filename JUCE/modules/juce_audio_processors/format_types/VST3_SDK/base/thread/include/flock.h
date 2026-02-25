@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -99,12 +99,12 @@ public:
 	FLock (const char8* name = "FLock");
 
 	/** Lock destructor. */
-	~FLock ();
+	~FLock () SMTG_OVERRIDE;
 
 	//-- ILock -----------------------------------------------------------
-	virtual void lock () SMTG_OVERRIDE;
-	virtual void unlock () SMTG_OVERRIDE;
-	virtual bool trylock () SMTG_OVERRIDE;
+	void lock () SMTG_OVERRIDE;
+	void unlock () SMTG_OVERRIDE;
+	bool trylock () SMTG_OVERRIDE;
 
 //------------------------------------------------------------------------
 protected:

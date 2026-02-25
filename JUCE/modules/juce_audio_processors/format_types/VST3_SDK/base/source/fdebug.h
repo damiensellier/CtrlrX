@@ -11,7 +11,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -51,11 +51,14 @@
 #pragma once
 
 #include "pluginterfaces/base/ftypes.h"
-#include <string.h>
+#include <cstring>
 
 #if SMTG_OS_MACOS
 #include <new>
 #endif
+
+/** Returns true if a debugger is attached. */
+bool AmIBeingDebugged ();
 
 //-----------------------------------------------------------------------------
 // development / release
@@ -93,6 +96,10 @@
 #define SMTG_ASSERT(f) \
 	if (!(f))          \
 		FDebugBreak ("%s(%d) : Assert failed: %s\n", __FILE__, __LINE__, #f);
+
+#define SMTG_ASSERT_MSG(f, msg) \
+	if (!(f))          \
+		FDebugBreak ("%s(%d) : Assert failed: [%s] [%s]\n", __FILE__, __LINE__, #f, msg);
 
 /** Send "comment" string to the debugger for display. */
 #define SMTG_WARNING(comment) FDebugPrint ("%s(%d) : %s\n", __FILE__, __LINE__, comment);
@@ -152,10 +159,10 @@ void FPrintLastError (const char* file, int line);
         the debug output to a file or stream.
 */
 ///@{
-typedef bool (*AssertionHandler) (const char* message);
+using AssertionHandler = bool (*) (const char* message);
 extern AssertionHandler gAssertionHandler;
 extern AssertionHandler gPreAssertionHook;
-typedef void (*DebugPrintLogger) (const char* message);
+using DebugPrintLogger = void (*) (const char* message);
 extern DebugPrintLogger gDebugPrintLogger;
 ///@}
 
@@ -191,6 +198,7 @@ void* operator new (size_t, int, const char*, int);
 #else
 /** if DEVELOPMENT is not set, these macros will do nothing. */
 #define SMTG_ASSERT(f)
+#define SMTG_ASSERT_MSG(f, msg)
 #define SMTG_WARNING(s)
 #define SMTG_PRINTSYSERROR
 #define SMTG_DEBUGSTR(s)
@@ -212,11 +220,9 @@ void* operator new (size_t, int, const char*, int);
 #endif
 #endif
 
-#if SMTG_CPPUNIT_TESTING
-#define SMTG_IS_TEST true
-#else
-#define SMTG_IS_TEST false
-#endif
+// replace #if SMTG_CPPUNIT_TESTING
+bool isSmtgUnitTesting ();
+void setSmtgUnitTesting ();
 
 #if !SMTG_RENAME_ASSERT
 #if SMTG_OS_WINDOWS

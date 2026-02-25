@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -48,19 +48,14 @@ void ComponentLayout::changed()
         document->changed();
 }
 
-void ComponentLayout::perform (UndoableAction* action, const String& actionName)
+void ComponentLayout::perform (std::unique_ptr<UndoableAction> action, const String& actionName)
 {
     jassert (document != nullptr);
 
     if (document != nullptr)
-    {
-        document->getUndoManager().perform (action, actionName);
-    }
+        document->getUndoManager().perform (action.release(), actionName);
     else
-    {
-        std::unique_ptr<UndoableAction> deleter (action);
         action->perform();
-    }
 }
 
 //==============================================================================
@@ -76,34 +71,34 @@ void ComponentLayout::clearComponents()
 class AddCompAction  : public UndoableAction
 {
 public:
-    AddCompAction (XmlElement* const xml_, ComponentLayout& layout_)
-       : indexAdded (-1),
+    AddCompAction (XmlElement* const xml_, ComponentLayout& layout_, int& index)
+       : indexRef (index),
          xml (xml_),
          layout (layout_)
     {
     }
 
-    bool perform()
+    bool perform() override
     {
         showCorrectTab();
         Component* const newComp = layout.addComponentFromXml (*xml, false);
         jassert (newComp != nullptr);
 
-        indexAdded = layout.indexOfComponent (newComp);
-        jassert (indexAdded >= 0);
-        return indexAdded >= 0;
+        indexRef = layout.indexOfComponent (newComp);
+        jassert (indexRef >= 0);
+        return indexRef >= 0;
     }
 
-    bool undo()
+    bool undo() override
     {
         showCorrectTab();
-        layout.removeComponent (layout.getComponent (indexAdded), false);
+        layout.removeComponent (layout.getComponent (indexRef), false);
         return true;
     }
 
-    int getSizeInUnits()    { return 10; }
+    int getSizeInUnits() override    { return 10; }
 
-    int indexAdded;
+    int& indexRef;
 
 private:
     std::unique_ptr<XmlElement> xml;
@@ -135,14 +130,14 @@ public:
         oldIndex = l.indexOfComponent (comp);
     }
 
-    bool perform()
+    bool perform() override
     {
         showCorrectTab();
         layout.removeComponent (getComponent(), false);
         return true;
     }
 
-    bool undo()
+    bool undo() override
     {
         Component* c = layout.addComponentFromXml (*xml, false);
         jassert (c != nullptr);
@@ -164,7 +159,7 @@ void ComponentLayout::removeComponent (Component* comp, const bool undoable)
     {
         if (undoable)
         {
-            perform (new DeleteCompAction (comp, *this), "Delete components");
+            perform (std::make_unique<DeleteCompAction> (comp, *this), "Delete components");
         }
         else
         {
@@ -188,7 +183,7 @@ public:
         oldIndex = l.indexOfComponent (comp);
     }
 
-    bool perform()
+    bool perform() override
     {
         showCorrectTab();
         Component* comp = layout.getComponent (oldIndex);
@@ -197,7 +192,7 @@ public:
         return true;
     }
 
-    bool undo()
+    bool undo() override
     {
         showCorrectTab();
         layout.moveComponentZOrder (newIndex, oldIndex);
@@ -224,7 +219,7 @@ void ComponentLayout::componentToFront (Component* comp, const bool undoable)
     if (comp != nullptr && components.contains (comp))
     {
         if (undoable)
-            perform (new FrontBackCompAction (comp, *this, -1), "Move components to front");
+            perform (std::make_unique<FrontBackCompAction> (comp, *this, -1), "Move components to front");
         else
             moveComponentZOrder (components.indexOf (comp), -1);
     }
@@ -235,7 +230,7 @@ void ComponentLayout::componentToBack (Component* comp, const bool undoable)
     if (comp != nullptr && components.contains (comp))
     {
         if (undoable)
-            perform (new FrontBackCompAction (comp, *this, 0), "Move components to back");
+            perform (std::make_unique<FrontBackCompAction> (comp, *this, 0), "Move components to back");
         else
             moveComponentZOrder (components.indexOf (comp), 0);
     }
@@ -253,7 +248,7 @@ void ComponentLayout::copySelectedToClipboard()
 
     for (int i = 0; i < components.size(); ++i)
     {
-        auto c = components.getUnchecked(i);
+        auto c = components.getUnchecked (i);
 
         if (selected.isSelected (c))
         {
@@ -315,7 +310,7 @@ void ComponentLayout::selectedToFront()
     const SelectedItemSet <Component*> temp (selected);
 
     for (int i = temp.getNumSelected(); --i >= 0;)
-        componentToFront (temp.getSelectedItem(i), true);
+        componentToFront (temp.getSelectedItem (i), true);
 }
 
 void ComponentLayout::selectedToBack()
@@ -323,7 +318,7 @@ void ComponentLayout::selectedToBack()
     const SelectedItemSet <Component*> temp (selected);
 
     for (int i = 0; i < temp.getNumSelected(); ++i)
-        componentToBack (temp.getSelectedItem(i), true);
+        componentToBack (temp.getSelectedItem (i), true);
 }
 
 void ComponentLayout::alignTop()
@@ -432,9 +427,8 @@ Component* ComponentLayout::addComponentFromXml (const XmlElement& xml, const bo
 {
     if (undoable)
     {
-        AddCompAction* const action = new AddCompAction (new XmlElement (xml), *this);
-        perform (action, "Add new components");
-        return components [action->indexAdded];
+        perform (std::make_unique<AddCompAction> (new XmlElement (xml), *this, addComponentIndexAdded), "Add new components");
+        return components [addComponentIndexAdded];
     }
 
     if (ComponentTypeHandler* const type
@@ -463,8 +457,8 @@ Component* ComponentLayout::addComponentFromXml (const XmlElement& xml, const bo
 Component* ComponentLayout::findComponentWithId (const int64 componentId) const
 {
     for (int i = 0; i < components.size(); ++i)
-        if (ComponentTypeHandler::getComponentId (components.getUnchecked(i)) == componentId)
-            return components.getUnchecked(i);
+        if (ComponentTypeHandler::getComponentId (components.getUnchecked (i)) == componentId)
+            return components.getUnchecked (i);
 
     return nullptr;
 }
@@ -572,9 +566,9 @@ PopupMenu ComponentLayout::getRelativeTargetMenu (Component* comp, int whichDime
 
     for (int i = 0; i < components.size(); ++i)
     {
-        Component* const c = components.getUnchecked(i);
+        auto* const c = components.getUnchecked (i);
 
-        if (c != comp)
+        if (c != nullptr && c != comp)
             m.addItem (menuIdBase + i + 1,
                        "Relative to " + getComponentMemberVariableName (c)
                         + " (class: " + ComponentTypeHandler::getHandlerFor (*c)->getClassName (c) + ")",
@@ -605,14 +599,14 @@ public:
     {
     }
 
-    bool perform()
+    bool perform() override
     {
         showCorrectTab();
         layout.setComponentPosition (getComponent(), newPos, false);
         return true;
     }
 
-    bool undo()
+    bool undo() override
     {
         showCorrectTab();
         layout.setComponentPosition (getComponent(), oldPos, false);
@@ -632,11 +626,11 @@ public:
           newBounds (bounds),
           oldBounds (comp->getBounds()),
           newProps (props),
-          oldProps(comp->getProperties())
+          oldProps (comp->getProperties())
     {
     }
 
-    bool perform()
+    bool perform() override
     {
         showCorrectTab();
         getComponent()->setBounds (newBounds);
@@ -645,7 +639,7 @@ public:
         return true;
     }
 
-    bool undo()
+    bool undo() override
     {
         showCorrectTab();
         getComponent()->setBounds (oldBounds);
@@ -667,7 +661,7 @@ void ComponentLayout::setComponentPosition (Component* comp,
     {
         if (undoable)
         {
-            perform (new ChangeCompPositionAction (comp, *this, newPos), "Move components");
+            perform (std::make_unique<ChangeCompPositionAction> (comp, *this, newPos), "Move components");
         }
         else
         {
@@ -701,7 +695,7 @@ void ComponentLayout::setComponentBoundsAndProperties (Component* componentToPos
     {
         if (undoable)
         {
-            perform (new ChangeCompBoundsAndPropertiesAction (componentToPosition, *this, newBounds, props), "Change component bounds");
+            perform (std::make_unique<ChangeCompBoundsAndPropertiesAction> (componentToPosition, *this, newBounds, props), "Change component bounds");
         }
         else
         {
@@ -845,7 +839,7 @@ void ComponentLayout::stretchSelectedComps (int dw, int dh, bool allowSnap)
 void ComponentLayout::fillInGeneratedCode (GeneratedCode& code) const
 {
     for (int i = 0; i < components.size(); ++i)
-        if (Component* const comp = components.getUnchecked(i))
+        if (Component* const comp = components.getUnchecked (i))
             if (ComponentTypeHandler* const type = ComponentTypeHandler::getHandlerFor (*comp))
                 type->fillInGeneratedCode (comp, code);
 }

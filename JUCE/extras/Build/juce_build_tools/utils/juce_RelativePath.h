@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -23,10 +23,9 @@
   ==============================================================================
 */
 
-namespace juce
+namespace juce::build_tools
 {
-namespace build_tools
-{
+
     //==============================================================================
     /** Manipulates a cross-platform partial file path. (Needed because File is designed
         for absolute paths on the active OS)
@@ -64,7 +63,7 @@ namespace build_tools
         String getFileNameWithoutExtension() const              { return getFakeFile().getFileNameWithoutExtension(); }
 
         String getFileExtension() const                         { return getFakeFile().getFileExtension(); }
-        bool hasFileExtension (juce::StringRef extension) const { return getFakeFile().hasFileExtension (extension); }
+        bool hasFileExtension (StringRef extension) const       { return getFakeFile().hasFileExtension (extension); }
         bool isAbsolute() const                                 { return isAbsolutePath (path); }
 
         RelativePath withFileExtension (const String& extension) const
@@ -108,22 +107,13 @@ namespace build_tools
 
         File getFakeFile() const
         {
-           #if JUCE_WINDOWS
-            if (isAbsolutePath (path))
-            {
-                // This is a hack to convert unix-style absolute paths into valid absolute Windows paths to avoid hitting
-                // an assertion in File::parseAbsolutePath().
-                if (path.startsWithChar (L'/') || path.startsWithChar (L'$') || path.startsWithChar (L'~'))
-                    return File (String ("C:\\") + windowsStylePath (path.substring (1)));
-
-                return File (path);
-            }
-           #endif
+            const auto unixStylePath = toUnixStyle();
+            const auto name = unixStylePath.substring (unixStylePath.lastIndexOfChar ('/') + 1);
 
             // This method gets called very often, so we'll cache this directory.
             static const File currentWorkingDirectory (File::getCurrentWorkingDirectory());
-            return currentWorkingDirectory.getChildFile (path);
+            return currentWorkingDirectory.getChildFile (name);
         }
     };
-}
-}
+
+} // namespace juce::build_tools

@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -49,7 +49,7 @@ public:
         choices.add ("Image Brush");
     }
 
-    void setIndex (int newIndex)
+    void setIndex (int newIndex) override
     {
         JucerFillType fill (isForStroke ? listener.owner->getStrokeType().fill
                                         : listener.owner->getFillType());
@@ -69,7 +69,7 @@ public:
             listener.owner->setStrokeFill (fill, true);
     }
 
-    int getIndex() const
+    int getIndex() const override
     {
         switch (isForStroke ? listener.owner->getStrokeType().fill.mode
                             : listener.owner->getFillType().mode)
@@ -167,8 +167,8 @@ public:
     ElementFillPositionProperty (ColouredElement* const owner_,
                                  const String& name,
                                  ComponentPositionDimension dimension_,
-                                 const bool isStart_,
-                                 const bool isForStroke_)
+                                 bool isStart_,
+                                 bool isForStroke_)
      : PositionPropertyBase (owner_, name, dimension_, false, false,
                              owner_->getDocument()->getComponentLayout()),
        listener (owner_),
@@ -178,7 +178,7 @@ public:
         listener.setPropertyToRefresh (*this);
     }
 
-    void setPosition (const RelativePositionedRectangle& newPos)
+    void setPosition (const RelativePositionedRectangle& newPos) override
     {
         JucerFillType fill (isForStroke ? listener.owner->getStrokeType().fill
                                         : listener.owner->getFillType());
@@ -194,7 +194,7 @@ public:
             listener.owner->setStrokeFill (fill, true);
     }
 
-    RelativePositionedRectangle getPosition() const
+    RelativePositionedRectangle getPosition() const override
     {
         const JucerFillType fill (isForStroke ? listener.owner->getStrokeType().fill
                                               : listener.owner->getFillType());
@@ -220,8 +220,8 @@ public:
     }
 
     //==============================================================================
-    void setState (bool newState)           { listener.owner->enableStroke (newState, true); }
-    bool getState() const                   { return listener.owner->isStrokeEnabled(); }
+    void setState (bool newState) override           { listener.owner->enableStroke (newState, true); }
+    bool getState() const override                   { return listener.owner->isStrokeEnabled(); }
 
     ElementListener<ColouredElement> listener;
 };
@@ -237,7 +237,7 @@ public:
         listener.setPropertyToRefresh (*this);
     }
 
-    void setValue (double newValue)
+    void setValue (double newValue) override
     {
         listener.owner->getDocument()->getUndoManager().undoCurrentTransactionOnly();
 
@@ -247,7 +247,7 @@ public:
                                        true);
     }
 
-    double getValue() const                 { return listener.owner->getStrokeType().stroke.getStrokeThickness(); }
+    double getValue() const override                 { return listener.owner->getStrokeType().stroke.getStrokeThickness(); }
 
     ElementListener<ColouredElement> listener;
 };
@@ -267,13 +267,17 @@ public:
         choices.add ("beveled");
     }
 
-    void setIndex (int newIndex)
+    void setIndex (int newIndex) override
     {
         const PathStrokeType::JointStyle joints[] = { PathStrokeType::mitered,
                                                       PathStrokeType::curved,
                                                       PathStrokeType::beveled };
 
-        jassert (newIndex >= 0 && newIndex < 3);
+        if (! isPositiveAndBelow (newIndex, numElementsInArray (joints)))
+        {
+            jassertfalse;
+            return;
+        }
 
         listener.owner->setStrokeType (PathStrokeType (listener.owner->getStrokeType().stroke.getStrokeThickness(),
                                                        joints [newIndex],
@@ -281,7 +285,7 @@ public:
                                        true);
     }
 
-    int getIndex() const
+    int getIndex() const override
     {
         switch (listener.owner->getStrokeType().stroke.getJointStyle())
         {
@@ -312,13 +316,17 @@ public:
         choices.add ("round");
     }
 
-    void setIndex (int newIndex)
+    void setIndex (int newIndex) override
     {
         const PathStrokeType::EndCapStyle ends[] = { PathStrokeType::butt,
                                                      PathStrokeType::square,
                                                      PathStrokeType::rounded };
 
-        jassert (newIndex >= 0 && newIndex < 3);
+        if (! isPositiveAndBelow (newIndex, numElementsInArray (ends)))
+        {
+            jassertfalse;
+            return;
+        }
 
         listener.owner->setStrokeType (PathStrokeType (listener.owner->getStrokeType().stroke.getStrokeThickness(),
                                                        listener.owner->getStrokeType().stroke.getJointStyle(),
@@ -326,7 +334,7 @@ public:
                                        true);
     }
 
-    int getIndex() const
+    int getIndex() const override
     {
         switch (listener.owner->getStrokeType().stroke.getEndStyle())
         {
@@ -354,7 +362,7 @@ public:
     }
 
     //==============================================================================
-    void setResource (const String& newName)
+    void setResource (const String& newName) override
     {
         if (element != nullptr)
         {
@@ -375,7 +383,7 @@ public:
         }
     }
 
-    String getResource() const
+    String getResource() const override
     {
         if (element == nullptr)
             return {};
@@ -406,7 +414,7 @@ public:
         listener.setPropertyToRefresh (*this);
     }
 
-    void setPosition (const RelativePositionedRectangle& newPos)
+    void setPosition (const RelativePositionedRectangle& newPos) override
     {
         if (isForStroke)
         {
@@ -422,7 +430,7 @@ public:
         }
     }
 
-    RelativePositionedRectangle getPosition() const
+    RelativePositionedRectangle getPosition() const override
     {
         if (isForStroke)
             return listener.owner->getStrokeType().fill.imageAnchor;
@@ -447,7 +455,7 @@ public:
         listener.setPropertyToRefresh (*this);
     }
 
-    void setValue (double newValue)
+    void setValue (double newValue) override
     {
         if (listener.owner != nullptr)
         {
@@ -470,7 +478,7 @@ public:
         }
     }
 
-    double getValue() const
+    double getValue() const override
     {
         if (listener.owner == nullptr)
             return 0;
@@ -608,14 +616,14 @@ public:
         oldState = element->getFillType();
     }
 
-    bool perform()
+    bool perform() override
     {
         showCorrectTab();
         getElement()->setFillType (newState, false);
         return true;
     }
 
-    bool undo()
+    bool undo() override
     {
         showCorrectTab();
         getElement()->setFillType (oldState, false);
@@ -667,14 +675,14 @@ public:
         oldState = element->isStrokeEnabled();
     }
 
-    bool perform()
+    bool perform() override
     {
         showCorrectTab();
         getElement()->enableStroke (newState, false);
         return true;
     }
 
-    bool undo()
+    bool undo() override
     {
         showCorrectTab();
         getElement()->enableStroke (oldState, false);
@@ -724,14 +732,14 @@ public:
     {
     }
 
-    bool perform()
+    bool perform() override
     {
         showCorrectTab();
         getElement()->setStrokeType (newState, false);
         return true;
     }
 
-    bool undo()
+    bool undo() override
     {
         showCorrectTab();
         getElement()->setStrokeType (oldState, false);
@@ -770,14 +778,14 @@ public:
         oldState = element->getStrokeType().fill;
     }
 
-    bool perform()
+    bool perform() override
     {
         showCorrectTab();
         getElement()->setStrokeFill (newState, false);
         return true;
     }
 
-    bool undo()
+    bool undo() override
     {
         showCorrectTab();
         getElement()->setStrokeFill (oldState, false);

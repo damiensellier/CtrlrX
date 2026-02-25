@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -32,11 +32,12 @@
 
   ID:                 juce_audio_basics
   vendor:             juce
-  version:            6.0.8
+  version:            7.0.12
   name:               JUCE audio and MIDI data classes
   description:        Classes for audio buffer manipulation, midi message handling, synthesis, etc.
   website:            http://www.juce.com/juce
   license:            ISC
+  minimumCppStandard: 17
 
   dependencies:       juce_core
   OSXFrameworks:      Accelerate
@@ -82,7 +83,9 @@
 
 //==============================================================================
 #include "buffers/juce_AudioDataConverters.h"
+JUCE_BEGIN_IGNORE_WARNINGS_MSVC (4661)
 #include "buffers/juce_FloatVectorOperations.h"
+JUCE_END_IGNORE_WARNINGS_MSVC
 #include "buffers/juce_AudioSampleBuffer.h"
 #include "buffers/juce_AudioChannelSet.h"
 #include "buffers/juce_AudioProcessLoadMeasurer.h"
@@ -120,3 +123,11 @@
 #include "sources/juce_ToneGeneratorAudioSource.h"
 #include "synthesisers/juce_Synthesiser.h"
 #include "audio_play_head/juce_AudioPlayHead.h"
+#include "utilities/juce_AudioWorkgroup.h"
+#include "midi/ump/juce_UMPBytesOnGroup.h"
+#include "midi/ump/juce_UMPDeviceInfo.h"
+
+namespace juce
+{
+    namespace ump = universal_midi_packets;
+}

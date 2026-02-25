@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -201,7 +201,7 @@ String ArgumentList::getValueForOption (StringRef option) const
 
     for (int i = 0; i < arguments.size(); ++i)
     {
-        auto& arg = arguments.getReference(i);
+        auto& arg = arguments.getReference (i);
 
         if (arg == option)
         {
@@ -227,7 +227,7 @@ String ArgumentList::removeValueForOption (StringRef option)
 
     for (int i = 0; i < arguments.size(); ++i)
     {
-        auto& arg = arguments.getReference(i);
+        auto& arg = arguments.getReference (i);
 
         if (arg == option)
         {

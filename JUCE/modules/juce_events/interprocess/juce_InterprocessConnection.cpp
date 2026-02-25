@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -23,7 +23,7 @@
 namespace juce
 {
 
-struct InterprocessConnection::ConnectionThread  : public Thread
+struct InterprocessConnection::ConnectionThread final : public Thread
 {
     ConnectionThread (InterprocessConnection& c)  : Thread ("JUCE IPC"), owner (c) {}
     void run() override     { owner.runThread(); }
@@ -65,7 +65,7 @@ private:
     bool safe = false;
 };
 
-class InterprocessConnection::SafeAction : public SafeActionImpl
+class InterprocessConnection::SafeAction final : public SafeActionImpl
 {
     using SafeActionImpl::SafeActionImpl;
 };
@@ -246,7 +246,7 @@ void InterprocessConnection::initialiseWithPipe (std::unique_ptr<NamedPipe> newP
 }
 
 //==============================================================================
-struct ConnectionStateMessage  : public MessageManager::MessageBase
+struct ConnectionStateMessage final : public MessageManager::MessageBase
 {
     ConnectionStateMessage (std::shared_ptr<SafeActionImpl> ipc, bool connected) noexcept
         : safeAction (ipc), connectionMade (connected)
@@ -295,7 +295,7 @@ void InterprocessConnection::connectionLostInt()
     }
 }
 
-struct DataDeliveryMessage  : public Message
+struct DataDeliveryMessage final : public Message
 {
     DataDeliveryMessage (std::shared_ptr<SafeActionImpl> ipc, const MemoryBlock& d)
         : safeAction (ipc), data (d)

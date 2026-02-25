@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -69,18 +69,26 @@ namespace ProjectInfo
 
 int writeBinaryData (juce::ArgumentList&& args)
 {
-    args.checkMinNumArguments (3);
+    args.checkMinNumArguments (4);
     const auto namespaceName = args.arguments.removeAndReturn (0);
     const auto headerName    = args.arguments.removeAndReturn (0);
     const auto outFolder     = args.arguments.removeAndReturn (0).resolveAsExistingFolder();
+    const auto inputFileList = args.arguments.removeAndReturn (0).resolveAsExistingFile();
 
     juce::build_tools::ResourceFile resourceFile;
 
     resourceFile.setClassName (namespaceName.text);
     const auto lineEndings = args.removeOptionIfFound ("--windows") ? "\r\n" : "\n";
 
-    for (const auto& arg : args.arguments)
-        resourceFile.addFile (arg.resolveAsExistingFile());
+    const auto allLines = [&]
+    {
+        auto lines = juce::StringArray::fromLines (inputFileList.loadFileAsString());
+        lines.removeEmptyStrings();
+        return lines;
+    }();
+
+    for (const auto& arg : allLines)
+        resourceFile.addFile (juce::File (arg));
 
     const auto result = resourceFile.write (0,
                                             lineEndings,
@@ -96,7 +104,7 @@ int writeBinaryData (juce::ArgumentList&& args)
     return 0;
 }
 
-struct IconParseResults final
+struct IconParseResults
 {
     juce::build_tools::Icons icons;
     juce::File output;
@@ -183,7 +191,7 @@ bool getBoolValue (const std::unordered_map<juce::String, juce::String>& dict, j
         || str.equalsIgnoreCase ("on");
 }
 
-struct UpdateField final
+struct UpdateField
 {
     const std::unordered_map<juce::String, juce::String>& dict;
 
@@ -240,7 +248,8 @@ juce::build_tools::PlistOptions parsePlistOptions (const juce::File& file,
     updateField ("SHOULD_ADD_STORYBOARD",                result.shouldAddStoryboardToProject);
     updateField ("LAUNCH_STORYBOARD_FILE",               result.storyboardName);
     updateField ("PROJECT_NAME",                         result.projectName);
-    updateField ("VERSION",                              result.version);
+    updateField ("VERSION",                              result.marketingVersion);
+    updateField ("BUILD_VERSION",                        result.currentProjectVersion);
     updateField ("COMPANY_COPYRIGHT",                    result.companyCopyright);
     updateField ("DOCUMENT_EXTENSIONS",                  result.documentExtensions);
     updateField ("FILE_SHARING_ENABLED",                 result.fileSharingEnabled);
@@ -261,12 +270,12 @@ juce::build_tools::PlistOptions parsePlistOptions (const juce::File& file,
     updateField ("PLUGIN_AU_MAIN_TYPE",                  result.auMainType);
     updateField ("IS_AU_SANDBOX_SAFE",                   result.isAuSandboxSafe);
     updateField ("IS_PLUGIN_SYNTH",                      result.isPluginSynth);
+    updateField ("IS_PLUGIN_ARA_EFFECT",                 result.isPluginARAEffect);
     updateField ("SUPPRESS_AU_PLIST_RESOURCE_USAGE",     result.suppressResourceUsage);
     updateField ("BUNDLE_ID",                            result.bundleIdentifier);
     updateField ("ICON_FILE",                            result.iconFile);
 
     result.type = type;
-    result.versionAsHex = juce::build_tools::getVersionAsHexInteger (result.version);
 
     if (result.storyboardName.isNotEmpty())
         result.storyboardName = result.storyboardName.fromLastOccurrenceOf ("/", false, false)
@@ -324,6 +333,7 @@ juce::build_tools::EntitlementOptions parseEntitlementsOptions (const juce::File
 
     updateField ("IS_IOS",                          result.isiOS);
     updateField ("IS_PLUGIN",                       result.isAudioPluginProject);
+    updateField ("IS_AU_PLUGIN_HOST",               result.isAUPluginHost);
     updateField ("ICLOUD_PERMISSIONS_ENABLED",      result.isiCloudPermissionsEnabled);
     updateField ("PUSH_NOTIFICATIONS_ENABLED",      result.isPushNotificationsEnabled);
     updateField ("APP_GROUPS_ENABLED",              result.isAppGroupsEnabled);
@@ -333,6 +343,38 @@ juce::build_tools::EntitlementOptions parseEntitlementsOptions (const juce::File
     updateField ("APP_SANDBOX_ENABLED",             result.isAppSandboxEnabled);
     updateField ("APP_SANDBOX_INHERIT",             result.isAppSandboxInhertianceEnabled);
     updateField ("APP_SANDBOX_OPTIONS",             result.appSandboxOptions);
+    updateField ("NETWORK_MULTICAST_ENABLED",       result.isNetworkingMulticastEnabled);
+
+    struct SandboxTemporaryAccessKey
+    {
+        juce::String cMakeVar, key;
+    };
+
+    SandboxTemporaryAccessKey sandboxTemporaryAccessKeys[]
+    {
+        { "APP_SANDBOX_FILE_ACCESS_HOME_RO", "home-relative-path.read-only" },
+        { "APP_SANDBOX_FILE_ACCESS_HOME_RW", "home-relative-path.read-write" },
+        { "APP_SANDBOX_FILE_ACCESS_ABS_RO",  "absolute-path.read-only" },
+        { "APP_SANDBOX_FILE_ACCESS_ABS_RW",  "absolute-path.read-write" }
+    };
+
+    for (const auto& entry : sandboxTemporaryAccessKeys)
+    {
+        juce::StringArray values;
+        updateField (entry.cMakeVar, values);
+
+        if (! values.isEmpty())
+            result.appSandboxTemporaryPaths.push_back ({ "com.apple.security.temporary-exception.files." + entry.key,
+                                                         std::move (values) });
+    }
+
+    {
+        juce::StringArray values;
+        updateField ("APP_SANDBOX_EXCEPTION_IOKIT", values);
+
+        if (! values.isEmpty())
+            result.appSandboxExceptionIOKit = values;
+    }
 
     result.type = type;
 
@@ -497,7 +539,7 @@ int main (int argc, char** argv)
         juce::ArgumentList argumentList { arguments.front(),
                                           juce::StringArray (arguments.data() + 1, (int) arguments.size() - 1) };
 
-        using Fn = typename std::add_lvalue_reference<decltype (writeBinaryData)>::type;
+        using Fn = int (*) (juce::ArgumentList&&);
 
         const std::unordered_map<juce::String, Fn> commands
         {
@@ -520,6 +562,21 @@ int main (int argc, char** argv)
         if (it == commands.cend())
             juce::ConsoleApplication::fail ("No matching mode", 1);
 
-        return it->second (std::move (argumentList));
+        try
+        {
+            return it->second (std::move (argumentList));
+        }
+        catch (const juce::build_tools::SaveError& error)
+        {
+            juce::ConsoleApplication::fail (error.message);
+        }
+        catch (const std::exception& ex)
+        {
+            juce::ConsoleApplication::fail (ex.what());
+        }
+        catch (...)
+        {
+            juce::ConsoleApplication::fail ("Unhandled exception");
+        }
     });
 }

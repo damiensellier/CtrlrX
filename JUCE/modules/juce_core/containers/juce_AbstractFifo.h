@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -42,30 +42,24 @@ namespace juce
     {
         void addToFifo (const int* someData, int numItems)
         {
-            int start1, size1, start2, size2;
-            abstractFifo.prepareToWrite (numItems, start1, size1, start2, size2);
+            const auto scope = abstractFifo.write (numItems);
 
-            if (size1 > 0)
-                copySomeData (myBuffer + start1, someData, size1);
+            if (scope.blockSize1 > 0)
+                copySomeData (myBuffer + scope.startIndex1, someData, scope.blockSize1);
 
-            if (size2 > 0)
-                copySomeData (myBuffer + start2, someData + size1, size2);
-
-            abstractFifo.finishedWrite (size1 + size2);
+            if (scope.blockSize2 > 0)
+                copySomeData (myBuffer + scope.startIndex2, someData + scope.blockSize1, scope.blockSize2);
         }
 
         void readFromFifo (int* someData, int numItems)
         {
-            int start1, size1, start2, size2;
-            abstractFifo.prepareToRead (numItems, start1, size1, start2, size2);
+            const auto scope = abstractFifo.read (numItems);
 
-            if (size1 > 0)
-                copySomeData (someData, myBuffer + start1, size1);
+            if (scope.blockSize1 > 0)
+                copySomeData (someData, myBuffer + scope.startIndex1, scope.blockSize1);
 
-            if (size2 > 0)
-                copySomeData (someData + size1, myBuffer + start2, size2);
-
-            abstractFifo.finishedRead (size1 + size2);
+            if (scope.blockSize2 > 0)
+                copySomeData (someData + scope.blockSize1, myBuffer + scope.startIndex2, scope.blockSize2);
         }
 
         AbstractFifo abstractFifo { 1024 };
@@ -81,9 +75,6 @@ public:
     //==============================================================================
     /** Creates a FIFO to manage a buffer with the specified capacity. */
     AbstractFifo (int capacity) noexcept;
-
-    /** Destructor */
-    ~AbstractFifo();
 
     //==============================================================================
     /** Returns the total size of the buffer being managed. */
@@ -181,7 +172,7 @@ public:
         }
         @endcode
 
-        @param numWanted        indicates how many items you'd like to add to the buffer
+        @param numWanted        indicates how many items you'd like to read from the buffer
         @param startIndex1      on exit, this will contain the start index in your buffer at which your data should be written
         @param blockSize1       on exit, this indicates how many items can be written to the block starting at startIndex1
         @param startIndex2      on exit, this will contain the start index in your buffer at which any data that didn't fit into
@@ -208,7 +199,7 @@ private:
 public:
     /** Class for a scoped reader/writer */
     template <ReadOrWrite mode>
-    class ScopedReadWrite 
+    class ScopedReadWrite final
     {
     public:
         /** Construct an unassigned reader/writer. Doesn't do anything upon destruction. */

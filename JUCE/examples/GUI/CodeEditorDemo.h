@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -31,7 +31,7 @@
 
  dependencies:     juce_core, juce_data_structures, juce_events, juce_graphics,
                    juce_gui_basics, juce_gui_extra
- exporters:        xcode_mac, vs2019, linux_make, xcode_iphone
+ exporters:        xcode_mac, vs2022, linux_make, xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -53,8 +53,8 @@
 #endif
 
 //==============================================================================
-class CodeEditorDemo  : public Component,
-                        private FilenameComponentListener
+class CodeEditorDemo final : public Component,
+                             private FilenameComponentListener
 {
 public:
     CodeEditorDemo()
@@ -78,7 +78,7 @@ public:
         addAndMakeVisible (fileChooser);
         fileChooser.addListener (this);
 
-        lookAndFeelChanged();
+        updateLookAndFeel();
 
         setSize (500, 500);
     }
@@ -121,7 +121,7 @@ private:
         editor->loadContent (fileChooser.getCurrentFile().loadFileAsString());
     }
 
-    void lookAndFeelChanged() override
+    void updateLookAndFeel()
     {
         if (auto* v4 = dynamic_cast<LookAndFeel_V4*> (&LookAndFeel::getDefaultLookAndFeel()))
         {
@@ -133,6 +133,11 @@ private:
         {
             editor->setColourScheme (cppTokeniser.getDefaultColourScheme());
         }
+    }
+
+    void lookAndFeelChanged() override
+    {
+        updateLookAndFeel();
     }
 
     CodeEditorComponent::ColourScheme getDarkCodeEditorColourScheme()

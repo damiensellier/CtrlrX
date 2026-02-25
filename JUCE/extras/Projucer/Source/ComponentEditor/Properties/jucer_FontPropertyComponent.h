@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -63,7 +63,7 @@ public:
     virtual String getTypefaceName() const = 0;
 
     //==============================================================================
-    void setIndex (int newIndex)
+    void setIndex (int newIndex) override
     {
         String type (choices [newIndex]);
 
@@ -74,7 +74,7 @@ public:
             setTypefaceName (type);
     }
 
-    int getIndex() const
+    int getIndex() const override
     {
         return choices.indexOf (getTypefaceName());
     }
@@ -124,7 +124,7 @@ public:
           << CodeHelpers::floatLiteral (font.getHeight(), 2)
           << ", ";
 
-        if (font.getAvailableStyles().contains(font.getTypefaceStyle()))
+        if (font.getAvailableStyles().contains (font.getTypefaceStyle()))
             s << "juce::Font::plain).withTypefaceStyle ("
               << CodeHelpers::stringLiteral (font.getTypefaceStyle())
               << ")";
@@ -132,7 +132,7 @@ public:
             s << getFontStyleCode (font)
               << ")";
 
-        if (font.getExtraKerningFactor() != 0.0f)
+        if (! approximatelyEqual (font.getExtraKerningFactor(), 0.0f))
             s << ".withExtraKerningFactor ("
               << CodeHelpers::floatLiteral (font.getExtraKerningFactor(), 3)
               << ")";

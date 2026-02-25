@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -41,13 +41,13 @@ namespace
 }
 
 #include "SharedCanvas.h"
-#include "SlaveComponent.h"
+#include "ClientComponent.h"
 #include "Demos.h"
 #include "MasterComponent.h"
 
 
 //==============================================================================
-class NetworkGraphicsDemoApplication  : public JUCEApplication
+class NetworkGraphicsDemoApplication final : public JUCEApplication
 {
 public:
     NetworkGraphicsDemoApplication()  : properties (getPropertyFileOptions())
@@ -89,7 +89,7 @@ public:
     }
 
     //==============================================================================
-    struct MainWindow    : public DocumentWindow
+    struct MainWindow final : public DocumentWindow
     {
         explicit MainWindow (PropertiesFile& props)
             : DocumentWindow ("JUCE Networked Graphics Demo - Master", Colours::white, DocumentWindow::allButtons)
@@ -107,7 +107,7 @@ public:
             : DocumentWindow ("JUCE Networked Graphics Demo", Colours::black, DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar (true);
-            setContentOwned (new SlaveCanvasComponent (props, windowIndex), true);
+            setContentOwned (new ClientCanvasComponent (props, windowIndex), true);
             setBounds (500, 100, getWidth(), getHeight());
             setResizable (true, false);
             setVisible (true);

@@ -18,9 +18,11 @@
 #define OBOE_STREAM_AAUDIO_H_
 
 #include <atomic>
+#include <shared_mutex>
 #include <mutex>
 #include <thread>
 
+#include <common/AdpfWrapper.h>
 #include "oboe/AudioStreamBuilder.h"
 #include "oboe/AudioStream.h"
 #include "oboe/Definitions.h"
@@ -50,6 +52,7 @@ public:
     // These functions override methods in AudioStream.
     // See AudioStream for documentation.
     Result open() override;
+    Result release() override;
     Result close() override;
 
     Result requestStart() override;
@@ -67,8 +70,7 @@ public:
 
     ResultWithValue<int32_t> setBufferSizeInFrames(int32_t requestedFrames) override;
     int32_t getBufferSizeInFrames() override;
-    int32_t getFramesPerBurst() override;
-    ResultWithValue<int32_t> getXRunCount() const override;
+    ResultWithValue<int32_t> getXRunCount()  override;
     bool isXRunCountSupported() const override { return true; }
 
     ResultWithValue<double> calculateLatencyMillis() override;
@@ -81,7 +83,7 @@ public:
                                        int64_t *framePosition,
                                        int64_t *timeNanoseconds) override;
 
-    StreamState getState() const override;
+    StreamState getState() override;
 
     AudioApi getAudioApi() const override {
         return AudioApi::AAudio;
@@ -91,7 +93,12 @@ public:
                                                    void *audioData,
                                                    int32_t numFrames);
 
-    bool                 isMMapUsed();
+    bool isMMapUsed();
+
+    void closePerformanceHint() override {
+        mAdpfWrapper.close();
+        mAdpfOpenAttempted = false;
+    }
 
 protected:
     static void internalErrorCallback(
@@ -108,18 +115,31 @@ protected:
 
     void logUnsupportedAttributes();
 
+    void beginPerformanceHintInCallback() override;
+
+    void endPerformanceHintInCallback(int32_t numFrames) override;
+
+    // set by callback (or app when idle)
+    std::atomic<bool>    mAdpfOpenAttempted{false};
+    AdpfWrapper          mAdpfWrapper;
+
 private:
     // Must call under mLock. And stream must NOT be nullptr.
     Result requestStop_l(AAudioStream *stream);
 
-    // Time to sleep in order to prevent a race condition with a callback after a close().
-    // Two milliseconds may be enough but 10 msec is even safer.
-    static constexpr int kDelayBeforeCloseMillis = 10;
+    /**
+     * Launch a thread that will stop the stream.
+     */
+    void launchStopThread();
+
+private:
 
     std::atomic<bool>    mCallbackThreadEnabled;
+    std::atomic<bool>    mStopThreadAllowed{false};
 
     // pointer to the underlying 'C' AAudio stream, valid if open, null if closed
     std::atomic<AAudioStream *> mAAudioStream{nullptr};
+    std::shared_mutex           mAAudioStreamLock; // to protect mAAudioStream while closing
 
     static AAudioLoader *mLibLoader;
 

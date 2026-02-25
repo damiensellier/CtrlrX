@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -26,7 +26,6 @@
 namespace juce
 {
 
-class AudioProcessor;
 class AudioProcessorEditorListener;
 
 //==============================================================================
@@ -175,7 +174,7 @@ public:
         A pointer to the object you pass in will be kept, but it won't be deleted
         by this object, so it's the caller's responsibility to manage it.
 
-        If you pass a nullptr, then no contraints will be placed on the positioning of the window.
+        If you pass a nullptr, then no constraints will be placed on the positioning of the window.
     */
     void setConstrainer (ComponentBoundsConstrainer* newConstrainer);
 
@@ -186,10 +185,43 @@ public:
      */
     void setBoundsConstrained (Rectangle<int> newBounds);
 
+    /** Gets a context object, if one is available.
+
+        Returns nullptr if the host does not provide any information that the editor
+        can query.
+
+        The returned pointer is non-owning, so do not attempt to free it.
+    */
+    AudioProcessorEditorHostContext* getHostContext() const noexcept          { return hostContext; }
+
+    /** Sets a context object that can be queried to find information that the host
+        makes available to the plugin.
+
+        You will only need to call this function if you are implementing a plugin host.
+    */
+    void setHostContext (AudioProcessorEditorHostContext* context) noexcept   { hostContext = context; }
+
     /** The ResizableCornerComponent which is currently being used by this editor,
         or nullptr if it does not have one.
     */
     std::unique_ptr<ResizableCornerComponent> resizableCorner;
+
+    /** The plugin wrapper will call this function to decide whether to use a layer-backed view to
+        host the editor on macOS and iOS.
+
+        Layer-backed views generally provide better performance, and are recommended in most
+        situations. However, on older macOS versions (confirmed on 10.12 and 10.13), displaying an
+        OpenGL context inside a layer-backed view can lead to deadlocks, so it is recommended to
+        avoid layer-backed views when using OpenGL on these OS versions.
+
+        The default behaviour of this function is to return false if and only if the juce_opengl
+        module is present and the current platform is macOS 10.13 or earlier.
+
+        You may want to override this behaviour if your plugin has an option to enable and disable
+        OpenGL rendering. If you know your plugin editor will never use OpenGL rendering, you can
+        set this function to return true in all situations.
+    */
+    virtual bool wantsLayerBackedView() const;
 
 private:
     //==============================================================================
@@ -211,6 +243,7 @@ private:
     void initialise();
     void editorResized (bool wasResized);
     void updatePeer();
+    void attachConstrainer (ComponentBoundsConstrainer*);
     void attachResizableCornerComponent();
 
     //==============================================================================
@@ -218,6 +251,7 @@ private:
     bool resizableByHost = false;
     ComponentBoundsConstrainer defaultConstrainer;
     ComponentBoundsConstrainer* constrainer = nullptr;
+    AudioProcessorEditorHostContext* hostContext = nullptr;
     Component::SafePointer<Component> splashScreen;
     AffineTransform hostScaleTransform;
 

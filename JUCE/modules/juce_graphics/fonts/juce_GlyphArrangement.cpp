@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -26,6 +26,14 @@
 namespace juce
 {
 
+static constexpr bool isNonBreakingSpace (const juce_wchar c)
+{
+    return c == 0x00a0
+        || c == 0x2007
+        || c == 0x202f
+        || c == 0x2060;
+}
+
 PositionedGlyph::PositionedGlyph() noexcept
     : character (0), glyph (0), x (0), y (0), w (0), whitespace (false)
 {
@@ -37,8 +45,6 @@ PositionedGlyph::PositionedGlyph (const Font& font_, juce_wchar character_, int 
       x (anchorX), y (baselineY), w (width), whitespace (whitespace_)
 {
 }
-
-PositionedGlyph::~PositionedGlyph() {}
 
 static void drawGlyphWithFont (Graphics& g, int glyph, const Font& font, AffineTransform t)
 {
@@ -63,7 +69,7 @@ void PositionedGlyph::createPath (Path& path) const
 {
     if (! isWhitespace())
     {
-        if (auto* t = font.getTypeface())
+        if (auto t = font.getTypefacePtr())
         {
             Path p;
             t->getOutlineForGlyph (glyph, p);
@@ -78,7 +84,7 @@ bool PositionedGlyph::hitTest (float px, float py) const
 {
     if (getBounds().contains (px, py) && ! isWhitespace())
     {
-        if (auto* t = font.getTypeface())
+        if (auto t = font.getTypefacePtr())
         {
             Path p;
             t->getOutlineForGlyph (glyph, p);
@@ -168,10 +174,10 @@ void GlyphArrangement::addCurtailedLineOfText (const Font& font, const String& t
             }
 
             auto thisX = xOffsets.getUnchecked (i);
-            bool isWhitespace = t.isWhitespace();
+            auto isWhitespace = isNonBreakingSpace (*t) || t.isWhitespace();
 
             glyphs.add (PositionedGlyph (font, t.getAndAdvance(),
-                                         newGlyphs.getUnchecked(i),
+                                         newGlyphs.getUnchecked (i),
                                          xOffset + thisX, yOffset,
                                          nextX - thisX, isWhitespace));
         }
@@ -233,8 +239,8 @@ void GlyphArrangement::addJustifiedText (const Font& font, const String& text,
     {
         int i = lineStartIndex;
 
-        if (glyphs.getReference(i).getCharacter() != '\n'
-              && glyphs.getReference(i).getCharacter() != '\r')
+        if (glyphs.getReference (i).getCharacter() != '\n'
+              && glyphs.getReference (i).getCharacter() != '\r')
             ++i;
 
         auto lineMaxX = glyphs.getReference (lineStartIndex).getLeft() + maxLineWidth;
@@ -250,7 +256,7 @@ void GlyphArrangement::addJustifiedText (const Font& font, const String& text,
                 ++i;
 
                 if (c == '\r' && i < glyphs.size()
-                     && glyphs.getReference(i).getCharacter() == '\n')
+                     && glyphs.getReference (i).getCharacter() == '\n')
                     ++i;
 
                 break;
@@ -306,7 +312,7 @@ void GlyphArrangement::addFittedText (const Font& f, const String& text,
                                       Justification layout, int maximumLines,
                                       float minimumHorizontalScale)
 {
-    if (minimumHorizontalScale == 0.0f)
+    if (approximatelyEqual (minimumHorizontalScale, 0.0f))
         minimumHorizontalScale = Font::getDefaultMinimumHorizontalScaleFactor();
 
     // doesn't make much sense if this is outside a sensible range of 0.5 to 1.0
@@ -357,7 +363,7 @@ void GlyphArrangement::moveRangeOfGlyphs (int startIndex, int num, const float d
 {
     jassert (startIndex >= 0);
 
-    if (dx != 0.0f || dy != 0.0f)
+    if (! approximatelyEqual (dx, 0.0f) || ! approximatelyEqual (dy, 0.0f))
     {
         if (num < 0 || startIndex + num > glyphs.size())
             num = glyphs.size() - startIndex;
@@ -485,7 +491,7 @@ void GlyphArrangement::justifyGlyphs (int startIndex, int num,
             {
                 auto glyphY = glyphs.getReference (startIndex + i).getBaselineY();
 
-                if (glyphY != baseY)
+                if (! approximatelyEqual (glyphY, baseY))
                 {
                     spreadOutLine (startIndex + lineStart, i - lineStart, width);
 
@@ -545,7 +551,7 @@ void GlyphArrangement::spreadOutLine (int start, int num, float targetWidth)
 
 static bool isBreakableGlyph (const PositionedGlyph& g) noexcept
 {
-    return g.isWhitespace() || g.getCharacter() == '-';
+    return ! isNonBreakingSpace (g.getCharacter()) && (g.isWhitespace() || g.getCharacter() == '-');
 }
 
 void GlyphArrangement::splitLines (const String& text, Font font, int startIndex,
@@ -689,7 +695,7 @@ void GlyphArrangement::drawGlyphUnderline (const Graphics& g, const PositionedGl
     auto lineThickness = (pg.font.getDescent()) * 0.3f;
     auto nextX = pg.x + pg.w;
 
-    if (i < glyphs.size() - 1 && glyphs.getReference (i + 1).y == pg.y)
+    if (i < glyphs.size() - 1 && approximatelyEqual (glyphs.getReference (i + 1).y, pg.y))
         nextX = glyphs.getReference (i + 1).x;
 
     Path p;

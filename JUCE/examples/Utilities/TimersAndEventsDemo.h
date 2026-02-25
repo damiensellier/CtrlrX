@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -31,7 +31,7 @@
 
  dependencies:     juce_core, juce_data_structures, juce_events, juce_graphics,
                    juce_gui_basics
- exporters:        xcode_mac, vs2019, linux_make, androidstudio, xcode_iphone
+ exporters:        xcode_mac, vs2022, linux_make, androidstudio, xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -50,7 +50,7 @@
 
 //==============================================================================
 /** Simple message that holds a Colour. */
-struct ColourMessage  : public Message
+struct ColourMessage final : public Message
 {
     ColourMessage (Colour col)  : colour (col) {}
 
@@ -73,10 +73,10 @@ struct ColourMessage  : public Message
     The flash will then fade using a Timer to repaint itself and will send a change
     message once it is finished.
  */
-class FlashingComponent   : public Component,
-                            public MessageListener,
-                            public ChangeBroadcaster,
-                            private Timer
+class FlashingComponent final : public Component,
+                                public MessageListener,
+                                public ChangeBroadcaster,
+                                private Timer
 {
 public:
     FlashingComponent() {}
@@ -144,8 +144,8 @@ private:
 };
 
 //==============================================================================
-class TimersAndEventsDemo   : public Component,
-                              private ChangeListener
+class TimersAndEventsDemo final : public Component,
+                                  private ChangeListener
 {
 public:
     TimersAndEventsDemo()

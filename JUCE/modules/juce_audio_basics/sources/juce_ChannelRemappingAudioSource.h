@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -87,7 +87,7 @@ public:
     /** Creates an output channel mapping.
 
         When the getNextAudioBlock() method is called, the data returned in channel sourceChannelIndex by
-        our input audio source will be copied to channel destChannelIndex of the  buffer.
+        our input audio source will be copied to channel destChannelIndex of the final buffer.
 
         @param sourceChannelIndex   the index of an output channel coming from our input audio source
                                     (i.e. the source specified when this object was created).

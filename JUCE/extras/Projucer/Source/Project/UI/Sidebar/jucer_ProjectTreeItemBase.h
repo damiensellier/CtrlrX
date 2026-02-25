@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -27,25 +27,24 @@
 
 
 //==============================================================================
-struct ProjectTreeItemBase  : public JucerTreeViewBase,
-                              public ValueTree::Listener
+struct ProjectTreeItemBase : public JucerTreeViewBase,
+                             public ValueTree::Listener
 {
     ProjectTreeItemBase() {}
 
     void showSettingsPage (Component* content)
     {
         content->setComponentID (getUniqueName());
-
         std::unique_ptr<Component> comp (content);
 
-        if (ProjectContentComponent* pcc = getProjectContentComponent())
-            pcc->setEditorComponent (comp.release(), nullptr);
+        if (auto* pcc = getProjectContentComponent())
+            pcc->setScrollableEditorComponent (std::move (comp));
     }
 
     void closeSettingsPage()
     {
         if (auto* pcc = getProjectContentComponent())
-            if (auto* content = pcc->getEditorComponentContent())
+            if (auto* content = pcc->getEditorComponent())
                 if (content->getComponentID() == getUniqueName())
                     pcc->hideEditor();
     }

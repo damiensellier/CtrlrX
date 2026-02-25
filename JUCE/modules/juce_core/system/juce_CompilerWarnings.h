@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -31,7 +31,8 @@
 #define JUCE_NTH_ARG_(_00, _01, _02, _03, _04, _05, _06, _07, _08, _09,        \
                       _10, _11, _12, _13, _14, _15, _16, _17, _18, _19,        \
                       _20, _21, _22, _23, _24, _25, _26, _27, _28, _29,        \
-                      _30, _31, _32, _33, _34, _35, _36, _37, _38, _39, N, ...)\
+                      _30, _31, _32, _33, _34, _35, _36, _37, _38, _39,        \
+                      _40, _41, _42, _43, _44, _45, _46, _47, _48, _49, N, ...)\
     N
 
 #define JUCE_EACH_00_(FN)
@@ -74,10 +75,30 @@
 #define JUCE_EACH_37_(FN, X, ...) FN(X) JUCE_EACH_36_(FN, __VA_ARGS__)
 #define JUCE_EACH_38_(FN, X, ...) FN(X) JUCE_EACH_37_(FN, __VA_ARGS__)
 #define JUCE_EACH_39_(FN, X, ...) FN(X) JUCE_EACH_38_(FN, __VA_ARGS__)
+#define JUCE_EACH_40_(FN, X, ...) FN(X) JUCE_EACH_39_(FN, __VA_ARGS__)
+#define JUCE_EACH_41_(FN, X, ...) FN(X) JUCE_EACH_40_(FN, __VA_ARGS__)
+#define JUCE_EACH_42_(FN, X, ...) FN(X) JUCE_EACH_41_(FN, __VA_ARGS__)
+#define JUCE_EACH_43_(FN, X, ...) FN(X) JUCE_EACH_42_(FN, __VA_ARGS__)
+#define JUCE_EACH_44_(FN, X, ...) FN(X) JUCE_EACH_43_(FN, __VA_ARGS__)
+#define JUCE_EACH_45_(FN, X, ...) FN(X) JUCE_EACH_44_(FN, __VA_ARGS__)
+#define JUCE_EACH_46_(FN, X, ...) FN(X) JUCE_EACH_45_(FN, __VA_ARGS__)
+#define JUCE_EACH_47_(FN, X, ...) FN(X) JUCE_EACH_46_(FN, __VA_ARGS__)
+#define JUCE_EACH_48_(FN, X, ...) FN(X) JUCE_EACH_47_(FN, __VA_ARGS__)
+#define JUCE_EACH_49_(FN, X, ...) FN(X) JUCE_EACH_48_(FN, __VA_ARGS__)
 
 /** Apply the macro FN to each of the other arguments. */
 #define JUCE_EACH(FN, ...)                                                     \
     JUCE_NTH_ARG_(, __VA_ARGS__,                                               \
+                  JUCE_EACH_49_,                                               \
+                  JUCE_EACH_48_,                                               \
+                  JUCE_EACH_47_,                                               \
+                  JUCE_EACH_46_,                                               \
+                  JUCE_EACH_45_,                                               \
+                  JUCE_EACH_44_,                                               \
+                  JUCE_EACH_43_,                                               \
+                  JUCE_EACH_42_,                                               \
+                  JUCE_EACH_41_,                                               \
+                  JUCE_EACH_40_,                                               \
                   JUCE_EACH_39_,                                               \
                   JUCE_EACH_38_,                                               \
                   JUCE_EACH_37_,                                               \
@@ -127,7 +148,7 @@
 /** Quote the argument, turning it into a string. */
 #define JUCE_TO_STRING(x) #x
 
-#if JUCE_CLANG || JUCE_GCC
+#if JUCE_CLANG || JUCE_GCC || JUCE_MINGW
     #define JUCE_IGNORE_GCC_IMPL_(compiler, warning)
     #define JUCE_IGNORE_GCC_IMPL_0(compiler, warning)
     #define JUCE_IGNORE_GCC_IMPL_1(compiler, warning)                          \
@@ -189,7 +210,7 @@
     #define JUCE_IGNORE_MSVC(warnings) __pragma(warning(disable:warnings))
     #define JUCE_BEGIN_IGNORE_WARNINGS_LEVEL_MSVC(level, warnings)              \
         __pragma(warning(push, level)) JUCE_IGNORE_MSVC(warnings)
-    #define JUCE_BEGIN_IGNORE_WARNINGS_MSVC(warnings)                          \
+    #define JUCE_BEGIN_IGNORE_WARNINGS_MSVC(warnings)                           \
         __pragma(warning(push)) JUCE_IGNORE_MSVC(warnings)
     #define JUCE_END_IGNORE_WARNINGS_MSVC __pragma(warning(pop))
 #else
@@ -198,3 +219,24 @@
     #define JUCE_BEGIN_IGNORE_WARNINGS_MSVC(warnings)
     #define JUCE_END_IGNORE_WARNINGS_MSVC
 #endif
+
+#if JUCE_MAC || JUCE_IOS
+    #define JUCE_SANITIZER_ATTRIBUTE_MINIMUM_CLANG_VERSION 11
+#else
+    #define JUCE_SANITIZER_ATTRIBUTE_MINIMUM_CLANG_VERSION 9
+#endif
+
+/** Disable sanitizers for a range of functions.
+
+    This functionality doesn't seem to exist on GCC yet, so at the moment this only works for clang.
+*/
+#if JUCE_CLANG && __clang_major__ >= JUCE_SANITIZER_ATTRIBUTE_MINIMUM_CLANG_VERSION
+    #define JUCE_BEGIN_NO_SANITIZE(warnings)                                    \
+        _Pragma (JUCE_TO_STRING (clang attribute push (__attribute__ ((no_sanitize (warnings))), apply_to=function)))
+    #define JUCE_END_NO_SANITIZE _Pragma (JUCE_TO_STRING (clang attribute pop))
+#else
+    #define JUCE_BEGIN_NO_SANITIZE(warnings)
+    #define JUCE_END_NO_SANITIZE
+#endif
+
+#undef JUCE_SANITIZER_ATTRIBUTE_MINIMUM_CLANG_VERSION

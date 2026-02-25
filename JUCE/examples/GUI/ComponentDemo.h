@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -31,7 +31,7 @@
 
  dependencies:     juce_core, juce_data_structures, juce_events, juce_graphics,
                    juce_gui_basics
- exporters:        xcode_mac, vs2019
+ exporters:        xcode_mac, vs2022
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -51,7 +51,7 @@
 /**
     This class represents one of the individual lights in our grid.
 */
-class ToggleLightComponent  : public Component
+class ToggleLightComponent final : public Component
 {
 public:
     ToggleLightComponent() {}
@@ -84,7 +84,7 @@ private:
 /**
     This is the parent class that holds multiple ToggleLightComponents in a grid.
 */
-class ToggleLightGridComponent  : public Component
+class ToggleLightGridComponent final : public Component
 {
 public:
     ToggleLightGridComponent()
@@ -134,7 +134,7 @@ private:
     This component lives inside our window, and this is where you should put all
     your controls and content.
 */
-class ComponentDemo   : public Component
+class ComponentDemo final : public Component
 {
 public:
     //==============================================================================

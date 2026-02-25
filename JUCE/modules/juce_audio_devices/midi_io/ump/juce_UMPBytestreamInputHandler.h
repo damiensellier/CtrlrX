@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -20,13 +20,15 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace universal_midi_packets
+#ifndef DOXYGEN
+
+namespace juce::universal_midi_packets
 {
 
 /**
     A base class for classes which convert bytestream midi to other formats.
+
+    @tags{Audio}
 */
 struct BytestreamInputHandler
 {
@@ -39,6 +41,8 @@ struct BytestreamInputHandler
 /**
     Parses a continuous bytestream and emits complete MidiMessages whenever a full
     message is received.
+
+    @tags{Audio}
 */
 struct BytestreamToBytestreamHandler : public BytestreamInputHandler
 {
@@ -86,6 +90,8 @@ struct BytestreamToBytestreamHandler : public BytestreamInputHandler
 /**
     Parses a continuous MIDI 1.0 bytestream, and emits full messages in the requested
     UMP format.
+
+    @tags{Audio}
 */
 struct BytestreamToUMPHandler : public BytestreamInputHandler
 {
@@ -130,5 +136,6 @@ struct BytestreamToUMPHandler : public BytestreamInputHandler
     BytestreamToUMPDispatcher dispatcher;
 };
 
-}
-}
+} // juce::universal_midi_packets
+
+#endif

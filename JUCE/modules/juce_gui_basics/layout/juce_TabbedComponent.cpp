@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -53,19 +53,19 @@ namespace TabbedComponentHelpers
 }
 
 //==============================================================================
-struct TabbedComponent::ButtonBar  : public TabbedButtonBar
+struct TabbedComponent::ButtonBar final : public TabbedButtonBar
 {
     ButtonBar (TabbedComponent& tabComp, TabbedButtonBar::Orientation o)
         : TabbedButtonBar (o), owner (tabComp)
     {
     }
 
-    void currentTabChanged (int newCurrentTabIndex, const String& newTabName)
+    void currentTabChanged (int newCurrentTabIndex, const String& newTabName) override
     {
         owner.changeCallback (newCurrentTabIndex, newTabName);
     }
 
-    void popupMenuClickOnTab (int tabIndex, const String& tabName)
+    void popupMenuClickOnTab (int tabIndex, const String& tabName) override
     {
         owner.popupMenuClickOnTab (tabIndex, tabName);
     }
@@ -75,7 +75,7 @@ struct TabbedComponent::ButtonBar  : public TabbedButtonBar
         return owner.tabs->getTabBackgroundColour (tabIndex);
     }
 
-    TabBarButton* createTabButton (const String& tabName, int tabIndex)
+    TabBarButton* createTabButton (const String& tabName, int tabIndex) override
     {
         return owner.createTabButton (tabName, tabIndex);
     }
@@ -309,5 +309,11 @@ void TabbedComponent::changeCallback (int newCurrentTabIndex, const String& newT
 
 void TabbedComponent::currentTabChanged (int, const String&) {}
 void TabbedComponent::popupMenuClickOnTab (int, const String&) {}
+
+//==============================================================================
+std::unique_ptr<AccessibilityHandler> TabbedComponent::createAccessibilityHandler()
+{
+    return std::make_unique<AccessibilityHandler> (*this, AccessibilityRole::group);
+}
 
 } // namespace juce

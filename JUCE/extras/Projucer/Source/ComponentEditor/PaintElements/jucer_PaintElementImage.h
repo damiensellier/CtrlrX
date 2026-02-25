@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -58,14 +58,14 @@ public:
     public:
         SetResourceAction (PaintElementImage* const, const String&);
 
-        bool perform();
-        bool undo();
+        bool perform() override;
+        bool undo() override;
 
     private:
         String newResource, oldResource;
     };
 
-    void setResource (const String&, const bool);
+    void setResource (const String&, bool);
 
     String getResource() const;
 
@@ -73,16 +73,16 @@ public:
     class SetOpacityAction   : public PaintElementUndoableAction <PaintElementImage>
     {
     public:
-        SetOpacityAction (PaintElementImage* const, const double);
+        SetOpacityAction (PaintElementImage* const, double);
 
-        bool perform();
-        bool undo();
+        bool perform() override;
+        bool undo() override;
 
     private:
         double newOpacity, oldOpacity;
     };
 
-    void setOpacity (double, const bool);
+    void setOpacity (double, bool);
     double getOpacity() const noexcept;
 
     //==============================================================================
@@ -94,10 +94,10 @@ public:
     class SetStretchModeAction   : public PaintElementUndoableAction <PaintElementImage>
     {
     public:
-        SetStretchModeAction (PaintElementImage* const, const StretchMode);
+        SetStretchModeAction (PaintElementImage* const, StretchMode);
 
-        bool perform();
-        bool undo();
+        bool perform() override;
+        bool undo() override;
 
     private:
         StretchMode newValue, oldValue;
@@ -105,7 +105,7 @@ public:
 
     StretchMode getStretchMode() const noexcept;
 
-    void setStretchMode (const StretchMode, const bool);
+    void setStretchMode (StretchMode, bool);
 
     //==============================================================================
     XmlElement* createXml() const override;
@@ -124,8 +124,8 @@ private:
     public:
         ImageElementResourceProperty (PaintElementImage* const);
 
-        void setResource (const String&);
-        String getResource() const;
+        void setResource (const String&) override;
+        String getResource() const override;
     };
 
     //==============================================================================
@@ -134,8 +134,8 @@ private:
     public:
         OpacityProperty (PaintElementImage* const);
 
-        void setValue (double);
-        double getValue() const;
+        void setValue (double) override;
+        double getValue() const override;
 
         ElementListener<PaintElementImage> listener;
     };
@@ -145,8 +145,8 @@ private:
     public:
         StretchModeProperty (PaintElementImage* const);
 
-        void setIndex (int);
-        int getIndex() const;
+        void setIndex (int) override;
+        int getIndex() const override;
 
         ElementListener<PaintElementImage> listener;
     };
@@ -156,8 +156,8 @@ private:
     public:
         ResetSizeProperty (PaintElementImage* const);
 
-        void buttonClicked();
-        String getButtonText() const;
+        void buttonClicked() override;
+        String getButtonText() const override;
 
     private:
         PaintElementImage* const element;

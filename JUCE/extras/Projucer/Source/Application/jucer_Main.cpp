@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -38,27 +38,6 @@
 #include "Windows/jucer_GlobalPathsWindowComponent.h"
 #include "Windows/jucer_PIPCreatorWindowComponent.h"
 #include "Windows/jucer_FloatingToolWindow.h"
-
-#include "../LiveBuildEngine/jucer_MessageIDs.h"
-#include "../LiveBuildEngine/jucer_CppHelpers.h"
-#include "../LiveBuildEngine/jucer_SourceCodeRange.h"
-#include "../LiveBuildEngine/jucer_ClassDatabase.h"
-#include "../LiveBuildEngine/jucer_DiagnosticMessage.h"
-
-#include "../LiveBuildEngine/jucer_CompileEngineDLL.h"
-#include "../LiveBuildEngine/jucer_CompileEngineClient.h"
-#include "../LiveBuildEngine/UI/jucer_ActivityListComponent.h"
-#include "../LiveBuildEngine/UI/jucer_BuildTabStatusComponent.h"
-#include "../LiveBuildEngine/UI/jucer_ComponentListComponent.h"
-#include "../LiveBuildEngine/jucer_CompileEngineServer.h"
-
-JUCE_IMPLEMENT_SINGLETON (CompileEngineDLL)
-
-struct ProjucerAppClasses
-{
-    #include "../CodeEditor/jucer_LiveBuildCodeEditor.h"
-    #include "../LiveBuildEngine/UI/jucer_ErrorListComponent.h"
-};
 
 #include "jucer_CommandLine.h"
 

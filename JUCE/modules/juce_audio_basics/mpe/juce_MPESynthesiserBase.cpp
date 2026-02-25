@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -24,80 +24,79 @@ namespace juce
 {
 
 MPESynthesiserBase::MPESynthesiserBase()
-    : instrument (new MPEInstrument)
+    : instrument (defaultInstrument)
 {
-    instrument->addListener (this);
+    instrument.addListener (this);
 }
 
-MPESynthesiserBase::MPESynthesiserBase (MPEInstrument* inst)
+MPESynthesiserBase::MPESynthesiserBase (MPEInstrument& inst)
     : instrument (inst)
 {
-    jassert (instrument != nullptr);
-    instrument->addListener (this);
+    instrument.addListener (this);
 }
 
 //==============================================================================
 MPEZoneLayout MPESynthesiserBase::getZoneLayout() const noexcept
 {
-    return instrument->getZoneLayout();
+    return instrument.getZoneLayout();
 }
 
 void MPESynthesiserBase::setZoneLayout (MPEZoneLayout newLayout)
 {
-    instrument->setZoneLayout (newLayout);
+    instrument.setZoneLayout (newLayout);
 }
 
 //==============================================================================
 void MPESynthesiserBase::enableLegacyMode (int pitchbendRange, Range<int> channelRange)
 {
-    instrument->enableLegacyMode (pitchbendRange, channelRange);
+    instrument.enableLegacyMode (pitchbendRange, channelRange);
 }
 
 bool MPESynthesiserBase::isLegacyModeEnabled() const noexcept
 {
-    return instrument->isLegacyModeEnabled();
+    return instrument.isLegacyModeEnabled();
 }
 
 Range<int> MPESynthesiserBase::getLegacyModeChannelRange() const noexcept
 {
-    return instrument->getLegacyModeChannelRange();
+    return instrument.getLegacyModeChannelRange();
 }
 
 void MPESynthesiserBase::setLegacyModeChannelRange (Range<int> channelRange)
 {
-    instrument->setLegacyModeChannelRange (channelRange);
+    instrument.setLegacyModeChannelRange (channelRange);
 }
 
 int MPESynthesiserBase::getLegacyModePitchbendRange() const noexcept
 {
-    return instrument->getLegacyModePitchbendRange();
+    return instrument.getLegacyModePitchbendRange();
 }
 
 void MPESynthesiserBase::setLegacyModePitchbendRange (int pitchbendRange)
 {
-    instrument->setLegacyModePitchbendRange (pitchbendRange);
+    instrument.setLegacyModePitchbendRange (pitchbendRange);
 }
 
 //==============================================================================
 void MPESynthesiserBase::setPressureTrackingMode (TrackingMode modeToUse)
 {
-    instrument->setPressureTrackingMode (modeToUse);
+    instrument.setPressureTrackingMode (modeToUse);
 }
 
 void MPESynthesiserBase::setPitchbendTrackingMode (TrackingMode modeToUse)
 {
-    instrument->setPitchbendTrackingMode (modeToUse);
+    instrument.setPitchbendTrackingMode (modeToUse);
 }
 
 void MPESynthesiserBase::setTimbreTrackingMode (TrackingMode modeToUse)
 {
-    instrument->setTimbreTrackingMode (modeToUse);
+    instrument.setTimbreTrackingMode (modeToUse);
 }
 
 //==============================================================================
 void MPESynthesiserBase::handleMidiEvent (const MidiMessage& m)
 {
-    instrument->processNextMidiEvent (m);
+    instrument.processNextMidiEvent (m);
 }
 
 //==============================================================================
@@ -108,7 +107,7 @@ void MPESynthesiserBase::renderNextBlock (AudioBuffer<floatType>& outputAudio,
                                           int numSamples)
 {
     // you must set the sample rate before using this!
-    jassert (sampleRate != 0);
+    jassert (! approximatelyEqual (sampleRate, 0.0));
 
     const ScopedLock sl (noteStateLock);
 
@@ -145,10 +144,10 @@ template void MPESynthesiserBase::renderNextBlock<double> (AudioBuffer<double>&,
 //==============================================================================
 void MPESynthesiserBase::setCurrentPlaybackSampleRate (const double newRate)
 {
-    if (sampleRate != newRate)
+    if (! approximatelyEqual (sampleRate, newRate))
     {
         const ScopedLock sl (noteStateLock);
-        instrument->releaseAllNotes();
+        instrument.releaseAllNotes();
         sampleRate = newRate;
     }
 }
@@ -165,7 +164,7 @@ void MPESynthesiserBase::setMinimumRenderingSubdivisionSize (int numSamples, boo
 
 namespace
 {
-    class MpeSynthesiserBaseTests : public UnitTest
+    class MpeSynthesiserBaseTests final : public UnitTest
     {
         enum class CallbackKind { process, midi };
 
@@ -191,7 +190,7 @@ namespace
             std::vector<CallbackKind> order;
         };
 
-        class MockSynthesiser  : public MPESynthesiserBase
+        class MockSynthesiser final : public MPESynthesiserBase
         {
         public:
             Events events;

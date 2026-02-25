@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -23,8 +23,8 @@
 namespace juce
 {
 
-struct FallbackDownloadTask  : public URL::DownloadTask,
-                               public Thread
+struct FallbackDownloadTask final : public URL::DownloadTask,
+                                    public Thread
 {
     FallbackDownloadTask (std::unique_ptr<FileOutputStream> outputStreamToUse,
                           size_t bufferSizeToUse,
@@ -106,29 +106,26 @@ struct FallbackDownloadTask  : public URL::DownloadTask,
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FallbackDownloadTask)
 };
 
-void URL::DownloadTask::Listener::progress (DownloadTask*, int64, int64) {}
-URL::DownloadTask::Listener::~Listener() {}
+void URL::DownloadTaskListener::progress (DownloadTask*, int64, int64) {}
 
 //==============================================================================
 std::unique_ptr<URL::DownloadTask> URL::DownloadTask::createFallbackDownloader (const URL& urlToUse,
                                                                                 const File& targetFileToUse,
-                                                                                const String& extraHeadersToUse,
-                                                                                Listener* listenerToUse,
-                                                                                bool usePostRequest)
+                                                                                const DownloadTaskOptions& options)
 {
     const size_t bufferSize = 0x8000;
     targetFileToUse.deleteFile();
 
     if (auto outputStream = targetFileToUse.createOutputStream (bufferSize))
     {
-        auto stream = std::make_unique<WebInputStream> (urlToUse, usePostRequest);
-        stream->withExtraHeaders (extraHeadersToUse);
+        auto stream = std::make_unique<WebInputStream> (urlToUse, options.usePost);
+        stream->withExtraHeaders (options.extraHeaders);
 
         if (stream->connect (nullptr))
             return std::make_unique<FallbackDownloadTask> (std::move (outputStream),
                                                            bufferSize,
                                                            std::move (stream),
-                                                           listenerToUse);
+                                                           options.listener);
     }
 
     return nullptr;
@@ -181,7 +178,15 @@ URL::URL (File localFile)
 
 void URL::init()
 {
-    auto i = url.indexOfChar ('?');
+    auto i = url.indexOfChar ('#');
+
+    if (i >= 0)
+    {
+        anchor = removeEscapeChars (url.substring (i + 1));
+        url = url.upToFirstOccurrenceOf ("#", false, false);
+    }
+
+    i = url.indexOfChar ('?');
 
     if (i >= 0)
     {
@@ -349,8 +354,21 @@ String URL::getSubPath (bool includeGetParameters) const
 
 String URL::getQueryString() const
 {
+    String result;
+
     if (parameterNames.size() > 0)
-        return "?" + URLHelpers::getMangledParameters (*this);
+        result += "?" + URLHelpers::getMangledParameters (*this);
+
+    if (anchor.isNotEmpty())
+        result += getAnchorString();
+
+    return result;
+}
+
+String URL::getAnchorString() const
+{
+    if (anchor.isNotEmpty())
+        return "#" + URL::addEscapeChars (anchor, true);
 
     return {};
 }
@@ -454,7 +472,7 @@ URL URL::getChildURL (const String& subPath) const
 
 bool URL::hasBodyDataToSend() const
 {
-    return filesToUpload.size() > 0 || postData.getSize() > 0;
+    return filesToUpload.size() > 0 || ! postData.isEmpty();
 }
 
 void URL::createHeadersAndPostData (String& headers,
@@ -466,7 +484,7 @@ void URL::createHeadersAndPostData (String& headers,
     if (filesToUpload.size() > 0)
     {
         // (this doesn't currently support mixing custom post-data with uploads..)
-        jassert (postData.getSize() == 0);
+        jassert (postData.isEmpty());
 
         auto boundary = String::toHexString (Random::getSystemRandom().nextInt64());
 
@@ -580,7 +598,7 @@ template <typename Stream> struct iOSFileStreamWrapperFlush    { static void flu
 template <> struct iOSFileStreamWrapperFlush<FileOutputStream> { static void flush (OutputStream* o) { o->flush(); } };
 
 template <typename Stream>
-class iOSFileStreamWrapper : public Stream
+class iOSFileStreamWrapper final : public Stream
 {
 public:
     iOSFileStreamWrapper (URL& urlToUse)
@@ -612,8 +630,7 @@ public:
             }
             else
             {
-                auto desc = [error localizedDescription];
-                ignoreUnused (desc);
+                [[maybe_unused]] auto desc = [error localizedDescription];
                 jassertfalse;
             }
         }
@@ -646,8 +663,7 @@ private:
                 return urlToUse.getLocalFile();
             }
 
-            auto desc = [error localizedDescription];
-            ignoreUnused (desc);
+            [[maybe_unused]] auto desc = [error localizedDescription];
             jassertfalse;
         }
 
@@ -753,7 +769,7 @@ std::unique_ptr<InputStream> URL::createInputStream (const InputStreamOptions& o
         return stream;
     }();
 
-    struct ProgressCallbackCaller  : public WebInputStream::Listener
+    struct ProgressCallbackCaller final : public WebInputStream::Listener
     {
         ProgressCallbackCaller (std::function<bool (int, int)> progressCallbackToUse)
             : callback (std::move (progressCallbackToUse))
@@ -793,12 +809,13 @@ std::unique_ptr<InputStream> URL::createInputStream (const InputStreamOptions& o
     JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 }
 
-#if JUCE_ANDROID
-OutputStream* juce_CreateContentURIOutputStream (const URL&);
-#endif
-
 std::unique_ptr<OutputStream> URL::createOutputStream() const
 {
+   #if JUCE_ANDROID
+    if (auto stream = AndroidDocument::fromDocument (*this).createOutputStream())
+        return stream;
+   #endif
+
     if (isLocalFile())
     {
        #if JUCE_IOS
@@ -809,11 +826,7 @@ std::unique_ptr<OutputStream> URL::createOutputStream() const
        #endif
     }
 
-   #if JUCE_ANDROID
-    return std::unique_ptr<OutputStream> (juce_CreateContentURIOutputStream (*this));
-   #else
     return nullptr;
-   #endif
 }
 
 //==============================================================================
@@ -864,6 +877,14 @@ URL URL::withParameters (const StringPairArray& parametersToAdd) const
         u.addParameter (parametersToAdd.getAllKeys()[i],
                         parametersToAdd.getAllValues()[i]);
 
+    return u;
+}
+
+URL URL::withAnchor (const String& anchorToAdd) const
+{
+    auto u = *this;
+
+    u.anchor = anchorToAdd;
     return u;
 }
 
@@ -926,7 +947,7 @@ String URL::removeEscapeChars (const String& s)
 
     for (int i = 0; i < utf8.size(); ++i)
     {
-        if (utf8.getUnchecked(i) == '%')
+        if (utf8.getUnchecked (i) == '%')
         {
             auto hexDigit1 = CharacterFunctions::getHexDigitValue ((juce_wchar) (uint8) utf8 [i + 1]);
             auto hexDigit2 = CharacterFunctions::getHexDigitValue ((juce_wchar) (uint8) utf8 [i + 2]);
@@ -954,7 +975,7 @@ String URL::addEscapeChars (const String& s, bool isParameter, bool roundBracket
 
     for (int i = 0; i < utf8.size(); ++i)
     {
-        auto c = utf8.getUnchecked(i);
+        auto c = utf8.getUnchecked (i);
 
         if (! (CharacterFunctions::isLetterOrDigit (c)
                  || legalChars.containsChar ((juce_wchar) c)))
@@ -1001,8 +1022,19 @@ std::unique_ptr<InputStream> URL::createInputStream (bool usePostCommand,
                                 .withConnectionTimeoutMs (timeOutMs)
                                 .withResponseHeaders (responseHeaders)
                                 .withStatusCode (statusCode)
-                                .withNumRedirectsToFollow(numRedirectsToFollow)
+                                .withNumRedirectsToFollow (numRedirectsToFollow)
                                 .withHttpRequestCmd (httpRequestCmd));
+}
+
+std::unique_ptr<URL::DownloadTask> URL::downloadToFile (const File& targetLocation,
+                                                        String extraHeaders,
+                                                        DownloadTask::Listener* listener,
+                                                        bool usePostCommand)
+{
+    auto options = DownloadTaskOptions().withExtraHeaders (std::move (extraHeaders))
+                                        .withListener (listener)
+                                        .withUsePost (usePostCommand);
+    return downloadToFile (targetLocation, std::move (options));
 }
 
 } // namespace juce

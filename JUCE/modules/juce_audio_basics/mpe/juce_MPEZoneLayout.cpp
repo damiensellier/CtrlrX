@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -23,7 +23,17 @@
 namespace juce
 {
 
-MPEZoneLayout::MPEZoneLayout() noexcept {}
+MPEZoneLayout::MPEZoneLayout (MPEZone lower, MPEZone upper)
+    : lowerZone (lower), upperZone (upper)
+{
+}
+
+MPEZoneLayout::MPEZoneLayout (MPEZone zone)
+    : lowerZone (zone.isLowerZone() ? zone : MPEZone()),
+      upperZone (! zone.isLowerZone() ? zone : MPEZone())
+{
+}
+
 
 MPEZoneLayout::MPEZoneLayout (const MPEZoneLayout& other)
     : lowerZone (other.lowerZone),
@@ -54,9 +64,9 @@ void MPEZoneLayout::setZone (bool isLower, int numMemberChannels, int perNotePit
     checkAndLimitZoneParameters (0, 96,  masterPitchbendRange);
 
     if (isLower)
-        lowerZone = { true, numMemberChannels, perNotePitchbendRange, masterPitchbendRange };
+        lowerZone = { MPEZone::Type::lower, numMemberChannels, perNotePitchbendRange, masterPitchbendRange };
     else
-        upperZone = { false, numMemberChannels, perNotePitchbendRange, masterPitchbendRange };
+        upperZone = { MPEZone::Type::upper, numMemberChannels, perNotePitchbendRange, masterPitchbendRange };
 
     if (numMemberChannels > 0)
     {
@@ -86,8 +96,8 @@ void MPEZoneLayout::setUpperZone (int numMemberChannels, int perNotePitchbendRan
 
 void MPEZoneLayout::clearAllZones()
 {
-    lowerZone = { true, 0 };
-    upperZone = { false, 0 };
+    lowerZone = { MPEZone::Type::lower, 0 };
+    upperZone = { MPEZone::Type::upper, 0 };
 
     sendLayoutChangeMessage();
 }
@@ -98,14 +108,11 @@ void MPEZoneLayout::processNextMidiEvent (const MidiMessage& message)
     if (! message.isController())
         return;
 
-    MidiRPNMessage rpn;
-
-    if (rpnDetector.parseControllerMessage (message.getChannel(),
+    if (auto parsed = rpnDetector.tryParse (message.getChannel(),
                                             message.getControllerNumber(),
-                                            message.getControllerValue(),
-                                            rpn))
+                                            message.getControllerValue()))
     {
-        processRpnMessage (rpn);
+        processRpnMessage (*parsed);
     }
 }
 
@@ -128,7 +135,7 @@ void MPEZoneLayout::processZoneLayoutRpnMessage (MidiRPNMessage rpn)
     }
 }
 
-void MPEZoneLayout::updateMasterPitchbend (Zone& zone, int value)
+void MPEZoneLayout::updateMasterPitchbend (MPEZone& zone, int value)
 {
     if (zone.masterPitchbendRange != value)
     {
@@ -138,7 +145,7 @@ void MPEZoneLayout::updateMasterPitchbend (Zone& zone, int value)
     }
 }
 
-void MPEZoneLayout::updatePerNotePitchbendRange (Zone& zone, int value)
+void MPEZoneLayout::updatePerNotePitchbendRange (MPEZone& zone, int value)
 {
     if (zone.perNotePitchbendRange != value)
     {
@@ -206,7 +213,7 @@ void MPEZoneLayout::checkAndLimitZoneParameters (int minValue, int maxValue,
 //==============================================================================
 #if JUCE_UNIT_TESTS
 
-class MPEZoneLayoutTests  : public UnitTest
+class MPEZoneLayoutTests final : public UnitTest
 {
 public:
     MPEZoneLayoutTests()
@@ -374,6 +381,17 @@ public:
             expectEquals (layout.getLowerZone().numMemberChannels, 3);
             expectEquals (layout.getLowerZone().perNotePitchbendRange, 48);
             expectEquals (layout.getLowerZone().masterPitchbendRange, 2);
+
+            const auto masterPitchBend = 0x0c;
+            layout.processNextMidiEvent ({ 0xb0, 0x64, 0x00 });
+            layout.processNextMidiEvent ({ 0xb0, 0x06, masterPitchBend });
+
+            expectEquals (layout.getLowerZone().masterPitchbendRange, masterPitchBend);
+
+            const auto newPitchBend = 0x0d;
+            layout.processNextMidiEvent ({ 0xb0, 0x06, newPitchBend });
+
+            expectEquals (layout.getLowerZone().masterPitchbendRange, newPitchBend);
         }
     }
 };

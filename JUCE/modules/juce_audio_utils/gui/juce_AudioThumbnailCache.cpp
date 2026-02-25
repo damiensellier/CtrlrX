@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -64,7 +64,7 @@ AudioThumbnailCache::AudioThumbnailCache (const int maxNumThumbs)
       maxNumThumbsToStore (maxNumThumbs)
 {
     jassert (maxNumThumbsToStore > 0);
-    thread.startThread (2);
+    thread.startThread (Thread::Priority::low);
 }
 
 AudioThumbnailCache::~AudioThumbnailCache()
@@ -74,8 +74,8 @@ AudioThumbnailCache::~AudioThumbnailCache()
 AudioThumbnailCache::ThumbnailCacheEntry* AudioThumbnailCache::findThumbFor (const int64 hash) const
 {
     for (int i = thumbs.size(); --i >= 0;)
-        if (thumbs.getUnchecked(i)->hash == hash)
-            return thumbs.getUnchecked(i);
+        if (thumbs.getUnchecked (i)->hash == hash)
+            return thumbs.getUnchecked (i);
 
     return nullptr;
 }
@@ -87,7 +87,7 @@ int AudioThumbnailCache::findOldestThumb() const
 
     for (int i = thumbs.size(); --i >= 0;)
     {
-        const ThumbnailCacheEntry* const te = thumbs.getUnchecked(i);
+        const ThumbnailCacheEntry* const te = thumbs.getUnchecked (i);
 
         if (te->lastUsed < oldestTime)
         {
@@ -150,7 +150,7 @@ void AudioThumbnailCache::removeThumb (const int64 hashCode)
     const ScopedLock sl (lock);
 
     for (int i = thumbs.size(); --i >= 0;)
-        if (thumbs.getUnchecked(i)->hash == hashCode)
+        if (thumbs.getUnchecked (i)->hash == hashCode)
             thumbs.remove (i);
 }
 
@@ -182,7 +182,7 @@ void AudioThumbnailCache::writeToStream (OutputStream& out)
     out.writeInt (thumbs.size());
 
     for (int i = 0; i < thumbs.size(); ++i)
-        thumbs.getUnchecked(i)->write (out);
+        thumbs.getUnchecked (i)->write (out);
 }
 
 void AudioThumbnailCache::saveNewlyFinishedThumbnail (const AudioThumbnailBase&, int64)

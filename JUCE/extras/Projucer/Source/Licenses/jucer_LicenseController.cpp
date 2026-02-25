@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -75,7 +75,7 @@ static LicenseState::Type getLicenseTypeFromValue (const String& d)
 }
 
 #if ! JUCER_ENABLE_GPL_MODE
-struct LicenseController::ModalCompletionCallback : ModalComponentManager::Callback
+struct LicenseController::ModalCompletionCallback final : ModalComponentManager::Callback
 {
     ModalCompletionCallback (LicenseController& controller) : owner (controller) {}
     void modalStateFinished (int returnValue) override       { owner.modalStateFinished (returnValue); }
@@ -143,7 +143,7 @@ void LicenseController::logout()
     thread.reset();
     updateState ({});
 
-   #if ! JUCE_LINUX
+   #if ! (JUCE_LINUX || JUCE_BSD)
     WebBrowserComponent::clearCookies();
    #endif
 
@@ -187,7 +187,7 @@ void LicenseController::ensureLicenseWebviewIsOpenWithPage (const String& param)
     }
     else
     {
-       #if ! JUCE_LINUX
+       #if ! (JUCE_LINUX || JUCE_BSD)
         WebBrowserComponent::clearCookies();
        #endif
 

@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -27,12 +27,12 @@
 
 #include "../../ProjectSaving/jucer_ProjectExporter.h"
 #include "../../Utility/UI/PropertyComponents/jucer_FilePathPropertyComponent.h"
-#include "../../Utility/Helpers/jucer_ValueWithDefaultWrapper.h"
+#include "../../Utility/Helpers/jucer_ValueTreePropertyWithDefaultWrapper.h"
 
 #include "jucer_NewProjectWizard.h"
 
 //==============================================================================
-class ItemHeader  : public Component
+class ItemHeader final : public Component
 {
 public:
     ItemHeader (StringRef name, StringRef description, const char* iconSvgData)
@@ -88,7 +88,7 @@ private:
 };
 
 //==============================================================================
-class TemplateComponent  : public Component
+class TemplateComponent final : public Component
 {
 public:
     TemplateComponent (const NewProjectTemplates::ProjectTemplate& temp,
@@ -99,25 +99,35 @@ public:
     {
         createProjectButton.onClick = [this]
         {
-            FileChooser fc ("Save Project", NewProjectWizard::getLastWizardFolder());
+            chooser = std::make_unique<FileChooser> ("Save Project", NewProjectWizard::getLastWizardFolder());
+            auto browserFlags = FileBrowserComponent::openMode | FileBrowserComponent::canSelectDirectories;
 
-            if (fc.browseForDirectory())
+            chooser->launchAsync (browserFlags, [this] (const FileChooser& fc)
             {
                 auto dir = fc.getResult();
 
-                if (auto project = NewProjectWizard::createNewProject (projectTemplate,
-                                                                       dir.getChildFile (projectNameValue.get().toString()),
-                                                                       projectNameValue.get(),
-                                                                       modulesValue.get(),
-                                                                       exportersValue.get(),
-                                                                       fileOptionsValue.get(),
-                                                                       modulePathValue.getCurrentValue(),
-                                                                       modulePathValue.getWrappedValueWithDefault().isUsingDefault()))
+                if (dir == File{})
+                    return;
+
+                SafePointer<TemplateComponent> safeThis { this };
+                messageBox = NewProjectWizard::createNewProject (projectTemplate,
+                                                                 dir.getChildFile (projectNameValue.get().toString()),
+                                                                 projectNameValue.get(),
+                                                                 modulesValue.get(),
+                                                                 exportersValue.get(),
+                                                                 fileOptionsValue.get(),
+                                                                 modulePathValue.getCurrentValue(),
+                                                                 modulePathValue.getWrappedValueTreePropertyWithDefault().isUsingDefault(),
+                                                                 [safeThis, dir] (ScopedMessageBox mb, std::unique_ptr<Project> project)
                 {
-                    projectCreatedCallback (std::move (project));
+                    if (safeThis == nullptr)
+                        return;
+
+                    safeThis->messageBox = std::move (mb);
+                    safeThis->projectCreatedCallback (std::move (project));
                     getAppSettings().lastWizardFolder = dir;
-                }
-            }
+                });
+            });
         };
 
         addAndMakeVisible (createProjectButton);
@@ -150,6 +160,7 @@ public:
 private:
     NewProjectTemplates::ProjectTemplate projectTemplate;
 
+    std::unique_ptr<FileChooser> chooser;
     std::function<void (std::unique_ptr<Project>)> projectCreatedCallback;
 
     ItemHeader header;
@@ -157,12 +168,12 @@ private:
 
     ValueTree settingsTree { "NewProjectSettings" };
 
-    ValueWithDefault projectNameValue { settingsTree, Ids::name,          nullptr, "NewProject" },
-                     modulesValue     { settingsTree, Ids::dependencies_, nullptr, projectTemplate.requiredModules, "," },
-                     exportersValue   { settingsTree, Ids::exporters,     nullptr, StringArray (ProjectExporter::getCurrentPlatformExporterTypeInfo().identifier.toString()), "," },
-                     fileOptionsValue { settingsTree, Ids::file,          nullptr, NewProjectTemplates::getVarForFileOption (projectTemplate.defaultFileOption) };
+    ValueTreePropertyWithDefault projectNameValue { settingsTree, Ids::name,          nullptr, "NewProject" },
+                                 modulesValue     { settingsTree, Ids::dependencies_, nullptr, projectTemplate.requiredModules, "," },
+                                 exportersValue   { settingsTree, Ids::exporters,     nullptr, StringArray (ProjectExporter::getCurrentPlatformExporterTypeInfo().identifier.toString()), "," },
+                                 fileOptionsValue { settingsTree, Ids::file,          nullptr, NewProjectTemplates::getVarForFileOption (projectTemplate.defaultFileOption) };
 
-    ValueWithDefaultWrapper modulePathValue;
+    ValueTreePropertyWithDefaultWrapper modulePathValue;
 
     PropertyPanel panel;
 
@@ -193,7 +204,7 @@ private:
 
     PropertyComponent* createModulePathPropertyComponent()
     {
-        return new FilePathPropertyComponent (modulePathValue.getWrappedValueWithDefault(), "Path to Modules", true);
+        return new FilePathPropertyComponent (modulePathValue.getWrappedValueTreePropertyWithDefault(), "Path to Modules", true);
     }
 
     PropertyComponent* createExportersPropertyValue()
@@ -239,12 +250,14 @@ private:
         return builder.components;
     }
 
+    ScopedMessageBox messageBox;
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TemplateComponent)
 };
 
 //==============================================================================
-class ExampleComponent  : public Component
+class ExampleComponent final : public Component
 {
 public:
     ExampleComponent (const File& f, std::function<void (const File&)> selectedCallback)
@@ -254,6 +267,9 @@ public:
           header (metadata[Ids::name].toString(), metadata[Ids::description].toString(), BinaryData::background_logo_svg),
           codeViewer (doc, &cppTokeniser)
     {
+        setTitle (exampleFile.getFileName());
+        setFocusContainerType (FocusContainerType::focusContainer);
+
         addAndMakeVisible (header);
 
         openExampleButton.onClick = [this] { exampleSelectedCallback (exampleFile); };
@@ -286,6 +302,7 @@ private:
 
         codeViewer.setScrollbarThickness (6);
         codeViewer.setReadOnly (true);
+        codeViewer.setTitle ("Code");
         getAppSettings().appearance.applyToCodeEditor (codeViewer);
 
         codeViewer.scrollToLine (findBestLineToScrollToForClass (StringArray::fromLines (fileString),

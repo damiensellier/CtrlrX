@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -35,12 +35,12 @@
 
   ID:                 juce_dsp
   vendor:             juce
-  version:            6.0.8
+  version:            7.0.12
   name:               JUCE DSP classes
   description:        Classes for audio buffer manipulation, digital audio processing, filtering, oversampling, fast math functions etc.
   website:            http://www.juce.com/juce
   license:            GPL/Commercial
-  minimumCppStandard: 14
+  minimumCppStandard: 17
 
   dependencies:       juce_audio_formats
   OSXFrameworks:      Accelerate
@@ -58,9 +58,9 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_audio_formats/juce_audio_formats.h>
 
-#if defined(_M_X64) || defined(__amd64__) || defined(__SSE2__) || (defined(_M_IX86_FP) && _M_IX86_FP == 2)
+#if defined (_M_X64) || defined (__amd64__) || defined (__SSE2__) || (defined (_M_IX86_FP) && _M_IX86_FP == 2)
 
- #if defined(_M_X64) || defined(__amd64__)
+ #if defined (_M_X64) || defined (__amd64__)
   #ifndef __SSE2__
    #define __SSE2__
   #endif
@@ -74,7 +74,9 @@
   #include <immintrin.h>
  #endif
 
-#elif defined (__ARM_NEON__) || defined (__ARM_NEON) || defined (__arm64__) || defined (__aarch64__)
+// it's ok to check for _M_ARM below as this is only defined on Windows for Arm 32-bit
+// which has a minimum requirement of armv7, which supports neon.
+#elif defined (__ARM_NEON__) || defined (__ARM_NEON) || defined (__arm64__) || defined (__aarch64__) || defined (_M_ARM) || defined (_M_ARM64)
 
  #ifndef JUCE_USE_SIMD
   #define JUCE_USE_SIMD 1
@@ -93,8 +95,8 @@
 
 #ifndef JUCE_VECTOR_CALLTYPE
  // __vectorcall does not work on 64-bit due to internal compiler error in
- // release mode in both VS2015 and VS2017. Re-enable when Microsoft fixes this
- #if _MSC_VER && JUCE_USE_SIMD && ! (defined(_M_X64) || defined(__amd64__))
+ // release mode VS2017. Re-enable when Microsoft fixes this
+ #if _MSC_VER && JUCE_USE_SIMD && ! (defined (_M_X64) || defined (__amd64__))
   #define JUCE_VECTOR_CALLTYPE __vectorcall
  #else
   #define JUCE_VECTOR_CALLTYPE
@@ -123,10 +125,11 @@
     If this flag is set, then JUCE will use Intel's MKL for JUCE's FFT and
     convolution classes.
 
-    The folder containing the mkl_dfti.h header must be in your header
-    search paths when using this flag. You also need to add all the necessary
-    intel mkl libraries to the "External Libraries to Link" field in the
-    Projucer.
+    If you're using the Projucer's Visual Studio exporter, you should also set
+    the "Use MKL Library (oneAPI)" option in the exporter settings to
+    "Sequential" or "Parallel". If you're not using the Visual Studio exporter,
+    the folder containing the mkl_dfti.h header must be in your header search
+    paths, and you must link against all the necessary MKL libraries.
 */
 #ifndef JUCE_DSP_USE_INTEL_MKL
  #define JUCE_DSP_USE_INTEL_MKL 0
@@ -185,54 +188,57 @@
 #undef Factor
 #undef check
 
-namespace juce
+namespace juce::dsp
 {
-    namespace dsp
-    {
-        template <typename Type>
-        using Complex = std::complex<Type>;
 
-        //==============================================================================
-        namespace util
-        {
-            /** Use this function to prevent denormals on intel CPUs.
-                This function will work with both primitives and simple containers.
-            */
-          #if JUCE_DSP_ENABLE_SNAP_TO_ZERO
-            inline void snapToZero (float&       x) noexcept            { JUCE_SNAP_TO_ZERO (x); }
-           #ifndef DOXYGEN
-            inline void snapToZero (double&      x) noexcept            { JUCE_SNAP_TO_ZERO (x); }
-            inline void snapToZero (long double& x) noexcept            { JUCE_SNAP_TO_ZERO (x); }
-           #endif
-          #else
-            inline void snapToZero (float&       x) noexcept            { ignoreUnused (x); }
-           #ifndef DOXYGEN
-            inline void snapToZero (double&      x) noexcept            { ignoreUnused (x); }
-            inline void snapToZero (long double& x) noexcept            { ignoreUnused (x); }
-           #endif
-          #endif
-        }
-    }
+template <typename Type>
+using Complex = std::complex<Type>;
+
+template <size_t len, typename T>
+using FixedSizeFunction = juce::FixedSizeFunction<len, T>;
+
+//==============================================================================
+namespace util
+{
+    /** Use this function to prevent denormals on intel CPUs.
+        This function will work with both primitives and simple containers.
+    */
+  #if JUCE_DSP_ENABLE_SNAP_TO_ZERO
+    inline void snapToZero (float&       x) noexcept            { JUCE_SNAP_TO_ZERO (x); }
+   #ifndef DOXYGEN
+    inline void snapToZero (double&      x) noexcept            { JUCE_SNAP_TO_ZERO (x); }
+    inline void snapToZero (long double& x) noexcept            { JUCE_SNAP_TO_ZERO (x); }
+   #endif
+  #else
+    inline void snapToZero ([[maybe_unused]] float&       x) noexcept            {}
+   #ifndef DOXYGEN
+    inline void snapToZero ([[maybe_unused]] double&      x) noexcept            {}
+    inline void snapToZero ([[maybe_unused]] long double& x) noexcept            {}
+   #endif
+  #endif
+}
+
 }
 
 //==============================================================================
 #if JUCE_USE_SIMD
- #include "native/juce_fallback_SIMDNativeOps.h"
+ #include "native/juce_SIMDNativeOps_fallback.h"
 
  // include the correct native file for this build target CPU
- #if defined(__i386__) || defined(__amd64__) || defined(_M_X64) || defined(_X86_) || defined(_M_IX86)
+ #if defined (__i386__) || defined (__amd64__) || defined (_M_X64) || defined (_X86_) || defined (_M_IX86)
   #ifdef __AVX2__
-   #include "native/juce_avx_SIMDNativeOps.h"
+   #include "native/juce_SIMDNativeOps_avx.h"
   #else
-   #include "native/juce_sse_SIMDNativeOps.h"
+   #include "native/juce_SIMDNativeOps_sse.h"
   #endif
- #elif defined(__arm__) || defined(_M_ARM) || defined (__arm64__) || defined (__aarch64__)
-  #include "native/juce_neon_SIMDNativeOps.h"
+ #elif JUCE_ARM
+  #include "native/juce_SIMDNativeOps_neon.h"
  #else
   #error "SIMD register support not implemented for this platform"
  #endif
 
  #include "containers/juce_SIMDRegister.h"
+ #include "containers/juce_SIMDRegister_Impl.h"
 #endif
 
 #include "maths/juce_SpecialFunctions.h"
@@ -243,12 +249,12 @@ namespace juce
 #include "maths/juce_LookupTable.h"
 #include "maths/juce_LogRampedValue.h"
 #include "containers/juce_AudioBlock.h"
-#include "containers/juce_FixedSizeFunction.h"
 #include "processors/juce_ProcessContext.h"
 #include "processors/juce_ProcessorWrapper.h"
 #include "processors/juce_ProcessorChain.h"
 #include "processors/juce_ProcessorDuplicator.h"
 #include "processors/juce_IIRFilter.h"
+#include "processors/juce_IIRFilter_Impl.h"
 #include "processors/juce_FIRFilter.h"
 #include "processors/juce_StateVariableFilter.h"
 #include "processors/juce_FirstOrderTPTFilter.h"

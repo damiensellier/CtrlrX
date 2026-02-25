@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -40,6 +40,7 @@ String createAlphaNumericUID();
 String createGUID (const String& seed); // Turns a seed into a windows GUID
 
 String escapeSpaces (const String& text); // replaces spaces with blackslash-space
+String escapeQuotesAndSpaces (const String& text);
 String addQuotesIfContainsSpaces (const String& text);
 
 StringPairArray parsePreprocessorDefs (const String& defs);
@@ -90,13 +91,17 @@ struct PropertyListBuilder
         add (propertyComp);
     }
 
-    void addSearchPathProperty (const Value& value, const String& name, const String& mainHelpText)
+    void addSearchPathProperty (const Value& value,
+                                const String& name,
+                                const String& mainHelpText)
     {
         add (new TextPropertyComponent (value, name, 16384, true),
              mainHelpText + " Use semi-colons or new-lines to separate multiple paths.");
     }
 
-    void addSearchPathProperty (ValueWithDefault& value, const String& name, const String& mainHelpText)
+    void addSearchPathProperty (const ValueTreePropertyWithDefault& value,
+                                const String& name,
+                                const String& mainHelpText)
     {
         add (new TextPropertyComponent (value, name, 16384, true),
              mainHelpText + " Use semi-colons or new-lines to separate multiple paths.");
@@ -105,7 +110,7 @@ struct PropertyListBuilder
     void setPreferredHeight (int height)
     {
         for (int j = components.size(); --j >= 0;)
-            components.getUnchecked(j)->setPreferredHeight (height);
+            components.getUnchecked (j)->setPreferredHeight (height);
     }
 
     Array<PropertyComponent*> components;
@@ -114,8 +119,8 @@ struct PropertyListBuilder
 //==============================================================================
 // A ValueSource which takes an input source, and forwards any changes in it.
 // This class is a handy way to create sources which re-map a value.
-class ValueSourceFilter   : public Value::ValueSource,
-                            private Value::Listener
+class ValueSourceFilter : public Value::ValueSource,
+                          private Value::Listener
 {
 public:
     ValueSourceFilter (const Value& source)  : sourceValue (source)

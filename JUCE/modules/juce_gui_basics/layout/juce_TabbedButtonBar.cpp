@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -171,7 +171,7 @@ void TabBarButton::resized()
 }
 
 //==============================================================================
-class TabbedButtonBar::BehindFrontTabComp  : public Component
+class TabbedButtonBar::BehindFrontTabComp final : public Component
 {
 public:
     BehindFrontTabComp (TabbedButtonBar& tb)  : owner (tb)
@@ -202,7 +202,7 @@ TabbedButtonBar::TabbedButtonBar (Orientation orientationToUse)
     setInterceptsMouseClicks (false, true);
     behindFrontTab.reset (new BehindFrontTabComp (*this));
     addAndMakeVisible (behindFrontTab.get());
-    setFocusContainer (true);
+    setFocusContainerType (FocusContainerType::keyboardFocusContainer);
 }
 
 TabbedButtonBar::~TabbedButtonBar()
@@ -343,7 +343,7 @@ void TabbedButtonBar::setCurrentTabIndex (int newIndex, bool shouldSendChangeMes
         currentTabIndex = newIndex;
 
         for (int i = 0; i < tabs.size(); ++i)
-            tabs.getUnchecked(i)->button->setToggleState (i == newIndex, dontSendNotification);
+            tabs.getUnchecked (i)->button->setToggleState (i == newIndex, dontSendNotification);
 
         resized();
 
@@ -365,7 +365,7 @@ TabBarButton* TabbedButtonBar::getTabButton (const int index) const
 int TabbedButtonBar::indexOfTabButton (const TabBarButton* button) const
 {
     for (int i = tabs.size(); --i >= 0;)
-        if (tabs.getUnchecked(i)->button.get() == button)
+        if (tabs.getUnchecked (i)->button.get() == button)
             return i;
 
     return -1;
@@ -416,7 +416,7 @@ void TabbedButtonBar::updateTabPositions (bool animate)
 
     for (int i = 0; i < tabs.size(); ++i)
     {
-        auto* tb = tabs.getUnchecked(i)->button.get();
+        auto* tb = tabs.getUnchecked (i)->button.get();
 
         totalLength += tb->getBestTabLength (depth) - overlap;
         tb->overlapPixels = jmax (0, overlap / 2);
@@ -459,7 +459,7 @@ void TabbedButtonBar::updateTabPositions (bool animate)
 
         for (int i = 0; i < tabs.size(); ++i)
         {
-            auto* tb = tabs.getUnchecked(i)->button.get();
+            auto* tb = tabs.getUnchecked (i)->button.get();
             auto newLength = totalLength + tb->getBestTabLength (depth);
 
             if (i > 0 && newLength * minimumScale > tabsButtonPos)
@@ -557,7 +557,7 @@ void TabbedButtonBar::showExtraItemsMenu()
 
     for (int i = 0; i < tabs.size(); ++i)
     {
-        auto* tab = tabs.getUnchecked(i);
+        auto* tab = tabs.getUnchecked (i);
 
         if (! tab->button->isVisible())
             m.addItem (PopupMenu::Item (tab->name)
@@ -573,5 +573,11 @@ void TabbedButtonBar::showExtraItemsMenu()
 //==============================================================================
 void TabbedButtonBar::currentTabChanged (int, const String&) {}
 void TabbedButtonBar::popupMenuClickOnTab (int, const String&) {}
+
+//==============================================================================
+std::unique_ptr<AccessibilityHandler> TabbedButtonBar::createAccessibilityHandler()
+{
+    return std::make_unique<AccessibilityHandler> (*this, AccessibilityRole::group);
+}
 
 } // namespace juce

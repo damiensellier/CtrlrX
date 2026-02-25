@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -31,7 +31,7 @@
 
  dependencies:     juce_core, juce_data_structures, juce_events, juce_graphics,
                    juce_gui_basics
- exporters:        xcode_mac, vs2019, linux_make, androidstudio, xcode_iphone
+ exporters:        xcode_mac, vs2022, linux_make, androidstudio, xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -49,9 +49,9 @@
 #include "../Assets/DemoUtilities.h"
 
 //==============================================================================
-class FontsDemo  : public Component,
-                   private ListBoxModel,
-                   private Slider::Listener
+class FontsDemo final : public Component,
+                        private ListBoxModel,
+                        private Slider::Listener
 {
 public:
     FontsDemo()
@@ -94,6 +94,7 @@ public:
 
         Font::findFonts (fonts);   // Generate the list of fonts
 
+        listBox.setTitle ("Fonts");
         listBox.setRowHeight (20);
         listBox.setModel (this);   // Tell the listbox where to get its data model
         listBox.setColour (ListBox::textColourId, Colours::black);
@@ -218,10 +219,15 @@ public:
         AttributedString s;
         s.setWordWrap (AttributedString::none);
         s.setJustification (Justification::centredLeft);
-        s.append (font.getTypefaceName(), font.withHeight ((float) height * 0.7f), Colours::black);
+        s.append (getNameForRow (rowNumber), font.withHeight ((float) height * 0.7f), Colours::black);
         s.append ("   " + font.getTypefaceName(), Font ((float) height * 0.5f, Font::italic), Colours::grey);
 
         s.draw (g, Rectangle<int> (width, height).expanded (-4, 50).toFloat());
+    }
+
+    String getNameForRow (int rowNumber) override
+    {
+        return fonts[rowNumber].getTypefaceName();
     }
 
     void selectedRowsChanged (int /*lastRowselected*/) override

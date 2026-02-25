@@ -22,27 +22,29 @@
 namespace Steinberg {
 
 //------------------------------------------------------------------------
-/**  Basic interface to a Plug-in component.
+/**  Basic interface to a plug-in component: IPluginBase
 \ingroup pluginBase
 - [plug imp]
-- initialize/terminate the Plug-in component
+- initialize/terminate the plug-in component
 
-The host uses this interface to initialize and to terminate the Plug-in component.
+The host uses this interface to initialize and to terminate the plug-in component.
 The context that is passed to the initialize method contains any interface to the
-host that the Plug-in will need to work. These interfaces can vary from category to category.
+host that the plug-in will need to work. These interfaces can vary from category to category.
 A list of supported host context interfaces should be included in the documentation
-of a specific category. */
-//------------------------------------------------------------------------
+of a specific category. 
+*/
 class IPluginBase: public FUnknown
 {
 public:
 //------------------------------------------------------------------------
-	/** The host passes a number of interfaces as context to initialize the Plug-in class.
-		@note Extensive memory allocations etc. should be performed in this method rather than in the class' constructor!
-		If the method does NOT return kResultOk, the object is released immediately. In this case terminate is not called! */
+	/** The host passes a number of interfaces as context to initialize the plug-in class.
+		\param context, passed by the host, is mandatory and should implement IHostApplication
+		@note Extensive memory allocations etc. should be performed in this method rather than in
+	   the class' constructor! If the method does NOT return kResultOk, the object is released
+	   immediately. In this case terminate is not called! */
 	virtual tresult PLUGIN_API initialize (FUnknown* context) = 0;
 
-	/** This function is called before the Plug-in is unloaded and can be used for
+	/** This function is called before the plug-in is unloaded and can be used for
 	    cleanups. You have to release all references to any host application interfaces. */
 	virtual tresult PLUGIN_API terminate () = 0;
 
@@ -54,20 +56,31 @@ DECLARE_CLASS_IID (IPluginBase, 0x22888DDB, 0x156E45AE, 0x8358B348, 0x08190625)
 
 
 //------------------------------------------------------------------------
-/** Basic Information about the class factory of the Plug-in.
+/** Basic Information about the class factory of the plug-in.
 \ingroup pluginBase
 */
-//------------------------------------------------------------------------
 struct PFactoryInfo
 {
 //------------------------------------------------------------------------
 	enum FactoryFlags
 	{
-		kNoFlags					= 0,		///< Nothing
-		kClassesDiscardable			= 1 << 0,	///< The number of exported classes can change each time the Module is loaded. If this flag is set, the host does not cache class information. This leads to a longer startup time because the host always has to load the Module to get the current class information.
-		kLicenseCheck				= 1 << 1,	///< Class IDs of components are interpreted as Syncrosoft-License (LICENCE_UID). Loaded in a Steinberg host, the module will not be loaded when the license is not valid
-		kComponentNonDiscardable	= 1 << 3,	///< Component won't be unloaded until process exit
-		kUnicode                    = 1 << 4    ///< Components have entirely unicode encoded strings. (True for VST 3 Plug-ins so far)
+		/** Nothing */
+		kNoFlags = 0,
+
+		/** The number of exported classes can change each time the Module is loaded. If this flag
+		   is set, the host does not cache class information. This leads to a longer startup time
+		   because the host always has to load the Module to get the current class information. */
+		kClassesDiscardable = 1 << 0,
+
+		/** This flag is deprecated, do not use anymore, resp. it will get ignored from
+		   Cubase/Nuendo 12 and later. */
+		kLicenseCheck = 1 << 1,
+
+		/** Component will not be unloaded until process exit */
+		kComponentNonDiscardable = 1 << 3,
+
+		/** Components have entirely unicode encoded strings (True for VST 3 plug-ins so far). */
+		kUnicode = 1 << 4
 	};
 
 	enum
@@ -78,12 +91,16 @@ struct PFactoryInfo
 	};
 
 //------------------------------------------------------------------------
-	char8 vendor[kNameSize];		///< e.g. "Steinberg Media Technologies"
-	char8 url[kURLSize];			///< e.g. "http://www.steinberg.de"
-	char8 email[kEmailSize];		///< e.g. "info@steinberg.de"
-	int32 flags;				///< (see above)
+	char8 vendor[kNameSize];	///< e.g. "Steinberg Media Technologies"
+	char8 url[kURLSize];		///< e.g. "http://www.steinberg.de"
+	char8 email[kEmailSize];	///< e.g. "info@steinberg.de"
+	int32 flags;				///< (see FactoryFlags above)
 //------------------------------------------------------------------------
-	PFactoryInfo (const char8* _vendor, const char8* _url, const char8* _email, int32 _flags)
+	SMTG_CONSTEXPR14 PFactoryInfo (const char8* _vendor, const char8* _url, const char8* _email,
+	                               int32 _flags)
+#if SMTG_CPP14
+	: vendor (), url (), email (), flags ()
+#endif
 	{
 		strncpy8 (vendor, _vendor, kNameSize);
 		strncpy8 (url, _url, kURLSize);
@@ -101,10 +118,9 @@ struct PFactoryInfo
 };
 
 //------------------------------------------------------------------------
-/**  Basic Information about a class provided by the Plug-in.
+/**  Basic Information about a class provided by the plug-in.
 \ingroup pluginBase
 */
-//------------------------------------------------------------------------
 struct PClassInfo
 {
 //------------------------------------------------------------------------
@@ -119,16 +135,32 @@ struct PClassInfo
 		kNameSize = 64
 	};
 //------------------------------------------------------------------------
-	TUID cid;                       ///< Class ID 16 Byte class GUID
-	int32 cardinality;              ///< cardinality of the class, set to kManyInstances (see \ref ClassCardinality)
-	char8 category[kCategorySize];  ///< class category, host uses this to categorize interfaces
-	char8 name[kNameSize];          ///< class name, visible to the user
+	/** Class ID 16 Byte class GUID */
+	TUID cid;
+
+	/** Cardinality of the class, set to kManyInstances (see \ref PClassInfo::ClassCardinality) */
+	int32 cardinality;
+
+	/** Class category, host uses this to categorize interfaces */
+	char8 category[kCategorySize];
+
+	/** Class name, visible to the user */
+	char8 name[kNameSize];
+
 //------------------------------------------------------------------------
 
-	PClassInfo (const TUID _cid, int32 _cardinality, const char8* _category, const char8* _name)
+	SMTG_CONSTEXPR14 PClassInfo (const TUID _cid, int32 _cardinality, const char8* _category,
+	                             const char8* _name)
+#if SMTG_CPP14
+	: cid (), cardinality (), category (), name ()
+#endif
 	{
+#if SMTG_CPP14
+		copyTUID (cid, _cid);
+#else
 		memset (this, 0, sizeof (PClassInfo));
 		memcpy (cid, _cid, sizeof (TUID));
+#endif
 		if (_category)
 			strncpy8 (category, _category, kCategorySize);
 		if (_name)
@@ -142,32 +174,31 @@ struct PClassInfo
 #endif
 };
 
-
 //------------------------------------------------------------------------
 //  IPluginFactory interface declaration
 //------------------------------------------------------------------------
-/**	Class factory that any Plug-in defines for creating class instances.
+/**	Class factory that any plug-in defines for creating class instances: IPluginFactory
 \ingroup pluginBase
 - [plug imp]
 
-From the host's point of view a Plug-in module is a factory which can create
+From the host's point of view a plug-in module is a factory which can create
 a certain kind of object(s). The interface IPluginFactory provides methods
-to get information about the classes exported by the Plug-in and a
+to get information about the classes exported by the plug-in and a
 mechanism to create instances of these classes (that usually define the IPluginBase interface).
 
 <b> An implementation is provided in public.sdk/source/common/pluginfactory.cpp </b>
 \see GetPluginFactory
 */
-//------------------------------------------------------------------------
 class IPluginFactory : public FUnknown
 {
 public:
 //------------------------------------------------------------------------
-	/** Fill a PFactoryInfo structure with information about the Plug-in vendor. */
+	/** Fill a PFactoryInfo structure with information about the plug-in vendor. */
 	virtual tresult PLUGIN_API getFactoryInfo (PFactoryInfo* info) = 0;
 
-	/** Returns the number of exported classes by this factory.
-	If you are using the CPluginFactory implementation provided by the SDK, it returns the number of classes you registered with CPluginFactory::registerClass. */
+	/** Returns the number of exported classes by this factory. If you are using the CPluginFactory
+	 * implementation provided by the SDK, it returns the number of classes you registered with
+	 * CPluginFactory::registerClass. */
 	virtual int32 PLUGIN_API countClasses () = 0;
 
 	/** Fill a PClassInfo structure with information about the class at the specified index. */
@@ -184,17 +215,23 @@ DECLARE_CLASS_IID (IPluginFactory, 0x7A4D811C, 0x52114A1F, 0xAED9D2EE, 0x0B43BF9
 
 
 //------------------------------------------------------------------------
-/**  Version 2 of Basic Information about a class provided by the Plug-in.
+/**  Version 2 of Basic Information about a class provided by the plug-in.
 \ingroup pluginBase
 */
-//------------------------------------------------------------------------
 struct PClassInfo2
 {
 //------------------------------------------------------------------------
-	TUID cid;									///< Class ID 16 Byte class GUID
-	int32 cardinality;							///< cardinality of the class, set to kManyInstances (see \ref ClassCardinality)
-	char8 category[PClassInfo::kCategorySize];	///< class category, host uses this to categorize interfaces
-	char8 name[PClassInfo::kNameSize];			///< class name, visible to the user
+	/** Class ID 16 Byte class GUID */
+	TUID cid;
+
+	/** Cardinality of the class, set to kManyInstances (see \ref PClassInfo::ClassCardinality) */
+	int32 cardinality;
+
+	/** Class category, host uses this to categorize interfaces */
+	char8 category[PClassInfo::kCategorySize];
+
+	/** Class name, visible to the user */
+	char8 name[PClassInfo::kNameSize];
 
 	enum {
 		kVendorSize = 64,
@@ -202,20 +239,44 @@ struct PClassInfo2
 		kSubCategoriesSize = 128
 	};
 
-	uint32 classFlags;				///< flags used for a specific category, must be defined where category is defined
-	char8 subCategories[kSubCategoriesSize];	///< module specific subcategories, can be more than one, logically added by the \c OR operator
-	char8 vendor[kVendorSize];		///< overwrite vendor information from factory info
-	char8 version[kVersionSize];	///< Version string (e.g. "1.0.0.512" with Major.Minor.Subversion.Build)
-	char8 sdkVersion[kVersionSize];	///< SDK version used to build this class (e.g. "VST 3.0")
+	/** flags used for a specific category, must be defined where category is defined */
+	uint32 classFlags;
 
+	/** module specific subcategories, can be more than one, logically added by the OR operator */
+	char8 subCategories[kSubCategoriesSize];
+	
+	/** overwrite vendor information from factory info */
+	char8 vendor[kVendorSize];
+
+	/** Version string (e.g. "1.0.0.512" with Major.Minor.Subversion.Build) */
+	char8 version[kVersionSize];
+
+	/** SDK version used to build this class (e.g. "VST 3.0") */
+	char8 sdkVersion[kVersionSize];
 //------------------------------------------------------------------------
 
-	PClassInfo2 (const TUID _cid, int32 _cardinality, const char8* _category, const char8* _name,
-		int32 _classFlags, const char8* _subCategories, const char8* _vendor, const char8* _version,
-		const char8* _sdkVersion)
+	SMTG_CONSTEXPR14 PClassInfo2 (const TUID _cid, int32 _cardinality, const char8* _category,
+	                              const char8* _name, int32 _classFlags,
+	                              const char8* _subCategories, const char8* _vendor,
+	                              const char8* _version, const char8* _sdkVersion)
+#if SMTG_CPP14
+	: cid ()
+	, cardinality ()
+	, category ()
+	, name ()
+	, classFlags ()
+	, subCategories ()
+	, vendor ()
+	, version ()
+	, sdkVersion ()
+#endif
 	{
+#if SMTG_CPP14
+		copyTUID (cid, _cid);
+#else
 		memset (this, 0, sizeof (PClassInfo2));
 		memcpy (cid, _cid, sizeof (TUID));
+#endif
 		cardinality = _cardinality;
 		if (_category)
 			strncpy8 (category, _category, PClassInfo::kCategorySize);
@@ -252,11 +313,10 @@ struct PClassInfo2
 //------------------------------------------------------------------------
 //  IPluginFactory2 interface declaration
 //------------------------------------------------------------------------
-/**	Version 2 of class factory supporting PClassInfo2.
+/**	Version 2 of class factory supporting PClassInfo2: IPluginFactory2
 \ingroup pluginBase
 \copydoc IPluginFactory
 */
-//------------------------------------------------------------------------
 class IPluginFactory2 : public IPluginFactory
 {
 public:
@@ -271,8 +331,8 @@ DECLARE_CLASS_IID (IPluginFactory2, 0x0007B650, 0xF24B4C0B, 0xA464EDB9, 0xF00B2A
 
 
 //------------------------------------------------------------------------
-/** Unicode Version of Basic Information about a class provided by the Plug-in */
-//------------------------------------------------------------------------
+/** Unicode Version of Basic Information about a class provided by the plug-in
+*/
 struct PClassInfoW
 {
 //------------------------------------------------------------------------
@@ -287,19 +347,44 @@ struct PClassInfoW
 		kSubCategoriesSize = 128
 	};
 
-	uint32 classFlags;					///< flags used for a specific category, must be defined where category is defined
-	char8 subCategories[kSubCategoriesSize];///< module specific subcategories, can be more than one, logically added by the \c OR operator
-	char16 vendor[kVendorSize];			///< overwrite vendor information from factory info
-	char16 version[kVersionSize];		///< Version string (e.g. "1.0.0.512" with Major.Minor.Subversion.Build)
-	char16 sdkVersion[kVersionSize];	///< SDK version used to build this class (e.g. "VST 3.0")
+	/** flags used for a specific category, must be defined where category is defined */
+	uint32 classFlags;
+
+	/** module specific subcategories, can be more than one, logically added by the OR operator */
+	char8 subCategories[kSubCategoriesSize];
+	
+	/** overwrite vendor information from factory info */
+	char16 vendor[kVendorSize];
+	
+	/** Version string (e.g. "1.0.0.512" with Major.Minor.Subversion.Build) */
+	char16 version[kVersionSize];
+	
+	/** SDK version used to build this class (e.g. "VST 3.0") */
+	char16 sdkVersion[kVersionSize];
 
 //------------------------------------------------------------------------
-	PClassInfoW (const TUID _cid, int32 _cardinality, const char8* _category, const char16* _name,
-		int32 _classFlags, const char8* _subCategories, const char16* _vendor, const char16* _version,
-		const char16* _sdkVersion)
+	SMTG_CONSTEXPR14 PClassInfoW (const TUID _cid, int32 _cardinality, const char8* _category,
+	                              const char16* _name, int32 _classFlags,
+	                              const char8* _subCategories, const char16* _vendor,
+	                              const char16* _version, const char16* _sdkVersion)
+#if SMTG_CPP14
+	: cid ()
+	, cardinality ()
+	, category ()
+	, name ()
+	, classFlags ()
+	, subCategories ()
+	, vendor ()
+	, version ()
+	, sdkVersion ()
+#endif
 	{
+#if SMTG_CPP14
+		copyTUID (cid, _cid);
+#else
 		memset (this, 0, sizeof (PClassInfoW));
 		memcpy (cid, _cid, sizeof (TUID));
+#endif
 		cardinality = _cardinality;
 		if (_category)
 			strncpy8 (category, _category, PClassInfo::kCategorySize);
@@ -332,9 +417,13 @@ struct PClassInfoW
 	PClassInfoW () { memset (this, 0, sizeof (PClassInfoW)); }
 #endif
 
-	void fromAscii (const PClassInfo2& ci2)
+	SMTG_CONSTEXPR14 void fromAscii (const PClassInfo2& ci2)
 	{
+#if SMTG_CPP14
+		copyTUID (cid, ci2.cid);
+#else
 		memcpy (cid, ci2.cid, sizeof (TUID));
+#endif
 		cardinality = ci2.cardinality;
 		strncpy8 (category, ci2.category, PClassInfo::kCategorySize);
 		str8ToStr16 (name, ci2.name, PClassInfo::kNameSize);
@@ -347,15 +436,13 @@ struct PClassInfoW
 	}
 };
 
-
 //------------------------------------------------------------------------
 //  IPluginFactory3 interface declaration
 //------------------------------------------------------------------------
-/**	Version 3 of class factory supporting PClassInfoW.
+/**	Version 3 of class factory supporting PClassInfoW: IPluginFactory3
 \ingroup pluginBase
 \copydoc IPluginFactory
 */
-//------------------------------------------------------------------------
 class IPluginFactory3 : public IPluginFactory2
 {
 public:
@@ -373,7 +460,6 @@ DECLARE_CLASS_IID (IPluginFactory3, 0x4555A2AB, 0xC1234E57, 0x9B122910, 0x368789
 //------------------------------------------------------------------------
 } // namespace Steinberg
 
-
 //------------------------------------------------------------------------
 #define LICENCE_UID(l1, l2, l3, l4) \
 { \
@@ -387,50 +473,48 @@ DECLARE_CLASS_IID (IPluginFactory3, 0x4555A2AB, 0xC1234E57, 0x9B122910, 0x368789
 	(int8)((l4 & 0x0000FF00) >>  8), (int8)((l4 & 0x000000FF)      )  \
 }
 
-
 //------------------------------------------------------------------------
 // GetPluginFactory
 //------------------------------------------------------------------------
 /**  Plug-in entry point.
 \ingroup pluginBase
-Any Plug-in must define and export this function. \n
+Any plug-in must define and export this function. \n
 A typical implementation of GetPluginFactory looks like this
-						\code
-	IPluginFactory* PLUGIN_API GetPluginFactory ()
+\code{.cpp}
+SMTG_EXPORT_SYMBOL IPluginFactory* PLUGIN_API GetPluginFactory ()
+{
+	if (!gPluginFactory)
 	{
-		if (!gPluginFactory)
+		static PFactoryInfo factoryInfo =
 		{
-			static PFactoryInfo factoryInfo =
-			{
-				"My Company Name",
-				"http://www.mywebpage.com",
-				"mailto:myemail@address.com",
-				PFactoryInfo::kNoFlags
-			};
+			"My Company Name",
+			"http://www.mywebpage.com",
+			"mailto:myemail@address.com",
+			PFactoryInfo::kNoFlags
+		};
 
-			gPluginFactory = new CPluginFactory (factoryInfo);
+		gPluginFactory = new CPluginFactory (factoryInfo);
 
-			static PClassInfo componentClass =
-			{
-				INLINE_UID (0x00000000, 0x00000000, 0x00000000, 0x00000000), // replace by a valid uid
-				1,
-				"Service",    // category
-				"Name"
-			};
+		static PClassInfo componentClass =
+		{
+			INLINE_UID (0x00000000, 0x00000000, 0x00000000, 0x00000000), // replace by a valid uid
+			1,
+			"Service",    // category
+			"Name"
+		};
 
-			gPluginFactory->registerClass (&componentClass, MyComponentClass::newInstance);
-		}
-		else
-			gPluginFactory->addRef ();
-
-		return gPluginFactory;
+		gPluginFactory->registerClass (&componentClass, MyComponentClass::newInstance);
 	}
-					\endcode
+	else
+		gPluginFactory->addRef ();
+
+	return gPluginFactory;
+}
+\endcode
 \see \ref loadPlugin
 */
-//------------------------------------------------------------------------
 extern "C"
 {
-	Steinberg::IPluginFactory* PLUGIN_API GetPluginFactory ();
+	SMTG_EXPORT_SYMBOL Steinberg::IPluginFactory* PLUGIN_API GetPluginFactory ();
 	typedef Steinberg::IPluginFactory* (PLUGIN_API *GetFactoryProc) ();
 }

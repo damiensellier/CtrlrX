@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -181,7 +181,7 @@ private:
         virtual bool parseServerResponse (const String&, LicenseState&) = 0;
     };
 
-    struct UserLogin  : public AccountEnquiryBase
+    struct UserLogin final : public AccountEnquiryBase
     {
         UserLogin (const String& e, const String& p)
             : userEmail (e), userPassword (p)
@@ -230,7 +230,7 @@ private:
         String userEmail, userPassword;
     };
 
-    struct UserLicenseQuery  : public AccountEnquiryBase
+    struct UserLicenseQuery final : public AccountEnquiryBase
     {
         UserLicenseQuery (const String& authToken)
             : userAuthToken (authToken)
@@ -363,7 +363,7 @@ private:
     }
 
     //==============================================================================
-    ThreadPool jobPool { 1 };
+    ThreadPool jobPool { ThreadPoolOptions{}.withNumberOfThreads (1) };
 
     //==============================================================================
     JUCE_DECLARE_WEAK_REFERENCEABLE (LicenseQueryThread)

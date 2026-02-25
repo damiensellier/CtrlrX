@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -23,41 +23,58 @@
   ==============================================================================
 */
 
-// Wow, those Steinberg guys really don't worry too much about compiler warnings.
-JUCE_BEGIN_IGNORE_WARNINGS_LEVEL_MSVC (0, 4505 4702)
+#pragma once
 
-JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wnon-virtual-dtor",
-                                     "-Wreorder",
-                                     "-Wunsequenced",
-                                     "-Wint-to-pointer-cast",
-                                     "-Wunused-parameter",
-                                     "-Wconversion",
-                                     "-Woverloaded-virtual",
-                                     "-Wshadow",
-                                     "-Wdeprecated-register",
-                                     "-Wunused-function",
-                                     "-Wsign-conversion",
-                                     "-Wsign-compare",
-                                     "-Wdelete-non-virtual-dtor",
-                                     "-Wdeprecated-declarations",
-                                     "-Wextra-semi",
-                                     "-Wmissing-braces",
-                                     "-Wswitch-default",
-                                     "-Wshadow-field",
-                                     "-Wpragma-pack",
-                                     "-Wcomma",
-                                     "-Wzero-as-null-pointer-constant",
-                                     "-Winconsistent-missing-destructor-override",
+#if JUCE_BSD && ! JUCE_CUSTOM_VST3_SDK
+ #error To build JUCE VST3 plug-ins on BSD you must use an external BSD-compatible VST3 SDK with JUCE_CUSTOM_VST3_SDK=1
+#endif
+
+// Wow, those Steinberg guys really don't worry too much about compiler warnings.
+JUCE_BEGIN_IGNORE_WARNINGS_LEVEL_MSVC (0, 4505 4702 6011 6031 6221 6386 6387 6330 6001 28199)
+
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-W#warnings",
                                      "-Wcast-align",
-                                     "-Wignored-qualifiers",
-                                     "-Wmissing-field-initializers",
-                                     "-Wformat=",
-                                     "-Wformat",
-                                     "-Wpedantic",
-                                     "-Wextra",
                                      "-Wclass-memaccess",
+                                     "-Wcomma",
+                                     "-Wconversion",
+                                     "-Wcpp",
+                                     "-Wdelete-non-virtual-dtor",
+                                     "-Wdeprecated",
+                                     "-Wdeprecated-copy-dtor",
+                                     "-Wdeprecated-declarations",
+                                     "-Wdeprecated-register",
+                                     "-Wextra",
+                                     "-Wextra-semi",
+                                     "-Wfloat-equal",
+                                     "-Wformat",
+                                     "-Wformat-truncation=",
+                                     "-Wformat=",
+                                     "-Wignored-qualifiers",
+                                     "-Winconsistent-missing-destructor-override",
+                                     "-Wint-to-pointer-cast",
+                                     "-Wlogical-op-parentheses",
+                                     "-Wmaybe-uninitialized",
+                                     "-Wmissing-braces",
+                                     "-Wmissing-field-initializers",
                                      "-Wmissing-prototypes",
-                                     "-Wtype-limits")
+                                     "-Wnon-virtual-dtor",
+                                     "-Woverloaded-virtual",
+                                     "-Wparentheses",
+                                     "-Wpedantic",
+                                     "-Wpragma-pack",
+                                     "-Wredundant-decls",
+                                     "-Wreorder",
+                                     "-Wshadow",
+                                     "-Wshadow-field",
+                                     "-Wsign-compare",
+                                     "-Wsign-conversion",
+                                     "-Wswitch-default",
+                                     "-Wtype-limits",
+                                     "-Wunsequenced",
+                                     "-Wunused-but-set-variable",
+                                     "-Wunused-function",
+                                     "-Wunused-parameter",
+                                     "-Wzero-as-null-pointer-constant")
 
 #undef DEVELOPMENT
 #define DEVELOPMENT 0  // This avoids a Clang warning in Steinberg code about unused values
@@ -75,6 +92,7 @@ JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wnon-virtual-dtor",
  #include <pluginterfaces/base/conststringtable.h>
  #include <pluginterfaces/base/funknown.h>
  #include <pluginterfaces/base/ipluginbase.h>
+ #include <pluginterfaces/base/iplugincompatibility.h>
  #include <pluginterfaces/base/ustring.h>
  #include <pluginterfaces/gui/iplugview.h>
  #include <pluginterfaces/gui/iplugviewcontentscalesupport.h>
@@ -95,11 +113,18 @@ JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wnon-virtual-dtor",
  #include <pluginterfaces/vst/ivstmidicontrollers.h>
  #include <pluginterfaces/vst/ivstchannelcontextinfo.h>
  #include <public.sdk/source/common/memorystream.h>
+ #include <public.sdk/source/vst/utility/uid.h>
  #include <public.sdk/source/vst/vsteditcontroller.h>
  #include <public.sdk/source/vst/vstpresetfile.h>
+
+ #include "pslextensions/ipslviewembedding.h"
 #else
  // needed for VST_VERSION
  #include <pluginterfaces/vst/vsttypes.h>
+
+ #ifndef NOMINMAX
+  #define NOMINMAX // Some of the steinberg sources don't set this before including windows.h
+ #endif
 
  #include <base/source/baseiids.cpp>
  #include <base/source/fbuffer.cpp>
@@ -108,12 +133,25 @@ JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wnon-virtual-dtor",
  #include <base/source/fstreamer.cpp>
  #include <base/source/fstring.cpp>
 
+ // The following shouldn't leak from fstring.cpp
+ #undef stricmp
+ #undef strnicmp
+ #undef snprintf
+ #undef vsnprintf
+ #undef snwprintf
+ #undef vsnwprintf
+
  #if VST_VERSION >= 0x030608
   #include <base/thread/source/flock.cpp>
   #include <pluginterfaces/base/coreiids.cpp>
  #else
   #include <base/source/flock.cpp>
  #endif
+
+#pragma push_macro ("True")
+#undef True
+#pragma push_macro ("False")
+#undef False
 
  #include <base/source/updatehandler.cpp>
  #include <pluginterfaces/base/conststringtable.cpp>
@@ -122,22 +160,30 @@ JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wnon-virtual-dtor",
  #include <pluginterfaces/base/ustring.cpp>
  #include <pluginterfaces/gui/iplugview.h>
  #include <pluginterfaces/gui/iplugviewcontentscalesupport.h>
- #include <pluginterfaces/vst/ivstmidicontrollers.h>
  #include <pluginterfaces/vst/ivstchannelcontextinfo.h>
+ #include <pluginterfaces/vst/ivstmidicontrollers.h>
  #include <public.sdk/source/common/memorystream.cpp>
  #include <public.sdk/source/common/pluginview.cpp>
- #include <public.sdk/source/vst/vsteditcontroller.cpp>
+ #include <public.sdk/source/vst/hosting/hostclasses.cpp>
+ #include <public.sdk/source/vst/moduleinfo/moduleinfoparser.cpp>
+ #include <public.sdk/source/vst/utility/stringconvert.cpp>
+ #include <public.sdk/source/vst/utility/uid.h>
  #include <public.sdk/source/vst/vstbus.cpp>
- #include <public.sdk/source/vst/vstinitiids.cpp>
  #include <public.sdk/source/vst/vstcomponent.cpp>
  #include <public.sdk/source/vst/vstcomponentbase.cpp>
+ #include <public.sdk/source/vst/vsteditcontroller.cpp>
+ #include <public.sdk/source/vst/vstinitiids.cpp>
  #include <public.sdk/source/vst/vstparameters.cpp>
  #include <public.sdk/source/vst/vstpresetfile.cpp>
- #include <public.sdk/source/vst/hosting/hostclasses.cpp>
+
+#pragma pop_macro ("True")
+#pragma pop_macro ("False")
 
  #if VST_VERSION >= 0x03060c   // 3.6.12
   #include <public.sdk/source/vst/hosting/pluginterfacesupport.cpp>
  #endif
+
+ #include "pslextensions/ipslviewembedding.h"
 
 //==============================================================================
 namespace Steinberg
@@ -156,10 +202,17 @@ namespace Steinberg
     DEF_CLASS_IID (IPlugFrame)
     DEF_CLASS_IID (IPlugViewContentScaleSupport)
 
-   #if JUCE_LINUX
+   #if JUCE_LINUX || JUCE_BSD
     DEF_CLASS_IID (Linux::IRunLoop)
+    DEF_CLASS_IID (Linux::IEventHandler)
    #endif
 }
+
+namespace Presonus
+{
+    DEF_CLASS_IID (IPlugInViewEmbedding)
+}
+
 #endif // JUCE_VST3HEADERS_INCLUDE_HEADERS_ONLY
 
 JUCE_END_IGNORE_WARNINGS_MSVC
@@ -212,3 +265,7 @@ JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 #undef DEF_CLASS2
 #undef DEF_CLASS_W
 #undef END_FACTORY
+
+#ifdef atomic_thread_fence
+ #undef atomic_thread_fence
+#endif

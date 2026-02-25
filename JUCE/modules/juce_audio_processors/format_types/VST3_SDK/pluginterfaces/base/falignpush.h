@@ -16,18 +16,20 @@
 
 //----------------------------------------------------------------------------------------------
 #if SMTG_OS_MACOS
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wunknown-warning-option"
+	#pragma GCC diagnostic ignored "-Wunknown-warning-option"
 	#pragma GCC diagnostic ignored "-Wpragma-pack"
 	#if SMTG_PLATFORM_64
 		#pragma pack(push, 16)
 	#else
 		#pragma pack(push, 1)
 	#endif
-	#pragma GCC diagnostic pop
 #elif defined __BORLANDC__
 	#pragma -a8
 #elif SMTG_OS_WINDOWS
+	//! @brief warning C4103: alignment changed after including header, may be due to missing #pragma pack(pop)
+	#ifdef _MSC_VER
+		#pragma warning(disable : 4103)
+	#endif
 	#pragma pack(push)
 	#if SMTG_PLATFORM_64
 		#pragma pack(16)

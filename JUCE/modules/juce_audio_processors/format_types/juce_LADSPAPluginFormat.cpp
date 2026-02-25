@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -23,7 +23,7 @@
   ==============================================================================
 */
 
-#if JUCE_PLUGINHOST_LADSPA && JUCE_LINUX
+#if JUCE_PLUGINHOST_LADSPA && (JUCE_LINUX || JUCE_BSD)
 
 #include <ladspa.h>
 
@@ -42,7 +42,7 @@ static int insideLADSPACallback = 0;
 #endif
 
 //==============================================================================
-class LADSPAModuleHandle    : public ReferenceCountedObject
+class LADSPAModuleHandle final : public ReferenceCountedObject
 {
 public:
     LADSPAModuleHandle (const File& f)
@@ -69,7 +69,7 @@ public:
     {
         for (auto i = getActiveModules().size(); --i >= 0;)
         {
-            auto* module = getActiveModules().getUnchecked(i);
+            auto* module = getActiveModules().getUnchecked (i);
 
             if (module->file == file)
                 return module;
@@ -113,7 +113,7 @@ private:
 };
 
 //==============================================================================
-class LADSPAPluginInstance     : public AudioPluginInstance
+class LADSPAPluginInstance final    : public AudioPluginInstance
 {
 public:
     LADSPAPluginInstance (const LADSPAModuleHandle::Ptr& m)
@@ -157,8 +157,8 @@ public:
 
         jassert (insideLADSPACallback == 0);
 
-        if (handle != nullptr && plugin != nullptr && plugin->cleanup != nullptr)
-            plugin->cleanup (handle);
+        if (handle != nullptr && plugin != nullptr)
+            NullCheckedInvocation::invoke (plugin->cleanup, handle);
 
         initialised = false;
         module = nullptr;
@@ -197,7 +197,7 @@ public:
             }
         }
 
-        setParameterTree (std::move (newTree));
+        setHostedParameterTree (std::move (newTree));
 
         for (auto* param : getParameters())
             if (auto* ladspaParam = dynamic_cast<LADSPAParameter*> (param))
@@ -209,8 +209,8 @@ public:
         setLatencySamples (0);
 
         // Some plugins crash if this doesn't happen:
-        if (plugin->activate   != nullptr)   plugin->activate (handle);
-        if (plugin->deactivate != nullptr)   plugin->deactivate (handle);
+        NullCheckedInvocation::invoke (plugin->activate, handle);
+        NullCheckedInvocation::invoke (plugin->deactivate, handle);
     }
 
     //==============================================================================
@@ -220,7 +220,7 @@ public:
     {
         desc.name = getName();
         desc.fileOrIdentifier = module->file.getFullPathName();
-        desc.uid = getUID();
+        desc.uniqueId = desc.deprecatedUid = getUID();
         desc.lastFileModTime = module->file.getLastModificationTime();
         desc.lastInfoUpdateTime = Time::getCurrentTime();
         desc.pluginFormatName = "LADSPA";
@@ -275,15 +275,14 @@ public:
                 firstParam->setValue (old);
             }
 
-            if (plugin->activate != nullptr)
-                plugin->activate (handle);
+            NullCheckedInvocation::invoke (plugin->activate, handle);
         }
     }
 
     void releaseResources() override
     {
         if (handle != nullptr && plugin->deactivate != nullptr)
-            plugin->deactivate (handle);
+            NullCheckedInvocation::invoke (plugin->deactivate, handle);
 
         tempBuffer.setSize (1, 1);
     }
@@ -301,7 +300,7 @@ public:
             if (plugin->run != nullptr)
             {
                 for (int i = 0; i < outputs.size(); ++i)
-                    plugin->connect_port (handle, (size_t) outputs.getUnchecked(i),
+                    plugin->connect_port (handle, (size_t) outputs.getUnchecked (i),
                                           i < buffer.getNumChannels() ? buffer.getWritePointer (i) : nullptr);
 
                 plugin->run (handle, (size_t) numSamples);
@@ -314,7 +313,7 @@ public:
                 tempBuffer.clear();
 
                 for (int i = 0; i < outputs.size(); ++i)
-                    plugin->connect_port (handle, (size_t) outputs.getUnchecked(i), tempBuffer.getWritePointer (i));
+                    plugin->connect_port (handle, (size_t) outputs.getUnchecked (i), tempBuffer.getWritePointer (i));
 
                 plugin->run_adding (handle, (size_t) numSamples);
 
@@ -384,10 +383,8 @@ public:
     void getCurrentProgramStateInformation (MemoryBlock& destData) override               { getStateInformation (destData); }
     void setCurrentProgramStateInformation (const void* data, int sizeInBytes) override   { setStateInformation (data, sizeInBytes); }
 
-    void setStateInformation (const void* data, int sizeInBytes) override
+    void setStateInformation (const void* data, [[maybe_unused]] int sizeInBytes) override
     {
-        ignoreUnused (sizeInBytes);
-
         auto* p = static_cast<const float*> (data);
 
         for (int i = 0; i < getParameters().size(); ++i)
@@ -459,7 +456,7 @@ private:
             {
                 const ScopedLock sl (pluginInstance.lock);
 
-                if (paramValue.unscaled != newValue)
+                if (! approximatelyEqual (paramValue.unscaled, newValue))
                     paramValue = ParameterValue (getNewParamScaled (interface->PortRangeHints [paramID], newValue), newValue);
             }
         }
@@ -515,6 +512,11 @@ private:
         String getLabel() const override                               { return {}; }
 
         bool isAutomatable() const override                            { return automatable; }
+
+        String getParameterID() const override
+        {
+            return String (paramID);
+        }
 
         static float scaledValue (float low, float high, float alpha, bool useLog) noexcept
         {
@@ -583,7 +585,7 @@ void LADSPAPluginFormat::findAllTypesForFile (OwnedArray<PluginDescription>& res
 
     PluginDescription desc;
     desc.fileOrIdentifier = fileOrIdentifier;
-    desc.uid = 0;
+    desc.uniqueId = desc.deprecatedUid = 0;
 
     auto createdInstance = createInstanceFromDescription (desc, 44100.0, 512);
     auto instance = dynamic_cast<LADSPAPluginInstance*> (createdInstance.get());
@@ -600,7 +602,7 @@ void LADSPAPluginFormat::findAllTypesForFile (OwnedArray<PluginDescription>& res
         {
             if (auto* plugin = instance->module->moduleMain ((size_t) uid))
             {
-                desc.uid = uid;
+                desc.uniqueId = desc.deprecatedUid = uid;
                 desc.name = plugin->Name != nullptr ? plugin->Name : "Unknown";
 
                 if (! arrayContainsPlugin (results, desc))
@@ -631,7 +633,7 @@ void LADSPAPluginFormat::createPluginInstance (const PluginDescription& desc,
 
         if (module != nullptr)
         {
-            shellLADSPAUIDToCreate = desc.uid;
+            shellLADSPAUIDToCreate = desc.uniqueId != 0 ? desc.uniqueId : desc.deprecatedUid;
 
             result.reset (new LADSPAPluginInstance (module));
 

@@ -4,37 +4,38 @@
 // Category    : Helpers
 // Filename    : public.sdk/source/vst/hosting/hostclasses.cpp
 // Created by  : Steinberg, 03/05/2008.
-// Description : VST 3 hostclasses, example implementations for IHostApplication, IAttributeList and IMessage
+// Description : VST 3 hostclasses, example impl. for IHostApplication, IAttributeList and IMessage
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
 #include "hostclasses.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 
 #include <algorithm>
 
@@ -46,31 +47,34 @@ HostApplication::HostApplication ()
 {
 	FUNKNOWN_CTOR
 
-	mPlugInterfaceSupport = owned (NEW PlugInterfaceSupport);
+	mPlugInterfaceSupport = owned (new PlugInterfaceSupport);
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostApplication::getName (String128 name)
 {
-	String str ("My VST3 HostApplication");
-	str.copyTo16 (name, 0, 127);
-	return kResultTrue;
+	return VST3::StringConvert::convert ("My VST3 HostApplication", name) ? kResultTrue :
+	                                                                        kInternalError;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostApplication::createInstance (TUID cid, TUID _iid, void** obj)
 {
-	FUID classID (FUID::fromTUID (cid));
-	FUID interfaceID (FUID::fromTUID (_iid));
-	if (classID == IMessage::iid && interfaceID == IMessage::iid)
+	if (FUnknownPrivate::iidEqual (cid, IMessage::iid) &&
+	    FUnknownPrivate::iidEqual (_iid, IMessage::iid))
 	{
 		*obj = new HostMessage;
 		return kResultTrue;
 	}
-	else if (classID == IAttributeList::iid && interfaceID == IAttributeList::iid)
+	if (FUnknownPrivate::iidEqual (cid, IAttributeList::iid) &&
+	    FUnknownPrivate::iidEqual (_iid, IAttributeList::iid))
 	{
-		*obj = new HostAttributeList;
-		return kResultTrue;
+		if (auto al = HostAttributeList::make ())
+		{
+			*obj = al.take ();
+			return kResultTrue;
+		}
+		return kOutOfMemory;
 	}
 	*obj = nullptr;
 	return kResultFalse;
@@ -106,17 +110,12 @@ uint32 PLUGIN_API HostApplication::release ()
 //-----------------------------------------------------------------------------
 IMPLEMENT_FUNKNOWN_METHODS (HostMessage, IMessage, IMessage::iid)
 //-----------------------------------------------------------------------------
-HostMessage::HostMessage () : messageId (nullptr), attributeList (nullptr)
-{
-	FUNKNOWN_CTOR
-}
+HostMessage::HostMessage () {FUNKNOWN_CTOR}
 
 //-----------------------------------------------------------------------------
-HostMessage::~HostMessage ()
+HostMessage::~HostMessage () noexcept
 {
 	setMessageID (nullptr);
-	if (attributeList)
-		attributeList->release ();
 	FUNKNOWN_DTOR
 }
 
@@ -144,37 +143,51 @@ void PLUGIN_API HostMessage::setMessageID (const char* mid)
 IAttributeList* PLUGIN_API HostMessage::getAttributes ()
 {
 	if (!attributeList)
-		attributeList = new HostAttributeList;
+		attributeList = HostAttributeList::make ();
 	return attributeList;
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-class HostAttribute
+struct HostAttributeList::Attribute
 {
-public:
-	enum Type
+	enum class Type
 	{
+		kUninitialized,
 		kInteger,
 		kFloat,
 		kString,
 		kBinary
 	};
+	Attribute () = default;
 
-	HostAttribute (int64 value) : size (0), type (kInteger) { v.intValue = value; }
-	HostAttribute (double value) : size (0), type (kFloat) { v.floatValue = value; }
-	HostAttribute (const TChar* value, uint32 size) : size (size), type (kString)
+	Attribute (int64 value) : type (Type::kInteger) { v.intValue = value; }
+	Attribute (double value) : type (Type::kFloat) { v.floatValue = value; }
+	/* size is in code unit (count of TChar) */
+	Attribute (const TChar* value, uint32 sizeInCodeUnit)
+	: size (sizeInCodeUnit), type (Type::kString)
 	{
-		v.stringValue = new TChar[size];
-		memcpy (v.stringValue, value, size * sizeof (TChar));
+		v.stringValue = new TChar[sizeInCodeUnit];
+		memcpy (v.stringValue, value, sizeInCodeUnit * sizeof (TChar));
 	}
-	HostAttribute (const void* value, uint32 size) : size (size), type (kBinary)
+	Attribute (const void* value, uint32 sizeInBytes) : size (sizeInBytes), type (Type::kBinary)
 	{
-		v.binaryValue = new char[size];
-		memcpy (v.binaryValue, value, size);
+		v.binaryValue = new char[sizeInBytes];
+		memcpy (v.binaryValue, value, sizeInBytes);
 	}
-	~HostAttribute ()
+	Attribute (Attribute&& o) { *this = std::move (o); }
+	Attribute& operator= (Attribute&& o)
+	{
+		v = o.v;
+		size = o.size;
+		type = o.type;
+		o.size = 0;
+		o.type = Type::kUninitialized;
+		o.v = {};
+		return *this;
+	}
+	~Attribute () noexcept
 	{
 		if (size)
 			delete[] v.binaryValue;
@@ -182,20 +195,21 @@ public:
 
 	int64 intValue () const { return v.intValue; }
 	double floatValue () const { return v.floatValue; }
-	const TChar* stringValue (uint32& stringSize)
+	/* sizeInCodeUnit is in code unit (count of TChar) */
+	const TChar* stringValue (uint32& sizeInCodeUnit)
 	{
-		stringSize = size;
+		sizeInCodeUnit = size;
 		return v.stringValue;
 	}
-	const void* binaryValue (uint32& binarySize)
+	const void* binaryValue (uint32& sizeInBytes)
 	{
-		binarySize = size;
+		sizeInBytes = size;
 		return v.binaryValue;
 	}
 
 	Type getType () const { return type; }
 
-protected:
+private:
 	union v
 	{
 		int64 intValue;
@@ -203,60 +217,48 @@ protected:
 		TChar* stringValue;
 		char* binaryValue;
 	} v;
-	uint32 size;
-	Type type;
+	uint32 size {0};
+	Type type {Type::kUninitialized};
 };
-
-using mapIterator = std::map<String, HostAttribute*>::iterator;
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 IMPLEMENT_FUNKNOWN_METHODS (HostAttributeList, IAttributeList, IAttributeList::iid)
+
 //-----------------------------------------------------------------------------
-HostAttributeList::HostAttributeList ()
+IPtr<IAttributeList> HostAttributeList::make ()
 {
-	FUNKNOWN_CTOR
+	return owned (new HostAttributeList);
 }
 
 //-----------------------------------------------------------------------------
-HostAttributeList::~HostAttributeList ()
+HostAttributeList::HostAttributeList () {FUNKNOWN_CTOR}
+
+//-----------------------------------------------------------------------------
+HostAttributeList::~HostAttributeList () noexcept
 {
-	std::map<String, HostAttribute*>::reverse_iterator it = list.rbegin ();
-	while (it != list.rend ())
-	{
-		delete it->second;
-		it++;
-	}
 	FUNKNOWN_DTOR
-}
-
-//-----------------------------------------------------------------------------
-void HostAttributeList::removeAttrID (AttrID aid)
-{
-	mapIterator it = list.find (aid);
-	if (it != list.end ())
-	{
-		delete it->second;
-		list.erase (it);
-	}
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::setInt (AttrID aid, int64 value)
 {
-	removeAttrID (aid);
-	list[aid] = new HostAttribute (value);
+	if (!aid)
+		return kInvalidArgument;
+	list[aid] = Attribute (value);
 	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::getInt (AttrID aid, int64& value)
 {
-	mapIterator it = list.find (aid);
-	if (it != list.end () && it->second)
+	if (!aid)
+		return kInvalidArgument;
+	auto it = list.find (aid);
+	if (it != list.end () && it->second.getType () == Attribute::Type::kInteger)
 	{
-		value = it->second->intValue ();
+		value = it->second.intValue ();
 		return kResultTrue;
 	}
 	return kResultFalse;
@@ -265,18 +267,21 @@ tresult PLUGIN_API HostAttributeList::getInt (AttrID aid, int64& value)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::setFloat (AttrID aid, double value)
 {
-	removeAttrID (aid);
-	list[aid] = new HostAttribute (value);
+	if (!aid)
+		return kInvalidArgument;
+	list[aid] = Attribute (value);
 	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::getFloat (AttrID aid, double& value)
 {
-	mapIterator it = list.find (aid);
-	if (it != list.end () && it->second)
+	if (!aid)
+		return kInvalidArgument;
+	auto it = list.find (aid);
+	if (it != list.end () && it->second.getType () == Attribute::Type::kFloat)
 	{
-		value = it->second->floatValue ();
+		value = it->second.floatValue ();
 		return kResultTrue;
 	}
 	return kResultFalse;
@@ -285,44 +290,53 @@ tresult PLUGIN_API HostAttributeList::getFloat (AttrID aid, double& value)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::setString (AttrID aid, const TChar* string)
 {
-	removeAttrID (aid);
-	list[aid] = new HostAttribute (string, String (const_cast<TChar*> (string)).length ());
+	if (!aid)
+		return kInvalidArgument;
+	// + 1 for the null-terminate
+	auto length = tstrlen (string) + 1;
+	list[aid] = Attribute (string, length);
 	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API HostAttributeList::getString (AttrID aid, TChar* string, uint32 size)
+tresult PLUGIN_API HostAttributeList::getString (AttrID aid, TChar* string, uint32 sizeInBytes)
 {
-	mapIterator it = list.find (aid);
-	if (it != list.end () && it->second)
+	if (!aid)
+		return kInvalidArgument;
+	auto it = list.find (aid);
+	if (it != list.end () && it->second.getType () == Attribute::Type::kString)
 	{
-		uint32 stringSize = 0;
-		const TChar* _string = it->second->stringValue (stringSize);
-		memcpy (string, _string, std::min<uint32> (stringSize, size) * sizeof (TChar));
+		uint32 sizeInCodeUnit = 0;
+		const TChar* _string = it->second.stringValue (sizeInCodeUnit);
+		memcpy (string, _string, std::min<uint32> (sizeInCodeUnit * sizeof (TChar), sizeInBytes));
 		return kResultTrue;
 	}
 	return kResultFalse;
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API HostAttributeList::setBinary (AttrID aid, const void* data, uint32 size)
+tresult PLUGIN_API HostAttributeList::setBinary (AttrID aid, const void* data, uint32 sizeInBytes)
 {
-	removeAttrID (aid);
-	list[aid] = new HostAttribute (data, size);
+	if (!aid)
+		return kInvalidArgument;
+	list[aid] = Attribute (data, sizeInBytes);
 	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API HostAttributeList::getBinary (AttrID aid, const void*& data, uint32& size)
+tresult PLUGIN_API HostAttributeList::getBinary (AttrID aid, const void*& data, uint32& sizeInBytes)
 {
-	mapIterator it = list.find (aid);
-	if (it != list.end () && it->second)
+	if (!aid)
+		return kInvalidArgument;
+	auto it = list.find (aid);
+	if (it != list.end () && it->second.getType () == Attribute::Type::kBinary)
 	{
-		data = it->second->binaryValue (size);
+		data = it->second.binaryValue (sizeInBytes);
 		return kResultTrue;
 	}
-	size = 0;
+	sizeInBytes = 0;
 	return kResultFalse;
 }
-}
-} // namespace
+
+} // Vst
+} // Steinberg

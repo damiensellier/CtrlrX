@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -62,8 +62,6 @@ File& File::operator= (File&& other) noexcept
     fullPath = std::move (other.fullPath);
     return *this;
 }
-
-JUCE_DECLARE_DEPRECATED_STATIC (const File File::nonexistent{};)
 
 //==============================================================================
 static String removeEllipsis (const String& path)
@@ -231,7 +229,7 @@ String File::addTrailingSeparator (const String& path)
 }
 
 //==============================================================================
-#if JUCE_LINUX
+#if JUCE_LINUX || JUCE_BSD
  #define NAMES_ARE_CASE_SENSITIVE 1
 #endif
 
@@ -360,6 +358,14 @@ String File::getPathUpToLastSlash() const
 File File::getParentDirectory() const
 {
     return createFileWithoutCheckingPath (getPathUpToLastSlash());
+}
+
+bool File::isNonEmptyDirectory() const
+{
+    if (! isDirectory())
+        return false;
+
+    return RangedDirectoryIterator (*this, false, "*", findFilesAndDirectories) != RangedDirectoryIterator();
 }
 
 //==============================================================================
@@ -563,18 +569,18 @@ void File::readLines (StringArray& destLines) const
 }
 
 //==============================================================================
-Array<File> File::findChildFiles (int whatToLookFor, bool searchRecursively, const String& wildcard) const
+Array<File> File::findChildFiles (int whatToLookFor, bool searchRecursively, const String& wildcard, FollowSymlinks followSymlinks) const
 {
     Array<File> results;
-    findChildFiles (results, whatToLookFor, searchRecursively, wildcard);
+    findChildFiles (results, whatToLookFor, searchRecursively, wildcard, followSymlinks);
     return results;
 }
 
-int File::findChildFiles (Array<File>& results, int whatToLookFor, bool searchRecursively, const String& wildcard) const
+int File::findChildFiles (Array<File>& results, int whatToLookFor, bool searchRecursively, const String& wildcard, FollowSymlinks followSymlinks) const
 {
     int total = 0;
 
-    for (const auto& di : RangedDirectoryIterator (*this, searchRecursively, wildcard, whatToLookFor))
+    for (const auto& di : RangedDirectoryIterator (*this, searchRecursively, wildcard, whatToLookFor, followSymlinks))
     {
         results.add (di.getFile());
         ++total;
@@ -955,7 +961,7 @@ File File::createTempFile (StringRef fileNameEnding)
 }
 
 bool File::createSymbolicLink (const File& linkFileToCreate,
-                               const String& nativePathOfTarget,
+                               [[maybe_unused]] const String& nativePathOfTarget,
                                bool overwriteExisting)
 {
     if (linkFileToCreate.exists())
@@ -972,7 +978,7 @@ bool File::createSymbolicLink (const File& linkFileToCreate,
             linkFileToCreate.deleteFile();
     }
 
-   #if JUCE_MAC || JUCE_LINUX
+   #if JUCE_MAC || JUCE_LINUX || JUCE_BSD
     // one common reason for getting an error here is that the file already exists
     if (symlink (nativePathOfTarget.toRawUTF8(), linkFileToCreate.getFullPathName().toRawUTF8()) == -1)
     {
@@ -988,7 +994,6 @@ bool File::createSymbolicLink (const File& linkFileToCreate,
                                nativePathOfTarget.toWideCharPointer(),
                                targetFile.isDirectory() ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0) != FALSE;
    #else
-    ignoreUnused (nativePathOfTarget);
     jassertfalse; // symbolic links not supported on this platform!
     return false;
    #endif
@@ -1010,6 +1015,19 @@ File File::getLinkedTarget() const
 #endif
 
 //==============================================================================
+#if JUCE_ALLOW_STATIC_NULL_VARIABLES
+
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wdeprecated-declarations")
+JUCE_BEGIN_IGNORE_WARNINGS_MSVC (4996)
+
+const File File::nonexistent{};
+
+JUCE_END_IGNORE_WARNINGS_GCC_LIKE
+JUCE_END_IGNORE_WARNINGS_MSVC
+
+#endif
+
+//==============================================================================
 MemoryMappedFile::MemoryMappedFile (const File& file, MemoryMappedFile::AccessMode mode, bool exclusive)
     : range (0, file.getSize())
 {
@@ -1027,7 +1045,7 @@ MemoryMappedFile::MemoryMappedFile (const File& file, const Range<int64>& fileRa
 //==============================================================================
 #if JUCE_UNIT_TESTS
 
-class FileTests  : public UnitTest
+class FileTests final : public UnitTest
 {
 public:
     FileTests()
@@ -1045,7 +1063,7 @@ public:
         expect (! File().existsAsFile());
         expect (! File().isDirectory());
        #if ! JUCE_WINDOWS
-        expect (File("/").isDirectory());
+        expect (File ("/").isDirectory());
        #endif
         expect (home.isDirectory());
         expect (home.exists());
@@ -1061,7 +1079,25 @@ public:
         expect (! home.isOnCDRomDrive());
         expect (File::getCurrentWorkingDirectory().exists());
         expect (home.setAsCurrentWorkingDirectory());
-        expect (File::getCurrentWorkingDirectory() == home);
+
+        {
+            auto homeParent = home;
+            bool noSymlinks = true;
+
+            while (! homeParent.isRoot())
+            {
+                if (homeParent.isSymbolicLink())
+                {
+                    noSymlinks = false;
+                    break;
+                }
+
+                homeParent = homeParent.getParentDirectory();
+            }
+
+            if (noSymlinks)
+                expect (File::getCurrentWorkingDirectory() == home);
+        }
 
         {
             Array<File> roots;
@@ -1079,7 +1115,11 @@ public:
 
         beginTest ("Writing");
 
-        File demoFolder (temp.getChildFile ("JUCE UnitTests Temp Folder.folder"));
+        auto random = getRandom();
+        const auto tempFolderName = "JUCE UnitTests Temp Folder "
+                                  + String::toHexString (random.nextInt())
+                                  + ".folder";
+        File demoFolder (temp.getChildFile (tempFolderName));
         expect (demoFolder.deleteRecursively());
         expect (demoFolder.createDirectory());
         expect (demoFolder.isDirectory());
@@ -1113,10 +1153,17 @@ public:
         expect (home.getChildFile ("./../xyz") == home.getParentDirectory().getChildFile ("xyz"));
         expect (home.getChildFile ("a1/a2/a3/./../../a4") == home.getChildFile ("a1/a4"));
 
+        expect (! File().hasReadAccess());
+        expect (! File().hasWriteAccess());
+
+        expect (! tempFile.hasReadAccess());
+
         {
             FileOutputStream fo (tempFile);
             fo.write ("0123456789", 10);
         }
+
+        expect (tempFile.hasReadAccess());
 
         expect (tempFile.exists());
         expect (tempFile.getSize() == 10);

@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -56,7 +56,7 @@ void PluginHostType::switchToHostApplication() const
    #endif
 }
 
-bool PluginHostType::isInAAXAudioSuite (AudioProcessor& processor)
+bool PluginHostType::isInAAXAudioSuite ([[maybe_unused]] AudioProcessor& processor)
 {
    #if JucePlugin_Build_AAX
     if (PluginHostType::getPluginLoadedAs() == AudioProcessor::wrapperType_AAX
@@ -66,14 +66,11 @@ bool PluginHostType::isInAAXAudioSuite (AudioProcessor& processor)
     }
    #endif
 
-    ignoreUnused (processor);
     return false;
 }
 
-Image PluginHostType::getHostIcon (int size) const
+Image PluginHostType::getHostIcon ([[maybe_unused]] int size) const
 {
-    ignoreUnused (size);
-
    #if JucePlugin_Enable_IAA && JucePlugin_Build_Standalone && JUCE_IOS && (! JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP)
     if (isInterAppAudioConnected())
         return juce_getIAAHostIcon (size);
@@ -96,13 +93,17 @@ const char* PluginHostType::getHostDescription() const noexcept
         case AbletonLive8:             return "Ableton Live 8";
         case AbletonLive9:             return "Ableton Live 9";
         case AbletonLive10:            return "Ableton Live 10";
+        case AbletonLive11:            return "Ableton Live 11";
         case AbletonLiveGeneric:       return "Ableton Live";
         case AdobeAudition:            return "Adobe Audition";
         case AdobePremierePro:         return "Adobe Premiere";
         case AppleGarageBand:          return "Apple GarageBand";
+        case AppleInfoHelper:          return "com.apple.audio.InfoHelper";
         case AppleLogic:               return "Apple Logic";
         case AppleMainStage:           return "Apple MainStage";
         case Ardour:                   return "Ardour";
+        case AULab:                    return "AU Lab";
+        case AUVal:                    return "auval";
         case AvidProTools:             return "ProTools";
         case BitwigStudio:             return "Bitwig Studio";
         case CakewalkSonar8:           return "Cakewalk Sonar 8";
@@ -118,6 +119,7 @@ const char* PluginHostType::getHostDescription() const noexcept
         case pluginval:                return "pluginval";
         case MergingPyramix:           return "Pyramix";
         case MuseReceptorGeneric:      return "Muse Receptor";
+        case Maschine:                 return "NI Maschine";
         case Reaper:                   return "Reaper";
         case Reason:                   return "Reason";
         case Renoise:                  return "Renoise";
@@ -171,11 +173,14 @@ PluginHostType::HostType PluginHostType::getHostType()
     if (hostPath.containsIgnoreCase       ("Live 8"))                   return AbletonLive8;
     if (hostPath.containsIgnoreCase       ("Live 9"))                   return AbletonLive9;
     if (hostPath.containsIgnoreCase       ("Live 10"))                  return AbletonLive10;
+    if (hostPath.containsIgnoreCase       ("Live 11"))                  return AbletonLive11;
     if (hostFilename.containsIgnoreCase   ("Live"))                     return AbletonLiveGeneric;
+    if (hostFilename.containsIgnoreCase   ("Audition"))                 return AdobeAudition;
     if (hostFilename.containsIgnoreCase   ("Adobe Premiere"))           return AdobePremierePro;
     if (hostFilename.containsIgnoreCase   ("GarageBand"))               return AppleGarageBand;
     if (hostFilename.containsIgnoreCase   ("Logic"))                    return AppleLogic;
     if (hostFilename.containsIgnoreCase   ("MainStage"))                return AppleMainStage;
+    if (hostFilename.containsIgnoreCase   ("AU Lab"))                   return AULab;
     if (hostFilename.containsIgnoreCase   ("Pro Tools"))                return AvidProTools;
     if (hostFilename.containsIgnoreCase   ("Nuendo 3"))                 return SteinbergNuendo3;
     if (hostFilename.containsIgnoreCase   ("Nuendo 4"))                 return SteinbergNuendo4;
@@ -209,7 +214,10 @@ PluginHostType::HostType PluginHostType::getHostType()
     if (hostFilename.containsIgnoreCase   ("OsxFL"))                    return FruityLoops;
     if (hostFilename.containsIgnoreCase   ("pluginval"))                return pluginval;
     if (hostFilename.containsIgnoreCase   ("AudioPluginHost"))          return JUCEPluginHost;
+    if (hostFilename.containsIgnoreCase   ("Maschine"))                 return Maschine;
     if (hostFilename.containsIgnoreCase   ("Vienna Ensemble Pro"))      return ViennaEnsemblePro;
+    if (hostFilename.containsIgnoreCase   ("auvaltool"))                return AUVal;
+    if (hostFilename.containsIgnoreCase   ("com.apple.audio.infohelper")) return AppleInfoHelper;
 
     if (hostIdReportedByWrapper == "com.apple.logic.pro")               return AppleLogic;
     if (hostIdReportedByWrapper == "com.apple.garageband")              return AppleGarageBand;
@@ -234,6 +242,7 @@ PluginHostType::HostType PluginHostType::getHostType()
     if (hostFilename.containsIgnoreCase   ("Live 8"))                return AbletonLive8;
     if (hostFilename.containsIgnoreCase   ("Live 9"))                return AbletonLive9;
     if (hostFilename.containsIgnoreCase   ("Live 10"))               return AbletonLive10;
+    if (hostFilename.containsIgnoreCase   ("Live 11"))               return AbletonLive11;
     if (hostFilename.containsIgnoreCase   ("Live "))                 return AbletonLiveGeneric;
     if (hostFilename.containsIgnoreCase   ("Audition"))              return AdobeAudition;
     if (hostFilename.containsIgnoreCase   ("Adobe Premiere"))        return AdobePremierePro;
@@ -273,6 +282,7 @@ PluginHostType::HostType PluginHostType::getHostType()
     if (hostFilename.containsIgnoreCase   ("Wavelab"))               return SteinbergWavelabGeneric;
     if (hostFilename.containsIgnoreCase   ("TestHost"))              return SteinbergTestHost;
     if (hostFilename.containsIgnoreCase   ("rm-host"))               return MuseReceptorGeneric;
+    if (hostFilename.containsIgnoreCase   ("Maschine"))              return Maschine;
     if (hostFilename.startsWith           ("FL"))                    return FruityLoops;
     if (hostFilename.contains             ("ilbridge."))             return FruityLoops;
     if (hostPath.containsIgnoreCase       ("Studio One"))            return StudioOne;
@@ -290,7 +300,7 @@ PluginHostType::HostType PluginHostType::getHostType()
     if (hostFilename.containsIgnoreCase   ("AudioPluginHost"))       return JUCEPluginHost;
     if (hostFilename.containsIgnoreCase   ("Vienna Ensemble Pro"))   return ViennaEnsemblePro;
 
-   #elif JUCE_LINUX
+   #elif JUCE_LINUX || JUCE_BSD
     if (hostFilename.containsIgnoreCase   ("Ardour"))            return Ardour;
     if (hostFilename.startsWithIgnoreCase ("Waveform"))          return TracktionWaveform;
     if (hostFilename.containsIgnoreCase   ("Tracktion"))         return TracktionGeneric;

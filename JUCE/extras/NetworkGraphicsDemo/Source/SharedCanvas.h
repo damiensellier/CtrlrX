@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -242,7 +242,7 @@ private:
             for (int i = 0; i < cg.getNumColours(); ++i)
             {
                 out.writeDouble (cg.getColourPosition (i));
-                out.writeInt ((int) cg.getColour(i).getARGB());
+                out.writeInt ((int) cg.getColour (i).getARGB());
             }
         }
         else
@@ -289,7 +289,7 @@ private:
 };
 
 //==============================================================================
-class CanvasGeneratingContext    : public LowLevelGraphicsContext
+class CanvasGeneratingContext final : public LowLevelGraphicsContext
 {
 public:
     CanvasGeneratingContext (SharedCanvasDescription& c)  : canvas (c)
@@ -399,13 +399,13 @@ public:
     {
         Path p;
         Font& font = getState().font;
-        font.getTypeface()->getOutlineForGlyph (glyphNumber, p);
+        font.getTypefacePtr()->getOutlineForGlyph (glyphNumber, p);
         fillPath (p, AffineTransform::scale (font.getHeight() * font.getHorizontalScale(), font.getHeight()).followedBy (transform));
     }
 
 private:
     //==============================================================================
-    struct SharedCanvasHolder  : public ReferenceCountedObject
+    struct SharedCanvasHolder final : public ReferenceCountedObject
     {
         SharedCanvasDescription canvas;
     };
@@ -467,7 +467,7 @@ struct BlockPacketiser
         for (int i = 0; i < blocks.size(); ++i)
         {
             auto index = (uint32) ByteOrder::swapIfBigEndian (i);
-            blocks.getReference(i).append (&index, sizeof (index));
+            blocks.getReference (i).append (&index, sizeof (index));
         }
     }
 
@@ -487,7 +487,7 @@ struct BlockPacketiser
         if (blocks.size() > 1)
         {
             for (int i = 0; i < blocks.size() - 1; ++i)
-                result.append (blocks.getReference(i).getData(), blocks.getReference(i).getSize() - 4);
+                result.append (blocks.getReference (i).getData(), blocks.getReference (i).getSize() - 4);
 
             String storedMD5 (String (CharPointer_ASCII ((const char*) blocks.getLast().getData()))
                                 .fromFirstOccurrenceOf (getLastPacketPrefix(), false, false));

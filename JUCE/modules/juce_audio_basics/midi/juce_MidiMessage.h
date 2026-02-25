@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -102,7 +102,8 @@ public:
                  double timeStamp = 0,
                  bool sysexHasEmbeddedLength = true);
 
-    /** Creates an active-sense message.
+    /** Creates an empty sysex message.
+
         Since the MidiMessage has to contain a valid message, this default constructor
         just initialises it with an empty sysex message.
     */
@@ -216,6 +217,13 @@ public:
         @see getSysExData
     */
     int getSysExDataSize() const noexcept;
+
+    /** Returns a span that bounds the sysex body bytes contained in this message. */
+    Span<const std::byte> getSysExDataSpan() const noexcept
+    {
+        return { reinterpret_cast<const std::byte*> (getSysExData()),
+                 (size_t) getSysExDataSize() };
+    }
 
     //==============================================================================
     /** Returns true if this message is a 'key-down' event.
@@ -854,19 +862,22 @@ public:
     static MidiMessage createSysExMessage (const void* sysexData,
                                            int dataSize);
 
+    /** Creates a system-exclusive message.
+        The data passed in is wrapped with header and tail bytes of 0xf0 and 0xf7.
+    */
+    static MidiMessage createSysExMessage (Span<const std::byte> data);
 
     //==============================================================================
+   #ifndef DOXYGEN
     /** Reads a midi variable-length integer.
-
-        This signature has been deprecated in favour of the safer
-        readVariableLengthValue.
 
         The `data` argument indicates the data to read the number from,
         and `numBytesUsed` is used as an out-parameter to indicate the number
         of bytes that were read.
     */
-    JUCE_DEPRECATED (static int readVariableLengthVal (const uint8* data,
-                                                       int& numBytesUsed) noexcept);
+    [[deprecated ("This signature has been deprecated in favour of the safer readVariableLengthValue.")]]
+    static int readVariableLengthVal (const uint8* data, int& numBytesUsed) noexcept;
+   #endif
 
     /** Holds information about a variable-length value which was parsed
         from a stream of bytes.
@@ -973,7 +984,7 @@ private:
         uint8 asBytes[sizeof (uint8*)];
     };
 
-    PackedData packedData = {};
+    PackedData packedData;
     double timeStamp = 0;
     int size;
    #endif

@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -30,10 +30,13 @@
 #include "../../../Assets/AudioLiveScrollingDisplay.h"
 
 //==============================================================================
+#if JUCE_MAC || JUCE_WINDOWS || JUCE_IOS || JUCE_ANDROID
+ #include "../../../GUI/AccessibilityDemo.h"
+#endif
 #include "../../../GUI/AnimationAppDemo.h"
 #include "../../../GUI/AnimationDemo.h"
 #include "../../../GUI/BouncingBallWavetableDemo.h"
-#if JUCE_USE_CAMERA && ! JUCE_LINUX
+#if JUCE_USE_CAMERA && ! (JUCE_LINUX || JUCE_BSD)
  #include "../../../GUI/CameraDemo.h"
 #endif
 #if ! JUCE_ANDROID
@@ -58,7 +61,7 @@
  #include "../../../GUI/OpenGLDemo2D.h"
 #endif
 #include "../../../GUI/PropertiesDemo.h"
-#if ! JUCE_LINUX
+#if ! (JUCE_LINUX || JUCE_BSD)
  #include "../../../GUI/VideoDemo.h"
 #endif
 #include "../../../GUI/WebBrowserDemo.h"
@@ -67,10 +70,13 @@
 
 void registerDemos_Two() noexcept
 {
+   #if JUCE_MAC || JUCE_WINDOWS || JUCE_IOS || JUCE_ANDROID
+    REGISTER_DEMO (AccessibilityDemo,         GUI, false)
+   #endif
     REGISTER_DEMO (AnimationAppDemo,          GUI, false)
     REGISTER_DEMO (AnimationDemo,             GUI, false)
     REGISTER_DEMO (BouncingBallWavetableDemo, GUI, false)
-   #if JUCE_USE_CAMERA && ! JUCE_LINUX
+   #if JUCE_USE_CAMERA && ! (JUCE_LINUX || JUCE_BSD)
     REGISTER_DEMO (CameraDemo,                GUI, true)
    #endif
    #if ! JUCE_ANDROID
@@ -95,10 +101,12 @@ void registerDemos_Two() noexcept
     REGISTER_DEMO (OpenGLDemo,                GUI, true)
    #endif
     REGISTER_DEMO (PropertiesDemo,            GUI, false)
-   #if ! JUCE_LINUX
+   #if ! (JUCE_LINUX || JUCE_BSD)
     REGISTER_DEMO (VideoDemo,                 GUI, true)
    #endif
+   #if JUCE_WEB_BROWSER
     REGISTER_DEMO (WebBrowserDemo,            GUI, true)
+   #endif
     REGISTER_DEMO (WidgetsDemo,               GUI, false)
     REGISTER_DEMO (WindowsDemo,               GUI, false)
 }

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -54,7 +54,7 @@
 #include "../Assets/DemoUtilities.h"
 
 //==============================================================================
-class MaterialLookAndFeel : public LookAndFeel_V4
+class MaterialLookAndFeel final : public LookAndFeel_V4
 {
 public:
     //==============================================================================
@@ -106,12 +106,12 @@ public:
     //==============================================================================
     void drawLinearSlider (Graphics& g, int x, int y, int width, int height,
                            float sliderPos, float minSliderPos, float maxSliderPos,
-                           const Slider::SliderStyle style, Slider& slider) override
+                           Slider::SliderStyle style, Slider& slider) override
     {
         ignoreUnused (style, minSliderPos, maxSliderPos);
 
         auto r = Rectangle<int> (x + haloRadius, y, width - (haloRadius * 2), height);
-        auto backgroundBar = r.withSizeKeepingCentre(r.getWidth(), 2);
+        auto backgroundBar = r.withSizeKeepingCentre (r.getWidth(), 2);
 
         sliderPos = (sliderPos - minSliderPos) / static_cast<float> (width);
 
@@ -178,8 +178,8 @@ public:
 };
 
 //==============================================================================
-class AUv3SynthEditor   : public AudioProcessorEditor,
-                          private Timer
+class AUv3SynthEditor final : public AudioProcessorEditor,
+                              private Timer
 {
 public:
     //==============================================================================
@@ -309,16 +309,16 @@ private:
 };
 
 //==============================================================================
-class AUv3SynthProcessor : public AudioProcessor
+class AUv3SynthProcessor final : public AudioProcessor
 {
 public:
-    AUv3SynthProcessor ()
+    AUv3SynthProcessor()
         : AudioProcessor (BusesProperties().withOutput ("Output", AudioChannelSet::stereo(), true)),
           currentRecording (1, 1), currentProgram (0)
     {
         // initialize parameters
-        addParameter (isRecordingParam = new AudioParameterBool  ("isRecording", "Is Recording", false));
-        addParameter (roomSizeParam    = new AudioParameterFloat ("roomSize", "Room Size", 0.0f, 1.0f, 0.5f));
+        addParameter (isRecordingParam = new AudioParameterBool  ({ "isRecording", 1 }, "Is Recording", false));
+        addParameter (roomSizeParam    = new AudioParameterFloat ({ "roomSize", 1 }, "Room Size", 0.0f, 1.0f, 0.5f));
 
         formatManager.registerBasicFormats();
 

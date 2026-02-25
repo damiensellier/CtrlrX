@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -70,9 +70,9 @@ public:
         movement.
 
         @param component            the component to move
-        @param Bounds          the destination bounds to which the component should move. To leave the
+        @param finalBounds          the destination bounds to which the component should move. To leave the
                                     component in the same place, just pass component->getBounds() for this value
-        @param Alpha           the alpha value that the component should have at the end of the animation
+        @param finalAlpha           the alpha value that the component should have at the end of the animation
         @param animationDurationMilliseconds    how long the animation should last, in milliseconds
         @param useProxyComponent    if true, this means the component should be replaced by an internally
                                     managed temporary component which is a snapshot of the original component.
@@ -90,13 +90,13 @@ public:
                                     will decelerate towards the middle of its journey. To move the component at a
                                     constant rate for its entire animation, set both the start and end speeds to 1.0
         @param endSpeed             a relative speed at which the component should be moving when the animation finishes.
-                                    If this is 0, the component will decelerate to a standstill at its  position;
+                                    If this is 0, the component will decelerate to a standstill at its final position;
                                     higher values mean the component will still be moving when it stops. To move the component
                                     at a constant rate for its entire animation, set both the start and end speeds to 1.0
     */
     void animateComponent (Component* component,
-                           const Rectangle<int>& Bounds,
-                           float Alpha,
+                           const Rectangle<int>& finalBounds,
+                           float finalAlpha,
                            int animationDurationMilliseconds,
                            bool useProxyComponent,
                            double startSpeed,
@@ -126,7 +126,7 @@ public:
     /** Clears all of the active animations.
 
         If moveComponentsToTheirFinalPositions is true, all the components will
-        be immediately set to their  positions. If false, they will be
+        be immediately set to their final positions. If false, they will be
         left in whatever locations they currently occupy.
     */
     void cancelAllAnimations (bool moveComponentsToTheirFinalPositions);

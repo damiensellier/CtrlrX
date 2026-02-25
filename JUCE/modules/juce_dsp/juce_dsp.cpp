@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -79,14 +79,14 @@
 #include "widgets/juce_Chorus.cpp"
 
 #if JUCE_USE_SIMD
- #if defined(__i386__) || defined(__amd64__) || defined(_M_X64) || defined(_X86_) || defined(_M_IX86)
+ #if JUCE_INTEL
   #ifdef __AVX2__
-   #include "native/juce_avx_SIMDNativeOps.cpp"
+   #include "native/juce_SIMDNativeOps_avx.cpp"
   #else
-   #include "native/juce_sse_SIMDNativeOps.cpp"
+   #include "native/juce_SIMDNativeOps_sse.cpp"
   #endif
- #elif defined(__arm__) || defined(_M_ARM) || defined (__arm64__) || defined (__aarch64__)
-  #include "native/juce_neon_SIMDNativeOps.cpp"
+ #elif JUCE_ARM
+  #include "native/juce_SIMDNativeOps_neon.cpp"
  #else
   #error "SIMD register support not implemented for this platform"
  #endif
@@ -101,7 +101,6 @@
  #endif
 
  #include "containers/juce_AudioBlock_test.cpp"
- #include "containers/juce_FixedSizeFunction_test.cpp"
  #include "frequency/juce_Convolution_test.cpp"
  #include "frequency/juce_FFT_test.cpp"
  #include "processors/juce_FIRFilter_test.cpp"

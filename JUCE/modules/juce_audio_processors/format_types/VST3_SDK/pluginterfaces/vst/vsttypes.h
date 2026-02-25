@@ -22,20 +22,45 @@
 namespace Steinberg {
 namespace Vst {
 //------------------------------------------------------------------------
+/** VST 3 SDK Version */
 #ifndef kVstVersionString
-#define kVstVersionString	"VST 3.6.13"	///< SDK version for PClassInfo2
+#define kVstVersionString	"VST 3.7.8"	///< SDK version for PClassInfo2
 #endif
 
 #define kVstVersionMajor	3
-#define kVstVersionMinor	6
-#define kVstVersionSub		13
+#define kVstVersionMinor	7
+#define kVstVersionSub		8
 
-// this allows to write things like: #if VST_VERSION >= 0x030500 // note that 3.10.0 is 0x030a00
 #define VST_VERSION ((kVstVersionMajor << 16) | (kVstVersionMinor << 8) | kVstVersionSub)
 
+// Versions History which allows to write such code:
+// #if VST_VERSION >= VST_3_6_5_VERSION
+#define VST_3_7_8_VERSION	0x030708
+#define VST_3_7_7_VERSION	0x030707
+#define VST_3_7_6_VERSION	0x030706
+#define VST_3_7_5_VERSION	0x030705
+#define VST_3_7_4_VERSION	0x030704
+#define VST_3_7_3_VERSION	0x030703
+#define VST_3_7_2_VERSION	0x030702
+#define VST_3_7_1_VERSION	0x030701
+#define VST_3_7_0_VERSION	0x030700
+#define VST_3_6_14_VERSION	0x03060E
+#define VST_3_6_13_VERSION	0x03060D
+#define VST_3_6_12_VERSION	0x03060C
+#define VST_3_6_11_VERSION	0x03060B
+#define VST_3_6_10_VERSION	0x03060A
+#define VST_3_6_9_VERSION	0x030609
+#define VST_3_6_8_VERSION	0x030608
+#define VST_3_6_7_VERSION	0x030607
+#define VST_3_6_6_VERSION	0x030606
+#define VST_3_6_5_VERSION	0x030605
+#define VST_3_6_0_VERSION	0x030600
+#define VST_3_5_0_VERSION	0x030500
+#define VST_3_1_0_VERSION	0x030100
+#define VST_3_0_0_VERSION	0x030000
+
 //------------------------------------------------------------------------
-/** \defgroup vst3typedef VST 3 Data Types
-*/
+/** \defgroup vst3typedef VST 3 Data Types */
 /*@{*/
 //------------------------------------------------------------------------
 // String Types
@@ -81,6 +106,41 @@ typedef uint64 Speaker;	            ///< Bit for one speaker
 
 /*@}*/
 
+static SMTG_CONSTEXPR const FIDString SDKVersionString = kVstVersionString;
+
+static SMTG_CONSTEXPR const uint32 SDKVersionMajor = kVstVersionMajor;
+static SMTG_CONSTEXPR const uint32 SDKVersionMinor = kVstVersionMinor;
+static SMTG_CONSTEXPR const uint32 SDKVersionSub   = kVstVersionSub;
+
+static SMTG_CONSTEXPR const uint32 SDKVersion =
+    ((SDKVersionMajor << 16) | (SDKVersionMinor << 8) | SDKVersionSub);
+
+// Versions History which allows to write such code:
+// if constexpr (SDKVersion >= SDKVersion_3_6_5) { ... }
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_7_7     = VST_3_7_7_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_7_6 	= VST_3_7_6_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_7_5 	= VST_3_7_5_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_7_4 	= VST_3_7_4_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_7_3 	= VST_3_7_3_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_7_2 	= VST_3_7_2_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_7_1 	= VST_3_7_1_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_7_0 	= VST_3_7_0_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_6_14	= VST_3_6_14_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_6_13	= VST_3_6_13_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_6_12	= VST_3_6_12_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_6_11	= VST_3_6_11_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_6_10	= VST_3_6_10_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_6_9 	= VST_3_6_9_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_6_8 	= VST_3_6_8_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_6_7 	= VST_3_6_7_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_6_6 	= VST_3_6_6_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_6_5 	= VST_3_6_5_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_6_0 	= VST_3_6_0_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_5_0 	= VST_3_5_0_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_1_0 	= VST_3_1_0_VERSION;
+static SMTG_CONSTEXPR const uint32 SDKVersion_3_0_0 	= VST_3_0_0_VERSION;
+
 //------------------------------------------------------------------------
 } // namespace Vst
 } // namespace Steinberg
+

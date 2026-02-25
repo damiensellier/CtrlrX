@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 /**
@@ -45,6 +43,18 @@ struct ProcessSpec
     /** The number of channels that the process() method will be expected to handle. */
     uint32 numChannels;
 };
+
+constexpr bool operator== (const ProcessSpec& a, const ProcessSpec& b)
+{
+    const auto tie = [] (const ProcessSpec& p)
+    {
+        return std::tie (p.sampleRate, p.maximumBlockSize, p.numChannels);
+    };
+
+    return tie (a) == tie (b);
+}
+
+constexpr bool operator!= (const ProcessSpec& a, const ProcessSpec& b) { return ! (a == b); }
 
 //==============================================================================
 /**
@@ -137,7 +147,7 @@ public:
     using AudioBlockType = AudioBlock<SampleType>;
     using ConstAudioBlockType = AudioBlock<const SampleType>;
 
-    /** Creates a ProcessContextReplacing that uses the given input and output blocks.
+    /** Creates a ProcessContextNonReplacing that uses the given input and output blocks.
         Note that the caller must not delete these blocks while they are still in use by this object!
     */
     ProcessContextNonReplacing (const ConstAudioBlockType& input, AudioBlockType& output) noexcept
@@ -173,5 +183,4 @@ private:
     AudioBlockType& outputBlock;
 };
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

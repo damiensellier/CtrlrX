@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -178,6 +178,21 @@ namespace TimeHelpers
     }
 
     static Atomic<uint32> lastMSCounterValue { (uint32) 0 };
+
+    static String getUTCOffsetString (int utcOffsetSeconds, bool includeSemiColon)
+    {
+        if (const auto seconds = utcOffsetSeconds)
+        {
+            auto minutes = seconds / 60;
+
+            return String::formatted (includeSemiColon ? "%+03d:%02d"
+                                                       : "%+03d%02d",
+                                      minutes / 60,
+                                      abs (minutes) % 60);
+        }
+
+        return "Z";
+    }
 }
 
 //==============================================================================
@@ -364,8 +379,7 @@ String Time::getTimeZone() const
 {
     String zone[2];
 
-  #if JUCE_WINDOWS
-   #if JUCE_MSVC || JUCE_CLANG
+  #if JUCE_WINDOWS && (JUCE_MSVC || JUCE_CLANG)
     _tzset();
 
     for (int i = 0; i < 2; ++i)
@@ -375,9 +389,6 @@ String Time::getTimeZone() const
         _get_tzname (&length, name, sizeof (name) - 1, i);
         zone[i] = name;
     }
-   #else
-    #warning "Can't find a replacement for tzset on mingw - ideas welcome!"
-   #endif
   #else
     tzset();
 
@@ -406,17 +417,7 @@ int Time::getUTCOffsetSeconds() const noexcept
 
 String Time::getUTCOffsetString (bool includeSemiColon) const
 {
-    if (auto seconds = getUTCOffsetSeconds())
-    {
-        auto minutes = seconds / 60;
-
-        return String::formatted (includeSemiColon ? "%+03d:%02d"
-                                                   : "%+03d%02d",
-                                  minutes / 60,
-                                  minutes % 60);
-    }
-
-    return "Z";
+    return TimeHelpers::getUTCOffsetString (getUTCOffsetSeconds(), includeSemiColon);
 }
 
 String Time::toISO8601 (bool includeDividerCharacters) const
@@ -567,7 +568,8 @@ Time& Time::operator-= (RelativeTime delta) noexcept           { millisSinceEpoc
 Time operator+ (Time time, RelativeTime delta) noexcept        { Time t (time); return t += delta; }
 Time operator- (Time time, RelativeTime delta) noexcept        { Time t (time); return t -= delta; }
 Time operator+ (RelativeTime delta, Time time) noexcept        { Time t (time); return t += delta; }
-const RelativeTime operator- (Time time1, Time time2) noexcept { return RelativeTime::milliseconds (time1.toMilliseconds() - time2.toMilliseconds()); }
+
+RelativeTime operator- (Time time1, Time time2) noexcept { return RelativeTime::milliseconds (time1.toMilliseconds() - time2.toMilliseconds()); }
 
 bool operator== (Time time1, Time time2) noexcept      { return time1.toMilliseconds() == time2.toMilliseconds(); }
 bool operator!= (Time time1, Time time2) noexcept      { return time1.toMilliseconds() != time2.toMilliseconds(); }
@@ -609,7 +611,7 @@ Time Time::getCompilationDate()
 //==============================================================================
 #if JUCE_UNIT_TESTS
 
-class TimeTests  : public UnitTest
+class TimeTests final : public UnitTest
 {
 public:
     TimeTests()
@@ -629,6 +631,12 @@ public:
         expect (t.getTimeZone().isNotEmpty());
         expect (t.getUTCOffsetString (true)  == "Z" || t.getUTCOffsetString (true).length() == 6);
         expect (t.getUTCOffsetString (false) == "Z" || t.getUTCOffsetString (false).length() == 5);
+
+        expect (TimeHelpers::getUTCOffsetString (-(3 * 60 + 15) * 60, true) == "-03:15");
+        expect (TimeHelpers::getUTCOffsetString (-(3 * 60 + 30) * 60, true) == "-03:30");
+        expect (TimeHelpers::getUTCOffsetString (-(3 * 60 + 45) * 60, true) == "-03:45");
+
+        expect (TimeHelpers::getUTCOffsetString ((3 * 60 + 15) * 60, true) == "+03:15");
 
         expect (Time::fromISO8601 (t.toISO8601 (true)) == t);
         expect (Time::fromISO8601 (t.toISO8601 (false)) == t);

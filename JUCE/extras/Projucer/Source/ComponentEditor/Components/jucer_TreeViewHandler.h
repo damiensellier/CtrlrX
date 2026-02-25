@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -168,13 +168,13 @@ private:
         {
         }
 
-        void setState (bool newState)
+        void setState (bool newState) override
         {
             document.perform (new TreeviewRootChangeAction (component, *document.getComponentLayout(), newState),
                               "Change TreeView root item");
         }
 
-        bool getState() const
+        bool getState() const override
         {
             return component->isRootItemVisible();
         }
@@ -190,7 +190,7 @@ private:
                 oldState = comp->isRootItemVisible();
             }
 
-            bool perform()
+            bool perform() override
             {
                 showCorrectTab();
                 getComponent()->setRootItemVisible (newState);
@@ -198,7 +198,7 @@ private:
                 return true;
             }
 
-            bool undo()
+            bool undo() override
             {
                 showCorrectTab();
                 getComponent()->setRootItemVisible (oldState);
@@ -221,13 +221,13 @@ private:
             choices.add ("Items closed by default");
         }
 
-        void setIndex (int newIndex)
+        void setIndex (int newIndex) override
         {
             document.perform (new TreeviewOpennessChangeAction (component, *document.getComponentLayout(), newIndex == 0),
                               "Change TreeView openness");
         }
 
-        int getIndex() const
+        int getIndex() const override
         {
             return component->areItemsOpenByDefault() ? 0 : 1;
         }
@@ -243,7 +243,7 @@ private:
                 oldState = comp->areItemsOpenByDefault();
             }
 
-            bool perform()
+            bool perform() override
             {
                 showCorrectTab();
                 getComponent()->setDefaultOpenness (newState);
@@ -251,7 +251,7 @@ private:
                 return true;
             }
 
-            bool undo()
+            bool undo() override
             {
                 showCorrectTab();
                 getComponent()->setDefaultOpenness (oldState);

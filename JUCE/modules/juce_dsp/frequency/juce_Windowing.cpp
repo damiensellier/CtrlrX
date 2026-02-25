@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -23,9 +23,7 @@
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 template <typename FloatType>
@@ -166,7 +164,7 @@ void WindowingFunction<FloatType>::fillWindowingTables (FloatType* samples, size
 }
 
 template <typename FloatType>
-void WindowingFunction<FloatType>::multiplyWithWindowingTable (FloatType* samples, size_t size) noexcept
+void WindowingFunction<FloatType>::multiplyWithWindowingTable (FloatType* samples, size_t size) const noexcept
 {
     FloatVectorOperations::multiply (samples, windowTable.getRawDataPointer(), jmin (static_cast<int> (size), windowTable.size()));
 }
@@ -192,5 +190,4 @@ const char* WindowingFunction<FloatType>::getWindowingMethodName (WindowingMetho
 template class WindowingFunction<float>;
 template class WindowingFunction<double>;
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

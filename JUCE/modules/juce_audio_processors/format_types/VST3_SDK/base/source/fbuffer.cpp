@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -37,7 +37,7 @@
 
 #include "base/source/fbuffer.h"
 #include "base/source/fstring.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace Steinberg {
 
@@ -231,7 +231,6 @@ bool Buffer::prependString8 (const char8* s)
 		return false;
 
 	uint32 len = (uint32) strlen (s);
-	
 	if (len > 0)
 	{
 		shiftStart (len);
@@ -361,7 +360,7 @@ bool Buffer::fromHexString (const char8* string)
 		else return false; // no hex string
 
 		if (upper)
-			data [count >> 1] = d << 4;
+			data [count >> 1] = static_cast<unsigned char> (d << 4);
 		else
 			data [count >> 1] += d;
 
@@ -530,12 +529,10 @@ int8* Buffer::operator + (uint32 i)
 {
 	if (i < memSize)
 		return buffer + i;
-	else
-	{
-		static int8 eof;
-		eof = 0;
-		return &eof;
-	}
+	
+	static int8 eof;
+	eof = 0;
+	return &eof;
 }
 
 //-------------------------------------------------------------------------------------
@@ -606,7 +603,7 @@ bool Buffer::toWideString (int32 sourceCodePage)
 			endString8 ();
 
 		Buffer dest (getFillSize () * sizeof (char16));
-		int32 result = String::multiByteToWideString (dest.str16 (), buffer, dest.getFree () / sizeof (char16), sourceCodePage);
+		int32 result = String::multiByteToWideString (dest.str16 (), str8 (), dest.getFree () / sizeof (char16), sourceCodePage);
 		if (result > 0)
 		{
 			dest.setFillSize ((result - 1) * sizeof (char16));

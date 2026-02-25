@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -31,7 +31,7 @@
 
  dependencies:     juce_analytics, juce_core, juce_data_structures, juce_events,
                    juce_graphics, juce_gui_basics
- exporters:        xcode_mac, vs2019, linux_make, xcode_iphone, androidstudio
+ exporters:        xcode_mac, vs2022, linux_make, xcode_iphone, androidstudio
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -58,7 +58,7 @@ enum DemoAnalyticsEventTypes
 };
 
 //==============================================================================
-class GoogleAnalyticsDestination  : public ThreadedAnalyticsDestination
+class GoogleAnalyticsDestination final : public ThreadedAnalyticsDestination
 {
 public:
     GoogleAnalyticsDestination()
@@ -199,7 +199,7 @@ public:
 
         shouldExit = true;
 
-        if (webStream.get() != nullptr)
+        if (webStream != nullptr)
             webStream->cancel();
     }
 
@@ -298,7 +298,7 @@ private:
 };
 
 //==============================================================================
-class AnalyticsCollectionDemo   : public Component
+class AnalyticsCollectionDemo final : public Component
 {
 public:
     //==============================================================================

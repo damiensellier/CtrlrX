@@ -1,15 +1,15 @@
 # ==============================================================================
 #
 #  This file is part of the JUCE library.
-#  Copyright (c) 2020 - Raw Material Software Limited
+#  Copyright (c) 2022 - Raw Material Software Limited
 #
 #  JUCE is an open source library subject to commercial or open-source
 #  licensing.
 #
-#  By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-#  Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+#  By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+#  Agreement and JUCE Privacy Policy.
 #
-#  End User License Agreement: www.juce.com/juce-6-licence
+#  End User License Agreement: www.juce.com/juce-7-licence
 #  Privacy Policy: www.juce.com/juce-privacy-policy
 #
 #  Or: You may also use this code under the terms of the GPL v3 (see
@@ -29,10 +29,6 @@ juce_add_gui_app(Projucer
     NEEDS_WEB_BROWSER                   TRUE)
 
 juce_generate_juce_header(Projucer)
-
-# This is to work around a bug with how cmake computes language standard flags with
-# target_compile_features
-set_target_properties(Projucer PROPERTIES CXX_STANDARD 11)
 
 target_sources(Projucer PRIVATE
     Source/Application/jucer_AutoUpdater.cpp
@@ -66,9 +62,6 @@ target_sources(Projucer PRIVATE
     Source/ComponentEditor/jucer_JucerDocument.cpp
     Source/ComponentEditor/jucer_ObjectTypes.cpp
     Source/ComponentEditor/jucer_PaintRoutine.cpp
-    Source/LiveBuildEngine/jucer_CompileEngineClient.cpp
-    Source/LiveBuildEngine/jucer_CompileEngineServer.cpp
-    Source/LiveBuildEngine/jucer_DownloadCompileEngineThread.cpp
     Source/Project/Modules/jucer_Modules.cpp
     Source/Project/UI/jucer_HeaderComponent.cpp
     Source/Project/jucer_Project.cpp
@@ -94,18 +87,20 @@ target_compile_definitions(Projucer PRIVATE
     JUCE_LOG_ASSERTIONS=1
     JUCE_STRICT_REFCOUNTEDPOINTER=1
     JUCE_USE_CURL=1
-    JUCE_WEB_BROWSER=0)
+    JUCE_WEB_BROWSER=0
+    # This is a temporary workaround to allow builds to complete on Xcode 15.
+    # Add -Wl,-ld_classic to the OTHER_LDFLAGS build setting if you need to
+    # deploy to older versions of macOS.
+    JUCE_SILENCE_XCODE_15_LINKER_WARNING=1)
 
 juce_add_binary_data(ProjucerData SOURCES
     Source/BinaryData/Icons/background_logo.svg
     Source/BinaryData/Icons/export_android.svg
-    Source/BinaryData/Icons/export_clion.svg
     Source/BinaryData/Icons/export_codeBlocks.svg
     Source/BinaryData/Icons/export_linux.svg
     Source/BinaryData/Icons/export_visualStudio.svg
     Source/BinaryData/Icons/export_xcode.svg
     Source/BinaryData/Icons/gpl_logo.svg
-    Source/BinaryData/Icons/juce-logo-with-text.svg
     Source/BinaryData/Icons/juce_icon.png
     Source/BinaryData/Icons/wizard_AnimatedApp.svg
     Source/BinaryData/Icons/wizard_AudioApp.svg
@@ -123,10 +118,17 @@ juce_add_binary_data(ProjucerData SOURCES
     Source/BinaryData/Templates/jucer_AudioComponentSimpleTemplate.h
     Source/BinaryData/Templates/jucer_AudioComponentTemplate.cpp
     Source/BinaryData/Templates/jucer_AudioComponentTemplate.h
+    Source/BinaryData/Templates/jucer_AudioPluginARADocumentControllerTemplate.cpp
+    Source/BinaryData/Templates/jucer_AudioPluginARADocumentControllerTemplate.h
+    Source/BinaryData/Templates/jucer_AudioPluginARAPlaybackRendererTemplate.cpp
+    Source/BinaryData/Templates/jucer_AudioPluginARAPlaybackRendererTemplate.h
     Source/BinaryData/Templates/jucer_AudioPluginEditorTemplate.cpp
     Source/BinaryData/Templates/jucer_AudioPluginEditorTemplate.h
+    Source/BinaryData/Templates/jucer_AudioPluginARAEditorTemplate.cpp
+    Source/BinaryData/Templates/jucer_AudioPluginARAEditorTemplate.h
     Source/BinaryData/Templates/jucer_AudioPluginFilterTemplate.cpp
     Source/BinaryData/Templates/jucer_AudioPluginFilterTemplate.h
+    Source/BinaryData/Templates/jucer_AudioPluginARAFilterTemplate.h
     Source/BinaryData/Templates/jucer_ComponentTemplate.cpp
     Source/BinaryData/Templates/jucer_ComponentTemplate.h
     Source/BinaryData/Templates/jucer_ContentCompSimpleTemplate.h
@@ -152,14 +154,18 @@ juce_add_binary_data(ProjucerData SOURCES
     Source/BinaryData/gradle/gradle-wrapper.jar
     Source/BinaryData/gradle/gradlew
     Source/BinaryData/gradle/gradlew.bat
+    Source/BinaryData/juce_SimpleBinaryBuilder.cpp
 
+    ../Build/CMake/JuceLV2Defines.h.in
     ../Build/CMake/LaunchScreen.storyboard
     ../Build/CMake/PIPAudioProcessor.cpp.in
+    ../Build/CMake/PIPAudioProcessorWithARA.cpp.in
     ../Build/CMake/PIPComponent.cpp.in
     ../Build/CMake/PIPConsole.cpp.in
     ../Build/CMake/RecentFilesMenuTemplate.nib
     ../Build/CMake/UnityPluginGUIScript.cs.in
-    ../Build/CMake/juce_runtime_arch_detection.cpp)
+    ../Build/CMake/juce_runtime_arch_detection.cpp
+    ../Build/CMake/juce_LinuxSubprocessHelper.cpp)
 
 target_link_libraries(Projucer PRIVATE
     ProjucerData

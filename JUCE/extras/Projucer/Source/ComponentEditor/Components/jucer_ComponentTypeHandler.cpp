@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -300,7 +300,7 @@ private:
             oldValue = ttc->getTooltip();
         }
 
-        bool perform()
+        bool perform() override
         {
             showCorrectTab();
 
@@ -314,7 +314,7 @@ private:
             return false;
         }
 
-        bool undo()
+        bool undo() override
         {
             showCorrectTab();
 
@@ -348,12 +348,12 @@ public:
         document.addChangeListener (this);
     }
 
-    ~ComponentPositionProperty()
+    ~ComponentPositionProperty() override
     {
         document.removeChangeListener (this);
     }
 
-    void setPosition (const RelativePositionedRectangle& newPos)
+    void setPosition (const RelativePositionedRectangle& newPos) override
     {
         auto* l = document.getComponentLayout();
 
@@ -363,7 +363,7 @@ public:
         l->setComponentPosition (component, newPos, true);
     }
 
-    RelativePositionedRectangle getPosition() const
+    RelativePositionedRectangle getPosition() const override
     {
         return ComponentTypeHandler::getComponentPosition (component);
     }
@@ -439,7 +439,7 @@ private:
             oldValue = comp->getExplicitFocusOrder();
         }
 
-        bool perform()
+        bool perform() override
         {
             showCorrectTab();
             getComponent()->setExplicitFocusOrder (newValue);
@@ -447,7 +447,7 @@ private:
             return true;
         }
 
-        bool undo()
+        bool undo() override
         {
             showCorrectTab();
             getComponent()->setExplicitFocusOrder (oldValue);
@@ -612,7 +612,7 @@ void ComponentTypeHandler::fillInCreationCode (GeneratedCode& code, Component* c
     s << "addAndMakeVisible (" << memberVariableName << ".get());\n";
 
 
-    if (SettableTooltipClient* ttc = dynamic_cast<SettableTooltipClient*> (component))
+    if (auto* ttc = dynamic_cast<SettableTooltipClient*> (component))
     {
         if (ttc->getTooltip().isNotEmpty())
         {
@@ -622,7 +622,7 @@ void ComponentTypeHandler::fillInCreationCode (GeneratedCode& code, Component* c
         }
     }
 
-    if (component->getExplicitFocusOrder() > 0)
+    if (component != nullptr && component->getExplicitFocusOrder() > 0)
         s << memberVariableName << "->setExplicitFocusOrder ("
           << component->getExplicitFocusOrder()
           << ");\n";

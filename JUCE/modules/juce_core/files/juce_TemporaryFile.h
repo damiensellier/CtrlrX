@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -90,7 +90,7 @@ public:
         This is useful if you have a file that you want to overwrite, but don't
         want to harm the original file if the write operation fails. You can
         use this to create a temporary file next to the target file, then
-        write to the temporary file, and ly use overwriteTargetFileWithTemporary()
+        write to the temporary file, and finally use overwriteTargetFileWithTemporary()
         to replace the target file with the one you've just written.
 
         This class won't create any files until you actually write to them. And remember

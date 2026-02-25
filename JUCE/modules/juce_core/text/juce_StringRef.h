@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -58,7 +58,7 @@ namespace juce
 
     @tags{Core}
 */
-class JUCE_API  StringRef  
+class JUCE_API  StringRef  final
 {
 public:
     /** Creates a StringRef from a raw string literal.

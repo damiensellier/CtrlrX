@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -63,8 +63,8 @@ void JUCEApplication::getCommandInfo (const CommandID commandID, ApplicationComm
 {
     if (commandID == StandardApplicationCommandIDs::quit)
     {
-        result.setInfo (TRANS("Quit"),
-                        TRANS("Quits the application"),
+        result.setInfo (TRANS ("Quit"),
+                        TRANS ("Quits the application"),
                         "Application", 0);
 
         result.defaultKeypresses.add (KeyPress ('q', ModifierKeys::commandModifier, 0));
@@ -83,16 +83,12 @@ bool JUCEApplication::perform (const InvocationInfo& info)
 }
 
 //==============================================================================
-#if JUCE_MAC
- extern void juce_initialiseMacMainMenu();
-#endif
-
 bool JUCEApplication::initialiseApp()
 {
     if (JUCEApplicationBase::initialiseApp())
     {
        #if JUCE_MAC
-        juce_initialiseMacMainMenu(); // (needs to get the app's name)
+        initialiseMacMainMenu(); // (needs to get the app's name)
        #endif
 
         return true;

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -113,7 +113,7 @@ private:
  #if (DOXYGEN || JUCE_CHECK_MEMORY_LEAKS)
   /** This macro lets you embed a leak-detecting object inside a class.
 
-      To use it, simply declare a JUCE_LEAK_DETECTOR(YourClassName) inside a private section
+      To use it, simply declare a JUCE_LEAK_DETECTOR (YourClassName) inside a private section
       of the class declaration. E.g.
 
       @code

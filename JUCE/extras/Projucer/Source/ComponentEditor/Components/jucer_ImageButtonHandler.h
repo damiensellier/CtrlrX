@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -179,12 +179,12 @@ public:
         {
         }
 
-        void setResource (const String& newName)
+        void setResource (const String& newName) override
         {
             setImageResource (layout, element, role, newName, true);
         }
 
-        String getResource() const
+        String getResource() const override
         {
             return getImageResource (element, role);
         }
@@ -294,7 +294,7 @@ public:
     {
         if (undoable)
         {
-            layout.perform (new SetImageKeepsPropAction (button, layout, newState), "change imagebutton proportion mode");
+            layout.perform (std::make_unique<SetImageKeepsPropAction> (button, layout, newState), "change imagebutton proportion mode");
         }
         else
         {
@@ -314,12 +314,12 @@ public:
         {
         }
 
-        void setState (bool newState)
+        void setState (bool newState) override
         {
             setImageKeepProportions (layout, component, newState, true);
         }
 
-        bool getState() const
+        bool getState() const override
         {
             return doesImageKeepProportions (component);
         }
@@ -371,7 +371,7 @@ public:
     {
         if (undoable)
         {
-            layout.perform (new SetImageOpacityAction (button, layout, role, opacity), "change imagebutton opacity");
+            layout.perform (std::make_unique<SetImageOpacityAction> (button, layout, role, opacity), "change imagebutton opacity");
         }
         else
         {
@@ -453,7 +453,7 @@ public:
     {
         if (undoable)
         {
-            layout.perform (new SetImageColourAction (button, layout, role, colour), "change imagebutton colour");
+            layout.perform (std::make_unique<SetImageColourAction> (button, layout, role, colour), "change imagebutton colour");
         }
         else
         {

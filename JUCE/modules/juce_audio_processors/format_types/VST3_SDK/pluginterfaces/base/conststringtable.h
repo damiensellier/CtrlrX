@@ -24,7 +24,6 @@ namespace Steinberg {
 /**	Constant unicode string table.
 Used for conversion from ASCII string literals to char16.
 */
-//------------------------------------------------------------------------
 class ConstStringTable
 {
 public:
@@ -33,7 +32,7 @@ public:
 	/** Returns a char16 string of a ASCII string literal*/
 	const char16* getString (const char8* str) const;
 	/** Returns a char16 character of a ASCII character */
-	const char16 getString (const char8 str) const;
+	char16 getString (const char8 str) const;
 
 protected:
 	ConstStringTable ();

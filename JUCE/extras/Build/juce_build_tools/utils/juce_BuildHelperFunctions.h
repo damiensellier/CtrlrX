@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -23,10 +23,9 @@
   ==============================================================================
 */
 
-namespace juce
+namespace juce::build_tools
 {
-namespace build_tools
-{
+
     void overwriteFileIfDifferentOrThrow (const File& file, const MemoryOutputStream& newData);
     void overwriteFileIfDifferentOrThrow (const File& file, const String& newData);
 
@@ -70,7 +69,7 @@ namespace build_tools
                               const String& utf8PointerVariable,
                               const StringArray& strings,
                               const StringArray& codeToExecute,
-                              const int indentLevel);
+                              int indentLevel);
 
     String unixStylePath (const String& path);
     String windowsStylePath (const String& path);
@@ -82,5 +81,5 @@ namespace build_tools
     String getRelativePathFrom (const File& file, const File& sourceFolder);
 
     void writeStreamToFile (const File& file, const std::function<void (MemoryOutputStream&)>& writer);
-}
-}
+
+} // namespace juce::build_tools

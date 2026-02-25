@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -27,7 +27,7 @@
 #include "jucer_SlidingPanelComponent.h"
 
 //==============================================================================
-struct SlidingPanelComponent::DotButton  : public Button
+struct SlidingPanelComponent::DotButton final : public Button
 {
     DotButton (SlidingPanelComponent& sp, int pageIndex)
         : Button (String()), owner (sp), index (pageIndex) {}
@@ -110,9 +110,9 @@ void SlidingPanelComponent::resized()
                                  .reduced ((content.getWidth() - dotSize * getNumTabs()) / 2, 10);
 
     for (int i = 0; i < getNumTabs(); ++i)
-        pages.getUnchecked(i)->dotButton->setBounds (dotHolder.removeFromLeft (dotSize));
+        pages.getUnchecked (i)->dotButton->setBounds (dotHolder.removeFromLeft (dotSize));
 
     for (int i = pages.size(); --i >= 0;)
-        if (Component* c = pages.getUnchecked(i)->content)
+        if (Component* c = pages.getUnchecked (i)->content)
             c->setBounds (content.translated (i * content.getWidth(), 0));
 }

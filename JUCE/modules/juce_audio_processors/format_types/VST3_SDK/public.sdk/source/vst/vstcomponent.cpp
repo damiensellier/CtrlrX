@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -59,7 +59,7 @@ tresult PLUGIN_API Component::initialize (FUnknown* context)
 //------------------------------------------------------------------------
 tresult PLUGIN_API Component::terminate ()
 {
-	// remove all buses
+	// remove all busses
 	removeAllBusses ();
 
 	return ComponentBase::terminate ();
@@ -70,7 +70,7 @@ BusList* Component::getBusList (MediaType type, BusDirection dir)
 {
 	if (type == kAudio)
 		return dir == kInput ? &audioInputs : &audioOutputs;
-	else if (type == kEvent)
+	if (type == kEvent)
 		return dir == kInput ? &eventInputs : &eventOutputs;
 	return nullptr;
 }
@@ -210,7 +210,7 @@ tresult Component::renameBus (MediaType type, BusDirection dir, int32 index,
 tresult getSpeakerChannelIndex (SpeakerArrangement arrangement, uint64 speaker, int32& channel)
 {
 	channel = SpeakerArr::getSpeakerIndex (speaker, arrangement);
-	return channel < 0 ? kResultFalse : kResultTrue;
+	return (channel < 0) == true ? kResultFalse : kResultTrue;
 }
 } // namespace Vst
 } // namespace Steinberg

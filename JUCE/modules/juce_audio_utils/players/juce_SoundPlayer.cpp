@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -27,7 +27,7 @@ namespace juce
 {
 
 // This is an AudioTransportSource which will own it's assigned source
-struct AudioSourceOwningTransportSource  : public AudioTransportSource
+struct AudioSourceOwningTransportSource final : public AudioTransportSource
 {
     AudioSourceOwningTransportSource (PositionableAudioSource* s, double sr)  : source (s)
     {
@@ -48,8 +48,8 @@ private:
 //==============================================================================
 // An AudioSourcePlayer which will remove itself from the AudioDeviceManager's
 // callback list once it finishes playing its source
-struct AutoRemovingTransportSource  : public AudioTransportSource,
-                                      private Timer
+struct AutoRemovingTransportSource final : public AudioTransportSource,
+                                           private Timer
 {
     AutoRemovingTransportSource (MixerAudioSource& mixerToUse, AudioTransportSource* ts, bool ownSource,
                                  int samplesPerBlock, double requiredSampleRate)
@@ -85,7 +85,7 @@ private:
 };
 
 // An AudioSource which simply outputs a buffer
-class AudioBufferSource  : public PositionableAudioSource
+class AudioBufferSource final : public PositionableAudioSource
 {
 public:
     AudioBufferSource (AudioBuffer<float>* audioBuffer, bool ownBuffer, bool playOnAllChannels)
@@ -242,15 +242,16 @@ void SoundPlayer::playTestSound()
 }
 
 //==============================================================================
-void SoundPlayer::audioDeviceIOCallback (const float** inputChannelData,
-                                         int numInputChannels,
-                                         float** outputChannelData,
-                                         int numOutputChannels,
-                                         int numSamples)
+void SoundPlayer::audioDeviceIOCallbackWithContext (const float* const* inputChannelData,
+                                                    int numInputChannels,
+                                                    float* const* outputChannelData,
+                                                    int numOutputChannels,
+                                                    int numSamples,
+                                                    const AudioIODeviceCallbackContext& context)
 {
-    player.audioDeviceIOCallback (inputChannelData, numInputChannels,
-                                  outputChannelData, numOutputChannels,
-                                  numSamples);
+    player.audioDeviceIOCallbackWithContext (inputChannelData, numInputChannels,
+                                             outputChannelData, numOutputChannels,
+                                             numSamples, context);
 }
 
 void SoundPlayer::audioDeviceAboutToStart (AudioIODevice* device)

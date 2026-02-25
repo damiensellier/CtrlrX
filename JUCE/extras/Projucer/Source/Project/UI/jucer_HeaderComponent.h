@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -32,18 +32,16 @@
 class Project;
 class ProjectContentComponent;
 class ProjectExporter;
-class CompileEngineChildProcess;
 
 //==============================================================================
-class HeaderComponent    : public Component,
-                           private ValueTree::Listener,
-                           private ChangeListener,
-                           private Value::Listener,
-                           private Timer
+class HeaderComponent final : public Component,
+                              private ValueTree::Listener,
+                              private ChangeListener,
+                              private Value::Listener,
+                              private Timer
 {
 public:
     HeaderComponent (ProjectContentComponent* projectContentComponent);
-    ~HeaderComponent() override;
 
     //==============================================================================
     void resized() override;
@@ -57,7 +55,6 @@ public:
     bool canCurrentExporterLaunchProject() const;
 
     void sidebarTabsWidthChanged (int newWidth);
-    void liveBuildEnablementChanged (bool isEnabled);
 
 private:
     //==============================================================================
@@ -83,13 +80,7 @@ private:
     void updateExporterButton();
 
     //==============================================================================
-    void buildPing();
-    void buildFinished (bool);
-    void setRunAppButtonState (bool);
-
-    //==============================================================================
     int tabsWidth = 200;
-    bool isBuilding = false;
 
     ProjectContentComponent* projectContentComponent = nullptr;
     Project* project = nullptr;
@@ -104,10 +95,7 @@ private:
     UserAvatarComponent userAvatar { true };
 
     IconButton projectSettingsButton { "Project Settings", getIcons().settings },
-               saveAndOpenInIDEButton { "Save and Open in IDE", Image() },
-               runAppButton { "Run Application", getIcons().play };
-
-    ReferenceCountedObjectPtr<CompileEngineChildProcess> childProcess;
+               saveAndOpenInIDEButton { "Save and Open in IDE", Image() };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HeaderComponent)
 };

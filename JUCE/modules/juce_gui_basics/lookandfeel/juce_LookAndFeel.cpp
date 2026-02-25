@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -58,7 +58,7 @@ LookAndFeel::~LookAndFeel()
          - there's a WeakReference to it somewhere else in your code
 
        Generally the fix for this will be to make sure you call
-       Component::setLookandFeel (nullptr) on any components that were still using
+       Component::setLookAndFeel (nullptr) on any components that were still using
        it before you delete it, or call LookAndFeel::setDefaultLookAndFeel (nullptr)
        if you had set it up to be the default one. This assertion can also be avoided by
        declaring your LookAndFeel object before any of the Components that use it as
@@ -82,7 +82,7 @@ Colour LookAndFeel::findColour (int colourID) const noexcept
     if (index >= 0)
         return colours[index].colour;
 
-    // jassertfalse; // Updated v5.6.34. To prevent stops on loading with wrong colours.
+    jassertfalse;
     return Colours::black;
 }
 
@@ -182,7 +182,7 @@ void LookAndFeel::setUsingNativeAlertWindows (bool shouldUseNativeAlerts)
 
 bool LookAndFeel::isUsingNativeAlertWindows()
 {
-   #if JUCE_LINUX
+   #if JUCE_LINUX || JUCE_BSD
     return false; // not available currently..
    #else
     return useNativeAlertWindows;

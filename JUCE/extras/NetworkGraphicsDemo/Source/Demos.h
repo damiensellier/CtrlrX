@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -24,7 +24,7 @@
 */
 
 
-struct BlankCanvas  : public AnimatedContent
+struct BlankCanvas final : public AnimatedContent
 {
     String getName() const override      { return "Blank Canvas"; }
     void reset() override {}
@@ -33,7 +33,7 @@ struct BlankCanvas  : public AnimatedContent
 };
 
 //==============================================================================
-struct GridLines  : public AnimatedContent
+struct GridLines final : public AnimatedContent
 {
     String getName() const override      { return "Grid Lines"; }
     void reset() override {}
@@ -64,7 +64,7 @@ struct GridLines  : public AnimatedContent
 };
 
 //==============================================================================
-struct BackgroundLogo  : public AnimatedContent
+struct BackgroundLogo : public AnimatedContent
 {
     BackgroundLogo()
     {
@@ -99,7 +99,7 @@ struct BackgroundLogo  : public AnimatedContent
 };
 
 //==============================================================================
-struct FlockDemo  : public BackgroundLogo
+struct FlockDemo : public BackgroundLogo
 {
     String getName() const override      { return "Flock"; }
 
@@ -158,7 +158,7 @@ struct FlockDemo  : public BackgroundLogo
 
         for (int i = 0; i < birds.size(); ++i)
             for (int j = i + 1; j < birds.size(); ++j)
-                attractBirds (birds.getReference(i), birds.getReference(j));
+                attractBirds (birds.getReference (i), birds.getReference (j));
 
         for (auto& b : birds)
         {
@@ -172,8 +172,8 @@ struct FlockDemo  : public BackgroundLogo
 
         for (int i = rings.size(); --i >= 0;)
         {
-            if (rings.getReference(i).update())
-                rings.getReference(i).draw (g);
+            if (rings.getReference (i).update())
+                rings.getReference (i).draw (g);
             else
                 rings.remove (i);
         }
@@ -358,7 +358,7 @@ struct FlockDemo  : public BackgroundLogo
 };
 
 //==============================================================================
-struct FlockWithText  : public FlockDemo
+struct FlockWithText final : public FlockDemo
 {
     FlockWithText()
     {
@@ -375,7 +375,7 @@ struct FlockWithText  : public FlockDemo
                       "Visual Studio, Android Studio, GCC and other compilers");
 
         messages.add ("JUCE can be used to build desktop or mobile apps, and also\n"
-                      "audio plug-ins in the VST2, VST3, AudioUnit, AAX and RTAS formats");
+                      "audio plug-ins in the VST2, VST3, AudioUnit and AAX formats");
     }
 
     String getName() const override      { return "Flock with text"; }
@@ -445,7 +445,7 @@ struct FlockWithText  : public FlockDemo
 };
 
 //==============================================================================
-struct SmallFlock  : public FlockDemo
+struct SmallFlock final : public FlockDemo
 {
     String getName() const override      { return "Small Flock"; }
 
@@ -456,7 +456,7 @@ struct SmallFlock  : public FlockDemo
 };
 
 //==============================================================================
-struct BigFlock  : public FlockDemo
+struct BigFlock final : public FlockDemo
 {
     String getName() const override      { return "Big Flock"; }
 
@@ -468,7 +468,7 @@ struct BigFlock  : public FlockDemo
 
 //==============================================================================
 template <int numHorizontalLogos>
-struct MultiLogo  : public BackgroundLogo
+struct MultiLogo final : public BackgroundLogo
 {
     String getName() const override      { return "Multi-Logo " + String ((int) numHorizontalLogos); }
 
@@ -490,7 +490,7 @@ struct MultiLogo  : public BackgroundLogo
 };
 
 //==============================================================================
-void createAllDemos (OwnedArray<AnimatedContent>& demos)
+inline void createAllDemos (OwnedArray<AnimatedContent>& demos)
 {
     demos.add (new FlockDemo());
     demos.add (new FlockWithText());

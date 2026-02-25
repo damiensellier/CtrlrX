@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -50,13 +50,13 @@ public:
     virtual void setInitialBounds (int parentWidth, int parentHeight);
 
     virtual Rectangle<int> getCurrentBounds (const Rectangle<int>& activeArea) const;
-    virtual void setCurrentBounds (const Rectangle<int>& newBounds, const Rectangle<int>& activeArea, const bool undoable);
+    virtual void setCurrentBounds (const Rectangle<int>& newBounds, const Rectangle<int>& activeArea, bool undoable);
 
     const RelativePositionedRectangle& getPosition() const;
-    void setPosition (const RelativePositionedRectangle& newPosition, const bool undoable);
-    void setPaintElementBounds (const Rectangle<int>& newBounds, const bool undoable);
+    void setPosition (const RelativePositionedRectangle& newPosition, bool undoable);
+    void setPaintElementBounds (const Rectangle<int>& newBounds, bool undoable);
     void setPaintElementBoundsAndProperties (PaintElement* elementToPosition, const Rectangle<int>& newBounds,
-                                             PaintElement* referenceElement, const bool undoable);
+                                             PaintElement* referenceElement, bool undoable);
 
     void updateBounds (const Rectangle<int>& activeArea);
 
@@ -118,13 +118,13 @@ protected:
     Rectangle<int> getCurrentAbsoluteBounds() const;
     void getCurrentAbsoluteBoundsDouble (double& x, double& y, double& w, double& h) const;
 
-    virtual void selectionChanged (const bool isSelected);
+    virtual void selectionChanged (bool isSelected);
 
     virtual void createSiblingComponents();
 
     void siblingComponentsChanged();
 
-    OwnedArray <ElementSiblingComponent> siblingComponents;
+    OwnedArray<ElementSiblingComponent> siblingComponents;
 
     void updateSiblingComps();
 

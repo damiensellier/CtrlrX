@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -31,7 +31,7 @@
 
  dependencies:     juce_core, juce_data_structures, juce_events, juce_graphics,
                    juce_gui_basics, juce_gui_extra
- exporters:        xcode_mac, vs2019, linux_make, androidstudio, xcode_iphone
+ exporters:        xcode_mac, vs2022, linux_make, androidstudio, xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -47,7 +47,7 @@
 #pragma once
 
 #ifndef PIP_DEMO_UTILITIES_INCLUDED
- #include "../Assets/DemoUtilities.h"
+#include "../Assets/DemoUtilities.h"
 #endif
 
 //==============================================================================
@@ -59,7 +59,7 @@ static void showBubbleMessage (Component& targetComponent, const String& textToS
 /** To demonstrate how sliders can have custom snapping applied to their values,
     this simple class snaps the value to 50 if it comes near.
 */
-struct SnappingSlider  : public Slider
+struct SnappingSlider final : public Slider
 {
     double snapValue (double attemptedValue, DragMode dragMode) override
     {
@@ -74,8 +74,8 @@ struct SnappingSlider  : public Slider
 };
 
 /** A TextButton that pops up a colour chooser to change its colours. */
-class ColourChangeButton  : public TextButton,
-                            public ChangeListener
+class ColourChangeButton final : public TextButton,
+                                 public ChangeListener
 {
 public:
     ColourChangeButton()
@@ -112,7 +112,7 @@ public:
 };
 
 //==============================================================================
-struct SlidersPage  : public Component
+struct SlidersPage final : public Component
 {
     SlidersPage()
     {
@@ -135,47 +135,47 @@ struct SlidersPage  : public Component
         s->setTextValueSuffix (" rels");
 
         sliderArea.removeFromLeft (20);
-        auto horizonalSliderArea = sliderArea.removeFromLeft (180);
+        auto horizontalSliderArea = sliderArea.removeFromLeft (180);
 
         s = createSlider (true);
         s->setSliderStyle (Slider::LinearHorizontal);
         s->setTextBoxStyle (Slider::TextBoxLeft, false, 80, 20);
-        s->setBounds (horizonalSliderArea.removeFromTop (20));
+        s->setBounds (horizontalSliderArea.removeFromTop (20));
 
         s = createSlider (false);
         s->setSliderStyle (Slider::LinearHorizontal);
         s->setTextBoxStyle (Slider::NoTextBox, false, 0, 0);
-        horizonalSliderArea.removeFromTop (20);
-        s->setBounds (horizonalSliderArea.removeFromTop (20));
+        horizontalSliderArea.removeFromTop (20);
+        s->setBounds (horizontalSliderArea.removeFromTop (20));
         s->setPopupDisplayEnabled (true, false, this);
         s->setTextValueSuffix (" nuns required to change a lightbulb");
 
         s = createSlider (false);
         s->setSliderStyle (Slider::LinearHorizontal);
         s->setTextBoxStyle (Slider::TextEntryBoxPosition::TextBoxAbove, false, 70, 20);
-        horizonalSliderArea.removeFromTop (20);
-        s->setBounds (horizonalSliderArea.removeFromTop (50));
+        horizontalSliderArea.removeFromTop (20);
+        s->setBounds (horizontalSliderArea.removeFromTop (50));
         s->setPopupDisplayEnabled (true, false, this);
 
         s = createSlider (false);
         s->setSliderStyle (Slider::IncDecButtons);
         s->setTextBoxStyle (Slider::TextBoxLeft, false, 50, 20);
-        horizonalSliderArea.removeFromTop (20);
-        s->setBounds (horizonalSliderArea.removeFromTop (20));
+        horizontalSliderArea.removeFromTop (20);
+        s->setBounds (horizontalSliderArea.removeFromTop (20));
         s->setIncDecButtonsMode (Slider::incDecButtonsDraggable_Vertical);
 
         s = createSlider (false);
         s->setSliderStyle (Slider::Rotary);
         s->setRotaryParameters (MathConstants<float>::pi * 1.2f, MathConstants<float>::pi * 2.8f, false);
         s->setTextBoxStyle (Slider::TextBoxRight, false, 70, 20);
-        horizonalSliderArea.removeFromTop (15);
-        s->setBounds (horizonalSliderArea.removeFromTop (70));
+        horizontalSliderArea.removeFromTop (15);
+        s->setBounds (horizontalSliderArea.removeFromTop (70));
         s->setTextValueSuffix (" mm");
 
         s = createSlider (false);
         s->setSliderStyle (Slider::LinearBar);
-        horizonalSliderArea.removeFromTop (10);
-        s->setBounds (horizonalSliderArea.removeFromTop (30));
+        horizontalSliderArea.removeFromTop (10);
+        s->setBounds (horizontalSliderArea.removeFromTop (30));
         s->setTextValueSuffix (" gallons");
 
         sliderArea.removeFromLeft (20);
@@ -229,7 +229,7 @@ struct SlidersPage  : public Component
 
         for (int i = 8; i <= 11; ++i)
         {
-            auto* selectedSlider = sliders.getUnchecked(i);
+            auto* selectedSlider = sliders.getUnchecked (i);
             selectedSlider->setTextBoxStyle (Slider::NoTextBox, false, 0, 0);
             selectedSlider->getMaxValueObject().referTo (sharedValueMax);
             selectedSlider->getMinValueObject().referTo (sharedValueMin);
@@ -261,7 +261,7 @@ private:
 };
 
 //==============================================================================
-struct ButtonsPage   : public Component
+struct ButtonsPage final : public Component
 {
     ButtonsPage (bool isRunningComponentTransformDemo)
     {
@@ -435,7 +435,7 @@ struct ButtonsPage   : public Component
                            juceImage, 1.0f, getRandomBrightColour().withAlpha (0.8f),
                            0.5f);
 
-            ib->setBounds (260, 350, 100, 100);
+            ib->setBounds (45, 380, 100, 100);
             ib->setTooltip ("ImageButton - showing alpha-channel hit-testing and colour overlay when clicked");
         }
     }
@@ -461,7 +461,8 @@ private:
 
 
 //==============================================================================
-struct MiscPage   : public Component
+struct MiscPage final : public Component,
+                        private Timer
 {
     MiscPage()
     {
@@ -482,6 +483,21 @@ struct MiscPage   : public Component
             comboBox.addItem ("combo box item " + String (i), i);
 
         comboBox.setSelectedId (1);
+
+        addAndMakeVisible (linearProgressBar);
+        linearProgressBar.setStyle (ProgressBar::Style::linear);
+        linearProgressBar.setBounds (10, 115, 200, 24);
+
+        addAndMakeVisible (circularProgressBar);
+        circularProgressBar.setStyle (ProgressBar::Style::circular);
+        circularProgressBar.setBounds (10, 145, 200, 100);
+
+        startTimerHz (10);
+    }
+
+    ~MiscPage() override
+    {
+        stopTimer();
     }
 
     void lookAndFeelChanged() override
@@ -490,14 +506,41 @@ struct MiscPage   : public Component
         textEditor2.applyFontToAllText (textEditor2.getFont());
     }
 
+    void timerCallback() override
+    {
+        constexpr auto minValue = -0.2;
+        constexpr auto maxValue = 1.2;
+        constexpr auto maxIncrement = 0.05;
+
+        if (progress >= maxValue)
+            progress = minValue;
+        else
+            progress += Random::getSystemRandom().nextDouble() * maxIncrement;
+
+        if (isPositiveAndNotGreaterThan (progress, 1.0))
+        {
+            linearProgressBar.setPercentageDisplay (true);
+            circularProgressBar.setPercentageDisplay (true);
+        }
+        else
+        {
+            linearProgressBar.setTextToDisplay ("Linear progress bar");
+            circularProgressBar.setTextToDisplay ("Circular progress bar");
+        }
+    }
+
     TextEditor textEditor1,
                textEditor2  { "Password", (juce_wchar) 0x2022 };
 
     ComboBox comboBox  { "Combo" };
+
+    double progress { 0.0 };
+    ProgressBar linearProgressBar { progress };
+    ProgressBar circularProgressBar { progress };
 };
 
 //==============================================================================
-struct MenuPage   : public Component
+struct MenuPage final : public Component
 {
     MenuPage()
     {
@@ -514,10 +557,42 @@ struct MenuPage   : public Component
         {
             PopupMenu menu;
 
-            for (auto i = 0; i < 40; ++i)
+            for (int i = 0; i < 40; ++i)
                 menu.addItem ("Item " + String (i), nullptr);
 
             menu.showMenuAsync (PopupMenu::Options{}.withTargetComponent (longMenuButton));
+        };
+
+        addAndMakeVisible (nestedMenusButton);
+        nestedMenusButton.onClick = [&]
+        {
+            PopupMenu menu;
+
+            for (int i = 0; i < 15; ++i)
+            {
+                PopupMenu subMenu;
+
+                for (int j = 0; j < 10; ++j)
+                {
+                    if (j % 2 == 0)
+                    {
+                        PopupMenu subSubMenu;
+
+                        for (int z = 0; z < 5; ++z)
+                            subSubMenu.addItem ("Sub-sub-item " + String (z), nullptr);
+
+                        subMenu.addSubMenu ("Sub-item " + String (j), subSubMenu);
+                    }
+                    else
+                    {
+                        subMenu.addItem ("Sub-item " + String (j), nullptr);
+                    }
+                }
+
+                menu.addSubMenu ("Item " + String (i), subMenu);
+            }
+
+            menu.showMenuAsync (PopupMenu::Options{}.withTargetComponent (nestedMenusButton));
         };
 
         addAndMakeVisible (multiColumnMenuButton);
@@ -525,7 +600,7 @@ struct MenuPage   : public Component
         {
             PopupMenu menu;
 
-            for (auto i = 0; i < 200; ++i)
+            for (int i = 0; i < 200; ++i)
                 menu.addItem ("Item " + String (i), nullptr);
 
             menu.showMenuAsync (PopupMenu::Options{}.withTargetComponent (multiColumnMenuButton)
@@ -536,10 +611,13 @@ struct MenuPage   : public Component
         addAndMakeVisible (customItemButton);
         customItemButton.onClick = [&]
         {
-            struct CustomComponent  : public PopupMenu::CustomComponent
+            struct CustomComponent final : public PopupMenu::CustomComponent
             {
                 CustomComponent (int widthIn, int heightIn, Colour backgroundIn)
-                    : idealWidth (widthIn), idealHeight (heightIn), background (backgroundIn)
+                    : PopupMenu::CustomComponent (false),
+                      idealWidth (widthIn),
+                      idealHeight (heightIn),
+                      background (backgroundIn)
                 {}
 
                 void getIdealSize (int& width, int& height) override
@@ -574,14 +652,12 @@ struct MenuPage   : public Component
             const auto colour = Colour::fromHSL (randomColourGenerator.nextFloat(), 0.5f, 0.5f, 1.0f);
             fancyThemeButton.setColour (TextButton::buttonColourId, colour);
 
-            const int columnLengths[] { 5, 10, 7, 3 };
-
             PopupMenu menu;
             menu.setLookAndFeel (&popupLookAndFeel);
 
-            for (auto length : columnLengths)
+            for (auto length : { 5, 10, 7, 3 })
             {
-                for (auto i = 0; i < length; ++i)
+                for (int i = 0; i < length; ++i)
                     menu.addItem ("Item " + String (i), nullptr);
 
                 menu.addColumnBreak();
@@ -602,6 +678,7 @@ struct MenuPage   : public Component
         box.flexDirection = FlexBox::Direction::column;
         box.items = { makeItem (shortMenuButton),
                       makeItem (longMenuButton),
+                      makeItem (nestedMenusButton),
                       makeItem (multiColumnMenuButton),
                       makeItem (customItemButton),
                       makeItem (fancyThemeButton) };
@@ -613,7 +690,7 @@ struct MenuPage   : public Component
     {
         void drawPopupMenuColumnSeparatorWithOptions (Graphics& g,
                                                       const Rectangle<int>& bounds,
-                                                      const PopupMenu::Options& opt)
+                                                      const PopupMenu::Options& opt) override
         {
             if (auto* target = opt.getTargetComponent())
             {
@@ -631,7 +708,7 @@ struct MenuPage   : public Component
             }
         }
 
-        void drawPopupMenuBackgroundWithOptions (Graphics& g, int, int, const PopupMenu::Options& opt)
+        void drawPopupMenuBackgroundWithOptions (Graphics& g, int, int, const PopupMenu::Options& opt) override
         {
             if (auto* target = opt.getTargetComponent())
             {
@@ -640,7 +717,7 @@ struct MenuPage   : public Component
         }
 
         // Return the amount of space that should be left between popup menu columns.
-        int getPopupMenuColumnSeparatorWidthWithOptions (const PopupMenu::Options&)
+        int getPopupMenuColumnSeparatorWidthWithOptions (const PopupMenu::Options&) override
         {
             return 10;
         }
@@ -651,14 +728,15 @@ struct MenuPage   : public Component
 
     TextButton shortMenuButton       { "Short" },
                longMenuButton        { "Long" },
+               nestedMenusButton     { "Nested Sub-Menus" },
                multiColumnMenuButton { "Multi Column" },
                customItemButton      { "Custom Items" },
                fancyThemeButton      { "Fancy Theme with Column Breaks" };
 };
 
 //==============================================================================
-class ToolbarDemoComp   : public Component,
-                          private Slider::Listener
+class ToolbarDemoComp final : public Component,
+                              private Slider::Listener
 {
 public:
     ToolbarDemoComp()
@@ -724,7 +802,7 @@ private:
                customiseButton    { "Customise..." };
 
     //==============================================================================
-    class DemoToolbarItemFactory   : public ToolbarItemFactory
+    class DemoToolbarItemFactory final : public ToolbarItemFactory
     {
     public:
         DemoToolbarItemFactory() {}
@@ -847,7 +925,7 @@ private:
 
         // Demonstrates how to put a custom component into a toolbar - this one contains
         // a ComboBox.
-        class CustomToolbarComboBox : public ToolbarItemComponent
+        class CustomToolbarComboBox final : public ToolbarItemComponent
         {
         public:
             CustomToolbarComboBox (const int toolbarItemId)
@@ -899,8 +977,8 @@ private:
 /**
     This class shows how to implement a TableListBoxModel to show in a TableListBox.
 */
-class TableDemoComponent    : public Component,
-                              public TableListBoxModel
+class TableDemoComponent final : public Component,
+                                 public TableListBoxModel
 {
 public:
     TableDemoComponent()
@@ -1055,7 +1133,7 @@ public:
 
     String getText (const int columnNumber, const int rowNumber) const
     {
-        return dataList->getChildElement (rowNumber)->getStringAttribute ( getAttributeNameForColumnId(columnNumber));
+        return dataList->getChildElement (rowNumber)->getStringAttribute (getAttributeNameForColumnId (columnNumber));
     }
 
     void setText (const int columnNumber, const int rowNumber, const String& newText)
@@ -1083,7 +1161,7 @@ private:
 
     //==============================================================================
     // This is a custom Label component, which we use for the table's editable text columns.
-    class EditableTextCustomComponent  : public Label
+    class EditableTextCustomComponent final : public Label
     {
     public:
         EditableTextCustomComponent (TableDemoComponent& td)  : owner (td)
@@ -1110,7 +1188,7 @@ private:
         {
             row = newRow;
             columnId = newColumn;
-            setText (owner.getText(columnId, row), dontSendNotification);
+            setText (owner.getText (columnId, row), dontSendNotification);
         }
 
         void paint (Graphics& g) override
@@ -1131,7 +1209,7 @@ private:
     //==============================================================================
     // This is a custom component containing a combo box, which we're going to put inside
     // our table's "rating" column.
-    class RatingColumnCustomComponent    : public Component
+    class RatingColumnCustomComponent final : public Component
     {
     public:
         RatingColumnCustomComponent (TableDemoComponent& td)  : owner (td)
@@ -1225,8 +1303,8 @@ private:
 };
 
 //==============================================================================
-class DragAndDropDemo  : public Component,
-                         public DragAndDropContainer
+class DragAndDropDemo final : public Component,
+                              public DragAndDropContainer
 {
 public:
     DragAndDropDemo()
@@ -1250,7 +1328,7 @@ public:
 
 private:
     //==============================================================================
-    struct SourceItemListboxContents  : public ListBoxModel
+    struct SourceItemListboxContents final : public ListBoxModel
     {
         // The following methods implement the necessary virtual functions from ListBoxModel,
         // telling the listbox how many rows there are, painting them, etc.
@@ -1288,10 +1366,10 @@ private:
 
     //==============================================================================
     // and this is a component that can have things dropped onto it..
-    class DragAndDropDemoTarget : public Component,
-                                  public DragAndDropTarget,
-                                  public FileDragAndDropTarget,
-                                  public TextDragAndDropTarget
+    class DragAndDropDemoTarget final : public Component,
+                                        public DragAndDropTarget,
+                                        public FileDragAndDropTarget,
+                                        public TextDragAndDropTarget
     {
     public:
         DragAndDropDemoTarget()    {}
@@ -1431,7 +1509,7 @@ private:
 };
 
 //==============================================================================
-struct DemoTabbedComponent  : public TabbedComponent
+struct DemoTabbedComponent final : public TabbedComponent
 {
     DemoTabbedComponent (bool isRunningComponenTransformsDemo)
         : TabbedComponent (TabbedButtonBar::TabsAtTop)
@@ -1452,7 +1530,7 @@ struct DemoTabbedComponent  : public TabbedComponent
 
     // This is a small star button that is put inside one of the tabs. You can
     // use this technique to create things like "close tab" buttons, etc.
-    class CustomTabButton  : public Component
+    class CustomTabButton final : public Component
     {
     public:
         CustomTabButton (bool isRunningComponenTransformsDemo)
@@ -1489,7 +1567,7 @@ struct DemoTabbedComponent  : public TabbedComponent
 };
 
 //==============================================================================
-struct WidgetsDemo   : public Component
+struct WidgetsDemo final : public Component
 {
     WidgetsDemo (bool isRunningComponenTransformsDemo = false)
         : tabs (isRunningComponenTransformsDemo)

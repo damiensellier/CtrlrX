@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -31,7 +31,7 @@
 
  dependencies:     juce_core, juce_data_structures, juce_events, juce_graphics,
                    juce_gui_basics
- exporters:        xcode_mac, vs2019, linux_make, androidstudio, xcode_iphone
+ exporters:        xcode_mac, vs2022, linux_make, androidstudio, xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -49,8 +49,8 @@
 #include "../Assets/DemoUtilities.h"
 
 //==============================================================================
-class ValueTreeItem  : public TreeViewItem,
-                       private ValueTree::Listener
+class ValueTreeItem final : public TreeViewItem,
+                            private ValueTree::Listener
 {
 public:
     ValueTreeItem (const ValueTree& v, UndoManager& um)
@@ -129,7 +129,7 @@ public:
                 }
             }
 
-            if (oldOpenness.get() != nullptr)
+            if (oldOpenness != nullptr)
                 treeView.restoreOpennessState (*oldOpenness, false);
         }
     }
@@ -179,15 +179,16 @@ private:
 };
 
 //==============================================================================
-class ValueTreesDemo   : public Component,
-                         public DragAndDropContainer,
-                         private Timer
+class ValueTreesDemo final : public Component,
+                             public DragAndDropContainer,
+                             private Timer
 {
 public:
     ValueTreesDemo()
     {
         addAndMakeVisible (tree);
 
+        tree.setTitle ("ValueTree");
         tree.setDefaultOpenness (true);
         tree.setMultiSelectEnabled (true);
         rootItem.reset (new ValueTreeItem (createRootValueTree(), undoManager));

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -25,13 +25,25 @@ namespace juce
 
 class AudioIODevice;
 
+/**
+    Additional information that may be passed to the AudioIODeviceCallback.
+
+    @tags{Audio}
+*/
+struct AudioIODeviceCallbackContext
+{
+    /** If the host provides this information, this field will be set to point to
+        an integer holding the current value; otherwise, this will be nullptr.
+    */
+    const uint64_t* hostTimeNs = nullptr;
+};
 
 //==============================================================================
 /**
     One of these is passed to an AudioIODevice object to stream the audio data
     in and out.
 
-    The AudioIODevice will repeatedly call this class's audioDeviceIOCallback()
+    The AudioIODevice will repeatedly call this class's audioDeviceIOCallbackWithContext()
     method on its own high-priority audio thread, when it needs to send or receive
     the next block of data.
 
@@ -82,12 +94,15 @@ public:
                                     processing into several smaller callbacks to ensure higher audio
                                     performance. So make sure your code can cope with reasonable
                                     changes in the buffer size from one callback to the next.
+        @param context              Additional information that may be passed to the
+                                    AudioIODeviceCallback.
     */
-    virtual void audioDeviceIOCallback (const float** inputChannelData,
-                                        int numInputChannels,
-                                        float** outputChannelData,
-                                        int numOutputChannels,
-                                        int numSamples) = 0;
+    virtual void audioDeviceIOCallbackWithContext (const float* const* inputChannelData,
+                                                   int numInputChannels,
+                                                   float* const* outputChannelData,
+                                                   int numOutputChannels,
+                                                   int numSamples,
+                                                   const AudioIODeviceCallbackContext& context);
 
     /** Called to indicate that the device is about to start calling back.
 
@@ -114,7 +129,6 @@ public:
     */
     virtual void audioDeviceError (const String& errorMessage);
 };
-
 
 //==============================================================================
 /**
@@ -159,6 +173,21 @@ public:
         To find out which of these are currently in use, call getActiveInputChannels().
     */
     virtual StringArray getInputChannelNames() = 0;
+
+    //==============================================================================
+    /** For devices that support a default layout, returns the channels that are enabled in the
+        default layout.
+
+        Returns nullopt if the device doesn't supply a default layout.
+    */
+    virtual std::optional<BigInteger> getDefaultOutputChannels() const { return {}; }
+
+    /** For devices that support a default layout, returns the channels that are enabled in the
+        default layout.
+
+        Returns nullopt if the device doesn't supply a default layout.
+    */
+    virtual std::optional<BigInteger> getDefaultInputChannels()  const { return {}; }
 
     //==============================================================================
     /** Returns the set of sample-rates this device supports.
@@ -278,6 +307,8 @@ public:
     */
     virtual int getInputLatencyInSamples() = 0;
 
+    /** Returns the workgroup for this device. */
+    virtual AudioWorkgroup getWorkgroup() const { return {}; }
 
     //==============================================================================
     /** True if this device can show a pop-up control panel for editing its settings.

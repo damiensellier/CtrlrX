@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -46,18 +46,6 @@ namespace MidiFileHelpers
         }
     }
 
-    template <typename Value>
-    struct Optional
-    {
-        Optional() = default;
-
-        Optional (const Value& v)
-            : value (v), valid (true) {}
-
-        Value value = Value();
-        bool valid = false;
-    };
-
     template <typename Integral>
     struct ReadTrait;
 
@@ -100,23 +88,23 @@ namespace MidiFileHelpers
 
         auto ch = tryRead<uint32> (data, remaining);
 
-        if (! ch.valid)
+        if (! ch.hasValue())
             return {};
 
-        if (ch.value != ByteOrder::bigEndianInt ("MThd"))
+        if (*ch != ByteOrder::bigEndianInt ("MThd"))
         {
             auto ok = false;
 
-            if (ch.value == ByteOrder::bigEndianInt ("RIFF"))
+            if (*ch == ByteOrder::bigEndianInt ("RIFF"))
             {
                 for (int i = 0; i < 8; ++i)
                 {
                     ch = tryRead<uint32> (data, remaining);
 
-                    if (! ch.valid)
+                    if (! ch.hasValue())
                         return {};
 
-                    if (ch.value == ByteOrder::bigEndianInt ("MThd"))
+                    if (*ch == ByteOrder::bigEndianInt ("MThd"))
                     {
                         ok = true;
                         break;
@@ -130,29 +118,29 @@ namespace MidiFileHelpers
 
         const auto bytesRemaining = tryRead<uint32> (data, remaining);
 
-        if (! bytesRemaining.valid || bytesRemaining.value > remaining)
+        if (! bytesRemaining.hasValue() || *bytesRemaining > remaining)
             return {};
 
         const auto optFileType = tryRead<uint16> (data, remaining);
 
-        if (! optFileType.valid || 2 < optFileType.value)
+        if (! optFileType.hasValue() || 2 < *optFileType)
             return {};
 
         const auto optNumTracks = tryRead<uint16> (data, remaining);
 
-        if (! optNumTracks.valid || (optFileType.value == 0 && optNumTracks.value != 1))
+        if (! optNumTracks.hasValue() || (*optFileType == 0 && *optNumTracks != 1))
             return {};
 
         const auto optTimeFormat = tryRead<uint16> (data, remaining);
 
-        if (! optTimeFormat.valid)
+        if (! optTimeFormat.hasValue())
             return {};
 
         HeaderDetails result;
 
-        result.fileType = (short) optFileType.value;
-        result.timeFormat = (short) optTimeFormat.value;
-        result.numberOfTracks = (short) optNumTracks.value;
+        result.fileType = (short) *optFileType;
+        result.timeFormat = (short) *optTimeFormat;
+        result.numberOfTracks = (short) *optNumTracks;
         result.bytesRead = maxSize - remaining;
 
         return { result };
@@ -172,7 +160,7 @@ namespace MidiFileHelpers
 
         for (int i = 0; i < numEvents; ++i)
         {
-            auto& m = tempoEvents.getEventPointer(i)->message;
+            auto& m = tempoEvents.getEventPointer (i)->message;
             auto eventTime = m.getTimeStamp();
 
             if (eventTime >= time)
@@ -186,9 +174,9 @@ namespace MidiFileHelpers
 
             while (i + 1 < numEvents)
             {
-                auto& m2 = tempoEvents.getEventPointer(i + 1)->message;
+                auto& m2 = tempoEvents.getEventPointer (i + 1)->message;
 
-                if (m2.getTimeStamp() != eventTime)
+                if (! approximatelyEqual (m2.getTimeStamp(), eventTime))
                     break;
 
                 if (m2.isTempoMetaEvent())
@@ -212,7 +200,7 @@ namespace MidiFileHelpers
 
             for (int j = 0; j < numEvents; ++j)
             {
-                auto& m = track->getEventPointer(j)->message;
+                auto& m = track->getEventPointer (j)->message;
 
                 if ((m.*method)())
                     results.addEvent (m);
@@ -264,7 +252,6 @@ namespace MidiFileHelpers
 
 //==============================================================================
 MidiFile::MidiFile()  : timeFormat ((short) (unsigned short) 0xe728) {}
-MidiFile::~MidiFile() {}
 
 MidiFile::MidiFile (const MidiFile& other)  : timeFormat (other.timeFormat)
 {
@@ -356,7 +343,9 @@ double MidiFile::getLastTimestamp() const
 }
 
 //==============================================================================
-bool MidiFile::readFrom (InputStream& sourceStream, bool createMatchingNoteOffs)
+bool MidiFile::readFrom (InputStream& sourceStream,
+                         bool createMatchingNoteOffs,
+                         int* fileType)
 {
     clear();
     MemoryBlock data;
@@ -372,10 +361,10 @@ bool MidiFile::readFrom (InputStream& sourceStream, bool createMatchingNoteOffs)
 
     const auto optHeader = MidiFileHelpers::parseMidiHeader (d, size);
 
-    if (! optHeader.valid)
+    if (! optHeader.hasValue())
         return false;
 
-    const auto header = optHeader.value;
+    const auto header = *optHeader;
     timeFormat = header.timeFormat;
 
     d += header.bytesRead;
@@ -385,27 +374,32 @@ bool MidiFile::readFrom (InputStream& sourceStream, bool createMatchingNoteOffs)
     {
         const auto optChunkType = MidiFileHelpers::tryRead<uint32> (d, size);
 
-        if (! optChunkType.valid)
+        if (! optChunkType.hasValue())
             return false;
 
         const auto optChunkSize = MidiFileHelpers::tryRead<uint32> (d, size);
 
-        if (! optChunkSize.valid)
+        if (! optChunkSize.hasValue())
             return false;
 
-        const auto chunkSize = optChunkSize.value;
+        const auto chunkSize = *optChunkSize;
 
         if (size < chunkSize)
             return false;
 
-        if (optChunkType.value == ByteOrder::bigEndianInt ("MTrk"))
+        if (*optChunkType == ByteOrder::bigEndianInt ("MTrk"))
             readNextTrack (d, (int) chunkSize, createMatchingNoteOffs);
 
         size -= chunkSize;
         d += chunkSize;
     }
 
-    return size == 0;
+    const auto successful = (size == 0);
+
+    if (successful && fileType != nullptr)
+        *fileType = header.fileType;
+
+    return successful;
 }
 
 void MidiFile::readNextTrack (const uint8* data, int size, bool createMatchingNoteOffs)
@@ -445,7 +439,7 @@ void MidiFile::convertTimestampTicksToSeconds()
         {
             for (int j = ms->getNumEvents(); --j >= 0;)
             {
-                auto& m = ms->getEventPointer(j)->message;
+                auto& m = ms->getEventPointer (j)->message;
                 m.setTimeStamp (MidiFileHelpers::convertTicksToSeconds (m.getTimeStamp(), tempoEvents, timeFormat));
             }
         }
@@ -481,7 +475,7 @@ bool MidiFile::writeTrack (OutputStream& mainOut, const MidiMessageSequence& ms)
 
     for (int i = 0; i < ms.getNumEvents(); ++i)
     {
-        auto& mm = ms.getEventPointer(i)->message;
+        auto& mm = ms.getEventPointer (i)->message;
 
         if (mm.isEndOfTrackMetaEvent())
             endOfTrackEventWritten = true;
@@ -536,7 +530,7 @@ bool MidiFile::writeTrack (OutputStream& mainOut, const MidiMessageSequence& ms)
 //==============================================================================
 #if JUCE_UNIT_TESTS
 
-struct MidiFileTest  : public UnitTest
+struct MidiFileTest final : public UnitTest
 {
     MidiFileTest()
         : UnitTest ("MidiFile", UnitTestCategories::midi)
@@ -604,7 +598,7 @@ struct MidiFileTest  : public UnitTest
             {
                 // No data
                 const auto header = parseHeader ([] (OutputStream&) {});
-                expect (! header.valid);
+                expect (! header.hasValue());
             }
 
             {
@@ -614,7 +608,7 @@ struct MidiFileTest  : public UnitTest
                     writeBytes (os, { 0xff });
                 });
 
-                expect (! header.valid);
+                expect (! header.hasValue());
             }
 
             {
@@ -624,7 +618,7 @@ struct MidiFileTest  : public UnitTest
                     writeBytes (os, { 'M', 'T', 'h', 'd' });
                 });
 
-                expect (! header.valid);
+                expect (! header.hasValue());
             }
 
             {
@@ -634,7 +628,7 @@ struct MidiFileTest  : public UnitTest
                     writeBytes (os, { 'M', 'T', 'h', 'd', 0, 0, 0, 6, 0, 0, 0, 16, 0, 1 });
                 });
 
-                expect (! header.valid);
+                expect (! header.hasValue());
             }
 
             {
@@ -644,7 +638,7 @@ struct MidiFileTest  : public UnitTest
                     writeBytes (os, { 'M', 'T', 'h', 'd', 0, 0, 0, 6, 0, 5, 0, 16, 0, 1 });
                 });
 
-                expect (! header.valid);
+                expect (! header.hasValue());
             }
 
             {
@@ -654,12 +648,12 @@ struct MidiFileTest  : public UnitTest
                     writeBytes (os, { 'M', 'T', 'h', 'd', 0, 0, 0, 6, 0, 1, 0, 16, 0, 1 });
                 });
 
-                expect (header.valid);
+                expect (header.hasValue());
 
-                expectEquals (header.value.fileType, (short) 1);
-                expectEquals (header.value.numberOfTracks, (short) 16);
-                expectEquals (header.value.timeFormat, (short) 1);
-                expectEquals ((int) header.value.bytesRead, 14);
+                expectEquals (header->fileType, (short) 1);
+                expectEquals (header->numberOfTracks, (short) 16);
+                expectEquals (header->timeFormat, (short) 1);
+                expectEquals ((int) header->bytesRead, 14);
             }
         }
 
@@ -668,7 +662,7 @@ struct MidiFileTest  : public UnitTest
             {
                 // Empty input
                 const auto file = parseFile ([] (OutputStream&) {});
-                expect (! file.valid);
+                expect (! file.hasValue());
             }
 
             {
@@ -678,7 +672,7 @@ struct MidiFileTest  : public UnitTest
                     writeBytes (os, { 'M', 'T', 'h', 'd' });
                 });
 
-                expect (! file.valid);
+                expect (! file.hasValue());
             }
 
             {
@@ -688,8 +682,8 @@ struct MidiFileTest  : public UnitTest
                     writeBytes (os, { 'M', 'T', 'h', 'd', 0, 0, 0, 6, 0, 1, 0, 0, 0, 1 });
                 });
 
-                expect (file.valid);
-                expectEquals (file.value.getNumTracks(), 0);
+                expect (file.hasValue());
+                expectEquals (file->getNumTracks(), 0);
             }
 
             {
@@ -700,7 +694,7 @@ struct MidiFileTest  : public UnitTest
                     writeBytes (os, { 'M', 'T', 'r', '?' });
                 });
 
-                expect (! file.valid);
+                expect (! file.hasValue());
             }
 
             {
@@ -711,9 +705,9 @@ struct MidiFileTest  : public UnitTest
                     writeBytes (os, { 'M', 'T', 'r', 'k', 0, 0, 0, 1, 0xff });
                 });
 
-                expect (file.valid);
-                expectEquals (file.value.getNumTracks(), 1);
-                expectEquals (file.value.getTrack (0)->getNumEvents(), 0);
+                expect (file.hasValue());
+                expectEquals (file->getNumTracks(), 1);
+                expectEquals (file->getTrack (0)->getNumEvents(), 0);
             }
 
             {
@@ -724,7 +718,7 @@ struct MidiFileTest  : public UnitTest
                     writeBytes (os, { 'M', 'T', 'r', 'k', 0x0f, 0, 0, 0, 0xff });
                 });
 
-                expect (! file.valid);
+                expect (! file.hasValue());
             }
 
             {
@@ -738,10 +732,10 @@ struct MidiFileTest  : public UnitTest
                     writeBytes (os, { 0x80, 0x00, 0x00 });
                 });
 
-                expect (file.valid);
-                expectEquals (file.value.getNumTracks(), 1);
+                expect (file.hasValue());
+                expectEquals (file->getNumTracks(), 1);
 
-                auto& track = *file.value.getTrack (0);
+                auto& track = *file->getTrack (0);
                 expectEquals (track.getNumEvents(), 1);
                 expect (track.getEventPointer (0)->message.isNoteOff());
                 expectEquals (track.getEventPointer (0)->message.getTimeStamp(), (double) 0x0f);
@@ -760,7 +754,7 @@ struct MidiFileTest  : public UnitTest
     }
 
     template <typename Fn>
-    static MidiFileHelpers::Optional<MidiFileHelpers::HeaderDetails> parseHeader (Fn&& fn)
+    static Optional<MidiFileHelpers::HeaderDetails> parseHeader (Fn&& fn)
     {
         MemoryOutputStream os;
         fn (os);
@@ -770,7 +764,7 @@ struct MidiFileTest  : public UnitTest
     }
 
     template <typename Fn>
-    static MidiFileHelpers::Optional<MidiFile> parseFile (Fn&& fn)
+    static Optional<MidiFile> parseFile (Fn&& fn)
     {
         MemoryOutputStream os;
         fn (os);
@@ -778,7 +772,9 @@ struct MidiFileTest  : public UnitTest
         MemoryInputStream is (os.getData(), os.getDataSize(), false);
         MidiFile mf;
 
-        if (mf.readFrom (is))
+        int fileType = 0;
+
+        if (mf.readFrom (is, true, &fileType))
             return mf;
 
         return {};

@@ -44,7 +44,7 @@ namespace ProjectInfo
 {
     const char* const  projectName    = "Projucer";
     const char* const  companyName    = "Raw Material Software Limited";
-    const char* const  versionString  = "6.0.8";
-    const int          versionNumber  = 0x60008;
+    const char* const  versionString  = "7.0.12";
+    const int          versionNumber  = 0x7000c;
 }
 #endif

@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -37,7 +37,7 @@ RelativePointPath::RelativePointPath (const RelativePointPath& other)
       containsDynamicPoints (false)
 {
     for (int i = 0; i < other.elements.size(); ++i)
-        elements.add (other.elements.getUnchecked(i)->clone());
+        elements.add (other.elements.getUnchecked (i)->clone());
 }
 
 RelativePointPath::RelativePointPath (const Path& path)
@@ -71,8 +71,8 @@ bool RelativePointPath::operator== (const RelativePointPath& other) const noexce
 
     for (int i = 0; i < elements.size(); ++i)
     {
-        ElementBase* const e1 = elements.getUnchecked(i);
-        ElementBase* const e2 = other.elements.getUnchecked(i);
+        ElementBase* const e1 = elements.getUnchecked (i);
+        ElementBase* const e2 = other.elements.getUnchecked (i);
 
         if (e1->type != e2->type)
             return false;
@@ -106,7 +106,7 @@ void RelativePointPath::swapWith (RelativePointPath& other) noexcept
 void RelativePointPath::createPath (Path& path, Expression::Scope* scope) const
 {
     for (int i = 0; i < elements.size(); ++i)
-        elements.getUnchecked(i)->addToPath (path, scope);
+        elements.getUnchecked (i)->addToPath (path, scope);
 }
 
 bool RelativePointPath::containsAnyDynamicPoints() const

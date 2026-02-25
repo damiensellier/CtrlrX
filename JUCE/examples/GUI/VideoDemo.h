@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -31,7 +31,7 @@
 
  dependencies:     juce_core, juce_data_structures, juce_events, juce_graphics,
                    juce_gui_basics, juce_gui_extra, juce_video
- exporters:        xcode_mac, vs2019, androidstudio, xcode_iphone
+ exporters:        xcode_mac, vs2022, androidstudio, xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -51,9 +51,9 @@
 #if JUCE_MAC || JUCE_WINDOWS
 //==============================================================================
 // so that we can easily have two video windows each with a file browser, wrap this up as a class..
-class MovieComponentWithFileBrowser  : public Component,
-                                       public DragAndDropTarget,
-                                       private FilenameComponentListener
+class MovieComponentWithFileBrowser final : public Component,
+                                            public DragAndDropTarget,
+                                            private FilenameComponentListener
 {
 public:
     MovieComponentWithFileBrowser()
@@ -134,19 +134,22 @@ private:
         }
         else
         {
-            AlertWindow::showMessageBoxAsync (AlertWindow::WarningIcon,
-                                              "Couldn't load the file!",
-                                              result.getErrorMessage());
+            auto options = MessageBoxOptions::makeOptionsOk (MessageBoxIconType::WarningIcon,
+                                                             "Couldn't load the file!",
+                                                             result.getErrorMessage());
+            messageBox = AlertWindow::showScopedAsync (options, nullptr);
         }
     }
+
+    ScopedMessageBox messageBox;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MovieComponentWithFileBrowser)
 };
 
 //==============================================================================
-class VideoDemo   : public Component,
-                    public DragAndDropContainer,
-                    private FileBrowserListener
+class VideoDemo final : public Component,
+                        public DragAndDropContainer,
+                        private FileBrowserListener
 {
 public:
     VideoDemo()
@@ -154,8 +157,9 @@ public:
         setOpaque (true);
 
         movieList.setDirectory (File::getSpecialLocation (File::userMoviesDirectory), true, true);
-        directoryThread.startThread (1);
+        directoryThread.startThread (Thread::Priority::background);
 
+        fileTree.setTitle ("Files");
         fileTree.addListener (this);
         fileTree.setColour (FileTreeComponent::backgroundColourId, Colours::lightgrey.withAlpha (0.6f));
         addAndMakeVisible (fileTree);
@@ -265,8 +269,8 @@ private:
 };
 #elif JUCE_IOS || JUCE_ANDROID
 //==============================================================================
-class VideoDemo   : public Component,
-                    private Timer
+class VideoDemo final : public Component,
+                        private Timer
 {
 public:
     VideoDemo()
@@ -353,7 +357,7 @@ public:
                                      {
                                          if (! granted)
                                          {
-                                             AlertWindow::showMessageBoxAsync (AlertWindow::WarningIcon,
+                                             AlertWindow::showMessageBoxAsync (MessageBoxIconType::WarningIcon,
                                                                                "Permissions warning",
                                                                                "External storage access permission not granted, some files"
                                                                                " may be inaccessible.");
@@ -502,7 +506,7 @@ private:
 
     void askIfUseNativeControls (const URL& url)
     {
-        auto* aw = new AlertWindow ("Choose viewer type", {}, AlertWindow::NoIcon);
+        auto* aw = new AlertWindow ("Choose viewer type", {}, MessageBoxIconType::NoIcon);
 
         aw->addButton ("Yes", 1, KeyPress (KeyPress::returnKey));
         aw->addButton ("No", 0, KeyPress (KeyPress::escapeKey));
@@ -539,7 +543,7 @@ private:
 
             curVideoComp->onPlaybackStarted = [this]() { processPlaybackStarted(); };
             curVideoComp->onPlaybackStopped = [this]() { processPlaybackPaused(); };
-            curVideoComp->onErrorOccurred   = [this](const String& errorMessage) { errorOccurred (errorMessage); };
+            curVideoComp->onErrorOccurred   = [this] (const String& errorMessage) { errorOccurred (errorMessage); };
             curVideoComp->setVisible (true);
 
            #if JUCE_SYNC_VIDEO_VOLUME_WITH_OS_MEDIA_VOLUME
@@ -558,7 +562,7 @@ private:
 
     void showVideoUrlPrompt()
     {
-        auto* aw = new AlertWindow ("Enter URL for video to load", {}, AlertWindow::NoIcon);
+        auto* aw = new AlertWindow ("Enter URL for video to load", {}, MessageBoxIconType::NoIcon);
 
         aw->addButton ("OK", 1, KeyPress (KeyPress::returnKey));
         aw->addButton ("Cancel", 0, KeyPress (KeyPress::escapeKey));
@@ -595,7 +599,7 @@ private:
         }
         else
         {
-            AlertWindow::showMessageBoxAsync (AlertWindow::WarningIcon,
+            AlertWindow::showMessageBoxAsync (MessageBoxIconType::WarningIcon,
                                               "Couldn't load the file!",
                                               result.getErrorMessage());
         }
@@ -626,7 +630,7 @@ private:
         currentPositionLabel.setText (getPositionString (position, duration), sendNotification);
 
         if (! positionSliderDragging)
-            positionSlider.setValue (duration != 0 ? (position / duration) : 0.0, dontSendNotification);
+            positionSlider.setValue (approximatelyEqual (duration, 0.0) ? 0.0 : (position / duration), dontSendNotification);
     }
 
     void seekVideoToStart()
@@ -676,7 +680,7 @@ private:
 
     void errorOccurred (const String& errorMessage)
     {
-        AlertWindow::showMessageBoxAsync (AlertWindow::InfoIcon,
+        AlertWindow::showMessageBoxAsync (MessageBoxIconType::InfoIcon,
                                           "An error has occurred",
                                           errorMessage + ", video will be unloaded.");
 
@@ -702,6 +706,6 @@ private:
         updatePositionSliderAndLabel();
     }
 };
-#elif JUCE_LINUX
+#elif JUCE_LINUX || JUCE_BSD
  #error "This demo is not supported on Linux!"
 #endif

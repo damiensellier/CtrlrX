@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -29,10 +29,15 @@ namespace juce
 struct ImageCache::Pimpl     : private Timer,
                                private DeletedAtShutdown
 {
-    Pimpl() {}
-    ~Pimpl() override { clearSingletonInstance(); }
+    Pimpl() = default;
 
-    JUCE_DECLARE_SINGLETON_SINGLETHREADED_MINIMAL (ImageCache::Pimpl)
+    ~Pimpl() override
+    {
+        stopTimer();
+        clearSingletonInstance();
+    }
+
+    JUCE_DECLARE_SINGLETON (ImageCache::Pimpl, false)
 
     Image getFromHashCode (const int64 hashCode) noexcept
     {
@@ -70,7 +75,7 @@ struct ImageCache::Pimpl     : private Timer,
 
         for (int i = images.size(); --i >= 0;)
         {
-            auto& item = images.getReference(i);
+            auto& item = images.getReference (i);
 
             if (item.image.getReferenceCount() <= 1)
             {
@@ -92,7 +97,7 @@ struct ImageCache::Pimpl     : private Timer,
         const ScopedLock sl (lock);
 
         for (int i = images.size(); --i >= 0;)
-            if (images.getReference(i).image.getReferenceCount() <= 1)
+            if (images.getReference (i).image.getReferenceCount() <= 1)
                 images.remove (i);
     }
 

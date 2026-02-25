@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -29,23 +29,23 @@ namespace juce
 namespace WindowsMediaCodec
 {
 
-class JuceIStream   : public ComBaseClassHelper<IStream>
+class JuceIStream final : public ComBaseClassHelper<IStream>
 {
 public:
     JuceIStream (InputStream& in) noexcept
-        : ComBaseClassHelper<IStream> (0), source (in)
+        : ComBaseClassHelper (0), source (in)
     {
     }
 
-    JUCE_COMRESULT Commit (DWORD)                        { return S_OK; }
-    JUCE_COMRESULT Write (const void*, ULONG, ULONG*)    { return E_NOTIMPL; }
-    JUCE_COMRESULT Clone (IStream**)                     { return E_NOTIMPL; }
-    JUCE_COMRESULT SetSize (ULARGE_INTEGER)              { return E_NOTIMPL; }
-    JUCE_COMRESULT Revert()                              { return E_NOTIMPL; }
-    JUCE_COMRESULT LockRegion (ULARGE_INTEGER, ULARGE_INTEGER, DWORD)    { return E_NOTIMPL; }
-    JUCE_COMRESULT UnlockRegion (ULARGE_INTEGER, ULARGE_INTEGER, DWORD)  { return E_NOTIMPL; }
+    JUCE_COMRESULT Commit (DWORD)                                        override { return S_OK; }
+    JUCE_COMRESULT Write (const void*, ULONG, ULONG*)                    override { return E_NOTIMPL; }
+    JUCE_COMRESULT Clone (IStream**)                                     override { return E_NOTIMPL; }
+    JUCE_COMRESULT SetSize (ULARGE_INTEGER)                              override { return E_NOTIMPL; }
+    JUCE_COMRESULT Revert()                                              override { return E_NOTIMPL; }
+    JUCE_COMRESULT LockRegion (ULARGE_INTEGER, ULARGE_INTEGER, DWORD)    override { return E_NOTIMPL; }
+    JUCE_COMRESULT UnlockRegion (ULARGE_INTEGER, ULARGE_INTEGER, DWORD)  override { return E_NOTIMPL; }
 
-    JUCE_COMRESULT Read (void* dest, ULONG numBytes, ULONG* bytesRead)
+    JUCE_COMRESULT Read (void* dest, ULONG numBytes, ULONG* bytesRead) override
     {
         auto numRead = source.read (dest, (size_t) numBytes);
 
@@ -55,7 +55,7 @@ public:
         return (numRead == (int) numBytes) ? S_OK : S_FALSE;
     }
 
-    JUCE_COMRESULT Seek (LARGE_INTEGER position, DWORD origin, ULARGE_INTEGER* resultPosition)
+    JUCE_COMRESULT Seek (LARGE_INTEGER position, DWORD origin, ULARGE_INTEGER* resultPosition) override
     {
         auto newPos = (int64) position.QuadPart;
 
@@ -74,16 +74,16 @@ public:
         }
 
         if (resultPosition != nullptr)
-            resultPosition->QuadPart = newPos;
+            resultPosition->QuadPart = (ULONGLONG) newPos;
 
         return source.setPosition (newPos) ? S_OK : E_NOTIMPL;
     }
 
     JUCE_COMRESULT CopyTo (IStream* destStream, ULARGE_INTEGER numBytesToDo,
-                           ULARGE_INTEGER* bytesRead, ULARGE_INTEGER* bytesWritten)
+                           ULARGE_INTEGER* bytesRead, ULARGE_INTEGER* bytesWritten) override
     {
         uint64 totalCopied = 0;
-        int64 numBytes = numBytesToDo.QuadPart;
+        auto numBytes = (int64) numBytesToDo.QuadPart;
 
         while (numBytes > 0 && ! source.isExhausted())
         {
@@ -95,8 +95,8 @@ public:
             if (numRead <= 0)
                 break;
 
-            destStream->Write (buffer, numRead, nullptr);
-            totalCopied += numRead;
+            destStream->Write (buffer, (ULONG) numRead, nullptr);
+            totalCopied += (ULONG) numRead;
         }
 
         if (bytesRead != nullptr)      bytesRead->QuadPart = totalCopied;
@@ -105,14 +105,14 @@ public:
         return S_OK;
     }
 
-    JUCE_COMRESULT Stat (STATSTG* stat, DWORD)
+    JUCE_COMRESULT Stat (STATSTG* stat, DWORD) override
     {
         if (stat == nullptr)
             return STG_E_INVALIDPOINTER;
 
         zerostruct (*stat);
         stat->type = STGTY_STREAM;
-        stat->cbSize.QuadPart = jmax ((int64) 0, source.getTotalLength());
+        stat->cbSize.QuadPart = (ULONGLONG) jmax ((int64) 0, source.getTotalLength());
         return S_OK;
     }
 
@@ -124,10 +124,10 @@ private:
 
 //==============================================================================
 static const char* wmFormatName = "Windows Media";
-static const char* const extensions[] = { ".mp3", ".wmv", ".asf", ".wm", ".wma", 0 };
+static const char* const extensions[] = { ".mp3", ".wmv", ".asf", ".wm", ".wma", nullptr };
 
 //==============================================================================
-class WMAudioReader   : public AudioFormatReader
+class WMAudioReader final : public AudioFormatReader
 {
 public:
     WMAudioReader (InputStream* const input_)
@@ -157,13 +157,13 @@ public:
         }
     }
 
-    ~WMAudioReader()
+    ~WMAudioReader() override
     {
         if (wmSyncReader != nullptr)
             wmSyncReader->Close();
     }
 
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
         if (sampleRate <= 0)
@@ -174,7 +174,7 @@ public:
         clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
                                            startSampleInFile, numSamples, lengthInSamples);
 
-        const int stride = numChannels * sizeof (int16);
+        const auto stride = (int) (numChannels * sizeof (int16));
 
         while (numSamples > 0)
         {
@@ -203,20 +203,20 @@ public:
                         return false;
 
                     if (hasJumped)
-                        bufferedRange.setStart ((int64) ((sampleTime * (int64) sampleRate) / 10000000));
+                        bufferedRange.setStart ((int64) ((sampleTime * (QWORD) sampleRate) / 10000000));
                     else
                         bufferedRange.setStart (bufferedRange.getEnd()); // (because the positions returned often aren't contiguous)
 
-                    bufferedRange.setLength ((int64) (dataLength / stride));
+                    bufferedRange.setLength ((int64) dataLength / (int64) stride);
 
-                    buffer.ensureSize ((int) dataLength);
+                    buffer.ensureSize ((size_t) dataLength);
                     memcpy (buffer.getData(), rawData, (size_t) dataLength);
                 }
                 else if (hr == NS_E_NO_MORE_SAMPLES)
                 {
                     bufferedRange.setStart (startSampleInFile);
                     bufferedRange.setLength (256);
-                    buffer.ensureSize (256 * stride);
+                    buffer.ensureSize (256 * (size_t) stride);
                     buffer.fillWith (0);
                 }
                 else
@@ -231,6 +231,7 @@ public:
 
             for (int i = 0; i < numDestChannels; ++i)
             {
+                JUCE_BEGIN_IGNORE_WARNINGS_MSVC (28182)
                 jassert (destSamples[i] != nullptr);
 
                 auto srcChan = jmin (i, (int) numChannels - 1);
@@ -239,9 +240,10 @@ public:
 
                 for (int j = 0; j < numToDo; ++j)
                 {
-                    dst[j] = ((uint32) *src) << 16;
+                    dst[j] = (int) (((uint32) *src) << 16);
                     src += numChannels;
                 }
+                JUCE_END_IGNORE_WARNINGS_MSVC
             }
 
             startSampleInFile += numToDo;
@@ -260,7 +262,7 @@ private:
 
     void checkCoInitialiseCalled()
     {
-        CoInitialize (0);
+        [[maybe_unused]] const auto result = CoInitialize (nullptr);
     }
 
     void scanFileForDetails()
@@ -284,7 +286,7 @@ private:
                     if (auto wmMediaProperties = wmStreamConfig.getInterface<IWMMediaProps>())
                     {
                         DWORD sizeMediaType;
-                        hr = wmMediaProperties->GetMediaType (0, &sizeMediaType);
+                        hr = wmMediaProperties->GetMediaType (nullptr, &sizeMediaType);
 
                         HeapBlock<WM_MEDIA_TYPE> mediaType;
                         mediaType.malloc (sizeMediaType, 1);
@@ -297,7 +299,7 @@ private:
                             sampleRate = inputFormat->nSamplesPerSec;
                             numChannels = inputFormat->nChannels;
                             bitsPerSample = inputFormat->wBitsPerSample != 0 ? inputFormat->wBitsPerSample : 16;
-                            lengthInSamples = (lengthInNanoseconds * (int) sampleRate) / 10000000;
+                            lengthInSamples = (lengthInNanoseconds * (QWORD) sampleRate) / 10000000;
                         }
                     }
                 }
@@ -317,7 +319,7 @@ WindowsMediaAudioFormat::WindowsMediaAudioFormat()
 {
 }
 
-WindowsMediaAudioFormat::~WindowsMediaAudioFormat() {}
+WindowsMediaAudioFormat::~WindowsMediaAudioFormat() = default;
 
 Array<int> WindowsMediaAudioFormat::getPossibleSampleRates()    { return {}; }
 Array<int> WindowsMediaAudioFormat::getPossibleBitDepths()      { return {}; }

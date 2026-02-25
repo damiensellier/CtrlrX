@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -59,7 +59,7 @@ String& GeneratedCode::getCallbackCode (const String& requiredParentClass,
 
     for (int i = callbacks.size(); --i >= 0;)
     {
-        CallbackMethod* const cm = callbacks.getUnchecked(i);
+        CallbackMethod* const cm = callbacks.getUnchecked (i);
 
         if (cm->requiredParentClass == parentClass
              && cm->returnType == returnType
@@ -81,7 +81,7 @@ void GeneratedCode::removeCallback (const String& returnType, const String& prot
 {
     for (int i = callbacks.size(); --i >= 0;)
     {
-        CallbackMethod* const cm = callbacks.getUnchecked(i);
+        CallbackMethod* const cm = callbacks.getUnchecked (i);
 
         if (cm->returnType == returnType && cm->prototype == prototype)
             callbacks.remove (i);
@@ -104,7 +104,7 @@ StringArray GeneratedCode::getExtraParentClasses() const
 
     for (int i = 0; i < callbacks.size(); ++i)
     {
-        CallbackMethod* const cm = callbacks.getUnchecked(i);
+        CallbackMethod* const cm = callbacks.getUnchecked (i);
         s.add (cm->requiredParentClass);
     }
 
@@ -117,7 +117,7 @@ String GeneratedCode::getCallbackDeclarations() const
 
     for (int i = 0; i < callbacks.size(); ++i)
     {
-        CallbackMethod* const cm = callbacks.getUnchecked(i);
+        CallbackMethod* const cm = callbacks.getUnchecked (i);
 
         s << cm->returnType << " " << cm->prototype << " override;\n";
     }
@@ -131,7 +131,7 @@ String GeneratedCode::getCallbackDefinitions() const
 
     for (int i = 0; i < callbacks.size(); ++i)
     {
-        CallbackMethod* const cm = callbacks.getUnchecked(i);
+        CallbackMethod* const cm = callbacks.getUnchecked (i);
 
         const String userCodeBlockName ("User"
             + build_tools::makeValidIdentifier (cm->prototype.upToFirstOccurrenceOf ("(", false, false),
@@ -217,7 +217,7 @@ static String getIncludeFileCode (const Array<File>& files, const File& targetFi
     String s;
 
     for (int i = 0; i < files.size(); ++i)
-        s << CodeHelpers::createIncludeStatement (files.getReference(i), targetFile) << newLine;
+        s << CodeHelpers::createIncludeStatement (files.getReference (i), targetFile) << newLine;
 
     return s;
 }

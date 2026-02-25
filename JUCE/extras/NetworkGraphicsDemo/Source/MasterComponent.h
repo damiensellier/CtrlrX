@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -28,11 +28,11 @@
     Runs the master node, calls the demo to update the canvas, broadcasts those changes
     out to slaves, and shows a view of all the clients to allow them to be dragged around.
 */
-struct MasterContentComponent  : public Component,
-                                 private Timer,
-                                 private OSCSender,
-                                 private OSCReceiver,
-                                 private OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>
+struct MasterContentComponent final : public Component,
+                                      private Timer,
+                                      private OSCSender,
+                                      private OSCReceiver,
+                                      private OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>
 {
     MasterContentComponent (PropertiesFile& props)
         : properties (props)
@@ -241,7 +241,7 @@ private:
     void updateDeviceComponents()
     {
         for (int i = devices.size(); --i >= 0;)
-            if (getClient (devices.getUnchecked(i)->getName()) == nullptr)
+            if (getClient (devices.getUnchecked (i)->getName()) == nullptr)
                 devices.remove (i);
 
         for (const auto& c : clients)
@@ -275,7 +275,7 @@ private:
     }
 
     //==============================================================================
-    struct DeviceComponent  : public Component
+    struct DeviceComponent final : public Component
     {
         DeviceComponent (MasterContentComponent& e, String name)
             : Component (name), editor (e)

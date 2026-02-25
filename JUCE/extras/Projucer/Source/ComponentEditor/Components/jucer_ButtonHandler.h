@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -204,7 +204,7 @@ private:
                 oldName = comp->getButtonText();
             }
 
-            bool perform()
+            bool perform() override
             {
                 showCorrectTab();
                 getComponent()->setButtonText (newName);
@@ -212,7 +212,7 @@ private:
                 return true;
             }
 
-            bool undo()
+            bool undo() override
             {
                 showCorrectTab();
                 getComponent()->setButtonText (oldName);
@@ -232,13 +232,13 @@ private:
         {
         }
 
-        void setState (bool newState)
+        void setState (bool newState) override
         {
             document.perform (new ButtonCallbackChangeAction (component, *document.getComponentLayout(), newState),
                               "Change button callback");
         }
 
-        bool getState() const       { return needsButtonListener (component); }
+        bool getState() const override       { return needsButtonListener (component); }
 
     private:
         class ButtonCallbackChangeAction  : public ComponentUndoableAction <Button>
@@ -251,7 +251,7 @@ private:
                 oldState = needsButtonListener (comp);
             }
 
-            bool perform()
+            bool perform() override
             {
                 showCorrectTab();
                 setNeedsButtonListener (getComponent(), newState);
@@ -259,7 +259,7 @@ private:
                 return true;
             }
 
-            bool undo()
+            bool undo() override
             {
                 showCorrectTab();
                 setNeedsButtonListener (getComponent(), oldState);
@@ -301,7 +301,7 @@ private:
                 oldId = comp->getRadioGroupId();
             }
 
-            bool perform()
+            bool perform() override
             {
                 showCorrectTab();
                 getComponent()->setRadioGroupId (newId);
@@ -309,7 +309,7 @@ private:
                 return true;
             }
 
-            bool undo()
+            bool undo() override
             {
                 showCorrectTab();
                 getComponent()->setRadioGroupId (oldId);
@@ -331,13 +331,13 @@ private:
         {
         }
 
-        void setState (bool newState)
+        void setState (bool newState) override
         {
             document.perform (new ButtonConnectedChangeAction (component, *document.getComponentLayout(), flag, newState),
                               "Change button connected edges");
         }
 
-        bool getState() const
+        bool getState() const override
         {
             return (component->getConnectedEdgeFlags() & flag) != 0;
         }
@@ -356,7 +356,7 @@ private:
                 oldState = ((comp->getConnectedEdgeFlags() & flag) != 0);
             }
 
-            bool perform()
+            bool perform() override
             {
                 showCorrectTab();
 
@@ -369,7 +369,7 @@ private:
                 return true;
             }
 
-            bool undo()
+            bool undo() override
             {
                 showCorrectTab();
 

@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -52,12 +52,12 @@ public:
     {
     }
 
-    bool perform()
+    bool perform() override
     {
         return changeTo (newValue);
     }
 
-    bool undo()
+    bool undo() override
     {
         return changeTo (oldValue);
     }
@@ -77,20 +77,21 @@ private:
     {
         showCorrectTab();
 
-        PaintElementPath* const path = getElement();
-        jassert (path != nullptr);
+        if (auto* const path = getElement())
+        {
+            if (auto* const p = path->getPoint (index))
+            {
+                const auto typeChanged = (p->type != value.type);
+                *p = value;
+                p->owner = path;
 
-        PathPoint* const p = path->getPoint (index);
-        jassert (p != nullptr);
+                if (typeChanged)
+                    path->pointListChanged();
 
-        const bool typeChanged = (p->type != value.type);
-        *p = value;
-        p->owner = path;
+                path->changed();
+            }
+        }
 
-        if (typeChanged)
-            path->pointListChanged();
-
-        path->changed();
         return true;
     }
 };
@@ -202,7 +203,7 @@ void PaintElementPath::setCurrentBounds (const Rectangle<int>& b,
 
         for (int i = 0; i < points.size(); ++i)
         {
-            PathPoint* const destPoint = points.getUnchecked(i);
+            PathPoint* const destPoint = points.getUnchecked (i);
             PathPoint p (*destPoint);
 
             for (int j = p.getNumPoints(); --j >= 0;)
@@ -454,14 +455,14 @@ void PaintElementPath::fillInGeneratedCode (GeneratedCode& code, String& paintMe
     {
         s << "    ";
         fillType.fillInGeneratedCode ("fill", zero, code, s);
-        s << "    g.fillPath (" << pathVariable << ", juce::AffineTransform::translation(x, y));\n";
+        s << "    g.fillPath (" << pathVariable << ", juce::AffineTransform::translation (x, y));\n";
     }
 
     if (isStrokePresent && ! strokeType.isInvisible())
     {
         s << "    ";
         strokeType.fill.fillInGeneratedCode ("stroke", zero, code, s);
-        s << "    g.strokePath (" << pathVariable << ", " << strokeType.getPathStrokeCode() << ", juce::AffineTransform::translation(x, y));\n";
+        s << "    g.strokePath (" << pathVariable << ", " << strokeType.getPathStrokeCode() << ", juce::AffineTransform::translation (x, y));\n";
     }
 
     s << "}\n\n";
@@ -476,7 +477,7 @@ void PaintElementPath::applyCustomPaintSnippets (StringArray& snippets)
     if (! snippets.isEmpty() && (! fillType.isInvisible() || (isStrokePresent && ! strokeType.isInvisible())))
     {
         customPaintCode = snippets[0];
-        snippets.remove(0);
+        snippets.remove (0);
     }
 }
 
@@ -516,7 +517,7 @@ void PaintElementPath::createSiblingComponents()
 
     for (int i = 0; i < points.size(); ++i)
     {
-        switch (points.getUnchecked(i)->type)
+        switch (points.getUnchecked (i)->type)
         {
             case Path::Iterator::startNewSubPath:
                 siblingComponents.add (new PathPointComponent (this, i, 0));
@@ -543,8 +544,8 @@ void PaintElementPath::createSiblingComponents()
 
     for (int i = 0; i < siblingComponents.size(); ++i)
     {
-        getParentComponent()->addAndMakeVisible (siblingComponents.getUnchecked(i));
-        siblingComponents.getUnchecked(i)->updatePosition();
+        getParentComponent()->addAndMakeVisible (siblingComponents.getUnchecked (i));
+        siblingComponents.getUnchecked (i)->updatePosition();
     }
 }
 
@@ -555,7 +556,7 @@ String PaintElementPath::pathToString() const
 
     for (int i = 0; i < points.size(); ++i)
     {
-        const PathPoint* const p = points.getUnchecked(i);
+        const PathPoint* const p = points.getUnchecked (i);
 
         switch (p->type)
         {
@@ -702,7 +703,7 @@ void PaintElementPath::updateStoredPath (const ComponentLayout* layout, const Re
 
         for (int i = 0; i < points.size(); ++i)
         {
-            const PathPoint* const p = points.getUnchecked(i);
+            const PathPoint* const p = points.getUnchecked (i);
 
             switch (p->type)
             {
@@ -747,14 +748,14 @@ public:
     {
     }
 
-    bool perform()
+    bool perform() override
     {
         showCorrectTab();
         getElement()->setNonZeroWinding (newValue, false);
         return true;
     }
 
-    bool undo()
+    bool undo() override
     {
         showCorrectTab();
         getElement()->setNonZeroWinding (oldValue, false);
@@ -845,22 +846,23 @@ public:
     {
     }
 
-    bool perform()
+    bool perform() override
     {
         showCorrectTab();
 
-        PaintElementPath* const path = getElement();
-        jassert (path != nullptr);
+        if (auto* const path = getElement())
+        {
+            if (auto* const p = path->addPoint (pointIndexToAddItAfter, false))
+            {
+                indexAdded = path->indexOfPoint (p);
+                jassert (indexAdded >= 0);
+            }
+        }
 
-        PathPoint* const p = path->addPoint (pointIndexToAddItAfter, false);
-        jassert (p != nullptr);
-
-        indexAdded = path->indexOfPoint (p);
-        jassert (indexAdded >= 0);
         return true;
     }
 
-    bool undo()
+    bool undo() override
     {
         showCorrectTab();
 
@@ -950,7 +952,7 @@ public:
     {
     }
 
-    bool perform()
+    bool perform() override
     {
         showCorrectTab();
 
@@ -961,7 +963,7 @@ public:
         return path != nullptr;
     }
 
-    bool undo()
+    bool undo() override
     {
         showCorrectTab();
 
@@ -1008,6 +1010,13 @@ bool PaintElementPath::getPoint (int index, int pointNumber, double& x, double& 
 
     if (p == nullptr)
     {
+        x = y = 0;
+        return false;
+    }
+
+    if (pointNumber >= PathPoint::maxRects)
+    {
+        jassertfalse;
         x = y = 0;
         return false;
     }
@@ -1117,6 +1126,12 @@ void PaintElementPath::movePoint (int index, int pointNumber,
         jassert (pointNumber < 3 || p->type == Path::Iterator::cubicTo);
         jassert (pointNumber < 2 || p->type == Path::Iterator::cubicTo || p->type == Path::Iterator::quadraticTo);
 
+        if (pointNumber >= PathPoint::maxRects)
+        {
+            jassertfalse;
+            return;
+        }
+
         RelativePositionedRectangle& pr = newPoint.pos [pointNumber];
 
         double x, y, w, h;
@@ -1137,6 +1152,12 @@ void PaintElementPath::movePoint (int index, int pointNumber,
 
 RelativePositionedRectangle PaintElementPath::getPoint (int index, int pointNumber) const
 {
+    if (pointNumber >= PathPoint::maxRects)
+    {
+        jassertfalse;
+        return RelativePositionedRectangle();
+    }
+
     if (PathPoint* const p = points [index])
     {
         jassert (pointNumber < 3 || p->type == Path::Iterator::cubicTo);
@@ -1151,6 +1172,12 @@ RelativePositionedRectangle PaintElementPath::getPoint (int index, int pointNumb
 
 void PaintElementPath::setPoint (int index, int pointNumber, const RelativePositionedRectangle& newPos, const bool undoable)
 {
+    if (pointNumber >= PathPoint::maxRects)
+    {
+        jassertfalse;
+        return;
+    }
+
     if (PathPoint* const p = points [index])
     {
         PathPoint newPoint (*p);
@@ -1222,17 +1249,17 @@ public:
 
     int getIndex() const override
     {
-        const PathPoint* const p = owner->getPoint (index);
-        jassert (p != nullptr);
-
-        switch (p->type)
+        if (const auto* const p = owner->getPoint (index))
         {
-            case Path::Iterator::startNewSubPath:   return 0;
-            case Path::Iterator::lineTo:            return 1;
-            case Path::Iterator::quadraticTo:       return 2;
-            case Path::Iterator::cubicTo:           return 3;
-            case Path::Iterator::closePath:         break;
-            default:                                jassertfalse; break;
+            switch (p->type)
+            {
+                case Path::Iterator::startNewSubPath:   return 0;
+                case Path::Iterator::lineTo:            return 1;
+                case Path::Iterator::quadraticTo:       return 2;
+                case Path::Iterator::cubicTo:           return 3;
+                case Path::Iterator::closePath:         break;
+                default:                                jassertfalse; break;
+            }
         }
 
         return 0;
@@ -1265,17 +1292,17 @@ public:
         owner->getDocument()->addChangeListener (this);
     }
 
-    ~PathPointPositionProperty()
+    ~PathPointPositionProperty() override
     {
         owner->getDocument()->removeChangeListener (this);
     }
 
-    void setPosition (const RelativePositionedRectangle& newPos)
+    void setPosition (const RelativePositionedRectangle& newPos) override
     {
         owner->setPoint (index, pointNumber, newPos, true);
     }
 
-    RelativePositionedRectangle getPosition() const
+    RelativePositionedRectangle getPosition() const override
     {
         return owner->getPoint (index, pointNumber);
     }
@@ -1301,22 +1328,22 @@ public:
         choices.add ("Subpath is open-ended");
     }
 
-    ~PathPointClosedProperty()
+    ~PathPointClosedProperty() override
     {
         owner->getDocument()->removeChangeListener (this);
     }
 
-    void changeListenerCallback (ChangeBroadcaster*)
+    void changeListenerCallback (ChangeBroadcaster*) override
     {
         refresh();
     }
 
-    void setIndex (int newIndex)
+    void setIndex (int newIndex) override
     {
         owner->setSubpathClosed (index, newIndex == 0, true);
     }
 
-    int getIndex() const
+    int getIndex() const override
     {
         return owner->isSubpathClosed (index) ? 0 : 1;
     }
@@ -1337,12 +1364,12 @@ public:
     {
     }
 
-    void buttonClicked()
+    void buttonClicked() override
     {
         owner->addPoint (index, true);
     }
 
-    String getButtonText() const      { return "Add new point"; }
+    String getButtonText() const override      { return "Add new point"; }
 
 private:
     PaintElementPath* const owner;
@@ -1407,9 +1434,9 @@ PathPoint PathPoint::withChangedPointType (const Path::Iterator::PathElementType
             p.pos [numPoints - 1] = p.pos [oldNumPoints - 1];
             p.pos [numPoints - 1].getRectangleDouble (x, y, w, h, parentArea, owner->getDocument()->getComponentLayout());
 
-            const int index = owner->points.indexOf (this);
+            const int index = owner->indexOfPoint (this);
 
-            if (PathPoint* lastPoint = owner->points [index - 1])
+            if (PathPoint* lastPoint = owner->getPoint (index - 1))
             {
                 lastPoint->pos [lastPoint->getNumPoints() - 1]
                             .getRectangleDouble (lastX, lastY, w, h, parentArea, owner->getDocument()->getComponentLayout());
@@ -1460,7 +1487,7 @@ void PathPoint::getEditableProperties (Array<PropertyComponent*>& props, bool mu
     if (multipleSelected)
         return;
 
-    auto index = owner->points.indexOf (this);
+    auto index = owner->indexOfPoint (this);
     jassert (index >= 0);
 
     switch (type)
@@ -1511,7 +1538,7 @@ void PathPoint::getEditableProperties (Array<PropertyComponent*>& props, bool mu
 
 void PathPoint::deleteFromPath()
 {
-    owner->deletePoint (owner->points.indexOf (this), true);
+    owner->deletePoint (owner->indexOfPoint (this), true);
 }
 
 //==============================================================================
@@ -1528,7 +1555,7 @@ PathPointComponent::PathPointComponent (PaintElementPath* const path_,
     setSize (11, 11);
     setRepaintsOnMouseActivity (true);
 
-    selected = routine->getSelectedPoints().isSelected (path_->points [index]);
+    selected = routine->getSelectedPoints().isSelected (path_->getPoint (index));
     routine->getSelectedPoints().addChangeListener (this);
 }
 
@@ -1588,7 +1615,7 @@ void PathPointComponent::mouseDown (const MouseEvent& e)
     dragX = getX() + getWidth() / 2;
     dragY = getY() + getHeight() / 2;
 
-    mouseDownSelectStatus = routine->getSelectedPoints().addToSelectionOnMouseDown (path->points [index], e.mods);
+    mouseDownSelectStatus = routine->getSelectedPoints().addToSelectionOnMouseDown (path->getPoint (index), e.mods);
 
     owner->getDocument()->beginTransaction();
 }
@@ -1620,7 +1647,7 @@ void PathPointComponent::mouseDrag (const MouseEvent& e)
 
 void PathPointComponent::mouseUp (const MouseEvent& e)
 {
-    routine->getSelectedPoints().addToSelectionOnMouseUp (path->points [index],
+    routine->getSelectedPoints().addToSelectionOnMouseUp (path->getPoint (index),
                                                           e.mods, dragging,
                                                           mouseDownSelectStatus);
 }
@@ -1629,7 +1656,7 @@ void PathPointComponent::changeListenerCallback (ChangeBroadcaster* source)
 {
     ElementSiblingComponent::changeListenerCallback (source);
 
-    const bool nowSelected = routine->getSelectedPoints().isSelected (path->points [index]);
+    const bool nowSelected = routine->getSelectedPoints().isSelected (path->getPoint (index));
 
     if (nowSelected != selected)
     {

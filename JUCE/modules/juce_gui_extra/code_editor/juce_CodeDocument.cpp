@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -590,7 +590,7 @@ String CodeDocument::getTextBetween (const Position& start, const Position& end)
 
     for (int i = jmax (0, startLine); i <= maxLine; ++i)
     {
-        auto& line = *lines.getUnchecked(i);
+        auto& line = *lines.getUnchecked (i);
         auto len = line.lineLength;
 
         if (i == startLine)
@@ -879,7 +879,7 @@ void CodeDocument::addListener    (CodeDocument::Listener* l)   { listeners.add 
 void CodeDocument::removeListener (CodeDocument::Listener* l)   { listeners.remove (l); }
 
 //==============================================================================
-struct CodeDocument::InsertAction   : public UndoableAction
+struct CodeDocument::InsertAction final : public UndoableAction
 {
     InsertAction (CodeDocument& doc, const String& t, const int pos) noexcept
         : owner (doc), text (t), insertPos (pos)
@@ -967,7 +967,7 @@ void CodeDocument::insert (const String& text, const int insertPos, const bool u
 }
 
 //==============================================================================
-struct CodeDocument::DeleteAction  : public UndoableAction
+struct CodeDocument::DeleteAction final : public UndoableAction
 {
     DeleteAction (CodeDocument& doc, int start, int end) noexcept
         : owner (doc), startPos (start), endPos (end),
@@ -1063,7 +1063,7 @@ void CodeDocument::remove (const int startPos, const int endPos, const bool undo
 //==============================================================================
 #if JUCE_UNIT_TESTS
 
-struct CodeDocumentTest  : public UnitTest
+struct CodeDocumentTest final : public UnitTest
 {
     CodeDocumentTest()
         : UnitTest ("CodeDocument", UnitTestCategories::text)

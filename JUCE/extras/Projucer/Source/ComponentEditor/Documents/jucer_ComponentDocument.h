@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -32,26 +32,26 @@ class ComponentDocument   : public JucerDocument
 {
 public:
     ComponentDocument (SourceCodeDocument* cpp);
-    ~ComponentDocument();
+    ~ComponentDocument() override;
 
     //==============================================================================
-    String getTypeName() const;
+    String getTypeName() const override;
 
-    JucerDocument* createCopy();
-    Component* createTestComponent (const bool alwaysFillBackground);
+    JucerDocument* createCopy() override;
+    Component* createTestComponent (bool alwaysFillBackground) override;
 
-    int getNumPaintRoutines() const                             { return 1; }
-    StringArray getPaintRoutineNames() const                    { return StringArray ("Graphics"); }
-    PaintRoutine* getPaintRoutine (const int index) const       { return index == 0 ? backgroundGraphics.get() : nullptr; }
+    int getNumPaintRoutines() const override                             { return 1; }
+    StringArray getPaintRoutineNames() const override                    { return StringArray ("Graphics"); }
+    PaintRoutine* getPaintRoutine (int index) const override             { return index == 0 ? backgroundGraphics.get() : nullptr; }
 
-    ComponentLayout* getComponentLayout() const                 { return components.get(); }
+    ComponentLayout* getComponentLayout() const override                 { return components.get(); }
 
     //==============================================================================
-    std::unique_ptr<XmlElement> createXml() const;
-    bool loadFromXml (const XmlElement& xml);
+    std::unique_ptr<XmlElement> createXml() const override;
+    bool loadFromXml (const XmlElement& xml) override;
 
-    void fillInGeneratedCode (GeneratedCode& code) const;
-    void applyCustomPaintSnippets (StringArray&);
+    void fillInGeneratedCode (GeneratedCode& code) const override;
+    void applyCustomPaintSnippets (StringArray&) override;
 
 private:
     std::unique_ptr<ComponentLayout> components;

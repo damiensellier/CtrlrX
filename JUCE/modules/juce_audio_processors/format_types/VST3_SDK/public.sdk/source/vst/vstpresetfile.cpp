@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -35,9 +35,7 @@
 //-----------------------------------------------------------------------------
 
 #include "vstpresetfile.h"
-
 #include <algorithm>
-
 
 namespace Steinberg {
 namespace Vst {
@@ -178,7 +176,7 @@ bool PresetFile::loadPreset (IBStream* stream, const FUID& classID, IComponent* 
 }
 
 //------------------------------------------------------------------------
-PresetFile::PresetFile (IBStream* stream) : stream (stream), entryCount (0)
+PresetFile::PresetFile (IBStream* stream) : stream (stream)
 {
 	memset (entries, 0, sizeof (entries));
 
@@ -490,13 +488,12 @@ bool PresetFile::storeComponentState (IBStream* componentStream)
 bool PresetFile::restoreComponentState (IComponent* component)
 {
 	const Entry* e = getEntry (kComponentState);
-	if (e)
-	{
-		auto* readOnlyBStream = new ReadOnlyBStream (stream, e->offset, e->size);
-		FReleaser readOnlyBStreamReleaser (readOnlyBStream);
-		return verify (component->setState (readOnlyBStream));
-	}
-	return false;
+	if (!e)
+		return false;
+	
+	auto readOnlyBStream = owned (new ReadOnlyBStream (stream, e->offset, e->size));
+	return verify (component->setState (readOnlyBStream));
+	
 }
 
 //------------------------------------------------------------------------
@@ -505,8 +502,7 @@ bool PresetFile::restoreComponentState (IEditController* editController)
 	const Entry* e = getEntry (kComponentState);
 	if (e)
 	{
-		auto* readOnlyBStream = new ReadOnlyBStream (stream, e->offset, e->size);
-		FReleaser readOnlyBStreamReleaser (readOnlyBStream);
+		auto readOnlyBStream = owned (new ReadOnlyBStream (stream, e->offset, e->size));
 		return verify (editController->setComponentState (readOnlyBStream));
 	}
 	return false;
@@ -546,8 +542,7 @@ bool PresetFile::restoreControllerState (IEditController* editController)
 	const Entry* e = getEntry (kControllerState);
 	if (e)
 	{
-		auto* readOnlyBStream = new ReadOnlyBStream (stream, e->offset, e->size);
-		FReleaser readOnlyBStreamReleaser (readOnlyBStream);
+		auto readOnlyBStream = owned (new ReadOnlyBStream (stream, e->offset, e->size));
 		return verify (editController->setState (readOnlyBStream));
 	}
 	return false;
@@ -603,9 +598,8 @@ bool PresetFile::restoreProgramData (IProgramListData* programListData,
 				return false;
 
 			int32 alreadyRead = sizeof (int32);
-			auto* readOnlyBStream =
-			    new ReadOnlyBStream (stream, e->offset + alreadyRead, e->size - alreadyRead);
-			FReleaser readOnlyBStreamReleaser (readOnlyBStream);
+			auto readOnlyBStream = owned (
+			    new ReadOnlyBStream (stream, e->offset + alreadyRead, e->size - alreadyRead));
 			return programListData && verify (programListData->setProgramData (
 			                              savedProgramListID, programIndex, readOnlyBStream));
 		}
@@ -639,9 +633,8 @@ bool PresetFile::restoreProgramData (IUnitData* unitData, UnitID* unitId)
 				return false;
 
 			int32 alreadyRead = sizeof (int32);
-			auto* readOnlyBStream =
-			    new ReadOnlyBStream (stream, e->offset + alreadyRead, e->size - alreadyRead);
-			FReleaser readOnlyStreamReleaser (readOnlyBStream);
+			auto readOnlyBStream = owned (
+				new ReadOnlyBStream (stream, e->offset + alreadyRead, e->size - alreadyRead));
 			return (unitData && verify (unitData->setUnitData (savedUnitID, readOnlyBStream)));
 		}
 	}
@@ -662,9 +655,8 @@ bool PresetFile::restoreProgramData (IUnitInfo* unitInfo, int32 unitProgramListI
 				return false;
 
 			int32 alreadyRead = sizeof (int32);
-			auto* readOnlyBStream =
-			    new ReadOnlyBStream (stream, e->offset + alreadyRead, e->size - alreadyRead);
-			FReleaser readOnlyStreamReleaser (readOnlyBStream);
+			auto readOnlyBStream = owned (
+			    new ReadOnlyBStream (stream, e->offset + alreadyRead, e->size - alreadyRead));
 			return (unitInfo && unitInfo->setUnitProgramData (unitProgramListID, programIndex,
 			                                                  readOnlyBStream));
 		}
@@ -712,7 +704,7 @@ IMPLEMENT_FUNKNOWN_METHODS (FileStream, IBStream, IBStream::iid)
 //------------------------------------------------------------------------
 tresult PLUGIN_API FileStream::read (void* buffer, int32 numBytes, int32* numBytesRead)
 {
-	size_t result = fread (buffer, 1, numBytes, file);
+	size_t result = fread (buffer, 1, static_cast<size_t> (numBytes), file);
 	if (numBytesRead)
 		*numBytesRead = (int32)result;
 	return static_cast<int32> (result) == numBytes ? kResultOk : kResultFalse;
@@ -721,7 +713,7 @@ tresult PLUGIN_API FileStream::read (void* buffer, int32 numBytes, int32* numByt
 //------------------------------------------------------------------------
 tresult PLUGIN_API FileStream::write (void* buffer, int32 numBytes, int32* numBytesWritten)
 {
-	size_t result = fwrite (buffer, 1, numBytes, file);
+	size_t result = fwrite (buffer, 1, static_cast<size_t> (numBytes), file);
 	if (numBytesWritten)
 		*numBytesWritten = (int32)result;
 	return static_cast<int32> (result) == numBytes ? kResultOk : kResultFalse;
@@ -788,7 +780,7 @@ tresult PLUGIN_API ReadOnlyBStream::read (void* buffer, int32 numBytes, int32* n
 	if (!sourceStream)
 		return kNotInitialized;
 
-	int32 maxBytesToRead = (int32) (sectionSize - seekPosition);
+	int32 maxBytesToRead = static_cast<int32> (sectionSize - seekPosition);
 	if (numBytes > maxBytesToRead)
 		numBytes = maxBytesToRead;
 	if (numBytes <= 0)
@@ -863,9 +855,9 @@ BufferStream::~BufferStream () {FUNKNOWN_DTOR}
 //------------------------------------------------------------------------
 tresult PLUGIN_API BufferStream::read (void* buffer, int32 numBytes, int32* numBytesRead)
 {
-	uint32 size = mBuffer.get (buffer, numBytes);
+	uint32 size = mBuffer.get (buffer, static_cast<uint32> (numBytes));
 	if (numBytesRead)
-		*numBytesRead = size;
+		*numBytesRead = static_cast<int32> (size);
 
 	return kResultTrue;
 }
@@ -873,7 +865,7 @@ tresult PLUGIN_API BufferStream::read (void* buffer, int32 numBytes, int32* numB
 //------------------------------------------------------------------------
 tresult PLUGIN_API BufferStream::write (void* buffer, int32 numBytes, int32* numBytesWritten)
 {
-	bool res = mBuffer.put (buffer, numBytes);
+	bool res = mBuffer.put (buffer, static_cast<uint32> (numBytes));
 	if (numBytesWritten)
 		*numBytesWritten = res ? numBytes : 0;
 

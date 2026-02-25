@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -23,10 +23,9 @@
   ==============================================================================
 */
 
-namespace juce
+namespace juce::build_tools
 {
-namespace build_tools
-{
+
     static const char* resourceFileIdentifierString = "JUCER_BINARY_RESOURCE";
 
     //==============================================================================
@@ -90,7 +89,7 @@ namespace build_tools
 
         for (int i = 0; i < files.size(); ++i)
         {
-            auto& file = files.getReference(i);
+            auto& file = files.getReference (i);
 
             if (! file.existsAsFile())
                 return Result::fail ("Can't open resource file: " + file.getFullPathName());
@@ -135,12 +134,14 @@ namespace build_tools
 
         cpp << "/* ==================================== " << resourceFileIdentifierString << " ====================================";
         writeComment (cpp);
-        cpp << "namespace " << className << newLine
+        cpp << "#include <cstring>" << newLine
+            << newLine
+            << "namespace " << className << newLine
             << "{" << newLine;
 
         while (i < files.size())
         {
-            auto& file = files.getReference(i);
+            auto& file = files.getReference (i);
             auto variableName = variableNames[i];
 
             FileInputStream fileStream (file);
@@ -183,7 +184,8 @@ namespace build_tools
 
             cpp << newLine
                 << newLine
-                << "const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)" << newLine
+                << "const char* getNamedResource (const char* resourceNameUTF8, int& numBytes);" << newLine
+                << "const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)"  << newLine
                 << "{" << newLine;
 
             StringArray returnCodes;
@@ -216,13 +218,12 @@ namespace build_tools
 
             cpp << "};" << newLine << newLine;
 
-            cpp << "const char* getNamedResourceOriginalFilename (const char* resourceNameUTF8)"                         << newLine
+            cpp << "const char* getNamedResourceOriginalFilename (const char* resourceNameUTF8);"                        << newLine
+                << "const char* getNamedResourceOriginalFilename (const char* resourceNameUTF8)"                         << newLine
                 << "{"                                                                                                   << newLine
                 << "    for (unsigned int i = 0; i < (sizeof (namedResourceList) / sizeof (namedResourceList[0])); ++i)" << newLine
-                << "    {"                                                                                               << newLine
-                << "        if (namedResourceList[i] == resourceNameUTF8)"                                               << newLine
+                << "        if (strcmp (namedResourceList[i], resourceNameUTF8) == 0)"                                   << newLine
                 << "            return originalFilenames[i];"                                                            << newLine
-                << "    }"                                                                                               << newLine
                 <<                                                                                                          newLine
                 << "    return nullptr;"                                                                                 << newLine
                 << "}"                                                                                                   << newLine
@@ -283,5 +284,5 @@ namespace build_tools
 
         return { Result::ok(), std::move (filesCreated) };
     }
-}
-}
+
+} // namespace juce::build_tools

@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -33,7 +33,7 @@
                    juce_audio_processors, juce_audio_utils, juce_core,
                    juce_data_structures, juce_dsp, juce_events, juce_graphics,
                    juce_gui_basics, juce_gui_extra
- exporters:        xcode_mac, vs2019, linux_make
+ exporters:        xcode_mac, vs2022, linux_make
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -76,16 +76,16 @@ struct IIRFilterDemoDSP
 
     void updateParameters()
     {
-        if (sampleRate != 0.0)
+        if (! approximatelyEqual (sampleRate, 0.0))
         {
             auto cutoff = static_cast<float> (cutoffParam.getCurrentValue());
             auto qVal   = static_cast<float> (qParam.getCurrentValue());
 
             switch (typeParam.getCurrentSelectedID())
             {
-                case 1:     *iir.state = *IIR::Coefficients<float>::makeLowPass  (sampleRate, cutoff, qVal); break;
-                case 2:     *iir.state = *IIR::Coefficients<float>::makeHighPass (sampleRate, cutoff, qVal); break;
-                case 3:     *iir.state = *IIR::Coefficients<float>::makeBandPass (sampleRate, cutoff, qVal); break;
+                case 1:     *iir.state = IIR::ArrayCoefficients<float>::makeLowPass  (sampleRate, cutoff, qVal); break;
+                case 2:     *iir.state = IIR::ArrayCoefficients<float>::makeHighPass (sampleRate, cutoff, qVal); break;
+                case 3:     *iir.state = IIR::ArrayCoefficients<float>::makeBandPass (sampleRate, cutoff, qVal); break;
                 default:    break;
             }
         }
@@ -96,13 +96,13 @@ struct IIRFilterDemoDSP
 
     ChoiceParameter typeParam { { "Low-pass", "High-pass", "Band-pass" }, 1, "Type" };
     SliderParameter cutoffParam { { 20.0, 20000.0 }, 0.5, 440.0f, "Cutoff", "Hz" };
-    SliderParameter qParam { { 0.3, 20.0 }, 0.5, 1.0 / std::sqrt(2.0), "Q" };
+    SliderParameter qParam { { 0.3, 20.0 }, 0.5, 1.0 / std::sqrt (2.0), "Q" };
 
     std::vector<DSPDemoParameterBase*> parameters { &typeParam, &cutoffParam, &qParam };
     double sampleRate = 0.0;
 };
 
-struct IIRFilterDemo    : public Component
+struct IIRFilterDemo final : public Component
 {
     IIRFilterDemo()
     {

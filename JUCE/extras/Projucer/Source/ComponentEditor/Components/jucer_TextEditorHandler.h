@@ -2,15 +2,15 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
+   Agreement and JUCE Privacy Policy.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
    Privacy Policy: www.juce.com/juce-privacy-policy
 
    Or: You may also use this code under the terms of the GPL v3 (see
@@ -114,20 +114,20 @@ public:
     {
         ComponentTypeHandler::fillInCreationCode (code, component, memberVariableName);
 
-        auto te = dynamic_cast<TextEditor*> (component);
-        jassert (te != nullptr);
+        if (auto* te = dynamic_cast<TextEditor*> (component))
+        {
+            String s;
+            s << memberVariableName << "->setMultiLine (" << CodeHelpers::boolLiteral (te->isMultiLine()) << ");\n"
+              << memberVariableName << "->setReturnKeyStartsNewLine (" << CodeHelpers::boolLiteral (te->getReturnKeyStartsNewLine()) << ");\n"
+              << memberVariableName << "->setReadOnly (" << CodeHelpers::boolLiteral (te->isReadOnly()) << ");\n"
+              << memberVariableName << "->setScrollbarsShown (" << CodeHelpers::boolLiteral (te->areScrollbarsShown()) << ");\n"
+              << memberVariableName << "->setCaretVisible (" << CodeHelpers::boolLiteral (te->isCaretVisible()) << ");\n"
+              << memberVariableName << "->setPopupMenuEnabled (" << CodeHelpers::boolLiteral (te->isPopupMenuEnabled()) << ");\n"
+              << getColourIntialisationCode (component, memberVariableName)
+              << memberVariableName << "->setText (" << quotedString (te->getProperties() ["initialText"].toString(), code.shouldUseTransMacro()) << ");\n\n";
 
-        String s;
-        s << memberVariableName << "->setMultiLine (" << CodeHelpers::boolLiteral (te->isMultiLine()) << ");\n"
-          << memberVariableName << "->setReturnKeyStartsNewLine (" << CodeHelpers::boolLiteral (te->getReturnKeyStartsNewLine()) << ");\n"
-          << memberVariableName << "->setReadOnly (" << CodeHelpers::boolLiteral (te->isReadOnly()) << ");\n"
-          << memberVariableName << "->setScrollbarsShown (" << CodeHelpers::boolLiteral (te->areScrollbarsShown()) << ");\n"
-          << memberVariableName << "->setCaretVisible (" << CodeHelpers::boolLiteral (te->isCaretVisible()) << ");\n"
-          << memberVariableName << "->setPopupMenuEnabled (" << CodeHelpers::boolLiteral (te->isPopupMenuEnabled()) << ");\n"
-          << getColourIntialisationCode (component, memberVariableName)
-          << memberVariableName << "->setText (" << quotedString (te->getProperties() ["initialText"].toString(), code.shouldUseTransMacro()) << ");\n\n";
-
-        code.constructorCode += s;
+            code.constructorCode += s;
+        }
     }
 
 private:
@@ -143,13 +143,13 @@ private:
             choices.add ("multi-line, return key disabled");
         }
 
-        void setIndex (int newIndex)
+        void setIndex (int newIndex) override
         {
             document.perform (new TextEditorMultilineChangeAction (component, *document.getComponentLayout(), newIndex),
                               "Change TextEditor multiline mode");
         }
 
-        int getIndex() const
+        int getIndex() const override
         {
             return component->isMultiLine() ? (component->getReturnKeyStartsNewLine() ? 1 : 2) : 0;
         }
@@ -165,7 +165,7 @@ private:
                 oldState = comp->isMultiLine() ? (comp->getReturnKeyStartsNewLine() ? 1 : 2) : 0;
             }
 
-            bool perform()
+            bool perform() override
             {
                 showCorrectTab();
                 getComponent()->setMultiLine (newState > 0);
@@ -174,7 +174,7 @@ private:
                 return true;
             }
 
-            bool undo()
+            bool undo() override
             {
                 showCorrectTab();
                 getComponent()->setMultiLine (oldState > 0);
@@ -196,13 +196,13 @@ private:
         {
         }
 
-        void setState (bool newState)
+        void setState (bool newState) override
         {
             document.perform (new TextEditorReadonlyChangeAction (component, *document.getComponentLayout(), ! newState),
                               "Change TextEditor read-only mode");
         }
 
-        bool getState() const        { return ! component->isReadOnly(); }
+        bool getState() const override        { return ! component->isReadOnly(); }
 
     private:
         class TextEditorReadonlyChangeAction  : public ComponentUndoableAction <TextEditor>
@@ -215,7 +215,7 @@ private:
                 oldState = comp->isReadOnly();
             }
 
-            bool perform()
+            bool perform() override
             {
                 showCorrectTab();
                 getComponent()->setReadOnly (newState);
@@ -223,7 +223,7 @@ private:
                 return true;
             }
 
-            bool undo()
+            bool undo() override
             {
                 showCorrectTab();
                 getComponent()->setReadOnly (oldState);
@@ -244,13 +244,13 @@ private:
         {
         }
 
-        void setState (bool newState)
+        void setState (bool newState) override
         {
             document.perform (new TextEditorScrollbarChangeAction (component, *document.getComponentLayout(), newState),
                               "Change TextEditor scrollbars");
         }
 
-        bool getState() const        { return component->areScrollbarsShown(); }
+        bool getState() const override        { return component->areScrollbarsShown(); }
 
     private:
         class TextEditorScrollbarChangeAction  : public ComponentUndoableAction <TextEditor>
@@ -263,7 +263,7 @@ private:
                 oldState = comp->areScrollbarsShown();
             }
 
-            bool perform()
+            bool perform() override
             {
                 showCorrectTab();
                 getComponent()->setScrollbarsShown (newState);
@@ -271,7 +271,7 @@ private:
                 return true;
             }
 
-            bool undo()
+            bool undo() override
             {
                 showCorrectTab();
                 getComponent()->setScrollbarsShown (oldState);
@@ -292,13 +292,13 @@ private:
         {
         }
 
-        void setState (bool newState)
+        void setState (bool newState) override
         {
             document.perform (new TextEditorCaretChangeAction (component, *document.getComponentLayout(), newState),
                               "Change TextEditor caret");
         }
 
-        bool getState() const        { return component->isCaretVisible(); }
+        bool getState() const override        { return component->isCaretVisible(); }
 
     private:
         class TextEditorCaretChangeAction  : public ComponentUndoableAction <TextEditor>
@@ -311,7 +311,7 @@ private:
                 oldState = comp->isCaretVisible();
             }
 
-            bool perform()
+            bool perform() override
             {
                 showCorrectTab();
                 getComponent()->setCaretVisible (newState);
@@ -319,7 +319,7 @@ private:
                 return true;
             }
 
-            bool undo()
+            bool undo() override
             {
                 showCorrectTab();
                 getComponent()->setCaretVisible (oldState);
@@ -340,13 +340,13 @@ private:
         {
         }
 
-        void setState (bool newState)
+        void setState (bool newState) override
         {
             document.perform (new TextEditorPopupMenuChangeAction (component, *document.getComponentLayout(), newState),
                               "Change TextEditor popup menu");
         }
 
-        bool getState() const        { return component->isPopupMenuEnabled(); }
+        bool getState() const override        { return component->isPopupMenuEnabled(); }
 
     private:
         class TextEditorPopupMenuChangeAction  : public ComponentUndoableAction <TextEditor>
@@ -359,7 +359,7 @@ private:
                 oldState = comp->isPopupMenuEnabled();
             }
 
-            bool perform()
+            bool perform() override
             {
                 showCorrectTab();
                 getComponent()->setPopupMenuEnabled (newState);
@@ -367,7 +367,7 @@ private:
                 return true;
             }
 
-            bool undo()
+            bool undo() override
             {
                 showCorrectTab();
                 getComponent()->setPopupMenuEnabled (oldState);
@@ -409,7 +409,7 @@ private:
                 oldState = comp->getProperties() ["initialText"];
             }
 
-            bool perform()
+            bool perform() override
             {
                 showCorrectTab();
                 getComponent()->setText (newState, false);
@@ -418,7 +418,7 @@ private:
                 return true;
             }
 
-            bool undo()
+            bool undo() override
             {
                 showCorrectTab();
                 getComponent()->setText (oldState, false);

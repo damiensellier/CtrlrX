@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -87,10 +87,6 @@ StringArray& StringArray::operator= (StringArray&& other) noexcept
 {
     strings = std::move (other.strings);
     return *this;
-}
-
-StringArray::~StringArray()
-{
 }
 
 bool StringArray::operator== (const StringArray& other) const noexcept
@@ -205,7 +201,7 @@ int StringArray::indexOf (StringRef stringToLookFor, bool ignoreCase, int i) con
     if (ignoreCase)
     {
         for (; i < numElements; ++i)
-            if (strings.getReference(i).equalsIgnoreCase (stringToLookFor))
+            if (strings.getReference (i).equalsIgnoreCase (stringToLookFor))
                 return i;
     }
     else
@@ -234,7 +230,7 @@ void StringArray::removeString (StringRef stringToRemove, bool ignoreCase)
     if (ignoreCase)
     {
         for (int i = size(); --i >= 0;)
-            if (strings.getReference(i).equalsIgnoreCase (stringToRemove))
+            if (strings.getReference (i).equalsIgnoreCase (stringToRemove))
                 strings.remove (i);
     }
     else
@@ -256,13 +252,13 @@ void StringArray::removeEmptyStrings (bool removeWhitespaceStrings)
     if (removeWhitespaceStrings)
     {
         for (int i = size(); --i >= 0;)
-            if (! strings.getReference(i).containsNonWhitespaceChars())
+            if (! strings.getReference (i).containsNonWhitespaceChars())
                 strings.remove (i);
     }
     else
     {
         for (int i = size(); --i >= 0;)
-            if (strings.getReference(i).isEmpty())
+            if (strings.getReference (i).isEmpty())
                 strings.remove (i);
     }
 }
@@ -308,7 +304,7 @@ String StringArray::joinIntoString (StringRef separator, int start, int numberTo
     auto bytesNeeded = (size_t) (last - start - 1) * separatorBytes;
 
     for (int i = start; i < last; ++i)
-        bytesNeeded += strings.getReference(i).getCharPointer().sizeInBytes() - sizeof (String::CharPointerType::CharType);
+        bytesNeeded += strings.getReference (i).getCharPointer().sizeInBytes() - sizeof (String::CharPointerType::CharType);
 
     String result;
     result.preallocateBytes (bytesNeeded);
@@ -416,7 +412,7 @@ void StringArray::removeDuplicates (bool ignoreCase)
 {
     for (int i = 0; i < size() - 1; ++i)
     {
-        auto s = strings.getReference(i);
+        auto s = strings.getReference (i);
 
         for (int nextIndex = i + 1;;)
         {
@@ -443,7 +439,7 @@ void StringArray::appendNumbersToDuplicates (bool ignoreCase,
 
     for (int i = 0; i < size() - 1; ++i)
     {
-        auto& s = strings.getReference(i);
+        auto& s = strings.getReference (i);
         auto nextIndex = indexOf (s, ignoreCase, i + 1);
 
         if (nextIndex >= 0)

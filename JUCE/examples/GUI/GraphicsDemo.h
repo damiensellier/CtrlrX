@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
@@ -31,7 +31,7 @@
 
  dependencies:     juce_core, juce_data_structures, juce_events, juce_graphics,
                    juce_gui_basics
- exporters:        xcode_mac, vs2019, linux_make, androidstudio, xcode_iphone
+ exporters:        xcode_mac, vs2022, linux_make, androidstudio, xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -50,7 +50,7 @@
 
 //==============================================================================
 /** Holds the various toggle buttons for the animation modes. */
-class ControllersComponent  : public Component
+class ControllersComponent final : public Component
 {
 public:
     ControllersComponent()
@@ -113,7 +113,7 @@ public:
 };
 
 //==============================================================================
-class GraphicsDemoBase  : public Component
+class GraphicsDemoBase : public Component
 {
 public:
     GraphicsDemoBase (ControllersComponent& cc, const String& name)
@@ -280,7 +280,7 @@ public:
 };
 
 //==============================================================================
-class RectangleFillTypesDemo  : public GraphicsDemoBase
+class RectangleFillTypesDemo final : public GraphicsDemoBase
 {
 public:
     RectangleFillTypesDemo (ControllersComponent& cc)
@@ -316,7 +316,7 @@ public:
 };
 
 //==============================================================================
-class PathsDemo  : public GraphicsDemoBase
+class PathsDemo final : public GraphicsDemoBase
 {
 public:
     PathsDemo (ControllersComponent& cc, bool linear, bool radial)
@@ -377,7 +377,7 @@ public:
 };
 
 //==============================================================================
-class StrokesDemo  : public GraphicsDemoBase
+class StrokesDemo final : public GraphicsDemoBase
 {
 public:
     StrokesDemo (ControllersComponent& cc)
@@ -410,7 +410,7 @@ public:
 };
 
 //==============================================================================
-class ImagesRenderingDemo  : public GraphicsDemoBase
+class ImagesRenderingDemo final : public GraphicsDemoBase
 {
 public:
     ImagesRenderingDemo (ControllersComponent& cc, bool argb, bool tiled)
@@ -448,7 +448,7 @@ public:
 };
 
 //==============================================================================
-class GlyphsDemo  : public GraphicsDemoBase
+class GlyphsDemo final : public GraphicsDemoBase
 {
 public:
     GlyphsDemo (ControllersComponent& cc)
@@ -468,7 +468,7 @@ public:
 };
 
 //==============================================================================
-class SVGDemo  : public GraphicsDemoBase
+class SVGDemo final : public GraphicsDemoBase
 {
 public:
     SVGDemo (ControllersComponent& cc)
@@ -513,7 +513,7 @@ public:
 };
 
 //==============================================================================
-class LinesDemo  : public GraphicsDemoBase
+class LinesDemo final : public GraphicsDemoBase
 {
 public:
     LinesDemo (ControllersComponent& cc)
@@ -576,8 +576,8 @@ public:
 };
 
 //==============================================================================
-class DemoHolderComponent  : public Component,
-                             private Timer
+class DemoHolderComponent final : public Component,
+                                  private Timer
 {
 public:
     DemoHolderComponent()
@@ -623,8 +623,8 @@ private:
 };
 
 //==============================================================================
-class TestListComponent   : public Component,
-                            private ListBoxModel
+class TestListComponent final : public Component,
+                                private ListBoxModel
 {
 public:
     TestListComponent (DemoHolderComponent& holder, ControllersComponent& controls)
@@ -644,35 +644,44 @@ public:
         demos.add (new LinesDemo  (controls));
 
         addAndMakeVisible (listBox);
+        listBox.setTitle ("Test List");
         listBox.setModel (this);
         listBox.selectRow (0);
     }
 
-    void resized()
+    void resized() override
     {
         listBox.setBounds (getLocalBounds());
     }
 
-    int getNumRows()
+    int getNumRows() override
     {
         return demos.size();
     }
 
-    void paintListBoxItem (int rowNumber, Graphics& g, int width, int height, bool rowIsSelected)
+    void paintListBoxItem (int rowNumber, Graphics& g, int width, int height, bool rowIsSelected) override
     {
-        if (auto* demo = demos[rowNumber])
-        {
-            if (rowIsSelected)
-                g.fillAll (Colour::contrasting (findColour (ListBox::textColourId),
-                                                findColour (ListBox::backgroundColourId)));
+        if (demos[rowNumber] == nullptr)
+            return;
 
-            g.setColour (findColour (ListBox::textColourId));
-            g.setFont (14.0f);
-            g.drawFittedText (demo->getName(), 8, 0, width - 10, height, Justification::centredLeft, 2);
-        }
+        if (rowIsSelected)
+            g.fillAll (Colour::contrasting (findColour (ListBox::textColourId),
+                                            findColour (ListBox::backgroundColourId)));
+
+        g.setColour (findColour (ListBox::textColourId));
+        g.setFont (14.0f);
+        g.drawFittedText (getNameForRow (rowNumber), 8, 0, width - 10, height, Justification::centredLeft, 2);
     }
 
-    void selectedRowsChanged (int lastRowSelected)
+    String getNameForRow (int rowNumber) override
+    {
+        if (auto* demo = demos[rowNumber])
+            return demo->getName();
+
+        return {};
+    }
+
+    void selectedRowsChanged (int lastRowSelected) override
     {
         demoHolder.setDemo (demos [lastRowSelected]);
     }
@@ -686,7 +695,7 @@ private:
 };
 
 //==============================================================================
-class GraphicsDemo  : public Component
+class GraphicsDemo final : public Component
 {
 public:
     GraphicsDemo()

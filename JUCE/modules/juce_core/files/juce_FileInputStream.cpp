@@ -2,7 +2,7 @@
   ==============================================================================
 
    This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   Copyright (c) 2022 - Raw Material Software Limited
 
    JUCE is an open source library subject to commercial or open-source
    licensing.
@@ -81,7 +81,7 @@ bool FileInputStream::setPosition (int64 pos)
 //==============================================================================
 #if JUCE_UNIT_TESTS
 
-struct FileInputStreamTests   : public UnitTest
+struct FileInputStreamTests final : public UnitTest
 {
     FileInputStreamTests()
         : UnitTest ("FileInputStream", UnitTestCategories::streams)

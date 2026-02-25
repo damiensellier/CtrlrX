@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -57,7 +57,7 @@ public:
 	/** cancel pending messages send by \param object or by any if object is 0 */
 	virtual tresult PLUGIN_API cancelUpdates (FUnknown* object) = 0;
 	/** send pending messages send by \param object or by any if object is 0 */
-	virtual tresult PLUGIN_API triggerDeferedUpdates (FUnknown* object = 0) = 0;
+	virtual tresult PLUGIN_API triggerDeferedUpdates (FUnknown* object = nullptr) = 0;
 	static const FUID iid;
 };
 
@@ -78,40 +78,53 @@ class UpdateHandler : public FObject, public IUpdateHandler, public IUpdateManag
 public:
 //------------------------------------------------------------------------------
 	UpdateHandler ();
-	~UpdateHandler ();
+	~UpdateHandler () SMTG_OVERRIDE;
 
 	using FObject::addDependent;
 	using FObject::removeDependent;
 	using FObject::deferUpdate;
 
 	// IUpdateHandler
+//private:
+	friend class FObject;
 	/** register \param dependent to get messages from \param object */
-	virtual tresult PLUGIN_API addDependent (FUnknown* object, IDependent* dependent) SMTG_OVERRIDE;
+	tresult PLUGIN_API addDependent (FUnknown* object, IDependent* dependent) SMTG_OVERRIDE;
 	/** unregister \param dependent to get no messages from \param object */
-	virtual tresult PLUGIN_API removeDependent (FUnknown* object,
+	tresult PLUGIN_API removeDependent (FUnknown* object, IDependent* dependent, size_t& earseCount);
+	tresult PLUGIN_API removeDependent (FUnknown* object,
 	                                            IDependent* dependent) SMTG_OVERRIDE;
+public:
 	/** send \param message to all dependents of \param object immediately */
-	virtual tresult PLUGIN_API triggerUpdates (FUnknown* object, int32 message) SMTG_OVERRIDE;
+	tresult PLUGIN_API triggerUpdates (FUnknown* object, int32 message) SMTG_OVERRIDE;
 	/** send \param message to all dependents of \param object when idle */
-	virtual tresult PLUGIN_API deferUpdates (FUnknown* object, int32 message) SMTG_OVERRIDE;
+	tresult PLUGIN_API deferUpdates (FUnknown* object, int32 message) SMTG_OVERRIDE;
 
 	// IUpdateManager
 	/** cancel pending messages send by \param object or by any if object is 0 */
-	virtual tresult PLUGIN_API cancelUpdates (FUnknown* object) SMTG_OVERRIDE;
+	tresult PLUGIN_API cancelUpdates (FUnknown* object) SMTG_OVERRIDE;
 	/** send pending messages send by \param object or by any if object is 0 */
-	virtual tresult PLUGIN_API triggerDeferedUpdates (FUnknown* object = 0) SMTG_OVERRIDE;
+	tresult PLUGIN_API triggerDeferedUpdates (FUnknown* object = nullptr) SMTG_OVERRIDE;
 
 	/// @cond ignore
 	// obsolete functions kept for compatibility
-	void checkUpdates (FObject* object = nullptr) { triggerDeferedUpdates (object->unknownCast ()); }
-	void flushUpdates (FObject* object) { cancelUpdates (object->unknownCast ()); }
+	void checkUpdates (FObject* object = nullptr)
+	{
+		triggerDeferedUpdates (object ? object->unknownCast () : nullptr);
+	}
+	void flushUpdates (FObject* object)
+	{
+		if (object)
+			cancelUpdates (object->unknownCast ());
+	}
 	void deferUpdate (FObject* object, int32 message)
 	{
-		deferUpdates (object->unknownCast (), message);
+		if (object)
+			deferUpdates (object->unknownCast (), message);
 	}
 	void signalChange (FObject* object, int32 message, bool suppressUpdateDone = false)
 	{
-		doTriggerUpdates (object->unknownCast (), message, suppressUpdateDone);
+		if (object)
+			doTriggerUpdates (object->unknownCast (), message, suppressUpdateDone);
 	}
 #if DEVELOPMENT
 	bool checkDeferred (FUnknown* object);
@@ -130,8 +143,6 @@ private:
 
 	Steinberg::Base::Thread::FLock lock;
 	Update::Table* table = nullptr;
-	friend struct LockUpdateDependencies;
-	static bool lockUpdates;
 };
 
 
