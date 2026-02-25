@@ -97,7 +97,7 @@ class CtrlrModulatorTreeViewItem : public TreeViewItem,
 		void mouseDown (const MouseEvent &e);
 		void mouseDoubleClick (const MouseEvent &e);
 		void labelTextChanged (Label *labelThatHasChanged);
-		Component *createItemComponent ();
+		std::unique_ptr<Component> createItemComponent ();
 		void itemOpennessChanged (bool isNowOpen);
 		CtrlrModulatorTreeLabel *createItemLabel(const ValueTree &itemToAttach);
 

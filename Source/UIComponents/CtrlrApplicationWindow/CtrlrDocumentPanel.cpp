@@ -45,6 +45,11 @@ bool CtrlrDocumentPanel::tryToCloseDocument (Component* component)
 	return (true);
 }
 
+void CtrlrDocumentPanel::tryToCloseDocumentAsync (Component* component, std::function<void (bool)> callback)
+{
+    callback (tryToCloseDocument (component));
+}
+
 void CtrlrDocumentPanel::activeDocumentChanged()
 {
     CtrlrEditor *ed = dynamic_cast <CtrlrEditor*> (getParentComponent());

@@ -38,10 +38,10 @@ void LExpression::wrapForLua (lua_State *L)
 	];
 }
 
-void LFile::findChildFiles (luabind::object const& table, int whatToLookFor, bool searchRecursively, const String wildcardPattern) const
+void LFile::findChildFiles (const File& file, luabind::object const& table, int whatToLookFor, bool searchRecursively, const String wildcardPattern)
 {
 	Array<File> files;
-	File::findChildFiles (files, whatToLookFor, searchRecursively, wildcardPattern);
+	file.findChildFiles (files, whatToLookFor, searchRecursively, wildcardPattern);
 
 	for (int i=1; i<=files.size(); i++)
 	{
@@ -49,14 +49,24 @@ void LFile::findChildFiles (luabind::object const& table, int whatToLookFor, boo
 	}
 }
 
-bool LFile::isValid()
+double LFile::getSize (const File& file)
 {
-	if (*this == File())
-	{
-		return (false);
-	}
+	return ((double) file.getSize());
+}
 
-	return (true);
+bool LFile::replaceWithData (File& file, const LMemoryBlock &dataToWrite)
+{
+	return (file.replaceWithData (dataToWrite.getData(), (size_t) dataToWrite.getSize()));
+}
+
+bool LFile::appendData (File& file, const LMemoryBlock &dataToAppend)
+{
+	return (file.appendData (dataToAppend.getData(), (size_t) dataToAppend.getSize()));
+}
+
+bool LFile::isValid(const File& file)
+{
+	return !(file == File());
 }
 
 void LFile::wrapForLua (lua_State *L)
@@ -65,9 +75,7 @@ void LFile::wrapForLua (lua_State *L)
 
 	module(L)
     [
-		class_<LFile>("LFile")
-		,
-        class_<File, bases<LFile> >("File")
+        class_<File>("File")
         .def(constructor<const String&>())
         .def(constructor<const File&>())
         .def("exists", &File::exists)
@@ -1097,7 +1105,7 @@ void LZipFile::wrapForLua(lua_State* L) // Updated v5.6.34. Thanks to @dnaldoog
 			.def("createStreamForEntry", (InputStream *(ZipFile::*)(int)) &ZipFile::createStreamForEntry, adopt(result))
 			.def("createStreamForEntry", (InputStream *(ZipFile::*)(const ZipFile::ZipEntry &)) &ZipFile::createStreamForEntry, adopt(result))
 			.def("uncompressTo", &ZipFile::uncompressTo)
-			.def("uncompressEntry", &ZipFile::uncompressEntry)
+			.def("uncompressEntry", (Result (ZipFile::*)(int, const File&, bool)) &ZipFile::uncompressEntry)
 	];
 }
 

@@ -39,7 +39,6 @@
 
 // Deprecated classes
 #include "Deprecated/CtrlrLuaBigInteger.h"
-#include "Deprecated/CtrlrLuaFile.h"
 #include "Deprecated/CtrlrLuaMemoryBlock.h"
 #include "Deprecated/CtrlrLuaRectangle.h"
 #include "Deprecated/CtrlrLuaComponentAnimator.h"

@@ -281,9 +281,7 @@ void LFont::wrapForLua (lua_State *L)
 
 	module(L)
     [
-		class_<LFont>("LFont")
-		,
-		class_<Font,bases<LFont> >("Font")
+		class_<Font>("Font")
 			.def(constructor<float,int>())
 			.def(constructor<const String &, float, int>())
 			.def(constructor<const String &, const String &, float>())
