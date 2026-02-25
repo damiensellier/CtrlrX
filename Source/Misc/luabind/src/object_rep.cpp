@@ -72,7 +72,10 @@ namespace luabind { namespace detail
 
     static int destroy_instance(lua_State* L)
     {
-        object_rep* instance = static_cast<object_rep*>(lua_touserdata(L, 1));
+        object_rep** const slot = static_cast<object_rep**>(lua_touserdata(L, 1));
+        object_rep* const instance = slot ? *slot : 0;
+        if (!instance)
+            return 0;
 
         lua_pushliteral(L, "__finalize");
         lua_gettable(L, 1);
@@ -89,6 +92,8 @@ namespace luabind { namespace detail
 
         instance->release_dependency_refs(L);
         instance->~object_rep();
+        ::operator delete(instance);
+        *slot = 0;
 
         lua_pushnil(L);
         lua_setmetatable(L, 1);
@@ -303,7 +308,8 @@ namespace luabind { namespace detail
 
     LUABIND_API object_rep* get_instance(lua_State* L, int index)
     {
-        object_rep* result = static_cast<object_rep*>(lua_touserdata(L, index));
+        object_rep** storage = static_cast<object_rep**>(lua_touserdata(L, index));
+        object_rep* result = storage ? *storage : 0;
 
         if (!result || !lua_getmetatable(L, index))
             return 0;
@@ -320,8 +326,9 @@ namespace luabind { namespace detail
 
     LUABIND_API object_rep* push_new_instance(lua_State* L, class_rep* cls)
     {
-        void* storage = lua_newuserdata(L, sizeof(object_rep));
-        object_rep* result = new (storage) object_rep(0, cls);
+        void* storage = lua_newuserdata(L, sizeof(object_rep*));
+        object_rep* result = new object_rep(0, cls);
+        *static_cast<object_rep**>(storage) = result;
         cls->get_table(L);
         lua_setuservalue(L, -2);
         lua_rawgeti(L, LUA_REGISTRYINDEX, cls->metatable_ref());

@@ -28,10 +28,17 @@
 //
 
 # include <boost/get_pointer.hpp>
+# include <memory>
 
 namespace luabind {
 
 using boost::get_pointer;
+
+template <class T, class D>
+T* get_pointer(std::unique_ptr<T, D> const& p)
+{
+    return p.get();
+}
 
 } // namespace luabind
 

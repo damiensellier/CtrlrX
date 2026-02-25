@@ -10,6 +10,8 @@
 
 # include <boost/type_traits/is_polymorphic.hpp>
 
+# include <utility>
+
 namespace luabind { namespace detail {
 
 template <class T>
@@ -89,7 +91,7 @@ void make_instance(lua_State* L, P p)
 
     try
     {
-        new (storage) holder_type(p, dynamic.first, dynamic.second);
+        new (storage) holder_type(std::move(p), dynamic.first, dynamic.second);
     }
     catch (...)
     {
