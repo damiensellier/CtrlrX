@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2022 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
-   Agreement and JUCE Privacy Policy.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-7-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -42,11 +51,11 @@
 #include <juce_audio_plugin_client/detail/juce_PluginUtilities.h>
 #include <juce_audio_plugin_client/detail/juce_LinuxMessageThread.h>
 
-#include <juce_audio_processors/utilities/juce_FlagCache.h>
-#include <juce_audio_processors/format_types/juce_LegacyAudioParameter.cpp>
+#include <juce_audio_processors_headless/utilities/juce_FlagCache.h>
+#include <juce_audio_processors_headless/format_types/juce_LegacyAudioParameter.h>
 
 #include "JuceLV2Defines.h"
-#include <juce_audio_processors/format_types/juce_LV2Common.h>
+#include <juce_audio_processors_headless/format_types/juce_LV2Common.h>
 
 #include <fstream>
 
@@ -1272,7 +1281,7 @@ private:
 
         // In the event that the plugin decides to send all of its parameters in one go,
         // we should ensure that the output buffer is large enough to accommodate, with some
-        // extra room for the sequence header, MIDI messages etc..
+        // extra room for the sequence header, MIDI messages etc.
         const auto patchSetSizeBytes = 72;
         const auto additionalSize = 8192;
         const auto atomPortMinSize = proc.getParameters().size() * patchSetSizeBytes + additionalSize;
@@ -1282,8 +1291,8 @@ private:
               "\t\tatom:bufferType atom:Sequence ;\n"
               "\t\tatom:supports\n";
 
-       #if ! JucePlugin_IsSynth && ! JucePlugin_IsMidiEffect
-        if (proc.acceptsMidi())
+       #if ! JucePlugin_IsSynth
+        if (proc.acceptsMidi() || proc.isMidiEffect())
        #endif
             os << "\t\t\tmidi:MidiEvent ,\n";
 
@@ -1299,9 +1308,7 @@ private:
               "\t\tatom:bufferType atom:Sequence ;\n"
               "\t\tatom:supports\n";
 
-       #if ! JucePlugin_IsMidiEffect
-        if (proc.producesMidi())
-       #endif
+        if (proc.producesMidi() || proc.isMidiEffect())
             os << "\t\t\tmidi:MidiEvent ,\n";
 
         os << "\t\t\tpatch:Message ;\n"

@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2022 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
-   Agreement and JUCE Privacy Policy.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-7-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -73,7 +82,7 @@ static void drawTextLayout (Graphics& g, Component& owner, StringRef text, const
 
     AttributedString attributedString { text };
     attributedString.setColour (textColour);
-    attributedString.setFont ((float) textBounds.getHeight() * 0.6f);
+    attributedString.setFont (owner.withDefaultMetrics (FontOptions { (float) textBounds.getHeight() * 0.6f }));
     attributedString.setJustification (Justification::centredLeft);
     attributedString.setWordWrap (AttributedString::WordWrap::none);
 
@@ -430,9 +439,8 @@ public:
 
             error = setup.manager->setAudioDeviceSetup (config, true);
 
-            showCorrectDeviceName (inputDeviceDropDown.get(), true);
-            showCorrectDeviceName (outputDeviceDropDown.get(), false);
-
+            updateSelectedInput();
+            updateSelectedOutput();
             updateControlPanelButton();
             resized();
         }
@@ -601,18 +609,34 @@ private:
     std::unique_ptr<Component> inputLevelMeter;
     std::unique_ptr<TextButton> showUIButton, showAdvancedSettingsButton, resetDeviceButton;
 
+    int findSelectedDeviceIndex (bool isInput) const
+    {
+        const auto device = setup.manager->getAudioDeviceSetup();
+        const auto deviceName = isInput ? device.inputDeviceName : device.outputDeviceName;
+        return type.getDeviceNames (isInput).indexOf (deviceName);
+    }
+
+    void updateSelectedInput()
+    {
+        showCorrectDeviceName (inputDeviceDropDown.get(), true);
+    }
+
+    void updateSelectedOutput()
+    {
+        constexpr auto isInput = false;
+        showCorrectDeviceName (outputDeviceDropDown.get(), isInput);
+
+        if (testButton != nullptr)
+            testButton->setEnabled (findSelectedDeviceIndex (isInput) >= 0);
+    }
+
     void showCorrectDeviceName (ComboBox* box, bool isInput)
     {
-        if (box != nullptr)
-        {
-            auto* currentDevice = setup.manager->getCurrentAudioDevice();
-            auto index = type.getIndexOfDevice (currentDevice, isInput);
+        if (box == nullptr)
+            return;
 
-            box->setSelectedId (index < 0 ? index : index + 1, dontSendNotification);
-
-            if (testButton != nullptr && ! isInput)
-                testButton->setEnabled (index >= 0);
-        }
+        const auto index = findSelectedDeviceIndex (isInput);
+        box->setSelectedId (index < 0 ? index : index + 1, dontSendNotification);
     }
 
     void addNamesToDeviceBox (ComboBox& combo, bool isInputs)
@@ -702,7 +726,7 @@ private:
             addNamesToDeviceBox (*outputDeviceDropDown, false);
         }
 
-        showCorrectDeviceName (outputDeviceDropDown.get(), false);
+        updateSelectedOutput();
     }
 
     void updateInputsComboBox()
@@ -725,7 +749,7 @@ private:
             addNamesToDeviceBox (*inputDeviceDropDown, true);
         }
 
-        showCorrectDeviceName (inputDeviceDropDown.get(), true);
+        updateSelectedInput();
     }
 
     void updateSampleRateComboBox (AudioIODevice* currentDevice)
@@ -780,10 +804,17 @@ private:
             currentRate = 48000.0;
 
         for (auto bs : currentDevice->getAvailableBufferSizes())
-            bufferSizeDropDown->addItem (String (bs) + " samples (" + String (bs * 1000.0 / currentRate, 1) + " ms)", bs);
+            bufferSizeDropDown->addItem (getBufferSizeText (bs, currentRate), bs);
 
-        bufferSizeDropDown->setSelectedId (currentDevice->getCurrentBufferSizeSamples(), dontSendNotification);
+        const auto bufferSizeSamples = currentDevice->getCurrentBufferSizeSamples();
+        bufferSizeDropDown->setText (getBufferSizeText (bufferSizeSamples, currentRate), dontSendNotification);
+
         bufferSizeDropDown->onChange = [this] { updateConfig (false, false, false, true); };
+    }
+
+    String getBufferSizeText (int bs, double currentRate) const
+    {
+        return String (bs) + " samples (" + String (bs * 1000.0 / currentRate, 1) + " ms)";
     }
 
 public:

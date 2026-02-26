@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2022 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
-   Agreement and JUCE Privacy Policy.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-7-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -82,6 +91,10 @@ public:
           channelConfiguration (channels),
           autoOpenMidiDevices (shouldAutoOpenMidiDevices)
     {
+        // Only one StandalonePluginHolder may be created at a time
+        jassert (currentInstance == nullptr);
+        currentInstance = this;
+
         shouldMuteInput.addListener (this);
         shouldMuteInput = ! isInterAppAudioConnected();
 
@@ -119,6 +132,8 @@ public:
 
         handleDeletePlugin();
         shutDownAudioDevices();
+
+        currentInstance = nullptr;
     }
 
     //==============================================================================
@@ -400,7 +415,10 @@ public:
         return {};
     }
 
-    static StandalonePluginHolder* getInstance();
+    static StandalonePluginHolder* getInstance()
+    {
+        return currentInstance;
+    }
 
     //==============================================================================
     OptionalScopedPointer<PropertySet> settings;
@@ -423,6 +441,8 @@ public:
     ScopedMessageBox messageBox;
 
 private:
+    inline static StandalonePluginHolder* currentInstance = nullptr;
+
     //==============================================================================
     void handleCreatePlugin()
     {
@@ -438,93 +458,6 @@ private:
         stopPlaying();
         processor = nullptr;
     }
-
-    //==============================================================================
-    /*  This class can be used to ensure that audio callbacks use buffers with a
-        predictable maximum size.
-
-        On some platforms (such as iOS 10), the expected buffer size reported in
-        audioDeviceAboutToStart may be smaller than the blocks passed to
-        audioDeviceIOCallbackWithContext. This can lead to out-of-bounds reads if the render
-        callback depends on additional buffers which were initialised using the
-        smaller size.
-
-        As a workaround, this class will ensure that the render callback will
-        only ever be called with a block with a length less than or equal to the
-        expected block size.
-    */
-    class CallbackMaxSizeEnforcer  : public AudioIODeviceCallback
-    {
-    public:
-        explicit CallbackMaxSizeEnforcer (AudioIODeviceCallback& callbackIn)
-            : inner (callbackIn) {}
-
-        void audioDeviceAboutToStart (AudioIODevice* device) override
-        {
-            maximumSize = device->getCurrentBufferSizeSamples();
-            storedInputChannels .resize ((size_t) device->getActiveInputChannels() .countNumberOfSetBits());
-            storedOutputChannels.resize ((size_t) device->getActiveOutputChannels().countNumberOfSetBits());
-
-            inner.audioDeviceAboutToStart (device);
-        }
-
-        void audioDeviceIOCallbackWithContext (const float* const* inputChannelData,
-                                               [[maybe_unused]] int numInputChannels,
-                                               float* const* outputChannelData,
-                                               [[maybe_unused]] int numOutputChannels,
-                                               int numSamples,
-                                               const AudioIODeviceCallbackContext& context) override
-        {
-            jassert ((int) storedInputChannels.size()  == numInputChannels);
-            jassert ((int) storedOutputChannels.size() == numOutputChannels);
-
-            int position = 0;
-
-            while (position < numSamples)
-            {
-                const auto blockLength = jmin (maximumSize, numSamples - position);
-
-                initChannelPointers (inputChannelData,  storedInputChannels,  position);
-                initChannelPointers (outputChannelData, storedOutputChannels, position);
-
-                inner.audioDeviceIOCallbackWithContext (storedInputChannels.data(),
-                                                        (int) storedInputChannels.size(),
-                                                        storedOutputChannels.data(),
-                                                        (int) storedOutputChannels.size(),
-                                                        blockLength,
-                                                        context);
-
-                position += blockLength;
-            }
-        }
-
-        void audioDeviceStopped() override
-        {
-            inner.audioDeviceStopped();
-        }
-
-    private:
-        struct GetChannelWithOffset
-        {
-            int offset;
-
-            template <typename Ptr>
-            auto operator() (Ptr ptr) const noexcept -> Ptr { return ptr + offset; }
-        };
-
-        template <typename Ptr, typename Vector>
-        void initChannelPointers (Ptr&& source, Vector&& target, int offset)
-        {
-            std::transform (source, source + target.size(), target.begin(), GetChannelWithOffset { offset });
-        }
-
-        AudioIODeviceCallback& inner;
-        int maximumSize = 0;
-        std::vector<const float*> storedInputChannels;
-        std::vector<float*> storedOutputChannels;
-    };
-
-    CallbackMaxSizeEnforcer maxSizeEnforcer { *this };
 
     //==============================================================================
     class SettingsComponent : public Component
@@ -662,7 +595,7 @@ private:
                             const String& preferredDefaultDeviceName,
                             const AudioDeviceManager::AudioDeviceSetup* preferredSetupOptions)
     {
-        deviceManager.addAudioCallback (&maxSizeEnforcer);
+        deviceManager.addAudioCallback (this);
         deviceManager.addMidiInputDeviceCallback ({}, &player);
 
         reloadAudioDeviceState (enableAudioInput, preferredDefaultDeviceName, preferredSetupOptions);
@@ -673,7 +606,7 @@ private:
         saveAudioDeviceState();
 
         deviceManager.removeMidiInputDeviceCallback ({}, &player);
-        deviceManager.removeAudioCallback (&maxSizeEnforcer);
+        deviceManager.removeAudioCallback (this);
     }
 
     void timerCallback() override
@@ -714,26 +647,11 @@ public:
     //==============================================================================
     typedef StandalonePluginHolder::PluginInOuts PluginInOuts;
 
-    //==============================================================================
-    /** Creates a window with a given title and colour.
-        The settings object can be a PropertySet that the class should use to
-        store its settings (it can also be null). If takeOwnershipOfSettings is
-        true, then the settings object will be owned and deleted by this object.
-    */
     StandaloneFilterWindow (const String& title,
                             Colour backgroundColour,
-                            PropertySet* settingsToUse,
-                            bool takeOwnershipOfSettings,
-                            const String& preferredDefaultDeviceName = String(),
-                            const AudioDeviceManager::AudioDeviceSetup* preferredSetupOptions = nullptr,
-                            const Array<PluginInOuts>& constrainToConfiguration = {},
-                           #if JUCE_ANDROID || JUCE_IOS
-                            bool autoOpenMidiDevices = true
-                           #else
-                            bool autoOpenMidiDevices = false
-                           #endif
-                            )
+                            std::unique_ptr<StandalonePluginHolder> pluginHolderIn)
         : DocumentWindow (title, backgroundColour, DocumentWindow::minimiseButton | DocumentWindow::closeButton),
+          pluginHolder (std::move (pluginHolderIn)),
           optionsButton ("Options")
     {
         setConstrainer (&decoratorConstrainer);
@@ -748,10 +666,6 @@ public:
         optionsButton.setTriggeredOnMouseDown (true);
        #endif
 
-        pluginHolder.reset (new StandalonePluginHolder (settingsToUse, takeOwnershipOfSettings,
-                                                        preferredDefaultDeviceName, preferredSetupOptions,
-                                                        constrainToConfiguration, autoOpenMidiDevices));
-
        #if JUCE_IOS || JUCE_ANDROID
         setFullScreen (true);
         updateContent();
@@ -764,6 +678,9 @@ public:
             const auto height = getHeight();
 
             const auto& displays = Desktop::getInstance().getDisplays();
+
+            if (displays.displays.isEmpty())
+                return { width, height };
 
             if (auto* props = pluginHolder->settings.get())
             {
@@ -795,6 +712,36 @@ public:
             if (auto* editor = processor->getActiveEditor())
                 setResizable (editor->isResizable(), false);
        #endif
+    }
+
+    //==============================================================================
+    /** Creates a window with a given title and colour.
+        The settings object can be a PropertySet that the class should use to
+        store its settings (it can also be null). If takeOwnershipOfSettings is
+        true, then the settings object will be owned and deleted by this object.
+    */
+    StandaloneFilterWindow (const String& title,
+                            Colour backgroundColour,
+                            PropertySet* settingsToUse,
+                            bool takeOwnershipOfSettings,
+                            const String& preferredDefaultDeviceName = String(),
+                            const AudioDeviceManager::AudioDeviceSetup* preferredSetupOptions = nullptr,
+                            const Array<PluginInOuts>& constrainToConfiguration = {},
+                           #if JUCE_ANDROID || JUCE_IOS
+                            bool autoOpenMidiDevices = true
+                           #else
+                            bool autoOpenMidiDevices = false
+                           #endif
+                            )
+        : StandaloneFilterWindow (title,
+                                  backgroundColour,
+                                  std::make_unique<StandalonePluginHolder> (settingsToUse,
+                                                                            takeOwnershipOfSettings,
+                                                                            preferredDefaultDeviceName,
+                                                                            preferredSetupOptions,
+                                                                            constrainToConfiguration,
+                                                                            autoOpenMidiDevices))
+    {
     }
 
     ~StandaloneFilterWindow() override
@@ -882,7 +829,7 @@ private:
         setContentOwned (content, resizeAutomatically);
     }
 
-    void buttonClicked (Button*) override
+    void buttonClicked (Button* button) override
     {
         PopupMenu m;
         m.addItem (1, TRANS ("Audio/MIDI Settings..."));
@@ -892,7 +839,7 @@ private:
         m.addSeparator();
         m.addItem (4, TRANS ("Reset to default state"));
 
-        m.showMenuAsync (PopupMenu::Options(),
+        m.showMenuAsync (PopupMenu::Options().withTargetComponent (button),
                          ModalCallbackFunction::forComponent (menuCallback, this));
     }
 
@@ -1136,22 +1083,5 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StandaloneFilterWindow)
 };
-
-inline StandalonePluginHolder* StandalonePluginHolder::getInstance()
-{
-   #if JucePlugin_Enable_IAA || JucePlugin_Build_Standalone
-    if (PluginHostType::getPluginLoadedAs() == AudioProcessor::wrapperType_Standalone)
-    {
-        auto& desktop = Desktop::getInstance();
-        const int numTopLevelWindows = desktop.getNumComponents();
-
-        for (int i = 0; i < numTopLevelWindows; ++i)
-            if (auto window = dynamic_cast<StandaloneFilterWindow*> (desktop.getComponent (i)))
-                return window->getPluginHolder();
-    }
-   #endif
-
-    return nullptr;
-}
 
 } // namespace juce

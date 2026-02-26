@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2022 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
-   Agreement and JUCE Privacy Policy.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-7-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -27,6 +36,29 @@
 #include "jucer_Project.h"
 #include "../ProjectSaving/jucer_ProjectSaver.h"
 #include "../Application/jucer_Application.h"
+
+static std::map<String, int> getAAXCategoryValues()
+{
+    return
+    {
+        { "None",           0x00000000 },
+        { "EQ",             0x00000001 },
+        { "Dynamics",       0x00000002 },
+        { "PitchShift",     0x00000004 },
+        { "Reverb",         0x00000008 },
+        { "Delay",          0x00000010 },
+        { "Modulation",     0x00000020 },
+        { "Harmonic",       0x00000040 },
+        { "NoiseReduction", 0x00000080 },
+        { "Dither",         0x00000100 },
+        { "SoundField",     0x00000200 },
+        { "HWGenerators",   0x00000400 },
+        { "SWGenerators",   0x00000800 },
+        { "WrappedPlugin",  0x00001000 },
+        { "Effect",         0x00002000 },
+        { "MIDIEffect",     0x00010000 },
+    };
+}
 
 //==============================================================================
 Project::ProjectFileModificationPoller::ProjectFileModificationPoller (Project& p)
@@ -113,9 +145,6 @@ Project::Project (const File& f)
 
     auto& app = ProjucerApplication::getApp();
 
-    if (! app.isRunningCommandLine)
-        app.getLicenseController().addListener (this);
-
     app.getJUCEPathModulesList().addListener (this);
     app.getUserPathsModulesList().addListener (this);
 
@@ -134,9 +163,6 @@ Project::~Project()
     auto& app = ProjucerApplication::getApp();
 
     app.openDocumentManager.closeAllDocumentsUsingProjectWithoutSaving (*this);
-
-    if (! app.isRunningCommandLine)
-        app.getLicenseController().removeListener (this);
 
     app.getJUCEPathModulesList().removeListener (this);
     app.getUserPathsModulesList().removeListener (this);
@@ -182,8 +208,6 @@ void Project::updateCompanyNameDependencies()
     pluginARAFactoryIDValue.setDefault  (getDefaultARAFactoryIDString());
     pluginARAArchiveIDValue.setDefault  (getDefaultARADocumentArchiveID());
     pluginManufacturerValue.setDefault  (getDefaultPluginManufacturerString());
-
-    updateLicenseWarning();
 }
 
 void Project::updateWebsiteDependencies()
@@ -291,9 +315,6 @@ void Project::initialiseProjectValues()
     projectTypeValue.referTo         (projectRoot, Ids::projectType,         getUndoManager(), build_tools::ProjectType_GUIApp::getTypeName());
     versionValue.referTo             (projectRoot, Ids::version,             getUndoManager(), "1.0.0");
     bundleIdentifierValue.referTo    (projectRoot, Ids::bundleIdentifier,    getUndoManager(), getDefaultBundleIdentifierString());
-
-    displaySplashScreenValue.referTo (projectRoot, Ids::displaySplashScreen, getUndoManager(), false);
-    splashScreenColourValue.referTo  (projectRoot, Ids::splashScreenColour,  getUndoManager(), "Dark");
 
     useAppConfigValue.referTo             (projectRoot, Ids::useAppConfig,                  getUndoManager(), true);
     addUsingNamespaceToJuceHeader.referTo (projectRoot, Ids::addUsingNamespaceToJuceHeader, getUndoManager(), true);
@@ -534,9 +555,22 @@ void Project::updatePluginCategories()
         auto aaxCategory = projectRoot.getProperty (Ids::pluginAAXCategory, {}).toString();
 
         if (getAllAAXCategoryVars().contains (aaxCategory))
+        {
             pluginAAXCategoryValue = aaxCategory;
-        else if (getAllAAXCategoryStrings().contains (aaxCategory))
-            pluginAAXCategoryValue = Array<var> (getAllAAXCategoryVars()[getAllAAXCategoryStrings().indexOf (aaxCategory)]);
+        }
+        else
+        {
+            constexpr auto prefix = "AAX_ePlugInCategory_";
+
+            if (aaxCategory.startsWithIgnoreCase (prefix))
+                aaxCategory = aaxCategory.substring ((int) std::string_view (prefix).size());
+
+            const auto map = getAAXCategoryValues();
+            const auto iter = map.find (aaxCategory);
+
+            if (iter != map.end())
+                pluginAAXCategoryValue = Array<var> (iter->second);
+        }
     }
 
     {
@@ -699,8 +733,6 @@ Result Project::loadDocument (const File& file)
 
     setChangedFlag (false);
 
-    updateLicenseWarning();
-
     return Result::ok();
 }
 
@@ -797,17 +829,6 @@ Result Project::saveResourcesOnly()
     return saver->saveResourcesOnly();
 }
 
-bool Project::hasIncompatibleLicenseTypeAndSplashScreenSetting() const
-{
-    auto companyName = companyNameValue.get().toString();
-    auto isJUCEProject = (companyName == "Raw Material Software Limited"
-                       || companyName == "JUCE"
-                       || companyName == "ROLI Ltd.");
-
-    return ! ProjucerApplication::getApp().isRunningCommandLine && ! isJUCEProject && ! shouldDisplaySplashScreen()
-          && ! ProjucerApplication::getApp().getLicenseController().getCurrentState().canUnlockFullFeatures();
-}
-
 bool Project::isFileModificationCheckPending() const
 {
     return fileModificationPoller.isCheckPending();
@@ -816,28 +837,7 @@ bool Project::isFileModificationCheckPending() const
 bool Project::isSaveAndExportDisabled() const
 {
     return ! ProjucerApplication::getApp().isRunningCommandLine
-           && (hasIncompatibleLicenseTypeAndSplashScreenSetting() || isFileModificationCheckPending());
-}
-
-void Project::updateLicenseWarning()
-{
-    if (hasIncompatibleLicenseTypeAndSplashScreenSetting())
-    {
-        ProjectMessages::MessageAction action;
-        auto currentLicenseState = ProjucerApplication::getApp().getLicenseController().getCurrentState();
-
-        if (currentLicenseState.isSignedIn() && (! currentLicenseState.canUnlockFullFeatures() || currentLicenseState.isOldLicense()))
-            action = { "Upgrade", [] { URL ("https://juce.com/get-juce").launchInDefaultBrowser(); } };
-        else
-            action = { "Sign in", [this] { ProjucerApplication::getApp().mainWindowList.getMainWindowForFile (getFile())->showLoginFormOverlay(); } };
-
-        addProjectMessage (ProjectMessages::Ids::incompatibleLicense,
-                           { std::move (action), { "Enable splash screen", [this] { displaySplashScreenValue = true; } } });
-    }
-    else
-    {
-        removeProjectMessage (ProjectMessages::Ids::incompatibleLicense);
-    }
+           && isFileModificationCheckPending();
 }
 
 void Project::updateJUCEPathWarning()
@@ -991,11 +991,6 @@ void Project::updateModuleNotFoundWarning (bool showWarning)
         removeProjectMessage (ProjectMessages::Ids::moduleNotFound);
 }
 
-void Project::licenseStateChanged()
-{
-    updateLicenseWarning();
-}
-
 void Project::changeListenerCallback (ChangeBroadcaster*)
 {
     updateJUCEPathWarning();
@@ -1129,10 +1124,6 @@ void Project::valueTreePropertyChanged (ValueTree& tree, const Identifier& prope
 
             if (shouldWriteLegacyPluginCharacteristicsSettings)
                 writeLegacyPluginCharacteristicsSettings();
-        }
-        else if (property == Ids::displaySplashScreen)
-        {
-            updateLicenseWarning();
         }
         else if (property == Ids::cppLanguageStandard)
         {
@@ -1396,17 +1387,6 @@ void Project::createPropertyEditors (PropertyListBuilder& props)
                "no such statement will be included. This setting used to be enabled by default, but it "
                "is recommended to leave it disabled for new projects.");
 
-    props.add (new ChoicePropertyComponent (displaySplashScreenValue, "Display the JUCE Splash Screen (required for closed source applications without an Indie or Pro JUCE license)"),
-                                            "This option controls the display of the standard JUCE splash screen. "
-                                            "In accordance with the terms of the JUCE 7 End-Use License Agreement (www.juce.com/juce-7-licence), "
-                                            "this option can only be disabled for closed source applications if you have a JUCE Indie or Pro "
-                                            "license, or are using JUCE under the GPL v3 license.");
-
-    props.add (new ChoicePropertyComponentWithEnablement (splashScreenColourValue, displaySplashScreenValue, "Splash Screen Colour",
-                                                          { "Dark", "Light" }, { "Dark", "Light" }),
-               "Choose the colour of the JUCE splash screen.");
-
-
     {
         StringArray projectTypeNames;
         Array<var> projectTypeCodes;
@@ -1651,19 +1631,6 @@ Project::Item Project::Item::createCopy()         { Item i (*this); i.state = i.
 
 String Project::Item::getID() const               { return state [Ids::ID]; }
 void Project::Item::setID (const String& newID)   { state.setProperty (Ids::ID, newID, nullptr); }
-
-std::unique_ptr<Drawable> Project::Item::loadAsImageFile() const
-{
-    const MessageManagerLock mml (ThreadPoolJob::getCurrentThreadPoolJob());
-
-    if (! mml.lockWasGained())
-        return nullptr;
-
-    if (isValid())
-        return Drawable::createFromImageFile (getFile());
-
-    return {};
-}
 
 Project::Item Project::Item::createGroup (Project& project, const String& name, const String& uid, bool isModuleCode)
 {
@@ -2353,22 +2320,22 @@ int Project::getARATransformationFlags() const noexcept
 //==============================================================================
 bool Project::isAUPluginHost() const
 {
-    return getEnabledModules().isModuleEnabled ("juce_audio_processors") && isConfigFlagEnabled ("JUCE_PLUGINHOST_AU", false);
+    return getEnabledModules().isModuleEnabled ("juce_audio_processors_headless") && isConfigFlagEnabled ("JUCE_PLUGINHOST_AU", false);
 }
 
 bool Project::isVSTPluginHost() const
 {
-    return getEnabledModules().isModuleEnabled ("juce_audio_processors") && isConfigFlagEnabled ("JUCE_PLUGINHOST_VST", false);
+    return getEnabledModules().isModuleEnabled ("juce_audio_processors_headless") && isConfigFlagEnabled ("JUCE_PLUGINHOST_VST", false);
 }
 
 bool Project::isVST3PluginHost() const
 {
-    return getEnabledModules().isModuleEnabled ("juce_audio_processors") && isConfigFlagEnabled ("JUCE_PLUGINHOST_VST3", false);
+    return getEnabledModules().isModuleEnabled ("juce_audio_processors_headless") && isConfigFlagEnabled ("JUCE_PLUGINHOST_VST3", false);
 }
 
 bool Project::isLV2PluginHost() const
 {
-    return getEnabledModules().isModuleEnabled ("juce_audio_processors") && isConfigFlagEnabled ("JUCE_PLUGINHOST_LV2", false);
+    return getEnabledModules().isModuleEnabled ("juce_audio_processors_headless") && isConfigFlagEnabled ("JUCE_PLUGINHOST_LV2", false);
 }
 
 bool Project::isARAPluginHost() const
@@ -2444,30 +2411,58 @@ Array<var> Project::getDefaultVST3Categories() const noexcept
 
 StringArray Project::getAllAAXCategoryStrings() noexcept
 {
-    static StringArray aaxCategoryStrings { "AAX_ePlugInCategory_None", "AAX_ePlugInCategory_EQ", "AAX_ePlugInCategory_Dynamics", "AAX_ePlugInCategory_PitchShift",
-                                            "AAX_ePlugInCategory_Reverb", "AAX_ePlugInCategory_Delay", "AAX_ePlugInCategory_Modulation", "AAX_ePlugInCategory_Harmonic",
-                                            "AAX_ePlugInCategory_NoiseReduction", "AAX_ePlugInCategory_Dither", "AAX_ePlugInCategory_SoundField", "AAX_ePlugInCategory_HWGenerators",
-                                            "AAX_ePlugInCategory_SWGenerators", "AAX_ePlugInCategory_WrappedPlugin", "AAX_EPlugInCategory_Effect" };
+    static auto result = std::invoke ([]
+    {
+        StringArray values;
 
-    return aaxCategoryStrings;
+        for (const auto& item : getAAXCategoryValues())
+            values.add (item.first);
+
+        return values;
+    });
+
+    return result;
 }
 
 Array<var> Project::getAllAAXCategoryVars() noexcept
 {
-    static Array<var> aaxCategoryVars { 0x00000000, 0x00000001, 0x00000002, 0x00000004,
-                                        0x00000008, 0x00000010, 0x00000020, 0x00000040,
-                                        0x00000080, 0x00000100, 0x00000200, 0x00000400,
-                                        0x00000800, 0x00001000, 0x00002000 };
+    static auto result = std::invoke ([]
+    {
+        Array<var> values;
 
-    return aaxCategoryVars;
+        for (const auto& item : getAAXCategoryValues())
+            values.add (item.second);
+
+        return values;
+    });
+
+    return result;
 }
 
 Array<var> Project::getDefaultAAXCategories() const noexcept
 {
-    if (isPluginSynth())
-        return getAllAAXCategoryVars()[getAllAAXCategoryStrings().indexOf ("AAX_ePlugInCategory_SWGenerators")];
+    const auto stringToFind = std::invoke ([this]() -> String
+    {
+        if (isPluginMidiEffect())
+            return "MIDIEffect";
 
-    return getAllAAXCategoryVars()[getAllAAXCategoryStrings().indexOf ("AAX_ePlugInCategory_None")];
+        if (isPluginSynth())
+            return "SWGenerators";
+
+        return "None";
+    });
+
+    const auto map = getAAXCategoryValues();
+    const auto iter = map.find (stringToFind);
+
+    if (iter == map.end())
+    {
+        // Invariant violation!
+        jassertfalse;
+        return {};
+    }
+
+    return var { iter->second };
 }
 
 bool Project::getDefaultEnableARA() const noexcept
@@ -2666,7 +2661,8 @@ void Project::addNewExporter (const Identifier& exporterIdentifier)
 
 void Project::createExporterForCurrentPlatform()
 {
-    addNewExporter (ProjectExporter::getCurrentPlatformExporterTypeInfo().identifier);
+    if (const auto identifier = ProjectExporter::getBestPlatformExporterIdentifier(); identifier.isNotEmpty())
+        addNewExporter (identifier);
 }
 
 String Project::getUniqueTargetFolderSuffixForExporter (const Identifier& exporterIdentifier, const String& base)
@@ -2704,8 +2700,6 @@ String Project::getUniqueTargetFolderSuffixForExporter (const Identifier& export
 StringPairArray Project::getAppConfigDefs()
 {
     StringPairArray result;
-    result.set ("JUCE_DISPLAY_SPLASH_SCREEN",  shouldDisplaySplashScreen()             ? "1" : "0");
-    result.set ("JUCE_USE_DARK_SPLASH_SCREEN", getSplashScreenColourString() == "Dark" ? "1" : "0");
     result.set ("JUCE_PROJUCER_VERSION",       "0x" + String::toHexString (ProjectInfo::versionNumber));
 
     OwnedArray<LibraryModule> modules;

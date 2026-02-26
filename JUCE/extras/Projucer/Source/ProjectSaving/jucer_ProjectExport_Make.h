@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2022 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
-   Agreement and JUCE Privacy Policy.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-7-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -415,11 +424,8 @@ public:
             {
                 out << "\t-$(V_AT)mkdir -p $(JUCE_OUTDIR)/$(JUCE_VST3DIR)/Contents/Resources" << newLine
                     << "\t-$(V_AT)rm -f $(JUCE_OUTDIR)/$(JUCE_VST3DIR)/Contents/moduleinfo.json" << newLine
-                    << "\t$(V_AT) $(JUCE_OUTDIR)/$(JUCE_TARGET_VST3_MANIFEST_HELPER) "
-                       "-create "
-                       "-version " << owner.project.getVersionString().quoted() << " "
-                       "-path $(JUCE_OUTDIR)/$(JUCE_VST3DIR) "
-                       "-output $(JUCE_OUTDIR)/$(JUCE_VST3DIR)/Contents/Resources/moduleinfo.json" << newLine
+                    << "\t$(V_AT) $(JUCE_OUTDIR)/$(JUCE_TARGET_VST3_MANIFEST_HELPER) > "
+                       "$(JUCE_OUTDIR)/$(JUCE_VST3DIR)/Contents/Resources/moduleinfo.json" << newLine
                     << "\t-$(V_AT)[ ! \"$(JUCE_VST3DESTDIR)\" ] || (mkdir -p $(JUCE_VST3DESTDIR) && cp -R $(JUCE_COPYCMD_VST3))" << newLine;
             }
             else if (type == VSTPlugIn)
@@ -482,7 +488,6 @@ public:
 
     bool isXcode() const override                           { return false; }
     bool isVisualStudio() const override                    { return false; }
-    bool isCodeBlocks() const override                      { return false; }
     bool isMakefile() const override                        { return true; }
     bool isAndroidStudio() const override                   { return false; }
 
@@ -616,33 +621,56 @@ private:
         return result;
     }
 
-    StringArray getExtraPkgConfigPackages() const
+    std::vector<PackageDependency> getExtraPkgConfigPackages() const
     {
         auto packages = StringArray::fromTokens (extraPkgConfigValue.get().toString(), " ", "\"'");
         packages.removeEmptyStrings();
 
-        return packages;
+        return makePackageDependencies (packages);
     }
 
-    StringArray getCompilePackages() const
+    std::vector<PackageDependency> getCompilePackages() const
     {
         auto packages = getLinuxPackages (PackageDependencyType::compile);
-        packages.addArray (getExtraPkgConfigPackages());
+        const auto extra = getExtraPkgConfigPackages();
+        packages.insert (packages.end(), extra.begin(), extra.end());
 
         return packages;
     }
 
-    StringArray getLinkPackages() const
+    std::vector<PackageDependency> getLinkPackages() const
     {
         auto packages = getLinuxPackages (PackageDependencyType::link);
-        packages.addArray (getExtraPkgConfigPackages());
+        const auto extra = getExtraPkgConfigPackages();
+        packages.insert (packages.end(), extra.begin(), extra.end());
+
+        return packages;
+    }
+
+    static StringArray getPackagesCommand (const std::vector<PackageDependency>& dependencies)
+    {
+        StringArray packages;
+
+        for (const auto& d : dependencies)
+        {
+            if (d.fallback.has_value())
+            {
+                packages.add (String { "$(shell ($(PKG_CONFIG) --exists %VALUE% && echo %VALUE%) || echo %OR_ELSE%)" }
+                                  .replace ("%VALUE%", d.dependency)
+                                  .replace ("%OR_ELSE%", *d.fallback));
+            }
+            else
+            {
+                packages.add (d.dependency);
+            }
+        }
 
         return packages;
     }
 
     String getPreprocessorPkgConfigFlags() const
     {
-        auto compilePackages = getCompilePackages();
+        auto compilePackages = getPackagesCommand (getCompilePackages());
 
         if (compilePackages.size() > 0)
             return "$(shell $(PKG_CONFIG) --cflags " + compilePackages.joinIntoString (" ") + ")";
@@ -652,7 +680,7 @@ private:
 
     String getLinkerPkgConfigFlags() const
     {
-        auto linkPackages = getLinkPackages();
+        auto linkPackages = getPackagesCommand (getLinkPackages());
 
         if (linkPackages.size() > 0)
             return "$(shell $(PKG_CONFIG) --libs " + linkPackages.joinIntoString (" ") + ")";
@@ -1232,7 +1260,7 @@ private:
 
         out << getPhonyTargetLine() << newLine << newLine;
 
-        writeTargetLines (out, getLinkPackages());
+        writeTargetLines (out, getPackagesCommand (getLinkPackages()));
 
         for (auto target : targets)
             target->addFiles (out, getFilesForTarget (filesToCompile, target, project));

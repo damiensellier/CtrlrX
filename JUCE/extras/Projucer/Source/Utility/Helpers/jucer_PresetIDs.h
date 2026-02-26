@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2022 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
-   Agreement and JUCE Privacy Policy.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-7-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -51,8 +60,6 @@ namespace Ids
     DECLARE_ID (addUsingNamespaceToJuceHeader);
     DECLARE_ID (usePrecompiledHeaderFile);
     DECLARE_ID (precompiledHeaderFile);
-    DECLARE_ID (displaySplashScreen);
-    DECLARE_ID (splashScreenColour);
     DECLARE_ID (position);
     DECLARE_ID (source);
     DECLARE_ID (width);
@@ -118,6 +125,7 @@ namespace Ids
     DECLARE_ID (cppLibType);
     DECLARE_ID (codeSigningIdentity);
     DECLARE_ID (fastMath);
+    DECLARE_ID (intrinsicFunctions);
     DECLARE_ID (linkTimeOptimisation);
     DECLARE_ID (vstBinaryLocation);
     DECLARE_ID (vst3BinaryLocation);
@@ -142,9 +150,6 @@ namespace Ids
     DECLARE_ID (msvcManifestFile);
     DECLARE_ID (warningsAreErrors);
     DECLARE_ID (linuxArchitecture);
-    DECLARE_ID (linuxCodeBlocksArchitecture);
-    DECLARE_ID (windowsCodeBlocksArchitecture);
-    DECLARE_ID (codeBlocksWindowsTarget);
     DECLARE_ID (toolset);
     DECLARE_ID (windowsTargetPlatformVersion);
     DECLARE_ID (debugInformationFormat);
@@ -156,7 +161,6 @@ namespace Ids
     DECLARE_ID (smallIcon);
     DECLARE_ID (prebuildCommand);
     DECLARE_ID (postbuildCommand);
-    DECLARE_ID (generateManifest);
     DECLARE_ID (useRuntimeLibDLL);
     DECLARE_ID (multiProcessorCompilation);
     DECLARE_ID (enableIncrementalLinking);
@@ -211,6 +215,8 @@ namespace Ids
     DECLARE_ID (cameraPermissionText);
     DECLARE_ID (sendAppleEventsPermissionNeeded);
     DECLARE_ID (sendAppleEventsPermissionText);
+    DECLARE_ID (localNetworkPermissionNeeded);
+    DECLARE_ID (localNetworkPermissionText);
     DECLARE_ID (androidJavaLibs);
     DECLARE_ID (androidAdditionalJavaFolders);
     DECLARE_ID (androidAdditionalResourceFolders);
@@ -262,6 +268,7 @@ namespace Ids
     DECLARE_ID (androidScreenOrientation);
     DECLARE_ID (androidExtraAssetsFolder);
     DECLARE_ID (androidStudioExePath);
+    DECLARE_ID (androidEnableVirtualMidi);
     DECLARE_ID (iosDeviceFamily);
     const Identifier iPhoneScreenOrientation ("iosScreenOrientation"); // old name is confusing
     DECLARE_ID (iPadScreenOrientation);
@@ -387,7 +394,6 @@ namespace Ids
     DECLARE_ID (dontAskAboutJUCEPath);
     DECLARE_ID (postExportShellCommandPosix);
     DECLARE_ID (postExportShellCommandWin);
-    DECLARE_ID (guiEditorEnabled);
     DECLARE_ID (jucerFormatVersion);
     DECLARE_ID (buildNumber);
     DECLARE_ID (lv2Uri);

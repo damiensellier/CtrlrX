@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2022 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
-   Agreement and JUCE Privacy Policy.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-7-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -51,15 +60,27 @@ class ConsoleUnitTestRunner final : public UnitTestRunner
 //==============================================================================
 int main (int argc, char **argv)
 {
+    constexpr auto helpOption = "--help|-h";
+    constexpr auto listOption = "--list-categories|-l";
+    constexpr auto categoryOption = "--category|-c";
+    constexpr auto seedOption = "--seed|-s";
+    constexpr auto nameOption = "--name|-n";
+
     ArgumentList args (argc, argv);
 
-    if (args.containsOption ("--help|-h"))
+    if (args.containsOption (helpOption))
     {
-        std::cout << argv[0] << " [--help|-h] [--list-categories] [--category=category] [--seed=seed]" << std::endl;
+        std::cout << argv[0]
+                  << " [" << helpOption << "]"
+                  << " [" << listOption << "]"
+                  << " [" << categoryOption << "=category]"
+                  << " [" << seedOption << "=seed]"
+                  << " [" << nameOption << "=name]"
+                  << std::endl;
         return 0;
     }
 
-    if (args.containsOption ("--list-categories"))
+    if (args.containsOption (listOption))
     {
         for (auto& category : UnitTest::getAllCategories())
             std::cout << category << std::endl;
@@ -70,13 +91,19 @@ int main (int argc, char **argv)
     ConsoleLogger logger;
     Logger::setCurrentLogger (&logger);
 
+    const ScopeGuard onExit { [&]
+    {
+        Logger::setCurrentLogger (nullptr);
+        DeletedAtShutdown::deleteAll();
+    }};
+
     ConsoleUnitTestRunner runner;
 
-    auto seed = [&args]
+    const auto seed = std::invoke ([&]
     {
-        if (args.containsOption ("--seed"))
+        if (args.containsOption (seedOption))
         {
-            auto seedValueString = args.getValueForOption ("--seed");
+            auto seedValueString = args.getValueForOption (seedOption);
 
             if (seedValueString.startsWith ("0x"))
                 return seedValueString.getHexValue64();
@@ -85,10 +112,12 @@ int main (int argc, char **argv)
         }
 
         return Random::getSystemRandom().nextInt64();
-    }();
+    });
 
-    if (args.containsOption ("--category"))
-        runner.runTestsInCategory (args.getValueForOption ("--category"), seed);
+    if (args.containsOption (categoryOption))
+        runner.runTestsInCategory (args.getValueForOption (categoryOption), seed);
+    else if (args.containsOption (nameOption))
+        runner.runTestsWithName (args.getValueForOption (nameOption), seed);
     else
         runner.runAllTests (seed);
 
@@ -99,22 +128,28 @@ int main (int argc, char **argv)
         auto* result = runner.getResult (i);
 
         if (result->failures > 0)
-            failures.push_back (result->unitTestName + " / " + result->subcategoryName + ": " + String (result->failures) + " test failure" + (result->failures > 1 ? "s" : ""));
+        {
+            const auto testName = result->unitTestName + " / " + result->subcategoryName;
+            const auto testSummary = String (result->failures) + " test failure" + (result->failures > 1 ? "s" : "");
+            const auto newLineAndTab = newLine + "\t";
+
+            failures.push_back (testName + ": " + testSummary + newLineAndTab
+                                + result->messages.joinIntoString (newLineAndTab));
+        }
     }
+
+    logger.writeToLog (newLine + String::repeatedString ("-", 65));
 
     if (! failures.empty())
     {
-        logger.writeToLog (newLine + "Test failure summary:" + newLine);
+        logger.writeToLog ("Test failure summary:");
 
         for (const auto& failure : failures)
-            logger.writeToLog (failure);
+            logger.writeToLog (newLine + failure);
 
-        Logger::setCurrentLogger (nullptr);
         return 1;
     }
 
-    logger.writeToLog (newLine + "All tests completed successfully");
-    Logger::setCurrentLogger (nullptr);
-
+    logger.writeToLog ("All tests completed successfully");
     return 0;
 }

@@ -184,45 +184,49 @@ Font CtrlrFontManager::getFont(const int fontIndex)
 	return (builtInFonts[0]);
 }
 
-Font CtrlrFontManager::getBuiltInFont(const String &fontResourceName)
+Font CtrlrFontManager::getBuiltInFont(const String &fontResourceName) // Updated v5.6.35. For JUCE 8
 {
-    int dataSize;
+    int dataSize = 0; // Match your BinaryData's 'int& numBytes'
+    
+    // This will now bind correctly to your specific getNamedResource
     const char *dataPointer = BinaryData::getNamedResource(fontResourceName.toUTF8(), dataSize);
-    if (dataSize <= 0)
-        return (Font());
+    
+    if (dataSize <= 0 || dataPointer == nullptr)
+        return Font();
 
-    MemoryBlock data(dataPointer, dataSize);
+    // CAST HERE: Convert the int to size_t for the Typeface creator
+    auto tf = Typeface::createSystemTypefaceFor (dataPointer, (size_t)dataSize);
+    
+    if (tf != nullptr)
+        return Font (tf);
 
-    if (fontResourceName.endsWith ("_ttf"))
-    {
-        return (Font (Typeface::createSystemTypefaceFor (dataPointer, dataSize)));
-    }
-    else
-    {
-        MemoryInputStream mi (data, true);
-
-        CustomTypeface *importedTypeFace = new CustomTypeface(mi);
-        return (Font (importedTypeFace));
-    }
+    return Font();
 }
 
-const Font CtrlrFontManager::getFont (const char *fontData, const int fontDataSize)
+const Font CtrlrFontManager::getFont (const char *fontData, const size_t fontDataSize) // Updated v5.6.35. For JUCE 8
 {
-	MemoryBlock data(fontData, fontDataSize);
-	MemoryInputStream mi (data, true);
-
-	CustomTypeface *importedTypeFace = new CustomTypeface(mi);
-	return (Font (importedTypeFace));
+    // The parameter is already size_t (from our header update),
+    // so we just pass it through.
+    auto tf = Typeface::createSystemTypefaceFor (fontData, fontDataSize);
+    
+    if (tf != nullptr)
+        return Font (tf);
+        
+    return Font();
 }
 
-Font CtrlrFontManager::getFont(const File &fontFile)
+Font CtrlrFontManager::getFont(const File &fontFile) // Updated v5.6.35. For JUCE 8
 {
-	MemoryBlock data;
-	fontFile.loadFileAsData (data);
-	MemoryInputStream mi (data, true);
+    MemoryBlock data;
+    fontFile.loadFileAsData (data);
 
-	CustomTypeface *importedTypeFace = new CustomTypeface(mi);
-	return (Font (importedTypeFace));
+    // Pass the size_t returned by MemoryBlock::getSize()
+    auto tf = Typeface::createSystemTypefaceFor (data.getData(), data.getSize());
+    
+    if (tf != nullptr)
+        return Font (tf);
+
+    return Font();
 }
 
 const Font CtrlrFontManager::getFontFromString (const String &string)

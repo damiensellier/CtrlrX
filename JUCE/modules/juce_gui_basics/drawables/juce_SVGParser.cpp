@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2022 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
-   Agreement and JUCE Privacy Policy.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-7-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -431,7 +440,7 @@ public:
         }
 
         // paths that finish back at their start position often seem to be
-        // left without a 'z', so need to be closed explicitly..
+        // left without a 'z', so need to be closed explicitly
         if (path.getCurrentPosition() == subpathStart)
             path.closeSubPath();
     }
@@ -917,7 +926,7 @@ private:
             auto radius = getCoordLength (fillXml->getStringAttribute ("r", "50%"), gradientWidth);
             gradient.point2 = gradient.point1 + Point<float> (radius, 0.0f);
 
-            //xxx (the fx, fy focal point isn't handled properly here..)
+            //xxx (the fx, fy focal point isn't handled properly here)
         }
         else
         {
@@ -1118,10 +1127,24 @@ private:
             return false;
         }
 
+        bool getPreviousTokenEndedWithSpace() const
+        {
+            return previousTokenEndedWithSpace;
+        }
+
+        void setPreviousTokenEndedWithSpace (bool endedWithSpace)
+        {
+            previousTokenEndedWithSpace = endedWithSpace;
+
+            if (parent != nullptr)
+                parent->setPreviousTokenEndedWithSpace (endedWithSpace);
+        }
+
     private:
         StringLayoutState* parent = nullptr;
         Point<float> nextStartingPos;
         Array<float> xCoords, yCoords;
+        bool previousTokenEndedWithSpace = false;
     };
 
     Drawable* parseText (const XmlPath& xml, bool shouldParseTransform,
@@ -1154,11 +1177,46 @@ private:
         auto dc = new DrawableComposite();
         setCommonAttributes (*dc, xml);
 
-        for (auto* e : xml->getChildIterator())
+        const auto children = xml->getChildIterator();
+
+        for (auto childIt = children.begin(); childIt != children.end(); ++childIt)
         {
+            const auto firstChild = childIt == children.begin();
+            const auto lastChild = std::next (childIt) == children.end();
+            auto* e = *childIt;
+
             if (e->isTextElement())
             {
-                auto fullText = e->getText();
+                auto fullText = e->getText().replace ("\r\n", " ").replace ("\n", " ");
+
+                if (layoutState.getPreviousTokenEndedWithSpace())
+                    fullText = fullText.trimStart();
+
+                if (xml->hasTagName ("text"))
+                {
+                    if (firstChild)
+                        fullText = fullText.trimStart();
+                    else if (lastChild)
+                        fullText = fullText.trimEnd();
+                }
+
+                const auto collapseSpaces = [] (const String& s)
+                {
+                    auto tokens = StringArray::fromTokens (s, false);
+                    tokens.removeEmptyStrings();
+                    auto collapsed = tokens.joinIntoString (" ");
+
+                    if (s.startsWithChar (' '))
+                        collapsed = " " + collapsed;
+
+                    if (s.endsWithChar (' '))
+                        collapsed += " ";
+
+                    return collapsed;
+                };
+
+                fullText = collapseSpaces (fullText);
+                layoutState.setPreviousTokenEndedWithSpace (fullText.endsWithChar (' '));
 
                 const auto subtextElements = [&]
                 {
@@ -1180,6 +1238,7 @@ private:
                     auto dt = new DrawableText();
                     dc->addAndMakeVisible (dt);
 
+                    dt->setPreserveWhitespace (true);
                     dt->setText (text);
                     dt->setFont (font, true);
 
@@ -1195,7 +1254,7 @@ private:
                     const auto y = optY.value_or (layoutState.getNextStartingPos().getY());
 
                     Rectangle<float> bounds (x, y - font.getAscent(),
-                                             font.getStringWidthFloat (text), font.getHeight());
+                                             GlyphArrangement::getStringWidth (font, text), font.getHeight());
 
                     if (anchorStr == "middle")   bounds.setX (bounds.getX() - bounds.getWidth() / 2.0f);
                     else if (anchorStr == "end") bounds.setX (bounds.getX() - bounds.getWidth());
@@ -1216,7 +1275,7 @@ private:
 
     Font getFont (const XmlPath& xml) const
     {
-        Font f;
+        Font f { FontOptions{} };
         auto family = getStyleAttribute (xml, "font-family").unquoted();
 
         if (family.isNotEmpty())
@@ -1290,7 +1349,7 @@ private:
         }
         else
         {
-            auto linkedFile = originalFile.getParentDirectory().getChildFile (link);
+            auto linkedFile = originalFile.getSiblingFile (link);
 
             if (linkedFile.existsAsFile())
                 inputStream = linkedFile.createInputStream();

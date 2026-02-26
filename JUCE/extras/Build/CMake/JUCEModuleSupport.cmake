@@ -1,23 +1,32 @@
 # ==============================================================================
 #
-#  This file is part of the JUCE library.
-#  Copyright (c) 2022 - Raw Material Software Limited
+#  This file is part of the JUCE framework.
+#  Copyright (c) Raw Material Software Limited
 #
-#  JUCE is an open source library subject to commercial or open-source
+#  JUCE is an open source framework subject to commercial or open source
 #  licensing.
 #
-#  By using JUCE, you agree to the terms of both the JUCE 7 End-User License
-#  Agreement and JUCE Privacy Policy.
+#  By downloading, installing, or using the JUCE framework, or combining the
+#  JUCE framework with any other source code, object code, content or any other
+#  copyrightable work, you agree to the terms of the JUCE End User Licence
+#  Agreement, and all incorporated terms including the JUCE Privacy Policy and
+#  the JUCE Website Terms of Service, as applicable, which will bind you. If you
+#  do not agree to the terms of these agreements, we will not license the JUCE
+#  framework to you, and you must discontinue the installation or download
+#  process and cease use of the JUCE framework.
 #
-#  End User License Agreement: www.juce.com/juce-7-licence
-#  Privacy Policy: www.juce.com/juce-privacy-policy
+#  JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+#  JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+#  JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 #
-#  Or: You may also use this code under the terms of the GPL v3 (see
-#  www.gnu.org/licenses).
+#  Or:
 #
-#  JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-#  EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-#  DISCLAIMED.
+#  You may also use this code under the terms of the AGPLv3:
+#  https://www.gnu.org/licenses/agpl-3.0.en.html
+#
+#  THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+#  WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+#  MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 #
 # ==============================================================================
 
@@ -34,6 +43,10 @@
 
 include_guard(GLOBAL)
 cmake_minimum_required(VERSION 3.22)
+
+if(NOT CMAKE_C_COMPILE_OBJECT)
+    message(FATAL_ERROR "A C compiler is required to build JUCE. Add 'C' to your project's LANGUAGES.")
+endif()
 
 # ==================================================================================================
 
@@ -53,13 +66,29 @@ function(_juce_find_target_architecture result)
     set("${result}" "${match_result}" PARENT_SCOPE)
 endfunction()
 
-if((CMAKE_SYSTEM_NAME STREQUAL "Linux") OR (CMAKE_SYSTEM_NAME MATCHES ".*BSD") OR MSYS OR MINGW)
+if((CMAKE_SYSTEM_NAME STREQUAL "Windows")
+   OR (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+   OR (CMAKE_SYSTEM_NAME MATCHES ".*BSD"))
     # If you really need to override the detected arch for some reason,
     # you can configure the build with -DJUCE_TARGET_ARCHITECTURE=<custom arch>
     if(NOT DEFINED JUCE_TARGET_ARCHITECTURE)
         _juce_find_target_architecture(target_arch)
         set(JUCE_TARGET_ARCHITECTURE "${target_arch}"
             CACHE INTERNAL "The target architecture, used to name internal folders in VST3 bundles, and to locate bundled libraries in modules")
+    endif()
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        if ((CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "X86" AND NOT JUCE_TARGET_ARCHITECTURE STREQUAL "i386")
+            OR (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "AMD64"
+                AND NOT (JUCE_TARGET_ARCHITECTURE STREQUAL "i386"
+                         OR JUCE_TARGET_ARCHITECTURE STREQUAL "x86_64")))
+            set(windows_helpers_can_run FALSE)
+        else()
+            set(windows_helpers_can_run TRUE)
+        endif()
+
+        set(JUCE_WINDOWS_HELPERS_CAN_RUN ${windows_helpers_can_run}
+            CACHE INTERNAL "Signals whether plugin related helper utilities can run on the build machine")
     endif()
 endif()
 
@@ -150,7 +179,9 @@ endfunction()
 function(_juce_get_metadata target key out_var)
     get_target_property(content "${target}" "INTERFACE_JUCE_${key}")
 
-    if(NOT "${content}" STREQUAL "content-NOTFOUND")
+    if("${content}" STREQUAL "content-NOTFOUND")
+        set(${out_var} PARENT_SCOPE)
+    else()
         set(${out_var} "${content}" PARENT_SCOPE)
     endif()
 endfunction()
@@ -259,7 +290,9 @@ function(_juce_get_platform_plugin_kinds out)
         endif()
     endif()
 
-    if((CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "Windows") AND NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
+    if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+       AND (CMAKE_SYSTEM_NAME STREQUAL "Darwin"
+            OR (CMAKE_SYSTEM_NAME STREQUAL "Windows" AND JUCE_TARGET_ARCHITECTURE STREQUAL "x86_64")))
         list(APPEND result AAX)
     endif()
 
@@ -298,8 +331,7 @@ function(_juce_link_frameworks target visibility)
                 set(framework_flags "${juce_found_${framework}}")
             endif()
         elseif(CMAKE_SYSTEM_NAME STREQUAL "iOS")
-            # CoreServices is only available on iOS 12+, we must link it weakly on earlier platforms
-            if(JUCE_LINK_FRAMEWORKS_WEAK OR ((framework STREQUAL "CoreServices") AND (CMAKE_OSX_DEPLOYMENT_TARGET LESS 12.0)))
+            if(JUCE_LINK_FRAMEWORKS_WEAK)
                 set(framework_flags "-weak_framework ${framework}")
             else()
                 set(framework_flags "-framework ${framework}")
@@ -349,12 +381,15 @@ endfunction()
 # ==================================================================================================
 
 function(_juce_create_pkgconfig_target name)
+    set(options NOLINK)
+    cmake_parse_arguments(JUCE_ARG "${options}" "" "" ${ARGN})
+
     if(TARGET juce::pkgconfig_${name})
         return()
     endif()
 
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(${name} ${ARGN})
+    pkg_check_modules(${name} ${JUCE_ARG_UNPARSED_ARGUMENTS})
 
     add_library(pkgconfig_${name} INTERFACE)
     add_library(juce::pkgconfig_${name} ALIAS pkgconfig_${name})
@@ -362,9 +397,12 @@ function(_juce_create_pkgconfig_target name)
 
     set(pairs
         "INCLUDE_DIRECTORIES\;INCLUDE_DIRS"
-        "LINK_LIBRARIES\;LINK_LIBRARIES"
         "LINK_OPTIONS\;LDFLAGS_OTHER"
         "COMPILE_OPTIONS\;CFLAGS_OTHER")
+
+    if(NOT JUCE_ARG_NOLINK)
+        list(APPEND pairs "LINK_LIBRARIES\;LINK_LIBRARIES")
+    endif()
 
     foreach(pair IN LISTS pairs)
         list(GET pair 0 key)
@@ -406,8 +444,6 @@ function(_juce_add_module_staticlib_paths module_target module_path)
             set(subfolder "$<IF:$<STREQUAL:${runtime_lib},MultiThreaded>,MT,${subfolder}>")
             target_link_directories(${module_target} INTERFACE
                 "${module_path}/libs/VisualStudio${CMAKE_MATCH_1}/${arch}/${subfolder}")
-        elseif(MSYS OR MINGW)
-            _juce_add_library_path(${module_target} "${module_path}/libs/MinGW/${JUCE_TARGET_ARCHITECTURE}")
         endif()
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Android")
         _juce_add_library_path(${module_target} "${module_path}/libs/Android/${CMAKE_ANDROID_ARCH_ABI}")
@@ -443,6 +479,8 @@ function(juce_add_module module_path)
     set(base_path "${module_parent_path}")
 
     _juce_module_sources("${module_path}" "${base_path}" globbed_sources headers)
+
+    set(all_module_sources)
 
     if(${module_name} STREQUAL "juce_audio_plugin_client")
         list(REMOVE_ITEM headers
@@ -491,19 +529,19 @@ function(juce_add_module module_path)
         endif()
     endif()
 
-    if(${module_name} STREQUAL "juce_audio_processors")
+    if(${module_name} STREQUAL "juce_audio_processors_headless")
         add_library(juce_vst3_headers INTERFACE)
 
         target_compile_definitions(juce_vst3_headers INTERFACE "$<$<TARGET_EXISTS:juce_vst3_sdk>:JUCE_CUSTOM_VST3_SDK=1>")
 
         target_include_directories(juce_vst3_headers INTERFACE
             "$<$<TARGET_EXISTS:juce_vst3_sdk>:$<TARGET_PROPERTY:juce_vst3_sdk,INTERFACE_INCLUDE_DIRECTORIES>>"
-            "$<$<NOT:$<TARGET_EXISTS:juce_vst3_sdk>>:${base_path}/juce_audio_processors/format_types/VST3_SDK>")
+            "$<$<NOT:$<TARGET_EXISTS:juce_vst3_sdk>>:${base_path}/juce_audio_processors_headless/format_types/VST3_SDK>")
 
-        target_link_libraries(juce_audio_processors INTERFACE juce_vst3_headers)
+        target_link_libraries(juce_audio_processors_headless INTERFACE juce_vst3_headers)
 
         add_library(juce_lilv_headers INTERFACE)
-        set(lv2_base_path "${base_path}/juce_audio_processors/format_types/LV2_SDK")
+        set(lv2_base_path "${base_path}/juce_audio_processors_headless/format_types/LV2_SDK")
         target_include_directories(juce_lilv_headers INTERFACE
             "${lv2_base_path}"
             "${lv2_base_path}/lv2"
@@ -513,14 +551,14 @@ function(juce_add_module module_path)
             "${lv2_base_path}/sratom"
             "${lv2_base_path}/lilv"
             "${lv2_base_path}/lilv/src")
-        target_link_libraries(juce_audio_processors INTERFACE juce_lilv_headers)
+        target_link_libraries(juce_audio_processors_headless INTERFACE juce_lilv_headers)
 
         add_library(juce_ara_headers INTERFACE)
 
         target_include_directories(juce_ara_headers INTERFACE
             "$<$<TARGET_EXISTS:juce_ara_sdk>:$<TARGET_PROPERTY:juce_ara_sdk,INTERFACE_INCLUDE_DIRECTORIES>>")
 
-        target_link_libraries(juce_audio_processors INTERFACE juce_ara_headers)
+        target_link_libraries(juce_audio_processors_headless INTERFACE juce_ara_headers)
 
         if(JUCE_ARG_ALIAS_NAMESPACE)
             add_library(${JUCE_ARG_ALIAS_NAMESPACE}::juce_vst3_headers ALIAS juce_vst3_headers)
@@ -609,17 +647,11 @@ function(juce_add_module module_path)
         _juce_link_libs_from_metadata("${module_name}" "${metadata_dict}" linuxLibs)
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         if((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC"))
-            if(module_name MATCHES "juce_gui_basics|juce_audio_processors|juce_core")
+            if(module_name MATCHES "juce_gui_basics|juce_audio_processors|juce_core|juce_graphics|juce_audio_processors_headless")
                 target_compile_options(${module_name} INTERFACE /bigobj)
             endif()
 
             _juce_link_libs_from_metadata("${module_name}" "${metadata_dict}" windowsLibs)
-        elseif(MSYS OR MINGW)
-            if(module_name STREQUAL "juce_gui_basics")
-                target_compile_options(${module_name} INTERFACE "-Wa,-mbig-obj")
-            endif()
-
-            _juce_link_libs_from_metadata("${module_name}" "${metadata_dict}" mingwLibs)
         endif()
     endif()
 

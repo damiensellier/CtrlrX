@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2022 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
-   Agreement and JUCE Privacy Policy.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-7-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -35,7 +44,169 @@ namespace juce
 
     // This is an internal list of callbacks (but currently used between modules)
     Array<AppInactivityCallback*> appBecomingInactiveCallbacks;
+
+    struct BadgeUpdateTrait
+    {
+       #if JUCE_IOS_API_VERSION_CAN_BE_BUILT (16, 0)
+        API_AVAILABLE (ios (16))
+        static void newFn (UIApplication*)
+        {
+            [[UNUserNotificationCenter currentNotificationCenter] setBadgeCount: 0 withCompletionHandler: nil];
+        }
+       #endif
+
+        static void oldFn (UIApplication* app)
+        {
+            JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wdeprecated-declarations")
+            app.applicationIconBadgeNumber = 0;
+            JUCE_END_IGNORE_WARNINGS_GCC_LIKE
+        }
+    };
+
+    /*  Each successful call to beginBackgroundTask must be balanced
+        by a call to endBackgroundTask.
+    */
+    class TaskHandle
+    {
+    public:
+        TaskHandle() = default;
+
+        explicit TaskHandle (UIBackgroundTaskIdentifier t)
+            : task (t) {}
+
+        ~TaskHandle()
+        {
+            if (task != UIBackgroundTaskInvalid)
+                [[UIApplication sharedApplication] endBackgroundTask:task];
+        }
+
+        TaskHandle (TaskHandle&& other) noexcept
+        {
+            swap (other);
+        }
+
+        TaskHandle& operator= (TaskHandle&& other) noexcept
+        {
+            TaskHandle { std::move (other) }.swap (*this);
+            return *this;
+        }
+
+        TaskHandle (const TaskHandle&) = delete;
+        TaskHandle& operator= (const TaskHandle&) = delete;
+
+    private:
+        void swap (TaskHandle& other) noexcept
+        {
+            std::swap (other.task, task);
+        }
+
+        UIBackgroundTaskIdentifier task = UIBackgroundTaskInvalid;
+    };
+
+    struct SceneUtils
+    {
+        // This will need to become more sophisticated to enable support for multiple scenes
+        static void sceneDidBecomeActive()
+        {
+            ifelse_17_0<BadgeUpdateTrait> ([UIApplication sharedApplication]);
+            isIOSAppActive = true;
+        }
+
+        static void sceneWillResignActive()
+        {
+            isIOSAppActive = false;
+
+            for (int i = appBecomingInactiveCallbacks.size(); --i >= 0;)
+                appBecomingInactiveCallbacks.getReference (i)->appBecomingInactive();
+        }
+
+        template <typename Self>
+        static void sceneDidEnterBackground ([[maybe_unused]] Self* s)
+        {
+            if (auto* app = JUCEApplicationBase::getInstance())
+            {
+               #if JUCE_EXECUTE_APP_SUSPEND_ON_BACKGROUND_TASK
+                s->appSuspendTask = TaskHandle { [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"JUCE Suspend Task"
+                                                                                              expirationHandler:^{ s->appSuspendTask = {}; }] };
+
+                MessageManager::callAsync ([app, s]
+                {
+                    app->suspended();
+                    s->appSuspendTask = {};
+                });
+               #else
+                app->suspended();
+               #endif
+            }
+        }
+
+        static void sceneWillEnterForeground()
+        {
+            if (auto* app = JUCEApplicationBase::getInstance())
+                app->resumed();
+        }
+
+        SceneUtils() = delete;
+    };
 } // namespace juce
+
+API_AVAILABLE (ios (13.0))
+@interface JuceAppSceneDelegate : NSObject<UIWindowSceneDelegate>
+{
+    @public
+    TaskHandle appSuspendTask;
+}
+@end
+
+@implementation JuceAppSceneDelegate
+{
+    SharedResourcePointer<WindowSceneTracker> windowSceneTracker;
+}
+
+- (void)           scene: (UIScene*) scene
+    willConnectToSession: (UISceneSession*) session
+                 options: (UISceneConnectionOptions*) connectionOptions
+{
+    if ([scene isKindOfClass: UIWindowScene.class])
+        windowSceneTracker->setWindowScene (static_cast<UIWindowScene*> (scene));
+    else
+        jassertfalse;
+}
+
+- (void) sceneDidDisconnect: (UIScene*) scene
+{
+    if (scene == windowSceneTracker->getWindowScene())
+        windowSceneTracker->setWindowScene (nullptr);
+}
+
+- (void) sceneDidBecomeActive: (UIScene*) scene
+{
+    SceneUtils::sceneDidBecomeActive();
+}
+
+- (void) sceneWillResignActive: (UIScene*) scene
+{
+    SceneUtils::sceneWillResignActive();
+}
+
+- (void) sceneDidEnterBackground: (UIScene*) scene
+{
+    SceneUtils::sceneDidEnterBackground (self);
+}
+
+- (void) sceneWillEnterForeground: (UIScene*) scene
+{
+    SceneUtils::sceneWillEnterForeground();
+}
+
+- (void)         windowScene: (UIWindowScene*) windowScene
+    didUpdateCoordinateSpace: (id<UICoordinateSpace>) previousCoordinateSpace
+        interfaceOrientation: (UIInterfaceOrientation) previousInterfaceOrientation
+             traitCollection: (UITraitCollection*) previousTraitCollection
+{
+    windowSceneTracker->setWindowScene (windowScene);
+}
+@end
 
 #if JUCE_PUSH_NOTIFICATIONS
 @interface JuceAppStartupDelegate : NSObject <UIApplicationDelegate, UNUserNotificationCenterDelegate>
@@ -43,10 +214,11 @@ namespace juce
 @interface JuceAppStartupDelegate : NSObject <UIApplicationDelegate>
 #endif
 {
-    UIBackgroundTaskIdentifier appSuspendTask;
+    @public
+    TaskHandle appSuspendTask;
+    std::optional<ScopedJuceInitialiser_GUI> initialiser;
 }
 
-@property (strong, nonatomic) UIWindow *window;
 - (id) init;
 - (void) dealloc;
 - (void) applicationDidFinishLaunching: (UIApplication*) application;
@@ -58,6 +230,11 @@ namespace juce
 - (void) application: (UIApplication*) application handleEventsForBackgroundURLSession: (NSString*) identifier
    completionHandler: (void (^)(void)) completionHandler;
 - (void) applicationDidReceiveMemoryWarning: (UIApplication *) application;
+
+- (UISceneConfiguration*)      application: (UIApplication*) application
+    configurationForConnectingSceneSession: (UISceneSession*) connectingSceneSession
+                                   options: (UISceneConnectionOptions*) options API_AVAILABLE (ios (13.0));
+
 #if JUCE_PUSH_NOTIFICATIONS
 
 - (void)                                 application: (UIApplication*) application
@@ -75,24 +252,6 @@ namespace juce
                                     withResponseInfo: (NSDictionary*) responseInfo
                                    completionHandler: (void(^)()) completionHandler;
 
-JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wdeprecated-declarations")
-
-- (void)                    application: (UIApplication*) application
-    didRegisterUserNotificationSettings: (UIUserNotificationSettings*) notificationSettings;
-- (void)                    application: (UIApplication*) application
-            didReceiveLocalNotification: (UILocalNotification*) notification;
-- (void)                    application: (UIApplication*) application
-             handleActionWithIdentifier: (NSString*) identifier
-                   forLocalNotification: (UILocalNotification*) notification
-                      completionHandler: (void(^)()) completionHandler;
-- (void)                    application: (UIApplication*) application
-             handleActionWithIdentifier: (NSString*) identifier
-                   forLocalNotification: (UILocalNotification*) notification
-                       withResponseInfo: (NSDictionary*) responseInfo
-                      completionHandler: (void(^)()) completionHandler;
-
-JUCE_END_IGNORE_WARNINGS_GCC_LIKE
-
 - (void) userNotificationCenter: (UNUserNotificationCenter*) center
         willPresentNotification: (UNNotification*) notification
           withCompletionHandler: (void (^)(UNNotificationPresentationOptions options)) completionHandler;
@@ -105,13 +264,13 @@ JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 @end
 
 @implementation JuceAppStartupDelegate
-
+{
     NSObject* _pushNotificationsDelegate;
+}
 
 - (id) init
 {
     self = [super init];
-    appSuspendTask = UIBackgroundTaskInvalid;
 
    #if JUCE_PUSH_NOTIFICATIONS
     [UNUserNotificationCenter currentNotificationCenter].delegate = self;
@@ -128,7 +287,7 @@ JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 - (void) applicationDidFinishLaunching: (UIApplication*) application
 {
     ignoreUnused (application);
-    initialiseJuce_GUI();
+    initialiser.emplace();
 
     if (auto* app = JUCEApplicationBase::createInstance())
     {
@@ -149,47 +308,22 @@ JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
 - (void) applicationDidEnterBackground: (UIApplication*) application
 {
-    if (auto* app = JUCEApplicationBase::getInstance())
-    {
-       #if JUCE_EXECUTE_APP_SUSPEND_ON_BACKGROUND_TASK
-        appSuspendTask = [application beginBackgroundTaskWithName:@"JUCE Suspend Task" expirationHandler:^{
-            if (appSuspendTask != UIBackgroundTaskInvalid)
-            {
-                [application endBackgroundTask:appSuspendTask];
-                appSuspendTask = UIBackgroundTaskInvalid;
-            }
-        }];
-
-        MessageManager::callAsync ([app] { app->suspended(); });
-       #else
-        ignoreUnused (application);
-        app->suspended();
-       #endif
-    }
+    SceneUtils::sceneDidEnterBackground (self);
 }
 
 - (void) applicationWillEnterForeground: (UIApplication*) application
 {
-    ignoreUnused (application);
-
-    if (auto* app = JUCEApplicationBase::getInstance())
-        app->resumed();
+    SceneUtils::sceneWillEnterForeground();
 }
 
 - (void) applicationDidBecomeActive: (UIApplication*) application
 {
-    application.applicationIconBadgeNumber = 0;
-
-    isIOSAppActive = true;
+    SceneUtils::sceneDidBecomeActive();
 }
 
 - (void) applicationWillResignActive: (UIApplication*) application
 {
-    ignoreUnused (application);
-    isIOSAppActive = false;
-
-    for (int i = appBecomingInactiveCallbacks.size(); --i >= 0;)
-        appBecomingInactiveCallbacks.getReference (i)->appBecomingInactive();
+    SceneUtils::sceneWillResignActive();
 }
 
 - (void) application: (UIApplication*) application handleEventsForBackgroundURLSession: (NSString*)identifier
@@ -206,6 +340,15 @@ JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
     if (auto* app = JUCEApplicationBase::getInstance())
         app->memoryWarningReceived();
+}
+
+- (UISceneConfiguration*)      application: (UIApplication*) application
+    configurationForConnectingSceneSession: (UISceneSession*) connectingSceneSession
+                                   options: (UISceneConnectionOptions*) options
+{
+    auto* config = connectingSceneSession.configuration;
+    config.delegateClass = JuceAppSceneDelegate.class;
+    return config;
 }
 
 - (void) setPushNotificationsDelegateToUse: (NSObject*) delegate
@@ -317,96 +460,6 @@ JUCE_END_IGNORE_WARNINGS_GCC_LIKE
         [invocation invoke];
     }
 }
-
-JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wdeprecated-declarations")
-
-- (void)                    application: (UIApplication*) application
-    didRegisterUserNotificationSettings: (UIUserNotificationSettings*) notificationSettings
-{
-    ignoreUnused (application);
-
-    SEL selector = @selector (application:didRegisterUserNotificationSettings:);
-
-    if (_pushNotificationsDelegate != nil && [_pushNotificationsDelegate respondsToSelector:selector])
-    {
-        NSInvocation* invocation = [NSInvocation invocationWithMethodSignature: [_pushNotificationsDelegate methodSignatureForSelector: selector]];
-        [invocation setSelector: selector];
-        [invocation setTarget: _pushNotificationsDelegate];
-        [invocation setArgument: &application atIndex: 2];
-        [invocation setArgument: &notificationSettings atIndex: 3];
-
-        [invocation invoke];
-    }
-}
-
-- (void)            application: (UIApplication*) application
-    didReceiveLocalNotification: (UILocalNotification*) notification
-{
-    ignoreUnused (application);
-
-    SEL selector = @selector (application:didReceiveLocalNotification:);
-
-    if (_pushNotificationsDelegate != nil && [_pushNotificationsDelegate respondsToSelector: selector])
-    {
-        NSInvocation* invocation = [NSInvocation invocationWithMethodSignature: [_pushNotificationsDelegate methodSignatureForSelector: selector]];
-        [invocation setSelector: selector];
-        [invocation setTarget: _pushNotificationsDelegate];
-        [invocation setArgument: &application  atIndex: 2];
-        [invocation setArgument: &notification atIndex: 3];
-
-        [invocation invoke];
-    }
-}
-
-- (void)           application: (UIApplication*) application
-    handleActionWithIdentifier: (NSString*) identifier
-          forLocalNotification: (UILocalNotification*) notification
-             completionHandler: (void(^)()) completionHandler
-{
-    ignoreUnused (application);
-
-    SEL selector = @selector (application:handleActionWithIdentifier:forLocalNotification:completionHandler:);
-
-    if (_pushNotificationsDelegate != nil && [_pushNotificationsDelegate respondsToSelector: selector])
-    {
-        NSInvocation* invocation = [NSInvocation invocationWithMethodSignature: [_pushNotificationsDelegate methodSignatureForSelector: selector]];
-        [invocation setSelector: selector];
-        [invocation setTarget: _pushNotificationsDelegate];
-        [invocation setArgument: &application       atIndex:2];
-        [invocation setArgument: &identifier        atIndex:3];
-        [invocation setArgument: &notification      atIndex:4];
-        [invocation setArgument: &completionHandler atIndex:5];
-
-        [invocation invoke];
-    }
-}
-
-- (void)           application: (UIApplication*) application
-    handleActionWithIdentifier: (NSString*) identifier
-          forLocalNotification: (UILocalNotification*) notification
-              withResponseInfo: (NSDictionary*) responseInfo
-             completionHandler: (void(^)()) completionHandler
-{
-    ignoreUnused (application);
-
-    SEL selector = @selector (application:handleActionWithIdentifier:forLocalNotification:withResponseInfo:completionHandler:);
-
-    if (_pushNotificationsDelegate != nil && [_pushNotificationsDelegate respondsToSelector: selector])
-    {
-        NSInvocation* invocation = [NSInvocation invocationWithMethodSignature: [_pushNotificationsDelegate methodSignatureForSelector: selector]];
-        [invocation setSelector: selector];
-        [invocation setTarget: _pushNotificationsDelegate];
-        [invocation setArgument: &application       atIndex:2];
-        [invocation setArgument: &identifier        atIndex:3];
-        [invocation setArgument: &notification      atIndex:4];
-        [invocation setArgument: &responseInfo      atIndex:5];
-        [invocation setArgument: &completionHandler atIndex:6];
-
-        [invocation invoke];
-    }
-}
-
-JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
 - (void) userNotificationCenter: (UNUserNotificationCenter*) center
         willPresentNotification: (UNNotification*) notification
@@ -535,10 +588,7 @@ bool Desktop::canUseSemiTransparentWindows() noexcept
 
 bool Desktop::isDarkModeActive() const
 {
-    if (@available (iOS 12.0, *))
-        return [[[UIScreen mainScreen] traitCollection] userInterfaceStyle] == UIUserInterfaceStyleDark;
-
-    return false;
+    return [[[UIScreen mainScreen] traitCollection] userInterfaceStyle] == UIUserInterfaceStyleDark;
 }
 
 JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wundeclared-selector")
@@ -599,42 +649,78 @@ Desktop::DisplayOrientation Desktop::getCurrentOrientation() const
     return Orientations::convertToJuce (orientation);
 }
 
-// The most straightforward way of retrieving the screen area available to an iOS app
-// seems to be to create a new window (which will take up all available space) and to
-// query its frame.
-struct TemporaryWindow
+struct WindowInfo
 {
-    UIWindow* window = [[UIWindow alloc] init];
-    ~TemporaryWindow() noexcept { [window release]; }
+    explicit WindowInfo (const UIWindow* window)
+        : bounds (convertToRectInt (window.frame)),
+          safeInsets (window.safeAreaInsets.top,
+                      window.safeAreaInsets.left,
+                      window.safeAreaInsets.bottom,
+                      window.safeAreaInsets.right)
+    {}
+
+    Rectangle<int> bounds;
+    BorderSize<double> safeInsets;
 };
 
-static Rectangle<int> getRecommendedWindowBounds()
+static const UIWindow* findWindow (const UIView* view)
 {
-    return convertToRectInt (TemporaryWindow().window.frame);
+    if (view == nullptr)
+        return nullptr;
+
+    if (view.window != nullptr)
+        return view.window;
+
+    return findWindow (view.superview);
 }
 
-static BorderSize<int> getSafeAreaInsets (float masterScale)
+static const UIWindow* findWindow (const Desktop& desktop)
 {
-    if (@available (iOS 11.0, *))
+    if (auto* c = desktop.getComponent (0))
+        if (auto* p = static_cast<UIViewComponentPeer*> (c->getPeer()))
+            if (auto* w = findWindow (p->view))
+                return w;
+
+    return {};
+}
+
+static WindowInfo getWindowInfo (const Desktop& desktop)
+{
+    if (! JUCEApplication::isStandaloneApp())
+        if (const auto* window = findWindow (desktop))
+            return WindowInfo { window };
+
+    const auto createTemporaryWindow = []()
     {
-        UIEdgeInsets safeInsets = TemporaryWindow().window.safeAreaInsets;
-        return detail::WindowingHelpers::roundToInt (BorderSize<double> { safeInsets.top,
-                                                                          safeInsets.left,
-                                                                          safeInsets.bottom,
-                                                                          safeInsets.right }.multipliedBy (1.0 / (double) masterScale));
-    }
+        if (@available (iOS 13, *))
+        {
+            SharedResourcePointer<WindowSceneTracker> windowSceneTracker;
 
-    JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wdeprecated-declarations")
-    auto statusBarSize = [UIApplication sharedApplication].statusBarFrame.size;
-    JUCE_END_IGNORE_WARNINGS_GCC_LIKE
+            if (auto* scene = windowSceneTracker->getWindowScene())
+                return NSUniquePtr<UIWindow> { [[UIWindow alloc] initWithWindowScene: scene] };
+        }
 
-    auto statusBarHeight = jmin (statusBarSize.width, statusBarSize.height);
+        return NSUniquePtr<UIWindow> { [[UIWindow alloc] init] };
+    };
 
-    return { roundToInt (statusBarHeight / masterScale), 0, 0, 0 };
+    auto window (createTemporaryWindow());
+    return WindowInfo { window.get() };
+}
+
+static Rectangle<int> getRecommendedWindowBounds (const Desktop& desktop)
+{
+    return getWindowInfo (desktop).bounds;
+}
+
+static BorderSize<int> getSafeAreaInsets (const Desktop& desktop)
+{
+    const auto masterScale = (double) desktop.getGlobalScaleFactor();
+    const auto safeInsets = getWindowInfo (desktop).safeInsets;
+    return detail::WindowingHelpers::roundToInt (safeInsets.multipliedBy (1.0 / masterScale));
 }
 
 //==============================================================================
-void Displays::findDisplays (float masterScale)
+void Displays::findDisplays (const Desktop& desktop)
 {
     JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wundeclared-selector")
     static const auto keyboardShownSelector  = @selector (juceKeyboardShown:);
@@ -658,13 +744,13 @@ void Displays::findDisplays (float masterScale)
     private:
         struct DelegateClass final : public ObjCClass<NSObject>
         {
-            DelegateClass() : ObjCClass<NSObject> ("JUCEOnScreenKeyboardObserver_")
+            DelegateClass() : ObjCClass ("JUCEOnScreenKeyboardObserver_")
             {
                 addIvar<OnScreenKeyboardChangeDetectorImpl*> ("owner");
 
                 addMethod (keyboardShownSelector, [] (id self, SEL, NSNotification* notification)
                 {
-                    setKeyboardScreenBounds (self, [&]() -> BorderSize<double>
+                    setKeyboardScreenBounds (self, std::invoke ([&]() -> BorderSize<double>
                     {
                         auto* info = [notification userInfo];
 
@@ -692,7 +778,7 @@ void Displays::findDisplays (float masterScale)
                             result.setBottom (rect.getHeight());
 
                         return result;
-                    }());
+                    }));
                 });
 
                 addMethod (keyboardHiddenSelector, [] (id self, SEL, NSNotification*)
@@ -725,9 +811,10 @@ void Displays::findDisplays (float masterScale)
         UIScreen* s = [UIScreen mainScreen];
 
         Display d;
+        const auto masterScale = desktop.getGlobalScaleFactor();
         d.totalArea = convertToRectInt ([s bounds]) / masterScale;
-        d.userArea = getRecommendedWindowBounds() / masterScale;
-        d.safeAreaInsets = getSafeAreaInsets (masterScale);
+        d.userArea = getRecommendedWindowBounds (desktop) / masterScale;
+        d.safeAreaInsets = getSafeAreaInsets (desktop);
         const auto scaledInsets = keyboardChangeDetector.getInsets().multipliedBy (1.0 / (double) masterScale);
         d.keyboardInsets = detail::WindowingHelpers::roundToInt (scaledInsets);
         d.isMain = true;

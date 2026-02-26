@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2022 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 7 End-User License
-   Agreement and JUCE Privacy Policy.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-7-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -29,18 +38,18 @@ namespace juce
 #define JNI_CLASS_MEMBERS(METHOD, STATICMETHOD, FIELD, STATICFIELD, CALLBACK) \
  STATICMETHOD (getAndroidBluetoothManager, "getAndroidBluetoothManager", "(Landroid/content/Context;)Lcom/rmsl/juce/JuceMidiSupport$BluetoothMidiManager;")
 
-DECLARE_JNI_CLASS_WITH_MIN_SDK (AndroidJuceMidiSupport, "com/rmsl/juce/JuceMidiSupport", 23)
+DECLARE_JNI_CLASS (AndroidJuceMidiSupport, "com/rmsl/juce/JuceMidiSupport")
 #undef JNI_CLASS_MEMBERS
 
 #define JNI_CLASS_MEMBERS(METHOD, STATICMETHOD, FIELD, STATICFIELD, CALLBACK) \
- METHOD (getMidiBluetoothAddresses, "getMidiBluetoothAddresses", "()[Ljava/lang/String;") \
+ METHOD (getMidiBluetoothAddresses, "getMidiBluetoothAddresses", "()Ljava/util/List;") \
  METHOD (pairBluetoothMidiDevice, "pairBluetoothMidiDevice", "(Ljava/lang/String;)Z") \
  METHOD (unpairBluetoothMidiDevice, "unpairBluetoothMidiDevice", "(Ljava/lang/String;)V") \
  METHOD (getHumanReadableStringForBluetoothAddress, "getHumanReadableStringForBluetoothAddress", "(Ljava/lang/String;)Ljava/lang/String;") \
  METHOD (getBluetoothDeviceStatus, "getBluetoothDeviceStatus", "(Ljava/lang/String;)I") \
  METHOD (startStopScan, "startStopScan", "(Z)V")
 
-DECLARE_JNI_CLASS_WITH_MIN_SDK (AndroidBluetoothManager, "com/rmsl/juce/JuceMidiSupport$BluetoothMidiManager", 23)
+DECLARE_JNI_CLASS (AndroidBluetoothManager, "com/rmsl/juce/JuceMidiSupport$BluetoothMidiManager")
 #undef JNI_CLASS_MEMBERS
 
 //==============================================================================
@@ -49,7 +58,9 @@ struct AndroidBluetoothMidiInterface
     static void startStopScan (bool startScanning)
     {
         JNIEnv* env = getEnv();
-        LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport, AndroidJuceMidiSupport.getAndroidBluetoothManager, getAppContext().get()));
+        LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport,
+                                                                  AndroidJuceMidiSupport.getAndroidBluetoothManager,
+                                                                  getAppContext().get()));
 
         if (btManager.get() != nullptr)
             env->CallVoidMethod (btManager.get(), AndroidBluetoothManager.startStopScan, (jboolean) (startScanning ? 1 : 0));
@@ -61,21 +72,22 @@ struct AndroidBluetoothMidiInterface
 
         JNIEnv* env = getEnv();
 
-        LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport, AndroidJuceMidiSupport.getAndroidBluetoothManager, getAppContext().get()));
+        LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport,
+                                                                  AndroidJuceMidiSupport.getAndroidBluetoothManager,
+                                                                  getAppContext().get()));
 
         // if this is null then bluetooth is not enabled
         if (btManager.get() == nullptr)
             return {};
 
-        jobjectArray jDevices = (jobjectArray) env->CallObjectMethod (btManager.get(),
-                                                                      AndroidBluetoothManager.getMidiBluetoothAddresses);
-        LocalRef<jobjectArray> devices (jDevices);
+        LocalRef<jobject> jDevices { (jobjectArray) env->CallObjectMethod (btManager.get(),
+                                                                           AndroidBluetoothManager.getMidiBluetoothAddresses) };
 
-        const int count = env->GetArrayLength (devices.get());
+        const auto count = env->CallIntMethod (jDevices, JavaList.size);
 
-        for (int i = 0; i < count; ++i)
+        for (auto i = (decltype (count)) 0; i < count; ++i)
         {
-            LocalRef<jstring> string ((jstring)  env->GetObjectArrayElement (devices.get(), i));
+            LocalRef<jstring> string { (jstring) env->CallObjectMethod (jDevices, JavaList.get, i) };
             retval.add (juceString (string));
         }
 
@@ -87,7 +99,9 @@ struct AndroidBluetoothMidiInterface
     {
         JNIEnv* env = getEnv();
 
-        LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport, AndroidJuceMidiSupport.getAndroidBluetoothManager, getAppContext().get()));
+        LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport,
+                                                                  AndroidJuceMidiSupport.getAndroidBluetoothManager,
+                                                                  getAppContext().get()));
         if (btManager.get() == nullptr)
             return false;
 
@@ -101,7 +115,9 @@ struct AndroidBluetoothMidiInterface
     {
         JNIEnv* env = getEnv();
 
-        LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport, AndroidJuceMidiSupport.getAndroidBluetoothManager, getAppContext().get()));
+        LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport,
+                                                                  AndroidJuceMidiSupport.getAndroidBluetoothManager,
+                                                                  getAppContext().get()));
 
         if (btManager.get() != nullptr)
             env->CallVoidMethod (btManager.get(), AndroidBluetoothManager.unpairBluetoothMidiDevice,
@@ -113,7 +129,9 @@ struct AndroidBluetoothMidiInterface
     {
         JNIEnv* env = getEnv();
 
-        LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport, AndroidJuceMidiSupport.getAndroidBluetoothManager, getAppContext().get()));
+        LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport,
+                                                                  AndroidJuceMidiSupport.getAndroidBluetoothManager,
+                                                                  getAppContext().get()));
 
         if (btManager.get() == nullptr)
             return address;
@@ -141,7 +159,9 @@ struct AndroidBluetoothMidiInterface
     {
         JNIEnv* env = getEnv();
 
-        LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport, AndroidJuceMidiSupport.getAndroidBluetoothManager, getAppContext().get()));
+        LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport,
+                                                                  AndroidJuceMidiSupport.getAndroidBluetoothManager,
+                                                                  getAppContext().get()));
 
         if (btManager.get() == nullptr)
             return unpaired;
@@ -307,7 +327,7 @@ private:
     {
         PairDeviceThread (const String& bluetoothAddressOfDeviceToPair,
                           AndroidBluetoothMidiDevicesListBox& ownerListBox)
-            : Thread ("JUCE Bluetooth MIDI Device Pairing Thread"),
+            : Thread (SystemStats::getJUCEVersion() + ": Bluetooth MIDI Device Pairing Thread"),
               bluetoothAddress (bluetoothAddressOfDeviceToPair),
               owner (&ownerListBox)
         {
@@ -492,9 +512,6 @@ bool BluetoothMidiDevicePairingDialogue::open (ModalComponentManager::Callback* 
 {
     std::unique_ptr<ModalComponentManager::Callback> exitCallback (exitCallbackPtr);
 
-    if (getAndroidSDKVersion() < 23)
-        return false;
-
     auto boundsToUse = (btBounds != nullptr ? *btBounds : Rectangle<int> {});
 
     if (! RuntimePermissions::isGranted (RuntimePermissions::bluetoothMidi))
@@ -512,12 +529,11 @@ bool BluetoothMidiDevicePairingDialogue::open (ModalComponentManager::Callback* 
 
 bool BluetoothMidiDevicePairingDialogue::isAvailable()
 {
-    if (getAndroidSDKVersion() < 23)
-        return false;
-
     auto* env = getEnv();
 
-    LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport, AndroidJuceMidiSupport.getAndroidBluetoothManager, getAppContext().get()));
+    LocalRef<jobject> btManager (env->CallStaticObjectMethod (AndroidJuceMidiSupport,
+                                                              AndroidJuceMidiSupport.getAndroidBluetoothManager,
+                                                              getAppContext().get()));
     return btManager != nullptr;
 }
 

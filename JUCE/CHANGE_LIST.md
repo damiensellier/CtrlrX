@@ -3,6 +3,128 @@
 This file lists the more notable headline features. For more detailed info
 about changes and bugfixes please see the git log and BREAKING_CHANGES.md.
 
+## Version 8.0.12
+
+  - Made Visual Studio 2026 the default in the Projucer
+  - Fixed a compilation error in Android In-App Purchases
+  - Fixed some MIDI device names
+
+## Version 8.0.11
+
+  - Added a new MIDI 2.0 Universal MIDI Packet demo
+  - Added a Visual Studio 2026 exporter
+  - Improved support for macOS/iOS 26
+  - Updated the VST3 SDK to 3.8.0 (MIT license)
+  - Updated the AAX SDK to 2.9.0
+  - Included the ASIO SDK source files directly (GPLv3 license)
+  - Updated Sheen Bidi to 2.9.0
+  - Improved rendering performance with a font and glyph cache
+  - Added a new juce_audio_processors_headless module
+
+## Version 8.0.10
+
+  - Avoided restarting Android Activities on system theme change
+  - Fixed an issue with PopupMenu item visibility
+  - Fixed iOS screen size detection in plug-ins
+  - Fixed some LLVM 21 compiler warnings
+  - Fixed some Direct2D drawning issues
+  - Fixed an XEmbedComponent issue
+
+## Version 8.0.9
+
+  - Added support for configurable font features (ligatures, kerning, ...)
+  - Multiple improvements to Android windowing
+  - Multiple improvements to text shaping
+  - Fixed clearing audio buffers on WASAPI device start/stop
+  - Fixed AU hosting of plug-ins with poorly implemented parameters
+  - Added macOS/iOS 26 support
+  - Added support for iOS UIScene lifecycle on iOS 13+
+  - Added support for 32-bit int WAV files
+  - Multiple Linux WebView improvements
+  - Fixed an issue with MIDI FX AAX plug-ins on any audio channel layouts
+  - Accessibility navigation is now enabled by default for disabled components
+
+## Version 8.0.8
+
+  - Improved the TextEditor layout behaviour
+  - Added new options to control text line spacing
+  - Added more Direct2D bug fixes and performance improvements
+  - Fixed a iOS simulator buffer size issue
+  - Moved the MIDI CapabilityInquiry Demo into the DemoRunner
+  - Updated the default Android toolchain version
+
+## Version 8.0.7
+
+  - Improved unicode handling and performance in TextEditor
+  - Fixed iOS external device sample rate handling in iOS 18
+  - Added many Direct2D bug fixes and performance improvements
+  - Added a new MessageManager::callSync counterpart to callAsync
+  - Fixed a crash in Ableton when closing a plug-in window
+  - Improved sscache compatibility
+  - Fixed some PopupMenu bugs
+  - Updated Zlib
+
+## Version 8.0.6
+
+  - Changed a Visual Studio toolchain error into a warning 
+
+## Version 8.0.5
+
+  - Added Windows Arm support
+  - Added support for local notifications
+  - Added passthrough compiler options to juceaide
+  - Added support for VST3 parameter migrations
+  - Fixed some Windows mouse events and window dragging behaviour
+  - Added Ranges functionality
+  - Added VST2 and VST3 MIDI note names
+
+## Version 8.0.4
+
+  - Simplified singleton creation
+  - Fixed some Javascript and C++ interoperability issues
+  - Added exact passthrough of MIDI CC timestamps
+  - Switched to obtaining MIDI plug-in properties at runtime
+  - Improved Windows Arm CMake support
+  - Improved ShapedText
+  - Fixed some issues with Windows DLL builds
+  - Add system-provided timestamps to VBlankAttachment and animations
+  - Fixed some iOS deprecation warnings
+  - Updated embedded CHOC version
+  - Updated embedded Oboe version
+  - Moved the JavaScript implementation into a separate module
+
+## Version 8.0.3
+
+  - Updated the AAX SDK to 2.8.0
+  - Fixed multiple Direct2D drawing issues
+  - Fixed buffer size and sample rate selection on iOS 18
+
+## Version 8.0.2
+
+  - Fixed some issues handling large images in Direct2D
+  - Enabled rounded window corners in Windows 11
+  - Fixed some compiler warnings in Xcode 16
+  - Improved macOS and Android GU rendering performance
+  - Added support for C++20 and C++23
+  - Fixed a Windows mouse response issue
+  - Updated the VST3 SDK to 3.7.12
+
+## Version 8.0.1
+
+  - Fixed some issues with text layout
+  - Removed source code for unsupported platforms
+  - Fixed some Direct2D issues
+  - Update the embedded version of harfbuzz
+  - Added more surround formats
+
+## Version 8.0.0
+
+  - Added a new Direct2D renderer
+  - Added support for WebView based UIs
+  - Added consistent unicode support across platforms
+  - Added a new animation module
+  - Bundled the AAX SDK
+
 ## Version 7.0.12
 
   - Fixed an issue with timers in Pro Tools

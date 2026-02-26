@@ -1,21 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2022 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
-   without fee is hereby granted provided that the above copyright notice and
-   this permission notice appear in all copies.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
+
+   Or:
+
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -134,7 +146,7 @@ std::unique_ptr<XmlElement> XmlDocument::getDocumentElement (const bool onlyRead
                     if (CharPointer_UTF8::isByteOrderMark (text))
                         text += 3;
 
-                    // parse the input buffer directly to avoid copying it all to a string..
+                    // parse the input buffer directly to avoid copying it all to a string
                     return parseDocumentElement (String::CharPointerType (text), onlyReadOuterDocumentElement);
                 }
             }
@@ -245,7 +257,7 @@ bool XmlDocument::parseHeader()
                           .trim();
 
         /* If you load an XML document with a non-UTF encoding type, it may have been
-           loaded wrongly.. Since all the files are read via the normal juce file streams,
+           loaded wrongly. Since all the files are read via the normal juce file streams,
            they're treated as UTF-8, so by the time it gets to the parser, the encoding will
            have been lost. Best plan is to stick to utf-8 or if you have specific files to
            read, use your own code to convert them to a unicode String, and pass that to the
@@ -433,14 +445,14 @@ XmlElement* XmlDocument::readNextElement (const bool alsoParseSubElements)
             skipNextWhiteSpace();
             auto c = *input;
 
-            // empty tag..
+            // empty tag
             if (c == '/' && input[1] == '>')
             {
                 input += 2;
                 break;
             }
 
-            // parse the guts of the element..
+            // parse the guts of the element
             if (c == '>')
             {
                 ++input;
@@ -451,7 +463,7 @@ XmlElement* XmlDocument::readNextElement (const bool alsoParseSubElements)
                 break;
             }
 
-            // get an attribute..
+            // get an attribute
             if (XmlIdentifierChars::isIdentifierChar (c))
             {
                 auto attNameEnd = XmlIdentifierChars::findEndOfToken (input);
@@ -470,7 +482,7 @@ XmlElement* XmlDocument::readNextElement (const bool alsoParseSubElements)
                         if (nextChar == '"' || nextChar == '\'')
                         {
                             auto* newAtt = new XmlElement::XmlAttributeNode (attNameStart, attNameEnd);
-                            readQuotedString (newAtt->value);
+                            readQuotedString (newAtt->attribute.value);
                             attributeAppender.append (newAtt);
                             continue;
                         }
@@ -517,7 +529,7 @@ void XmlDocument::readChildElements (XmlElement& parent)
 
             if (c1 == '/')
             {
-                // our close tag..
+                // our close tag
                 auto closeTag = input.indexOf ((juce_wchar) '>');
 
                 if (closeTag >= 0)
@@ -554,7 +566,7 @@ void XmlDocument::readChildElements (XmlElement& parent)
             }
             else
             {
-                // this is some other element, so parse and add it..
+                // this is some other element, so parse and add it
                 if (auto* n = readNextElement (true))
                     childAppender.append (n);
                 else
@@ -857,7 +869,7 @@ String XmlDocument::expandExternalEntity (const String& entity)
             {
                 auto ent = tokenisedDTD [i + 1].trimCharactersAtEnd (">").trim().unquoted();
 
-                // check for sub-entities..
+                // check for sub-entities
                 auto ampersand = ent.indexOfChar ('&');
 
                 while (ampersand >= 0)

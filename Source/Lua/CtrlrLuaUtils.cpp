@@ -217,14 +217,18 @@ String CtrlrLuaUtils::askForTextInputWindow (const String title, const String me
 	}
 }
 
-StringArray CtrlrLuaUtils::getMidiInputDevices()
+StringArray CtrlrLuaUtils::getMidiInputDevices() // Update v5.6.35. For JUCE 8
 {
-	return ( MidiInput::getDevices() );
+    StringArray devices;
+    for (auto& d : MidiInput::getAvailableDevices())
+        devices.add (d.name);
 }
 
-StringArray CtrlrLuaUtils::getMidiOutputDevices()
+StringArray CtrlrLuaUtils::getMidiOutputDevices() // Update v5.6.35. For JUCE 8
 {
-	return ( MidiOutput::getDevices() );
+    StringArray devices;
+    for (auto& d : MidiOutput::getAvailableDevices())
+        devices.add (d.name);
 }
 
 juce::String CtrlrLuaUtils::base64_encode(const juce::String& stringToEncode) // Added v5.6.34. Thanks to @dnaldoog

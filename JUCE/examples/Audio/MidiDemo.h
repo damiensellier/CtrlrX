@@ -1,18 +1,22 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE examples.
-   Copyright (c) 2022 - Raw Material Software Limited
+   This file is part of the JUCE framework examples.
+   Copyright (c) Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
+   to use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
 
-   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES,
-   WHETHER EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR
-   PURPOSE, ARE DISCLAIMED.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+   REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+   AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+   INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+   LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+   OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+   PERFORMANCE OF THIS SOFTWARE.
 
   ==============================================================================
 */
@@ -27,13 +31,16 @@
  version:          1.0.0
  vendor:           JUCE
  website:          http://juce.com
- description:      Handles incoming and outcoming midi messages.
+ description:      Handles incoming and outcoming midi messages in
+                   MIDI 1.0 bytestream format. For an example of handling MIDI 2.0
+                   messages in Universal Midi Packet format, see the UMPDemo.
 
  dependencies:     juce_audio_basics, juce_audio_devices, juce_audio_formats,
                    juce_audio_processors, juce_audio_utils, juce_core,
                    juce_data_structures, juce_events, juce_graphics,
-                   juce_gui_basics, juce_gui_extra
- exporters:        xcode_mac, vs2022, linux_make, androidstudio, xcode_iphone
+                   juce_gui_basics, juce_gui_extra, juce_audio_processors_headless
+ exporters:        xcode_mac, vs2022, vs2026, linux_make, androidstudio,
+                   xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -48,6 +55,12 @@
 
 #pragma once
 
+// This demo shows how to use the MidiInput and MidiOutput types to send and receive
+// messages using the traditional bytestream format.
+// New programs should prefer to use the newer Universal Midi Packet format whenever
+// possible.
+// For an example showing how UMP messages can be sent and received, see the UMPDemo,
+// as well as the ump::Session, ump::Input, and ump::Output types.
 
 //==============================================================================
 struct MidiDeviceListEntry final : ReferenceCountedObject
@@ -75,7 +88,8 @@ struct MidiDeviceListEntry final : ReferenceCountedObject
 class MidiDemo final : public Component,
                        private MidiKeyboardState::Listener,
                        private MidiInputCallback,
-                       private AsyncUpdater
+                       private AsyncUpdater,
+                       private ump::EndpointsListener
 {
 public:
     //==============================================================================
@@ -122,10 +136,16 @@ public:
         setSize (732, 520);
 
         updateDeviceLists();
+        updateVirtualPorts();
+
+        ump::Endpoints::getInstance()->setVirtualMidiBytestreamServiceActive (true);
+        ump::Endpoints::getInstance()->addListener (*this);
     }
 
     ~MidiDemo() override
     {
+        ump::Endpoints::getInstance()->removeListener (*this);
+
         midiInputs .clear();
         midiOutputs.clear();
         keyboardState.removeListener (this);
@@ -358,6 +378,9 @@ private:
         for (auto midiOutput : midiOutputs)
             if (midiOutput->outDevice != nullptr)
                 midiOutput->outDevice->sendMessageNow (msg);
+
+        if (auto* o = virtualOut.get())
+            o->sendMessageNow (msg);
     }
 
     //==============================================================================
@@ -445,7 +468,7 @@ private:
     //==============================================================================
     void addLabelAndSetStyle (Label& label)
     {
-        label.setFont (Font (15.00f, Font::plain));
+        label.setFont (FontOptions (15.00f, Font::plain));
         label.setJustificationType (Justification::centredLeft);
         label.setEditable (false, false, false);
         label.setColour (TextEditor::textColourId, Colours::black);
@@ -458,6 +481,34 @@ private:
     {
         for (const auto isInput : { true, false })
             updateDeviceList (isInput);
+    }
+
+    void endpointsChanged() override
+    {
+        updateDeviceLists();
+    }
+
+    void virtualMidiServiceActiveChanged() override
+    {
+        if (ump::Endpoints::getInstance()->isVirtualMidiBytestreamServiceActive())
+        {
+            if (virtualIn == nullptr || virtualOut == nullptr)
+                updateVirtualPorts();
+        }
+        else
+        {
+            virtualIn = nullptr;
+            virtualOut = nullptr;
+        }
+    }
+
+    void updateVirtualPorts()
+    {
+        virtualIn = MidiInput::createNewDevice ("MidiDemo Virtual In", this);
+        virtualOut = MidiOutput::createNewDevice ("MidiDemo Virtual Out");
+
+        if (virtualIn != nullptr)
+            virtualIn->start();
     }
 
     //==============================================================================
@@ -476,10 +527,8 @@ private:
     CriticalSection midiMonitorLock;
     Array<MidiMessage> incomingMessages;
 
-    MidiDeviceListConnection connection = MidiDeviceListConnection::make ([this]
-    {
-        updateDeviceLists();
-    });
+    std::unique_ptr<MidiInput> virtualIn;
+    std::unique_ptr<MidiOutput> virtualOut;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiDemo)
