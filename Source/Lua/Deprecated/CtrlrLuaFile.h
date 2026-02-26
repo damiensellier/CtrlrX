@@ -12,7 +12,7 @@
  *			Never use this class directly always use the File class
  *
  */
-class CtrlrLuaFile : public File
+class CtrlrLuaFile
 {
 	public:
 		CtrlrLuaFile();
@@ -49,6 +49,9 @@ class CtrlrLuaFile : public File
 
 		*/
 		static CtrlrLuaFile getSpecialLocation(const File::SpecialLocationType loc);
+
+    private:
+        File internalFile;
 };
 
 #endif

@@ -25,12 +25,12 @@
 /*
   ==============================================================================
 
-   In accordance with the terms of the JUCE 6 End-Use License Agreement, the
+   In accordance with the terms of the JUCE 7 End-Use License Agreement, the
    JUCE Code in SECTION A cannot be removed, changed or otherwise rendered
    ineffective unless you have a JUCE Indie or Pro license, or are using JUCE
    under the GPL v3 license.
 
-   End User License Agreement: www.juce.com/juce-6-licence
+   End User License Agreement: www.juce.com/juce-7-licence
 
   ==============================================================================
 */
@@ -179,6 +179,14 @@
 
 #ifndef    JUCE_PLUGINHOST_LADSPA
  //#define JUCE_PLUGINHOST_LADSPA 0
+#endif
+
+#ifndef    JUCE_PLUGINHOST_LV2
+ //#define JUCE_PLUGINHOST_LV2 0
+#endif
+
+#ifndef    JUCE_PLUGINHOST_ARA
+ //#define JUCE_PLUGINHOST_ARA 0
 #endif
 
 #ifndef    JUCE_CUSTOM_VST3_SDK

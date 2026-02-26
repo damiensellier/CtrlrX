@@ -21,7 +21,7 @@ namespace BinaryData
     const int            LICENSE_txtSize = 1207;
 
     extern const char*   README_md;
-    const int            README_mdSize = 7469;
+    const int            README_mdSize = 8641;
 
     extern const char*   CtrlrRevision_template;
     const int            CtrlrRevision_templateSize = 597;
