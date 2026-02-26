@@ -222,6 +222,8 @@ StringArray CtrlrLuaUtils::getMidiInputDevices() // Update v5.6.35. For JUCE 8
     StringArray devices;
     for (auto& d : MidiInput::getAvailableDevices())
         devices.add (d.name);
+    
+    return devices;
 }
 
 StringArray CtrlrLuaUtils::getMidiOutputDevices() // Update v5.6.35. For JUCE 8
@@ -229,6 +231,8 @@ StringArray CtrlrLuaUtils::getMidiOutputDevices() // Update v5.6.35. For JUCE 8
     StringArray devices;
     for (auto& d : MidiOutput::getAvailableDevices())
         devices.add (d.name);
+    
+    return devices;
 }
 
 juce::String CtrlrLuaUtils::base64_encode(const juce::String& stringToEncode) // Added v5.6.34. Thanks to @dnaldoog
