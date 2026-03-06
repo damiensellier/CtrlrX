@@ -329,6 +329,7 @@ CtrlrLuaMethodCodeEditorSettings::~CtrlrLuaMethodCodeEditorSettings()
     deleteAndZero(syntaxTokenColor);
     
     deleteAndZero(openSearchTabs);
+    deleteAndZero(autoCompleteButton);
     deleteAndZero(resetButton);
     deleteAndZero(applyButton);
 }
@@ -384,8 +385,11 @@ void CtrlrLuaMethodCodeEditorSettings::resized()
 	// Open search tab  check box
 	openSearchTabs->setBounds(marginLeft + 0, syntaxY + 64, sampleWidth, 24);
 
+    // Autocomplete toggle
+    autoCompleteButton->setBounds(marginLeft + 0, syntaxY + 88, sampleWidth, 24);
+
     // Add horizontal line above buttons
-    int buttonY = syntaxY + 104;
+    int buttonY = syntaxY + 128;
 
     // Position the three buttons in a row: RESET  APPLY  CANCEL
     int buttonWidth = (sampleWidth - 16) / 2; // Account for spacing between buttons
@@ -495,7 +499,10 @@ void CtrlrLuaMethodCodeEditorSettings::buttonClicked(Button* buttonThatWasClicke
 			bgColour->setSelectedId(findColourIndex(Colours::white), dontSendNotification);
 			lineNumbersBgColour->setSelectedId(findColourIndex(Colours::cornflowerblue), dontSendNotification);
 			lineNumbersColour->setSelectedId(findColourIndex(Colours::black), dontSendNotification);
-			
+            autoCompleteButton->setToggleState(false, dontSendNotification);
+            //bool savedAutoComplete = owner.getComponentTree().getProperty(Ids::autoCompleteEnabled, false);
+            //SharedValues::getAutoCompleteValue().setValue(savedAutoComplete);
+            owner.getComponentTree().setProperty(Ids::luaMethodEditorAutoCompleteEnabled, false, nullptr);
 			customSyntaxColors.clear();
 			clearSyntaxColorSettings();
 			String currentToken = getCurrentSelectedTokenType();
@@ -869,6 +876,9 @@ void CtrlrLuaMethodCodeEditorSettings::applySettings()
     owner.getComponentTree().setProperty(Ids::openSearchTabsState,
         openSearchTabs->getToggleState(), nullptr);
 
+    owner.getComponentTree().setProperty(Ids::luaMethodEditorAutoCompleteEnabled,
+        autoCompleteButton->getToggleState(), nullptr);
+    SharedValues::getAutoCompleteValue().setValue(autoCompleteButton->getToggleState());
     // Save syntax colors
     saveSyntaxColorsToSettings();
 
