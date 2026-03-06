@@ -157,6 +157,14 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
 
     addAndMakeVisible (fontTest = new CodeEditorComponent (codeDocument, &luaTokeniser));
 
+    addAndMakeVisible(autoCompleteButton = new ToggleButton(""));
+    // Load saved state
+    bool savedAutoComplete = owner.getComponentTree().getProperty(Ids::luaMethodEditorAutoCompleteEnabled, false);
+    autoCompleteButton->setToggleState(savedAutoComplete, dontSendNotification);
+    autoCompleteButton->getToggleStateValue().referTo(SharedValues::getAutoCompleteValue());
+    autoCompleteButton->setButtonText(SharedValues::getAutoCompleteLabel());
+    SharedValues::getAutoCompleteValue().setValue(savedAutoComplete);
+
     addAndMakeVisible(openSearchTabs = new ToggleButton(""));
     //openSearchTabs->setButtonText("Open Search Tabs"); // Corrected to use a string literal
     openSearchTabs->getToggleStateValue().referTo(SharedValues::getSearchTabsValue());
@@ -283,7 +291,7 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     originalLineNumbersColour = getLineNumbersColour();
     originalOpenSearchTabs = openSearchTabs->getToggleState();
 	
-    setSize(334, 586);
+    setSize(334, 600);
     updateSyntaxColors();
 }
 

@@ -577,6 +577,8 @@ void CtrlrLuaMethodCodeEditor::hideCallTip()
 }
 void CtrlrLuaMethodCodeEditor::codeDocumentTextInserted(const juce::String& newText, int insertIndex)
 {
+	 if (!SharedValues::getAutoCompleteValue().getValue())
+        return; // if disabled in preferences bail out
     // --- 1. AGGRESSIVE GUARD ---
     if (isReplacingText)
     {

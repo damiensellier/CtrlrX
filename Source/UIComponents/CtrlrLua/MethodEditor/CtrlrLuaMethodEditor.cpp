@@ -243,7 +243,7 @@ CtrlrLuaMethod *CtrlrLuaMethodEditor::setEditedMethod (const Uuid &methodUuid)
     {
         if (method->getCodeEditor() == nullptr)
         {
-            /* the method is not yest beeing edited */
+            /* the method is not yet being edited */
             createNewTab (method);
         }
         else

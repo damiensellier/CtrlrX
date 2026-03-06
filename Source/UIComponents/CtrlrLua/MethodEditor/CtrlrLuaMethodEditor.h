@@ -157,12 +157,22 @@ class SharedValues
 public:
     static Value& getSearchTabsValue()
     {
-        static Value searchTabsValue(true); // default to true
+        static Value searchTabsValue (var (true)); // default to true
         return searchTabsValue;
+    }
+    static Value& getAutoCompleteValue()
+    {
+        static Value autoCompleteValue (var (false)); // default to false
+        return autoCompleteValue;
     }
     static const String& getSearchTabsLabel()
     {
-        static const String label("Keep methods opened after a match");
+        static const String label ("Keep methods opened after a match");
+        return label;
+    }
+    static const String& getAutoCompleteLabel()
+    {
+        static const String label ("Autocomplete lua methods");
         return label;
     }
 };
