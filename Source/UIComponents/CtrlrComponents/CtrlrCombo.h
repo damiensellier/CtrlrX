@@ -84,19 +84,21 @@ public:
     //==============================================================================
     void updateFuzzySearch(const String& searchText);
     
-    // 3. The SearchListener struct (Updated to Label::Listener)
-    struct SearchListener : public juce::Label::Listener {
-        SearchListener(CtrlrCombo& o) : owner(o) {}
-        void labelTextChanged (juce::Label* label) override {
-            owner.updateFuzzySearch(label->getText());
-        }
-        CtrlrCombo& owner;
-    };
+	// 3. The SearchListener struct (Updated to Label::Listener)
+	struct SearchListener : public juce::Label::Listener {
+		SearchListener(CtrlrCombo& o) : owner(o) {}
+		void labelTextChanged (juce::Label* label) override {
+			// Direct call is safer for focus management in JUCE 6
+			owner.updateFuzzySearch(label->getText());
+		}
+		CtrlrCombo& owner;
+	};
 	void parentHierarchyChanged() override;
 	void visibilityChanged() override;
 	void timerCallback() override;
 	void lookAndFeelChanged() override;
-    //==============================================================================
+	void focusLost (FocusChangeType cause) override;
+	//==============================================================================
     juce_UseDebuggingNewOperator
 
 private:
@@ -110,6 +112,9 @@ private:
     Array <var> values;
     CtrlrComboLF lf;
     ScopedPointer<CtrlrValueMap> valueMap;
+    bool isSearching = false;
+    bool isUpdating = false;
+    String lastSearchText;
     //[/UserVariables]
 
     //==============================================================================
