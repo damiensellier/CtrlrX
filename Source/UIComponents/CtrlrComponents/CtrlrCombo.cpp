@@ -14,7 +14,9 @@
 CtrlrCombo::CtrlrCombo (CtrlrModulator &owner)
     : CtrlrComponent(owner),
       lf(*this),
-      ctrlrCombo (nullptr)
+      ctrlrCombo (nullptr),
+      isUpdating (false),
+      isSearching (false)
 {
 	valueMap = new CtrlrValueMap();
     
@@ -160,15 +162,39 @@ void CtrlrCombo::mouseDown (const MouseEvent& e)
 {
     if (getProperty(Ids::uiComboSearch))
     {
-        _DBG("UX RESET: Restoring full list for browser mode");
-        
-        // Reset the ComboBox to show all items from the valueMap
-        valueMap->fillCombo (*ctrlrCombo, true);
-        
-        // We do NOT clear the text here so it "stays" as requested,
-        // but the internal list is now complete.
-    }
+        if (!isSearching)
+        {
+            _DBG("STARTING SEARCH MODE: Showing list + forcing caret");
+            
+            isUpdating = true;
+            valueMap->fillCombo(*ctrlrCombo, true);
+            isUpdating = false;
 
+            // 1. Enable editing mode
+            ctrlrCombo->setEditableText(true);
+            
+            // 2. Show the popup
+            ctrlrCombo->showPopup();
+
+            // 3. THE FIX: Find the internal editor and force it to show up NOW
+            for (int i = 0; i < ctrlrCombo->getNumChildComponents(); ++i)
+            {
+                if (auto* lb = dynamic_cast<juce::Label*>(ctrlrCombo->getChildComponent(i)))
+                {
+                    lb->showEditor(); // This creates the TextEditor component
+                    
+                    if (auto* ed = lb->getCurrentTextEditor())
+                    {
+                        ed->grabKeyboardFocus();
+                        ed->setCaretVisible(true);
+                        ed->moveCaretToEnd();
+                    }
+                    break;
+                }
+            }
+            return;
+        }
+    }
     CtrlrComponent::mouseDown (e);
 }
 
@@ -213,6 +239,22 @@ void CtrlrCombo::visibilityChanged()
         _DBG("LIFECYCLE: Component visible. Starting 250ms safety timer...");
         // This is now a valid call
         startTimer(250);
+    }
+}
+
+void CtrlrCombo::focusLost (FocusChangeType cause)
+{
+    if (ctrlrCombo)
+    {
+        // This ensures the menu disappears if you click on another modulator or the background
+        ctrlrCombo->hidePopup();
+        
+        if (getProperty(Ids::uiComboSearch))
+        {
+            isSearching = false;
+            // Optional: reset to non-editable so the next click starts fresh
+            ctrlrCombo->setEditableText(false);
+        }
     }
 }
 
@@ -285,20 +327,15 @@ void CtrlrCombo::timerCallback()
 
 void CtrlrCombo::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
 {
+    if (isUpdating) return;
     if (comboBoxThatHasChanged == ctrlrCombo)
     {
-        //[UserComboBoxCode_ctrlrCombo] -- add your combo box handling code here..
-        _DBG("CtrlrCombo::comboBoxChanged");
-        
-        // setComponentValue (ctrlrCombo->getSelectedItemIndex(), true);
-        
-        // Use getSelectedId() - 1 to map back to the original valueMap index
-        // because we added +1 during the addItem loop in updateFuzzySearch
-        int originalIndex = ctrlrCombo->getSelectedId() - 1;
-        
-        if (originalIndex >= 0)
+        const int id = ctrlrCombo->getSelectedId();
+        if (id > 0)
         {
-            setComponentValue (originalIndex, true);
+            isSearching = false;
+            setComponentValue (id - 1, true);
+            ctrlrCombo->setEditableText(false); // Reset for next interaction
         }
     }
 }
@@ -489,108 +526,105 @@ void CtrlrCombo::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChange
 
 void CtrlrCombo::handleAsyncUpdate()
 {
-    const bool shouldBeEditable = getProperty(Ids::uiComboSearch);
-    _DBG("--- ASYNC UPDATE START ---");
-    _DBG("Target Search State: " + String(shouldBeEditable ? "ON" : "OFF"));
-    
-    ctrlrCombo->setEditableText (shouldBeEditable);
-    
-    if (shouldBeEditable)
-    {
-        MessageManager::callAsync([this]() {
-            if (ctrlrCombo)
-            {
-                _DBG("Async: Attempting findAndAttach...");
-                findAndAttach (ctrlrCombo);
-                updateInternalComponentStyles();
+    if (ctrlrCombo == nullptr || valueMap == nullptr) return;
+
+    // 1. Capture Caret Position before clearing
+    int caretPos = 0;
+    juce::TextEditor* ed = nullptr;
+    for (int i = 0; i < ctrlrCombo->getNumChildComponents(); ++i) {
+        if (auto* lb = dynamic_cast<juce::Label*>(ctrlrCombo->getChildComponent(i))) {
+            ed = lb->getCurrentTextEditor();
+            if (ed != nullptr) {
+                caretPos = ed->getCaretPosition();
+                break;
             }
-            else {
-                _DBG("Async ERROR: ctrlrCombo is NULL");
+        }
+    }
+
+    isUpdating = true;
+    
+    // 2. Filter Logic (Keep your existing loop)
+    StringArray matches;
+    Array<int> ids;
+    for (int i = 0; i < valueMap->getNumValues(); ++i) {
+        String item = valueMap->getTextForIndex(i);
+        if (item.containsIgnoreCase(lastSearchText)) {
+            matches.add(item);
+            ids.add(i + 1);
+        }
+    }
+
+    // 3. Update UI
+    ctrlrCombo->clear(juce::dontSendNotification);
+    for (int i = 0; i < matches.size(); ++i)
+        ctrlrCombo->addItem(matches[i], ids[i]);
+
+    if (isSearching) {
+        // ALWAYS dismiss and show to refresh the list correctly
+        juce::PopupMenu::dismissAllActiveMenus();
+
+        juce::MessageManager::callAsync([this, caretPos]() {
+            if (ctrlrCombo == nullptr) return;
+            
+            ctrlrCombo->showPopup();
+
+            // Re-grab focus and restore the EXACT cursor position
+            for (int i = 0; i < ctrlrCombo->getNumChildComponents(); ++i) {
+                if (auto* lb = dynamic_cast<juce::Label*>(ctrlrCombo->getChildComponent(i))) {
+                    if (auto* currentEd = lb->getCurrentTextEditor()) {
+                        currentEd->grabKeyboardFocus();
+                        currentEd->setHighlightedRegion(juce::Range<int>(0, 0)); // Fixes "Select All" bug
+                        currentEd->setCaretPosition(caretPos);
+                    }
+                }
             }
         });
     }
-    else
-    {
-        _DBG("Async: Resetting search listener");
-        searchListener.reset();
-        comboContentChanged();
-        updateInternalComponentStyles();
-    }
     
-    repaint();
+    isUpdating = false;
 }
 
 void CtrlrCombo::findAndAttach (juce::ComboBox* combo)
 {
-    if (combo == nullptr) {
-        _DBG("findAndAttach: Aborted (Combo is null)");
-        return;
-    }
-
-    bool labelFound = false;
-    for (int i = 0; i < combo->getNumChildComponents(); ++i)
-    {
-        if (auto* lb = dynamic_cast<juce::Label*> (combo->getChildComponent(i)))
-        {
-            _DBG("findAndAttach: Attached to Label at address: " + String::toHexString((int64)lb));
-            
-            labelFound = true;
-            _DBG("findAndAttach: Found Label child. Attaching listener.");
-            
-            if (searchListener == nullptr)
-                searchListener = std::make_unique<SearchListener>(*this);
-            
-            lb->removeListener (searchListener.get());
-            lb->addListener (searchListener.get());
-
-            // --- SAFETY WRAPPERS ---
-            // These automatically become null if the objects are deleted
-            // during the Edit Mode transition.
-            juce::Component::SafePointer<juce::Label> safeLabel (lb);
-            juce::Component::SafePointer<CtrlrCombo> safeThis (this);
-
-            lb->onEditorShow = [safeThis, safeLabel] {
-                _DBG("UI EVENT: onEditorShow triggered");
-                
-                // If the panel or label is dying/in edit mode, ABORT.
-                if (safeThis == nullptr || safeLabel == nullptr || safeThis->getOwner().getOwnerPanel().getEditMode())
-                    return;
-                
-                juce::MessageManager::callAsync([safeThis, safeLabel]() {
-                    // Double check: Did the objects survive the async delay?
-                    if (safeThis == nullptr || safeLabel == nullptr)
-                        return;
-
-                    if (auto* ed = safeLabel->getCurrentTextEditor())
-                    {
-                        _DBG("UI EVENT: Applying colors to active TextEditor");
-                        
-                        ed->setColour (juce::TextEditor::backgroundColourId, VAR2COLOUR(safeThis->getProperty(Ids::uiComboBgColour)));
-                        ed->setColour (juce::TextEditor::textColourId, VAR2COLOUR(safeThis->getProperty(Ids::uiComboTextColour)));
-                        ed->setColour (juce::TextEditor::highlightColourId, VAR2COLOUR(safeThis->getProperty(Ids::uiComboTextColour)).withAlpha(0.3f));
-                        
-                        // Capture safeThis to prevent 'this' dangling inside text change
-                        ed->onTextChange = [safeThis, ed] {
-                            if (safeThis != nullptr) {
-                                _DBG("FUZZY: Text changed to: " + ed->getText());
-                                safeThis->updateFuzzySearch (ed->getText());
-                            }
-                        };
-                    }
-                });
-                
-                if (safeThis->ctrlrCombo && (bool)safeThis->getProperty(Ids::uiComboSearch)) {
-                    safeThis->valueMap->fillCombo (*(safeThis->ctrlrCombo), true);
-                    safeThis->ctrlrCombo->showPopup();
-                }
-            };
-            break;
-        }
-    }
-    
-    if (!labelFound) {
-        _DBG("findAndAttach WARNING: No Label component found! ComboBox might not be initialized.");
-    }
+	if (combo == nullptr) return;
+	
+	for (int i = 0; i < combo->getNumChildComponents(); ++i)
+	{
+		if (auto* lb = dynamic_cast<juce::Label*> (combo->getChildComponent(i)))
+		{
+			if (searchListener == nullptr)
+				searchListener = std::make_unique<SearchListener>(*this);
+			
+			lb->removeListener (searchListener.get());
+			lb->addListener (searchListener.get());
+			
+			juce::Component::SafePointer<juce::Label> safeLabel (lb);
+			juce::Component::SafePointer<CtrlrCombo> safeThis (this);
+			
+			lb->onEditorShow = [safeThis, safeLabel] {
+				if (safeThis == nullptr || safeLabel == nullptr) return;
+				
+				if (auto* ed = safeLabel->getCurrentTextEditor()) {
+					// This line is the most important for smooth backspacing
+					ed->setSelectAllWhenFocused(false);
+					
+					ed->moveCaretToEnd();
+					
+					// 3. FORCE COLORS (From previous step)
+					_DBG("UI EVENT: Applying colors to active TextEditor");
+					
+					ed->setColour (juce::TextEditor::backgroundColourId, VAR2COLOUR(safeThis->getProperty(Ids::uiComboBgColour)));
+					ed->setColour (juce::TextEditor::textColourId, VAR2COLOUR(safeThis->getProperty(Ids::uiComboTextColour)));
+					ed->setColour (juce::TextEditor::highlightColourId, VAR2COLOUR(safeThis->getProperty(Ids::uiComboTextColour)).withAlpha(0.3f));
+					
+					ed->onTextChange = [safeThis, ed] {
+						if (safeThis != nullptr) safeThis->updateFuzzySearch(ed->getText());
+					};
+				}
+			};
+			break;
+		}
+	}
 }
 
 void CtrlrCombo::setComponentText (const String &componentText)
@@ -602,7 +636,7 @@ void CtrlrCombo::fillContent(const int contentType)
 {
 	Array<File> files;
 	const String prewviousContent = ctrlrCombo->getText();
-
+	
 	switch (contentType)
 	{
 		case 1:
@@ -794,72 +828,72 @@ void CtrlrCombo::updateInternalComponentStyles()
 
 void CtrlrCombo::updateFuzzySearch(const String& searchText)
 {
-    _DBG("STAGE 1: updateFuzzySearch() triggered for: " + searchText);
+    _DBG("FUZZY_STEP 1: Enter updateFuzzySearch with '" + searchText + "'");
 
-    // 1. Find the active TextEditor to maintain focus later
+    if (ctrlrCombo == nullptr || valueMap == nullptr) return;
+    if (isUpdating) return;
+
+    isUpdating = true; // LOCK
+    lastSearchText = searchText;
+    isSearching = searchText.isNotEmpty();
+
+    // 1. Capture Editor and Caret for focus recovery
     juce::TextEditor* ed = nullptr;
-    std::function<void(juce::Component*)> findEd = [&](juce::Component* c) {
-        if (ed != nullptr || c == nullptr) return;
-        for (int i = 0; i < c->getNumChildComponents(); ++i) {
-            auto* child = c->getChildComponent(i);
-            if (auto* found = dynamic_cast<juce::TextEditor*>(child)) { ed = found; return; }
-            findEd(child);
-        }
-    };
-    findEd(ctrlrCombo);
-
-    // 2. Force the old popup to close first to prevent stacking
-    if (ctrlrCombo->isPopupActive()) {
-        ctrlrCombo->hidePopup();
-    }
-
-    if (searchText.isEmpty()) {
-        _DBG("STAGE 2: Text empty, resetting list");
-        valueMap->fillCombo (*ctrlrCombo, true);
-        ctrlrCombo->showPopup();
-        return;
-    }
-    
-    _DBG("STAGE 3: Filtering for string: " + searchText);
-
-    // 3. Filter items
-    ctrlrCombo->clear (juce::dontSendNotification);
-    int resultsFound = 0;
-
-    const int numValues = valueMap->getNumValues();
-    for (int i = 0; i < numValues; ++i) {
-        const String itemText = valueMap->getTextForIndex (i);
-        std::string searchStr = searchText.toLowerCase().toStdString();
-        std::string targetStr = itemText.toLowerCase().toStdString();
-        
-        // Rapidfuzz Score
-        double score = rapidfuzz::fuzz::partial_ratio (searchStr, targetStr);
-        if (itemText.startsWithIgnoreCase (searchText)) score = 100.0;
-        
-        double threshold = (searchText.length() < 3) ? 90.0 : 65.0;
-        
-        if (score >= threshold) {
-            ctrlrCombo->addItem (itemText, i + 1);
-            resultsFound++;
+    for (int i = 0; i < ctrlrCombo->getNumChildComponents(); ++i) {
+        if (auto* lb = dynamic_cast<juce::Label*>(ctrlrCombo->getChildComponent(i))) {
+            ed = lb->getCurrentTextEditor();
+            if (ed != nullptr) break;
         }
     }
-    
-    _DBG("STAGE 4: Matches found: " + String(resultsFound));
-    
-    // 4. Display the updated results
-    if (resultsFound > 0) {
-        ctrlrCombo->showPopup();
+    const int caretPos = (ed != nullptr) ? ed->getCaretPosition() : 0;
+
+    // 2. Clear and Refill based on search
+    ctrlrCombo->clear(juce::dontSendNotification);
+
+    if (isSearching)
+    {
+        int matchCount = 0;
+        for (int i = 0; i < valueMap->getNumValues(); ++i) {
+            String item = valueMap->getTextForIndex(i);
+            if (item.containsIgnoreCase(searchText)) {
+                ctrlrCombo->addItem(item, i + 1);
+                matchCount++;
+            }
+        }
+        _DBG("FUZZY_STEP 3: Found " + String(matchCount) + " matches");
+        
+        if (matchCount == 0) ctrlrCombo->addItem("(no matches)", -1);
+
+        // ALWAYS dismiss first so the popup can "refresh"
+        juce::PopupMenu::dismissAllActiveMenus();
+
+        juce::MessageManager::callAsync([this, ed, caretPos]() {
+            if (ctrlrCombo == nullptr) return;
+            ctrlrCombo->showPopup();
+            if (ed != nullptr) {
+                ed->grabKeyboardFocus();
+                ed->setCaretPosition(caretPos);
+            }
+        });
     }
-    else {
-        ctrlrCombo->addItem ("(no matches found)", -1);
-        ctrlrCombo->setItemEnabled (-1, false);
-        ctrlrCombo->showPopup();
+    else
+    {
+        // EMPTY SEARCH: Restore full list
+        _DBG("FUZZY: Search cleared, showing full list");
+        valueMap->fillCombo(*ctrlrCombo, true);
+        
+        // If they just backspaced the last character, keep the list open
+        if (!ctrlrCombo->isPopupActive())
+            ctrlrCombo->showPopup();
+            
+        if (ed != nullptr) {
+            ed->grabKeyboardFocus();
+            ed->setCaretPosition(0);
+        }
     }
-    
-    // 5. CRITICAL: Re-grab focus immediately so typing is not interrupted
-    if (ed != nullptr) {
-        ed->grabKeyboardFocus();
-    }
+
+    isUpdating = false; // UNLOCK
+    _DBG("FUZZY_STEP 7: Logic Finished");
 }
 
 void CtrlrCombo::CtrlrComboLF::drawPopupMenuBackground (Graphics &g, int width, int height)
