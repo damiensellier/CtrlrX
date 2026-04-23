@@ -26,17 +26,17 @@ void CtrlrPanelProcessor::processBlock(MidiBuffer &midiMessages, MidiBuffer &lef
 		owner.getMIDIInputThread().handleMIDIFromHost(midiMessages);
 	}
 
-	leftoverBuffer.clear();
+	leftoverBuffer.clear(); // client already clears the left-over buffer
 
     processLua(midiMessages, info);
 
 	MidiBuffer::Iterator i(midiMessages);
 	MidiMessage m;
-	int time;
+	int samplePosition;
 
-	while (i.getNextEvent(m,time))
+	while (i.getNextEvent(m, samplePosition))
 	{
-		_MIN("VST INPUT", m, time);
+		_MIN("VST INPUT", m, samplePosition);
 		if (owner.getMidiOptionBool(panelMidiThruH2D) == true)
 		{
 			if (owner.getMidiOptionBool(panelMidiThruH2DChannelize))
@@ -54,7 +54,7 @@ void CtrlrPanelProcessor::processBlock(MidiBuffer &midiMessages, MidiBuffer &lef
 				m.setChannel (owner.getMidiChannel(panelMidiOutputChannelHost));
 			}
 
-			leftoverBuffer.addEvent (m, time);
+			leftoverBuffer.addEvent (m, samplePosition);
 		}
 	}
 }

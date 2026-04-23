@@ -4,6 +4,12 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.31.0")
   cmake_policy(SET CMP0175 NEW)
 endif()
 
+# for using sccache with MSVC in windows
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.25.0")
+    cmake_policy(SET CMP0141 NEW)
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+endif()
+
 # This tells cmake we have goodies in the /cmake folder
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include (PamplejuceVersion)
@@ -112,6 +118,7 @@ juce_add_plugin("${PROJECT_NAME}"
     PLUGIN_CODE cTrl
     FORMATS "${FORMATS}"
 
+    # See JUCE/docs/CMake API.md
     # --- CORE PLUGIN CHARACTERISTICS FROM PROJUCER ---
     IS_SYNTH TRUE
     IS_MIDI_EFFECT FALSE
@@ -328,7 +335,9 @@ include(PamplejuceIPP)
 
 
 # Everything related to the tests target
-#include(Tests) # enable once we have tests...
+#include(Tests) # This would use the Catch2 framework and recompile the source-code...
+enable_testing()
+add_subdirectory(Tests)
 
 # A separate target for Benchmarks (keeps the Tests target fast)
 #include(Benchmarks) # enable once we have benchmarks...

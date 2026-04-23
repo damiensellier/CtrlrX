@@ -48,7 +48,7 @@ class CtrlrProcessor : public AudioProcessor, public ChangeBroadcaster
 	public:
 	    CtrlrProcessor();
 		~CtrlrProcessor();
-		void prepareToPlay (double sampleRate, int samplesPerBlock);   
+		void prepareToPlay (double sampleRate, int samplesPerBlock) override;
 		void releaseResources() override;
     
         #ifndef JucePlugin_PreferredChannelConfigurations
@@ -103,7 +103,7 @@ class CtrlrProcessor : public AudioProcessor, public ChangeBroadcaster
         // For ProTools projects generated with a < 4.3.0 JUCE versions of AAX Plugin
         int32 getAAXPluginIDForMainBusConfig (const AudioChannelSet& mainInputLayout,
                                               const AudioChannelSet& mainOutputLayout,
-                                              bool idForAudioSuite) const
+                                              bool idForAudioSuite) const override
         {
             int uniqueFormatId = 0;
             if (mainOutputLayout == AudioChannelSet::stereo())
@@ -121,8 +121,8 @@ class CtrlrProcessor : public AudioProcessor, public ChangeBroadcaster
 		static XmlElement* getXmlFromBinary (const void* data, const int sizeInBytes);
 		static void copyXmlToBinary (const XmlElement& xml, juce::MemoryBlock& destData);
     
-		void getStateInformation (MemoryBlock& destData);
-		void setStateInformation (const void* data, int sizeInBytes);
+		void getStateInformation (MemoryBlock& destData) override;
+		void setStateInformation (const void* data, int sizeInBytes) override;
 		void setStateInformation (const XmlElement *xmlState);
 
         CtrlrLog &getCtrlrLog()										{ return (*ctrlrLog); }
@@ -157,6 +157,8 @@ class CtrlrProcessor : public AudioProcessor, public ChangeBroadcaster
 		int logSamplePos;
 		ValueTree overridesTree;
 		MidiMessageCollector midiCollector;
+		double sample_to_seconds;
+		double lastMidiCollectorOutputTimeMs;
 		Array <PanelProcessorReference,CriticalSection> panelProcessors;
 		Array <CtrlrParameterFromHost,CriticalSection> parameterUpdates;
 		bool	thruHostToHost,

@@ -153,9 +153,13 @@ jobs:
 
       - name: Build
         run: cmake --build ${{ env.BUILD_DIR }} --config ${{ env.BUILD_TYPE }}
-      # - name: Test & Benchmarks
-      #   working-directory: ${{ env.BUILD_DIR }}
-      #   run: ctest --verbose --output-on-failure
+
+      - name: Test & Benchmarks
+        # for now, if tests fail, we do continue...
+        continue-on-error: true
+        working-directory: ${{ env.BUILD_DIR }}/Tests
+        run: ctest --verbose --output-on-failure -C ${{ env.BUILD_TYPE}}
+
 
       - name: Read in .env from CMake # see GitHubENV.cmake
         run: |
