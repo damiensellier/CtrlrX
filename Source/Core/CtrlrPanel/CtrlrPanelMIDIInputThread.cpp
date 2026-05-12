@@ -136,13 +136,21 @@ void CtrlrPanelMIDIInputThread::closeInputDevice()
 {
 	if (inputDevicePtr)
 	{
+		inputDevicePtr->removeDeviceListener(this);
 		inputDevicePtr->closeDevice();
+		inputDevicePtr = nullptr;
 	}
 }
 
 bool CtrlrPanelMIDIInputThread::openInputDevice (const String &inputDeviceName)
 {
 	const ScopedWriteLock sl(lock);
+
+	if (inputDevicePtr != nullptr)
+	{
+		inputDevicePtr->removeDeviceListener (this);
+		return (true);
+	}
 
 	inputDevicePtr = owner.getCtrlrManagerOwner().getCtrlrMidiDeviceManager().getDeviceByName (inputDeviceName, inputDevice, true);
 

@@ -112,7 +112,6 @@ void CtrlrMIDIDevice::closeDevice()
 		}
 	}
 
-	deviceListeners.clear();
 	setProperty (Ids::midiDevState, false);
 }
 
