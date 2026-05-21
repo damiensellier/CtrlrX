@@ -341,7 +341,7 @@ void CtrlrModulatorProcessor::setValueFromMIDI(CtrlrMidiMessage &m, const CtrlrM
 
 void CtrlrModulatorProcessor::setParameterNotifyingHost() // CtrlrX->VST Host
 {
-	if (owner.getVstIndex() >= 0 && owner.isExportedToVst())
+	if (owner.getVstIndex() >= 0 && owner.isExportedToVst() && !owner.isStatic())
 	{
 		getProcessor()->setParameterNotifyingHost (owner.getVstIndex(), normalizeValue (currentValue.value, minValue, maxValue));
 	}
