@@ -157,6 +157,7 @@ void CtrlrMIDIDevice::handleIncomingMidiMessage (MidiInput* /*source*/, const Mi
 	}
 	else
 	{
+#if 0 // UPDATED v5.6.36. Thanks to @dnaldoog. SEE : Slider not reacting on Midi channel different than 1 https://github.com/damiensellier/CtrlrX/issues/262
         lastMessageWasSysex = false;
 
 		for (int i=0; i<deviceListeners.size(); i++)
@@ -166,6 +167,24 @@ void CtrlrMIDIDevice::handleIncomingMidiMessage (MidiInput* /*source*/, const Mi
 			if (ch == message.getChannel() || ch == 0 || message.getChannel() == 0)
 			{
 				deviceListeners.getListeners() [i]->handleMIDIFromDevice (message);
+			}
+		}
+		/*
+		If you ever want to allow users to toggle any option in this file, you access the ValueTree with an extra property such as:
+		(bool)owner.getProperty(Ids::midiMessageChannelOverrideMapIncoming);
+		*/
+#endif
+		lastMessageWasSysex = false;
+		const bool isOverrideActive = true;
+		
+		for (int i = 0; i < deviceListeners.size(); i++)
+		{
+			auto *listener = deviceListeners.getListeners()[i];
+			const int listenerCh = listener->getListenerInputMidiChannel();
+			const int incomingCh = message.getChannel();
+			if (listenerCh == 0 || incomingCh == 0 || listenerCh == incomingCh || isOverrideActive)
+			{
+				listener->handleMIDIFromDevice(message);
 			}
 		}
 	}

@@ -257,7 +257,7 @@
   <id name="uiSliderDecimalPlaces"          text="Decimal place"    type="Numeric" min="0" max="4" />
   <id name="uiSliderValueSuffix"            text="Value suffix"     type="Text" />
   
-  <id name="uiSliderDoubleClickValue" 		text="The value to set when double clicked" type="Numeric" min="-2147483648" max="2147483647" int="0.000000001" />
+  <id name="uiSliderDoubleClickValue"         text="The value to set when double clicked" type="Numeric" min="-32768" max="65535" int="0.0001" />
   <id name="uiSliderDoubleClickEnabled" 	text="Double clicked setting" type="Bool" defaults="Enabled/Disabled"/>
   <id name="uiSliderValuePosition" 			text="Value position" type="VarNumeric" defaults="NoTextBox=0,TextBoxLeft=1,TextBoxRight=2,TextBoxAbove=3,TextBoxBelow=4"/>
   <id name="uiSliderValueHeight" 			text="Value height" type="Text"/>

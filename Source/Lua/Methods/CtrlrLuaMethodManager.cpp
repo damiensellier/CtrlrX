@@ -8,6 +8,8 @@
 #include "CtrlrLog.h"
 #include "CtrlrLuaObjectWrapper.h"
 #include "CtrlrWindowManagers/CtrlrManagerWindowManager.h"
+#include "luabind/object.hpp" // added to check if method has a certain property in isMethodValid, which is used to disable methods that have thrown an error during execution. This is needed to prevent the same error from happening repeatedly and crashing Ctrlr.
+// #include "luabind/types.hpp"
 
 CtrlrLuaMethodManager::CtrlrLuaMethodManager(CtrlrLuaManager &_owner)
 	: managerTree(Ids::luaManagerMethods),
@@ -485,7 +487,12 @@ const String CtrlrLuaMethodManager::getDefaultMethodCode(const String &methodNam
 {
 	if (linkedToProperty.isEmpty() || linkedToProperty == COMBO_NONE_ITEM)
 	{
-		return ("function "+methodName+"()\n\t-- Your method code here\nend");
+        return ("function " + methodName + "()\n"
+				"\t-- Safety Check: Prevents methods firing during boot, DAW load, or preset changes.\n"
+                "\t-- Combines panel:getBootstrapState() panel:getRestoreState()  panel:getProgramState().\n"
+                "\t-- (Optionally delete this line if this function must run during initialization)\n"
+				"\tif panel:isLoading() then return end\n\n"
+                "end");
 	}
 	else
 	{
@@ -628,4 +635,55 @@ void CtrlrLuaMethodManager::wrapUtilities()
 			addMethod (getGroupByName("Built-In"), getUtilityName(i), getUtilityCode(i).trim(), "", getUtilityUuid(i), getUtilityAlwaysUpdate(i));
 		}
 	}
+}
+
+bool CtrlrLuaMethodManager::isMethodValid(CtrlrLuaMethod *o) // Updated 5.6.36. Thanks to @dnaldoog. SEE : https://github.com/damiensellier/CtrlrX/pull/277
+{
+	if (o == nullptr)
+	{
+		return false;
+	}
+	
+	// Global Thread Safety Guard: Immediately decline execution if the application or
+	// UI engine Message Manager is in a state of teardown or exit processing.
+	if (juce::MessageManager::getInstanceWithoutCreating() == nullptr ||
+		juce::MessageManager::getInstance()->hasStopMessageBeenSent())
+	{
+		return false;
+	}
+	
+	try
+	{
+		// Check structural flag validity cleanly
+		if (!o->isValid())
+		{
+			return false;
+		}
+		
+		// Safety intercept: Ensure the wrapped luaObject tracking wrapper exists
+		if (&(o->getObject()) == nullptr)
+		{
+			return false;
+		}
+	}
+	catch (...)
+	{
+		// Quietly swallow the structural exception if 'o' is a wild/dangling pointer
+		return false;
+	}
+	
+	lua_State* L = owner.getLuaState();
+	if (!L) return false;
+	
+	try
+	{
+		luabind::object methodObj = o->getObject().getLuabindObject();
+		if (methodObj && luabind::type(methodObj) == LUA_TFUNCTION)
+		{
+			return true;
+		}
+	}
+	catch (...) {}
+	
+	return false;
 }

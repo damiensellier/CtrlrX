@@ -60,7 +60,9 @@ Ctrlr allows you to control any MIDI-enabled hardware: synthesizers, drum machin
 
 Development and maintenance of [CtrlrX](https://github.com/damiensellier/CtrlrX) are supported by the community. If you find this project useful and would like to support [Damien Sellier](https://github.com/DamienSellier/), the main person behind [CtrlrX](https://github.com/damiensellier/CtrlrX), any donations are greatly appreciated.
 
+You can donate via PayPal using this link: **[https://paypal.me/damiensellier/10](https://paypal.me/damiensellier/10)**
 You can donate via ko-fi using this link: **[https://ko-fi.com/damiensellier](https://ko-fi.com/damiensellier)**
+
 
 ---
 
@@ -485,6 +487,10 @@ Tuturial coming soon.
 ---
 
 ## Changelog
+
+#### Version 5.6.36 | 2026.05.02
+
+* **FIXED** CtrlrTabsComponents.cpp and CtrlrGroup.cpp keep component owner group on uiTabs. `CtrlrTabsComponent.cpp`, `CtrlrGroup.cpp`
 
 #### Version 5.6.35 | 2026.04.20
 

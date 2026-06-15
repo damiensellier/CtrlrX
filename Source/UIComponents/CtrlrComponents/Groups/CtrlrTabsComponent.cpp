@@ -467,10 +467,17 @@ void CtrlrTabsComponent::setOwned (CtrlrComponent *componentToOwn, const int sub
 		componentToOwn->setProperty (Ids::componentTabId, subIndexInGroup, true);
 		componentToOwn->setProperty (Ids::componentGroupped, true, true);
 		
-		// SAFEGUARD: Only clear the group name if we aren't currently loading the panel
-		if (!CtrlrComponent::restoreStateInProgress)
+		// NEW FIX: If the component is being dragged by the user,
+		// we clear the Group property so the Tab becomes the primary owner.
+		if (auto* dragContainer = DragAndDropContainer::findParentDragContainerFor(this)) // Updated v5.6.36
 		{
-			componentToOwn->setProperty(Ids::componentGroupName, "", true); // Added v5.6.35. Thanks to @dnaldoog. Clear group name when assigning to tab
+			if (dragContainer->isDragAndDropActive())
+			{
+				if (componentToOwn->getProperty(Ids::componentGroupName).toString().isNotEmpty())
+				{
+					componentToOwn->setProperty(Ids::componentGroupName, String(), true);
+				}
+			}
 		}
 		
 		if (ctrlrTabs->getTabContentComponent(subIndexInGroup))

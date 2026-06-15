@@ -30,9 +30,6 @@ CtrlrEditor::CtrlrEditor (CtrlrProcessor *_ownerFilter, CtrlrManager &_owner)
     // http://www.juce.com/forum/topic/applicationcommandmanager-menus-not-active-annoyance#new
     owner.getCommandManager().setFirstCommandTarget (this);
 
-    menuBar = new MenuBarComponent (this);
-    addAndMakeVisible(menuBar);
-
 	setApplicationCommandManagerToWatch (&owner.getCommandManager());
 
 	owner.getCommandManager().registerAllCommandsForTarget (this);

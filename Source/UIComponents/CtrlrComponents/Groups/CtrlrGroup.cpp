@@ -317,19 +317,38 @@ Array <CtrlrComponent*> CtrlrGroup::getOwnedChildren()
 
 void CtrlrGroup::setOwned (CtrlrComponent *componentToOwn, const int subIndexInGroup, const bool shouldOwnThisComponent)
 {
-	if (shouldOwnThisComponent)
-	{
+    if (componentToOwn == nullptr) // Updated v5.6.36
+        return;
+
+    if (shouldOwnThisComponent)
+    {
 		content.addAndMakeVisible (componentToOwn);
-		componentToOwn->setProperty (Ids::componentGroupName, owner.getName(), true);
-		componentToOwn->setProperty (Ids::componentGroupped, true, true);
-	}
-	else
-	{
-		owner.getOwnerPanel().getEditor()->getCanvas()->addAndMakeVisibleNg(componentToOwn);
+        componentToOwn->setProperty (Ids::componentGroupName, owner.getName(), true);
+        componentToOwn->setProperty (Ids::componentGroupped, true, true);
+        
+        // When moving into a group, we should also clear any old Tab associations
+        if (auto* dragContainer = DragAndDropContainer::findParentDragContainerFor(this))
+        {
+            if (dragContainer->isDragAndDropActive())
+            {
+                componentToOwn->setProperty (Ids::componentTabName, String(), true);
+            }
+        }
+    }
+    else
+    {
+        owner.getOwnerPanel().getEditor()->getCanvas()->addAndMakeVisibleNg(componentToOwn);
 		componentToOwn->setProperty (Ids::componentGroupped, false, true);
-        if (!owner.getOwnerPanel().isSchemeAtLeast(1))
-            componentToOwn->setProperty (Ids::componentGroupName, "", false);
-	}
+
+        // NEW FIX: Clear the group name when dragged out to the canvas
+        if (auto* dragContainer = DragAndDropContainer::findParentDragContainerFor(this))
+        {
+            if (dragContainer->isDragAndDropActive())
+            {
+				componentToOwn->setProperty (Ids::componentGroupName, String(), true);
+            }
+        }
+    }
 }
 
 void CtrlrGroup::canvasStateRestored()

@@ -407,46 +407,47 @@ bool CtrlrPanel::isLoading()
 void CtrlrPanel::bootstrapPanel(const bool setInitialProgram)
 {
     _DBG("CtrlrPanel::bootstrapPanel");
-	if (getRestoreState())
-		return;
+    if (getRestoreState())
+        return;
 
-	boostrapStateStatus = true;
-	// Capture the exact system time when boot started
+    boostrapStateStatus = true;
+    
+    // Capture the exact system time when boot started
     bootstrapStartTime = juce::Time::getMillisecondCounter();
     isBootstrapTimerActive = true;
-	for (int i=0; i<ctrlrModulators.size(); i++)
-	{
-		ctrlrModulators[i]->allModulatorsInitialized();
-	}
+    for (int i=0; i<ctrlrModulators.size(); i++)
+    {
+        ctrlrModulators[i]->allModulatorsInitialized();
+    }
 
-	if (setInitialProgram)
-		setProgram (initialProgram);
+    if (setInitialProgram)
+        setProgram (initialProgram);
 
-	if (luaPanelLoadedCbk.get())
-	{
-		if (luaPanelLoadedCbk->isValid())
-		{
-			getCtrlrLuaManager().getMethodManager().call (luaPanelLoadedCbk, (uint8)owner.getInstanceMode());
-		}
-	}
+    if (luaPanelLoadedCbk.get())
+    {
+        if (luaPanelLoadedCbk->isValid())
+        {
+            getCtrlrLuaManager().getMethodManager().call (luaPanelLoadedCbk, (uint8)owner.getInstanceMode());
+        }
+    }
 
-	if ((bool)getProperty (Ids::panelMidiSendProgramChangeOnLoad) == true)
-	{
-		sendMidiProgramChange();
-	}
+    if ((bool)getProperty (Ids::panelMidiSendProgramChangeOnLoad) == true)
+    {
+        sendMidiProgramChange();
+    }
 
-	editModeChanged(getProperty(Ids::uiPanelEditMode));
+    editModeChanged(getProperty(Ids::uiPanelEditMode));
 
-	sendSnapshotOnLoad();
+    sendSnapshotOnLoad();
 
-	// Synchronously dispatch any pending change message in each modulator to prevent Lua Callback functions beeing called on startup
-	for (int i = 0; i<ctrlrModulators.size(); i++)
-	{
-		ctrlrModulators[i]->getProcessor().handleUpdateNowIfNeeded();
-	}
+    // Synchronously dispatch any pending change message in each modulator to prevent Lua Callback functions beeing called on startup
+    for (int i = 0; i<ctrlrModulators.size(); i++)
+    {
+        ctrlrModulators[i]->getProcessor().handleUpdateNowIfNeeded();
+    }
 
-	boostrapStateStatus = false;
-	bootstrapStartTime = juce::Time::getMillisecondCounter();
+    boostrapStateStatus = false;
+    bootstrapStartTime = juce::Time::getMillisecondCounter();
     isBootstrapTimerActive = true;
 }
 

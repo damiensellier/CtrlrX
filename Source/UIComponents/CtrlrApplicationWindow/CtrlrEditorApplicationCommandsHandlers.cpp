@@ -8,7 +8,6 @@
 #include "CtrlrLua/MethodEditor/CtrlrLuaMethodCodeEditorSettings.h" // Added v5.6.34.
 #include "CtrlrWindowManagers/CtrlrDialogWindow.h"
 #include "CtrlrMIDI/CtrlrMIDISettingsDialog.h"
-#include "CtrlrMIDI/CtrlrMIDISettingsDialog.h"
 #include "CtrlrLua/MethodEditor/CtrlrLuaMethodEditorCommandIDs.h" // Added v5.6.34.
 
 void CtrlrEditor::performLuaEditorCommand(const int commandID) // Added v5.6.34. Declare the functions to call depending on the LUA method editor menu item selected from the GUI.
@@ -424,30 +423,90 @@ void CtrlrEditor::performRecentFileOpen(const int menuItemID)
 
 void CtrlrEditor::performShowKeyboardMappingDialog(const int menuItemID)
 {
+// Updated v5.6.36. Thanks to @dnaldoog. SEE : https://github.com/damiensellier/CtrlrX/issues/278
 #if JUCE_LINUX
-	// Non-modal on Linux to avoid Wayland crashes
-	auto* keys = new KeyMappingEditorComponent(*owner.getCommandManager().getKeyMappings(), true);
-	keys->setSize(600, 400); // Set an initial size for the component
-	DialogWindow::LaunchOptions options;
-	options.content.setOwned(keys);
-	options.dialogTitle = "Keyboard mapping";
-	options.resizable = true;
-	options.useNativeTitleBar = true;
-	options.dialogBackgroundColour = Colours::lightgrey;
-	options.escapeKeyTriggersCloseButton = true;
-	options.componentToCentreAround = this;
 	
-	options.launchAsync();
+	// 0) Cancel visible popups immediately
+	if (auto* mm = ModalComponentManager::getInstanceWithoutCreating())
+		mm->cancelAllModalComponents();
 	
-	// Save the key mappings when dialog closes
-	MessageManager::callAsync([this]() {
-		ScopedPointer<XmlElement> keysXml(owner.getCommandManager().getKeyMappings()->createXml(true).release());
+	// 1) First defer: exit menu callback
+	MessageManager::callAsync([this]
+	{
+		_DBG("KBMap: first async (exited menu callback)");
 		
-		if (keysXml)
-		{
-			owner.setProperty(Ids::ctrlrKeyboardMapping, keysXml->createDocument(""));
-		}
-	});
+		// 2) Second defer: next event loop tick
+		MessageManager::callAsync([this]
+								  {
+			_DBG("KBMap: second async (next frame)");
+			
+			const int extraDelayMs = 20;
+			
+			Timer::callAfterDelay(extraDelayMs, [this]()
+								  {
+				_DBG("KBMap: final launch (after extraDelay)");
+				
+				auto* keys = new KeyMappingEditorComponent(
+														   *owner.getCommandManager().getKeyMappings(), true);
+				
+				keys->setSize(600, 400);
+				
+				DialogWindow::LaunchOptions options;
+				options.content.setOwned(keys);
+				options.dialogTitle = "Keyboard mapping";
+				options.resizable = true;
+				options.useNativeTitleBar = false;
+				options.dialogBackgroundColour = Colours::lightgrey;
+				options.escapeKeyTriggersCloseButton = true;
+				
+				// Launch the window asynchronously
+				auto* dialog = options.launchAsync();
+				
+				if (dialog != nullptr)
+				{
+					// Create a SafePointer that automatically turns null when the window is destroyed
+					Component::SafePointer<Component> safeDialog(dialog);
+					
+					// Check periodically if the window has been closed by the user
+					// Using a lambda timer lambda capture to monitor the safe pointer
+					struct SaveTimer : public Timer
+					{
+						Component::SafePointer<Component> targetDialog;
+						decltype(owner)& ownerRef; // Automatically infers the exact class type of 'owner'
+						
+						SaveTimer(Component* d, decltype(owner)& o)
+						: targetDialog(d), ownerRef(o)
+						{
+							startTimer(200); // Check every 200ms
+						}
+						
+						void timerCallback() override
+						{
+							// If the window is gone, it means the user closed it!
+							if (targetDialog == nullptr)
+							{
+								stopTimer();
+								_DBG("KBMap: Dialog closed by user. Saving configuration mappings to XML properties...");
+								
+								if (auto xml = ownerRef.getCommandManager().getKeyMappings()->createXml(true))
+								{
+									ownerRef.setProperty(Ids::ctrlrKeyboardMapping, xml->createDocument(""));
+								}
+								
+								delete this; // Safely self-destruct the tracker timer
+							}
+						}
+					};
+					
+					// Instantiate the tracker
+					new SaveTimer(dialog, owner);
+				}
+			}); // end Timer::callAfterDelay
+		}); // end second callAsync
+	}); // end first callAsync
+	
+	return;
+	
 #else
 	// Modal on other platforms (original code)
 	ScopedPointer<KeyMappingEditorComponent> keys(new KeyMappingEditorComponent(*owner.getCommandManager().getKeyMappings(), true));

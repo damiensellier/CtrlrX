@@ -71,6 +71,7 @@ class CtrlrLuaMethodManager : public ValueTree::Listener
 		String getUtilityDescription(const int index);
 		String getUtilityUuid(const int index);
 		bool getUtilityAlwaysUpdate(const int index);
+		bool isMethodValid(CtrlrLuaMethod* o);
 		void wrapUtilities();
 
 		/** Calls */
