@@ -1,0 +1,53 @@
+# Base style to build upon
+BasedOnStyle: LLVM
+
+# --- INDENTATION & TABS ---
+# The codebase uses physical tabs, not spaces
+UseTab: Always
+TabWidth: 4
+IndentWidth: 4
+
+# --- THE "DOUBLE INDENT" ACCESS SPECIFIERS ---
+# Indents 'public:' and 'private:' relative to the class definition (1 tab)
+IndentAccessModifiers: true
+
+# Extra padding rules
+AccessModifierOffset: 0
+
+# --- POINTER & REFERENCE ALIGNMENT ---
+# Aligns operators to the right/center-right to match: Type &variable or Type *variable
+PointerAlignment: Right
+
+# --- BRACE BREAKING STYLE ---
+# The project uses a variation of Allman/GNU where braces break onto new lines
+BreakBeforeBrackets: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: false
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: false
+  AfterObjCDeclaration: false
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+
+# --- CONSTRUCTOR INITIALIZER LISTS ---
+# Match constructor formatting style (e.g., : propertyName(_propertyName))
+ConstructorInitializerIndentWidth: 4
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+PackConstructorInitializers: BinPack
+
+# --- ALIGNMENT WRAPPING ---
+# Keep long function arguments cleanly aligned under each other
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+
+# Line limit safety padding
+ColumnLimit: 120
