@@ -189,10 +189,9 @@ CtrlrPanel *CtrlrManager::addPanel(const ValueTree &savedState, const bool showU
 	CtrlrPanel *panel = new CtrlrPanel(*this, getUniquePanelName("Ctrlr Panel"), ctrlrPanels.size());
 
 	ctrlrPanels.add (panel);
-    panel->restoreState(savedState);
         
     // ADDED DEEP COPY HERE: Breaks the shared memory link for standard panels
-    panel->restoreState (savedState.createCopy()); 
+    panel->restoreState (savedState.createCopy()); // Update 5.6.36. FIX for duplicated modulators on load. Issue #282
 	managerTree.addChild (panel->getPanelTree(), -1, 0);
 
 	if (showUI)
