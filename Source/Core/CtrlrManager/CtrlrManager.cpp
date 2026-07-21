@@ -37,6 +37,8 @@ CtrlrManager::CtrlrManager(CtrlrProcessor *_owner, CtrlrLog &_ctrlrLog)
 
 CtrlrManager::~CtrlrManager()
 {
+    shuttingDown = true; // Added v5.6.36. Thanks to @dnaldoog. Freeze tree updates instantly
+    _DBG("!!! DTOR for CtrlrManager");
     commandManager.removeListener (this);
     ctrlrDocumentPanel->closeAllDocuments(false);
     ctrlrPanels.clear();

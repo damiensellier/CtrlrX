@@ -6,7 +6,7 @@ static const char *ctrlrRevision          = JucePlugin_VersionString;
 #ifdef JUCE_MAC
 // macOS build: Use build script-generated timestamp
 #ifndef BUILD_TIMESTAMP
-#define BUILD_TIMESTAMP "2026-07-20 23:06:08"
+#define BUILD_TIMESTAMP "2026-07-21 13:13:05"
 #endif
 static const char *ctrlrRevisionDate      = BUILD_TIMESTAMP; // Updated v5.6.32. FIX for Xcode not updating build time properly and keeping the first build timestamp as ref
 

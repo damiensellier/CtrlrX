@@ -7,7 +7,7 @@ class CtrlrLuaObjectWrapper
 {
 	public:
 		CtrlrLuaObjectWrapper();
-    CtrlrLuaObjectWrapper(luabind::object const& other);
+		CtrlrLuaObjectWrapper(luabind::object const& other);
 		CtrlrLuaObjectWrapper(const CtrlrLuaObjectWrapper& other);
 		CtrlrLuaObjectWrapper& operator= (const CtrlrLuaObjectWrapper& other);
 		~CtrlrLuaObjectWrapper();
