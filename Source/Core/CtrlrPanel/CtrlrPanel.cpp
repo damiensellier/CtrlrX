@@ -242,7 +242,9 @@ CtrlrPanel::~CtrlrPanel()
 
 	ctrlrModulators.clear();
 
-	owner.getManagerTree().removeChild (panelTree, 0);
+	if (!owner.isShuttingDown()) {
+		owner.getManagerTree().removeChild(panelTree, 0);
+	}
 }
 
 void CtrlrPanel::setRestoreState(const bool _restoreStateStatus)
