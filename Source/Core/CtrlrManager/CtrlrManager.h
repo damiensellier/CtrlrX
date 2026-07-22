@@ -247,9 +247,7 @@ class CtrlrManager :    public ValueTree::Listener,
 		void setProperty (const Identifier& name, const var &newValue)											{ managerTree.setProperty (name, newValue, 0); }
 		const var &getProperty (const Identifier& name) const													{ return managerTree.getProperty (name); }
 		const var getProperty (const Identifier& name, const var &defaultReturnValue) const						{ return managerTree.getProperty (name, defaultReturnValue); }
-		bool isShuttingDown() const noexcept {
-			return shuttingDown;
-		} // Added v5.6.36. Thanks to @dnaldoog
+		bool isShuttingDown() const noexcept																	{ return shuttingDown; } // Added v5.6.36. Thanks to @dnaldoog
 		CtrlrLog &getCtrlrLog()																					{ return (ctrlrLog); }
 		void removePanel (CtrlrPanelEditor *editor);
 		CtrlrPanel *getActivePanel();
