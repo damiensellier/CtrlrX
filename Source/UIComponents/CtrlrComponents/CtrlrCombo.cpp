@@ -242,7 +242,8 @@ void CtrlrCombo::visibilityChanged()
              + " | UI Text: '" + ctrlrCombo->getText() + "'");
     }
 
-    if (isVisible() && (bool)getProperty(Ids::uiComboSearch))
+    // if (isVisible() && (bool)getProperty(Ids::uiComboSearch))
+    if (isVisible()) // TEST. Broader condition for @Tonfisch issue #301
     {
         _DBG("LIFECYCLE: Component visible. Starting 250ms safety timer...");
         startTimer(250);
