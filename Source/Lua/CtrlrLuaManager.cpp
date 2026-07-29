@@ -334,6 +334,8 @@ void CtrlrPanelCanvas::wrapForLua(lua_State* L)
 				.def("getNumLayers", &CtrlrPanelCanvas::getNumLayers)
 				.def("getLayerName", &CtrlrPanelCanvas::getLayerName)
 				.def("setCustomLookAndFeel", (void (CtrlrPanelCanvas::*)(const luabind::object&)) & CtrlrPanelCanvas::setCustomLookAndFeel)
+				.def("setPopupMenuFont", &CtrlrPanelCanvas::setPopupMenuFont)
+				.def("setPopupMenuColour", &CtrlrPanelCanvas::setPopupMenuColour)
 		];
 }
 

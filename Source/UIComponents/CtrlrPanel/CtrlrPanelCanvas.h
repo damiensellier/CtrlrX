@@ -30,15 +30,23 @@ class CtrlrQuickXmlPreview : public Button::Listener, public Component
 class CtrlrPopupMenuLook : public LookAndFeel_V4
 {
 	public:
-		CtrlrPopupMenuLook(){}
+		CtrlrPopupMenuLook(){
+			// Default fallback colors so menus are never pitch black by default
+			setColour (PopupMenu::backgroundColourId, Colour (0xff222222));
+			setColour (PopupMenu::textColourId, Colour (0xffdddddd));
+			setColour (PopupMenu::highlightedBackgroundColourId, Colour (0xff2a629a));
+			setColour (PopupMenu::highlightedTextColourId, Colour (0xffffffff));
+		}
 		~CtrlrPopupMenuLook(){}
 		Path getTickShape (float height);
+		void setPopupMenuFont (const Font& newFont) { popupFont = newFont; }
+		Font getPopupMenuFont() override { return popupFont; }
         void drawPopupMenuBackground (Graphics& g,
                              int width,
                              int height);
 		
         void drawPopupMenuItem (Graphics& g,
-                                     int width, int height,
+                                     const Rectangle<int>& area,
                                      bool isSeparator,
                                      bool isActive,
                                      bool isHighlighted,
@@ -46,14 +54,17 @@ class CtrlrPopupMenuLook : public LookAndFeel_V4
                                      bool hasSubMenu,
                                      const String& text,
                                      const String& shortcutKeyText,
-                                     Image* image,
-                                     const Colour *textColourToUse);
+                                     // Image* image,
+                                     const Drawable* icon,
+                                     const Colour *textColourToUse) override;
 		
         void getIdealPopupMenuItemSize (const String &text,
                                         bool isSeparator,
                                         int standardMenuItemHeight,
                                         int &idealWidth,
                                         int &idealHeight);
+	private:
+		Font popupFont { 14.0f };
 };
 
 
@@ -223,6 +234,8 @@ public:
 	PopupMenu getLayerMenu();
 	void setCustomLookAndFeel(const luabind::object &customLookAndFeel);
 	void setCustomLookAndFeel (LookAndFeelBase *customLookAndFeel);
+	void setPopupMenuFont (const Font& newFont);
+	void setPopupMenuColour (int colourId, Colour colour);
 
     JUCE_LEAK_DETECTOR(CtrlrPanelCanvas)
 
@@ -244,6 +257,8 @@ private:
     ResizableBorderComponent* ctrlrPanelCanvasResizableBorder;
     CtrlrPanelCanvas (const CtrlrPanelCanvas&);
     const CtrlrPanelCanvas& operator= (const CtrlrPanelCanvas&);
+	CtrlrPopupMenuLook popupMenuLook;
+	
 };
 
 

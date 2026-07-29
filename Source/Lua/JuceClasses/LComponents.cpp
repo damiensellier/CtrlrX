@@ -1563,6 +1563,19 @@ int LPopupMenu::showAt(Rectangle<int> &areaToAttachTo, int standardItemHeight)
     return (PopupMenu::showAt (areaToAttachTo, -1, -1, -1, standardItemHeight, nullptr));
 }
 
+void LPopupMenu::setLookAndFeel (const luabind::object &_customLookAndFeel)
+{
+	try
+	{
+        auto *lf = luabind::object_cast<LookAndFeelBase *> (_customLookAndFeel);
+        PopupMenu::setLookAndFeel (lf);  // LookAndFeelBase* implicitly upcasts to juce::LookAndFeel
+	}
+	catch (luabind::error &e)
+	{
+        //WRN("Unable to cast passed LookAndFeel object to anything usable: " + _STR(e.what()));
+	}
+}
+
 void LPopupMenu::wrapForLua (lua_State *L)
 {
 	using namespace luabind;
@@ -1588,6 +1601,7 @@ void LPopupMenu::wrapForLua (lua_State *L)
 				.def("show", (int(LPopupMenu::*)(int))&LPopupMenu::show)
 				.def("showAt", (int(LPopupMenu::*)(Component*, int)) &LPopupMenu::showAt)
 				.def("showAt", (int(LPopupMenu::*)(Rectangle<int> &, int)) &LPopupMenu::showAt)
+				.def("setLookAndFeel", (void(LPopupMenu::*)(const luabind::object&))&LPopupMenu::setLookAndFeel) // Added v5.6.36. Thanks to @dnaldoog
 	];
 }
 

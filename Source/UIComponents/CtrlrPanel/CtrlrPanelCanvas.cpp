@@ -1378,67 +1378,80 @@ void CtrlrPopupMenuLook::drawPopupMenuBackground (Graphics& g,
     g.fillAll (findColour (PopupMenu::backgroundColourId));
     ignoreUnused (width, height);
 
-   #if ! JUCE_MAC
+   // #if ! JUCE_MAC
     g.setColour (findColour (PopupMenu::textColourId).withAlpha (0.7f));
-    g.drawRect (0, 0, width, height);
-   #endif
+    g.drawRect (0, 0, width, height, 1);
+   // #endif
 }
 
 void CtrlrPopupMenuLook::drawPopupMenuItem (Graphics& g,
-                                     int width, int height,
-                                     const bool isSeparator,
-                                     const bool isActive,
-                                     const bool isHighlighted,
-                                     const bool isTicked,
-                                     const bool hasSubMenu,
-                                     const String& text,
-                                     const String& shortcutKeyText,
-                                     Image* image,
-                                     const Colour* const textColourToUse)
+                                            const Rectangle<int>& area,
+                                            const bool isSeparator,
+                                            const bool isActive,
+                                            const bool isHighlighted,
+                                            const bool isTicked,
+                                            const bool hasSubMenu,
+                                            const String& text,
+                                            const String& shortcutKeyText,
+                                            const Drawable* icon,
+                                            const Colour* const textColourToUse)
 {
+    const int width  = area.getWidth();
+    const int height = area.getHeight();
     const float halfH = height * 0.5f;
 
-	bool hasSecondLine = false;
-	if (text.indexOf("\n") > 0)
-		hasSecondLine = true;
-	const int secondLineStart = Font(14).getStringWidth(text.upToFirstOccurrenceOf("\n",false, true));
-	const String secondLine  = text.fromLastOccurrenceOf("\n", false, true);
-	const String ttext = text.upToFirstOccurrenceOf("\n", false, true);
+    // Fetch the LookAndFeel popup menu font
+    Font font = getPopupMenuFont();
+
+    bool hasSecondLine = false;
+    if (text.indexOf("\n") > 0)
+        hasSecondLine = true;
+
+    const int secondLineStart = font.getStringWidth(text.upToFirstOccurrenceOf("\n", false, true));
+    const String secondLine   = text.fromLastOccurrenceOf("\n", false, true);
+    const String ttext        = text.upToFirstOccurrenceOf("\n", false, true);
 
     if (isSeparator)
     {
         const float separatorIndent = 5.5f;
-        
-        g.setColour (findColour(PopupMenu::textColourId).withAlpha(0.3f));// Colour (0x33000000));
+
+        // Draw separator using textColourId with low alpha
+        g.setColour (findColour(PopupMenu::textColourId).withAlpha(0.3f));
         g.drawLine (separatorIndent, halfH, width - separatorIndent, halfH);
 
-        g.setColour (findColour(PopupMenu::textColourId).withAlpha(0.6f)); // Colour (0x66ffffff));
+        g.setColour (findColour(PopupMenu::textColourId).withAlpha(0.6f));
         g.drawLine (separatorIndent, halfH + 1.0f, width - separatorIndent, halfH + 1.0f);
     }
     else
     {
-        Colour textColour(findColour(PopupMenu::textColourId)); //(Colours::black);
+        // 1. Determine Text Colour
+        Colour textColour = findColour(PopupMenu::textColourId);
 
         if (textColourToUse != nullptr)
+        {
             textColour = *textColourToUse;
+        }
+        else if (isHighlighted)
+        {
+            g.setColour (findColour (PopupMenu::highlightedBackgroundColourId));
+            g.fillRect (area); // Fills the full item row area
+			textColour = findColour(PopupMenu::highlightedTextColourId);
+        }
 
+        // 2. Draw Highlight Background
         if (isHighlighted)
         {
-            g.setColour (findColour(PopupMenu::highlightedBackgroundColourId));//(Colour(0x991111aa));
+            g.setColour (findColour(PopupMenu::highlightedBackgroundColourId));
             g.fillRect (1, 1, width - 2, height - 2);
+        }
 
-			g.setColour (findColour(PopupMenu::highlightedTextColourId)); // (Colours::white);
-        }
-        else
-        {
-            g.setColour (textColour);
-        }
+        // 3. Set Active Drawing Colour for Text / Icons / Checkmarks
+        g.setColour (textColour);
 
         if (! isActive)
             g.setOpacity (0.3f);
 
-        Font font (14);
-
+        // Cap Font Size safety check relative to row height
         if (font.getHeight() > height / 1.3f)
             font.setHeight (height / 1.3f);
 
@@ -1447,11 +1460,12 @@ void CtrlrPopupMenuLook::drawPopupMenuItem (Graphics& g,
         const int leftBorder = (height * 5) / 4;
         const int rightBorder = 4;
 
-        if (image != nullptr)
+        // 4. Draw Icon or Checkmark
+        if (icon != nullptr)
         {
-            g.drawImageWithin (*image,
-                               2, 1, leftBorder - 4, height - 2,
-                               RectanglePlacement::centred | RectanglePlacement::onlyReduceInSize, false);
+            icon->drawWithin (g,
+                              Rectangle<float> ((float)area.getX() + 2, (float)area.getY() + 1, (float)leftBorder - 4, (float)height - 2),
+                              RectanglePlacement::centred | RectanglePlacement::onlyReduceInSize, 1.0f);
         }
         else if (isTicked)
         {
@@ -1463,31 +1477,36 @@ void CtrlrPopupMenuLook::drawPopupMenuItem (Graphics& g,
                                                              th, true));
         }
 
+        // 5. Draw Main Text Label
         g.drawFittedText (ttext,
                           leftBorder, 0,
                           width - (leftBorder + rightBorder), height,
                           Justification::centredLeft, 1);
 
+        // 6. Draw Subtext / Shortcut Key Text
         if (shortcutKeyText.isNotEmpty() || hasSecondLine)
         {
             Font f2 (font);
             f2.setHeight (f2.getHeight() * 0.65f);
             f2.setHorizontalScale (0.95f);
             g.setFont (f2);
-			String textToDraw;
-			if (hasSecondLine)
-				textToDraw = secondLine;
-			else
-				textToDraw = shortcutKeyText;
 
-			g.drawFittedText (textToDraw,
-                        secondLineStart+8 + leftBorder,
-                        0,
-                        width - (leftBorder + rightBorder + 4) - secondLineStart - 8,
-                        height,
-                        Justification::centredRight,
-						3);
+            String textToDraw;
+            if (hasSecondLine)
+                textToDraw = secondLine;
+            else
+                textToDraw = shortcutKeyText;
+
+            g.drawFittedText (textToDraw,
+                              secondLineStart + 8 + leftBorder,
+                              0,
+                              width - (leftBorder + rightBorder + 4) - secondLineStart - 8,
+                              height,
+                              Justification::centredRight,
+                              3);
         }
+
+        // 7. Draw Submenu Arrow Indicator
         if (hasSubMenu)
         {
             const float arrowH = 0.6f * font.getAscent();
@@ -1623,6 +1642,18 @@ void CtrlrPanelCanvas::setCustomLookAndFeel (const luabind::object &_customLookA
     {
         _WRN("Unable to cast passed LookAndFeel object to anything usable: "+_STR(e.what()));
     }
+}
+
+void CtrlrPanelCanvas::setPopupMenuFont (const Font& newFont)
+{
+    // ONLY update our popup menu look instance
+    popupMenuLook.setPopupMenuFont (newFont);
+}
+
+void CtrlrPanelCanvas::setPopupMenuColour (int colourId, Colour colour)
+{
+    // ONLY update our popup menu look instance
+    popupMenuLook.setColour (colourId, colour);
 }
 
 CtrlrQuickXmlPreview::CtrlrQuickXmlPreview(ValueTree &_treeToPreview) : h("Show XML", URL()), treeToPreview(_treeToPreview)

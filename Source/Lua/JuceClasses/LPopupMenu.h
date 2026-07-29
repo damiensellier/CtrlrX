@@ -18,6 +18,7 @@ class LPopupMenu : public PopupMenu
         int show(int itemHeight);
         int showAt(Rectangle<int> &areaToAttachTo, int standardItemHeight);
         int showAt(Component *componentToAttachTo, int standardItemHeight);
+        void setLookAndFeel (const luabind::object &_customLookAndFeel); // Added v5.6.36. Thanks to @dnaldoog
 		void addSubMenu (const String& subMenuName,
                      const LPopupMenu& subMenu,
                      bool isEnabled = true,
