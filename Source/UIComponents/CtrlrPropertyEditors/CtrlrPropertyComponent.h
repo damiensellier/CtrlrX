@@ -60,8 +60,8 @@ class CtrlrPropertyComponent  : public PropertyComponent, public ValueTree::List
 		Font currentFont;
 		CtrlrIDManager::PropertyType propertyType;
 		CtrlrPanel *panel;
-		StringArray *possibleChoices;
-		Array<var>  *possibleValues;
+		StringArray possibleChoices;
+		Array<var> possibleValues;
 		URL url;
 		String urlString;
 };
