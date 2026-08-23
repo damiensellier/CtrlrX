@@ -9,13 +9,35 @@
 #endif
 
 #include "mock_MidiDevice.h"
+// This mock shadows the MIDIEventList / protocol-aware CoreMIDI API
+// (MIDIInputPortCreateWithProtocol, MIDISendEventList, ...) and leans on JUCE's
+// universal_midi_packets converters. It supports JUCE 6 and JUCE 8 from one source, so that the
+// file can be merged between those branches without being rewritten each time.
+//
+// Both JUCE versions take the same road at runtime: juce_mac_CoreMidi.mm / juce_CoreMidi_mac.mm
+// select the EventList/UMP API under `if (@available (macOS 11, iOS 14, *))` and only fall back to
+// the older MIDIPacketList API below macOS 11. Every CI runner is well above that, so the
+// MIDIPacketList path is left to the framework (referenced but never called) on both versions and
+// there is nothing version-specific about the CoreMIDI surface itself.
+//
+// What does differ is JUCE's UMP layer -- see the three JUCE_MAJOR_VERSION guards below:
+//   1. header location and visibility (here)
+//   2. GenericUMPConverter::convert's input type (deliverToBlocks)
+//   3. the ToBytestreamConverter callback signature (MIDISendEventList)
 #if JUCE_MAC
 
 InformMockMidiOfSubsystem mockMidiSubsystem;
 
-// JUCE's universal_midi_packets headers are included only inside juce_audio_devices.cpp, so they
-// are not visible through <JuceHeader.h>. Pull the (header-only) converter chain in directly; the
-// few out-of-line symbols (View::size, SysEx7 helpers) link from the already-compiled JUCE module.
+#if JUCE_MAJOR_VERSION >= 8
+// JUCE 8 exposes the converter chain publicly: juce_audio_basics.h includes midi/ump/juce_UMP.h and
+// declares `namespace juce { namespace ump = universal_midi_packets; }`, so <JuceHeader.h> (pulled
+// in by mock_MidiDevice.h above) is all this file needs. As of 8.0.12 these headers live in
+// juce_audio_basics/midi/ump/, and the old juce_audio_devices/midi_io/ump/ directory holds
+// unrelated files (juce_UMPEndpoint.h, juce_UMPSession.h, ...).
+#else
+// JUCE 6 keeps the chain private to the module -- juce_audio_devices.h does not include it and the
+// `ump` alias exists only inside juce_audio_devices.cpp -- so include it by hand, in dependency
+// order, exactly as juce_audio_devices.cpp does.
 #include <juce_audio_devices/midi_io/ump/juce_UMPProtocols.h>
 #include <juce_audio_devices/midi_io/ump/juce_UMPUtils.h>
 #include <juce_audio_devices/midi_io/ump/juce_UMPacket.h>
@@ -28,6 +50,7 @@ InformMockMidiOfSubsystem mockMidiSubsystem;
 #include <juce_audio_devices/midi_io/ump/juce_UMPMidi1ToBytestreamTranslator.h>
 #include <juce_audio_devices/midi_io/ump/juce_UMPMidi1ToMidi2DefaultTranslator.h>
 #include <juce_audio_devices/midi_io/ump/juce_UMPConverters.h>
+#endif
 
 #include <algorithm>
 #include <cstdio>
@@ -138,11 +161,25 @@ namespace
         MIDIEventPacket* packet = MIDIEventListInit (list, kMIDIProtocol_1_0);
 
         ump::GenericUMPConverter converter (ump::PacketProtocol::MIDI_1_0);
-        converter.convert (msg, [&] (const ump::View& view)
+
+        // GUARD 2: as of JUCE 8.0.12 convert() takes a BytesOnGroup, View, Packets or an iterator
+        // pair -- the MidiMessage overload JUCE 6 has was removed. Either way the callback receives
+        // a View per converted packet, so only the input differs.
+        const auto emitPacket = [&] (const ump::View& view)
         {
             packet = MIDIEventListAdd (list, sizeof (storage), packet, /*timeStamp*/ 0,
                                        view.size(), view.data());
-        });
+        };
+
+#if JUCE_MAJOR_VERSION >= 8
+        converter.convert (ump::BytesOnGroup { 0,
+                               juce::Span<const std::byte> (
+                                   reinterpret_cast<const std::byte*> (msg.getRawData()),
+                                   (size_t) msg.getRawDataSize()) },
+                           emitPacket);
+#else
+        converter.convert (msg, emitPacket);
+#endif
 
         for (auto block : blocks)
             if (block != nullptr)
@@ -326,10 +363,26 @@ OSStatus MIDISendEventList (MIDIPortRef, MIDIEndpointRef dest, const MIDIEventLi
         ump::Iterator it   (packet->words, packet->wordCount * sizeof (juce::uint32));
         ump::Iterator end  (packet->words + packet->wordCount, 0);
         for (; it != end; ++it)
+            // GUARD 3: JUCE 6's translator hands the callback a ready-made MidiMessage. As of JUCE
+            // 8.0.12 SingleGroupMidi1ToBytestreamTranslator::dispatch instead calls
+            // `callback (BytesOnGroup { 0, bytes }, time)`, so the message must be rebuilt from the
+            // bytes. The body is the same either way.
+#if JUCE_MAJOR_VERSION >= 8
+            converter.convert (*it, 0.0, [&] (const ump::BytesOnGroup& groupBytes, double)
+            {
+                if (groupBytes.bytes.empty())
+                    return;
+
+                m->sendMidiEvent (dev, port,
+                                  juce::MidiMessage (groupBytes.bytes.data(),
+                                                     (int) groupBytes.bytes.size()));
+            });
+#else
             converter.convert (*it, 0.0, [&] (const juce::MidiMessage& msg)
             {
                 m->sendMidiEvent (dev, port, msg);
             });
+#endif
 
         packet = MIDIEventPacketNext (packet);
     }

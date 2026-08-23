@@ -16,15 +16,6 @@ MidiRouting.h2d_host_cc_reaches_device_once_and_host_once
 MidiRouting.pause_in_blocks_host_echo
 MidiLua.device_input_invokes_lua_multiMidiReceived_once
 
-# macOS-only. A device-injected CC is correctly delivered into CtrlrX by the CoreMIDI mock (proven:
-# the sibling device-input tests -- d2d, device_input_matching, roundtrip, MidiLua device/host input
-# -- all pass, so the input reaches CtrlrX's comparator/Lua/device paths), but the D2H thru-to-host
-# copy never appears on the host output. It is *lost*, not merely delayed: draining ~40 blocks (~1s)
-# still yields 0. Passes on Linux and Windows with identical mock/test code, so this is a genuine
-# macOS-specific CtrlrX MIDI-timestamp/handling issue (CtrlrX MIDI handling is out of scope for this
-# PR), not a mock defect.
-MidiRouting.d2h_injected_cc_reaches_host_once
-
 # NOTE: a couple of Lua.* tests (e.g. Lua.lua_global_objects_and_panel_bindings_available) can
 # intermittently hit the ctest 120s TIMEOUT under runner load (time is not mocked). A timed-out test
 # emits no JUnit XML, so it is invisible to ci_check_test_results.py and cannot be allowlisted here;
