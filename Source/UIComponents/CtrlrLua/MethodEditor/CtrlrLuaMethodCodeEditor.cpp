@@ -1864,7 +1864,7 @@ void CtrlrLuaMethodCodeEditor::toggleLineComment() // Updated v5.6.34
 
     // Check if we should comment or uncomment
     bool allLinesCommented = true;
-    for (int lineNum = startLine; lineNum <= endLine; ++lineNum)
+    for (int lineNum = startLine; lineNum < endLine; ++lineNum) // Updated v5.6.36. Thanks to @dnaldoog. Was <= . Prevents crash. REF: issue #314
     {
         String line = document.getLine(lineNum);
         if (line.trimStart().isEmpty() || !line.trimStart().startsWith("--"))
@@ -1875,7 +1875,7 @@ void CtrlrLuaMethodCodeEditor::toggleLineComment() // Updated v5.6.34
     }
 
     // Comment or uncomment
-    for (int lineNum = startLine; lineNum <= endLine; ++lineNum)
+    for (int lineNum = startLine; lineNum < endLine; ++lineNum) // Updated v5.6.36. Thanks to @dnaldoog. Prevents crash. REF: issue #314
     {
         CodeDocument::Position lineStart(document, lineNum, 0);
         String line = document.getLine(lineNum);
