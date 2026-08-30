@@ -115,7 +115,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          submodules: recursive
+          # Currently, every submodule in this repo lives under Panels/
+          # none of them are build inputs, so skip them all.
+          # WARNING: If we ever add submodules that are required for the build, 
+          #          init/update them selectively via cmake/git_submodules.cmake and an EXCLUDE pattern
+          submodules: false
 
      # -----------------------------------------------------------------------
       # Extract LuaJIT Source from local Archive

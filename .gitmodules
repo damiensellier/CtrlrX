@@ -1,3 +1,12 @@
-[submodule "Panels"]
-	path = Panels
+[submodule "Panels/original"]
+	path = Panels/original
 	url = https://github.com/RomanKubiak/Panels.git
+[submodule "Panels/unityconstruct"]
+	path = Panels/unityconstruct
+	url = https://github.com/unityconstruct/CtrlrPanels.git
+[submodule "Panels/sequential_dsi"]
+	path = Panels/sequential_dsi
+	url = https://github.com/synthmutt/CtrlrPanelSequential.git
+[submodule "Panels/dnaldoog"]
+	path = Panels/dnaldoog
+	url = https://github.com/dnaldoog/CtrlrDemoPanels.git
