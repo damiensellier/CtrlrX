@@ -43,6 +43,7 @@ public:
     void resized();
     void sliderValueChanged (Slider* sliderThatWasMoved);
     void mouseUp (const MouseEvent& e);
+    void showTextEditor();
 
     //==============================================================================
     juce_UseDebuggingNewOperator

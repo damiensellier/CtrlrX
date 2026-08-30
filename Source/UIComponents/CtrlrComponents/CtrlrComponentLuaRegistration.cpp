@@ -64,6 +64,7 @@ void CtrlrSlider::wrapForLua(lua_State *L)
 		[
 			class_<CtrlrSlider, bases<CtrlrComponent, CtrlrLuaObject> >("CtrlrSlider")
 			.def("getOwnedSlider", &CtrlrSlider::getOwnedSlider)
+			.def("showTextEditor", &CtrlrSlider::showTextEditor)
 		];
 }
 

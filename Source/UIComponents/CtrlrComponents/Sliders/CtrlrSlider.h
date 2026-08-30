@@ -35,6 +35,7 @@ class CtrlrSlider  : public CtrlrComponent,
         static LookAndFeel* getLookAndFeelFromComponentProperty(const String &lookAndFeelComponentProperty);
         void resetLookAndFeelOverrides();
         void updatePropertiesPanel();
+        void showTextEditor();
         JUCE_LEAK_DETECTOR(CtrlrSlider)
 
     private:

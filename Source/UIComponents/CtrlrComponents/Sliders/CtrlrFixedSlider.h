@@ -45,6 +45,7 @@ public:
     void paint (Graphics& g);
     void resized();
     void mouseUp (const MouseEvent& e);
+    void showTextEditor();
 
 
     //==============================================================================

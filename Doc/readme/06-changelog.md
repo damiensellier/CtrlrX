@@ -24,7 +24,7 @@
 
 ## Changelog
 
-#### Version 5.6.36 | 2026.08.27
+#### Version 5.6.36 | 2026.08.30
 
 * **FIXED** CtrlrTabsComponents.cpp and CtrlrGroup.cpp keep component owner group on uiTabs. `CtrlrTabsComponent.cpp`, `CtrlrGroup.cpp`
 * **FIXED** Doubling of menu item causing potential crash. `CtrlrEditor.cpp`. Thanks to [John Goodland](https://github.com/dnaldoog) `CtrlrEditorApplicationCommandsHandlers.cpp`
@@ -56,6 +56,7 @@
 * **UPDATED** CI/CD test files for JUCE 8 compatibility. Thanks to [Sgorpi](https://github.com/sgorpi)
 * **ADDED** uiLabel showTextEditor() to display the text field editor. `CtrlrLabel.cpp` & `.h`, `CtrlrComponentLuaRegistration.cpp`, `CtrlrComponentLuaRegistration.cpp`
 * **UPDATED** UTF8 support for LUA string. Thanks to [John Goodland](https://github.com/dnaldoog). `LCore.cpp`, `stdafx_luabind.h`
+* **ADDED** uiSlider (all types) showTextEditor() to display the value field editor. `CtrlrComponentLuaRegistration.cpp`, `CtrlrSlider.cpp`  & `.h`, `CtrlrFixedImageSlider.cpp`  & `.h`, `CtrlrFixedSlider.cpp`  & `.h`,, `CtrlrImageSlider.cpp`  & `.h`
 
 #### Version 5.6.35 | 2026.04.20
 

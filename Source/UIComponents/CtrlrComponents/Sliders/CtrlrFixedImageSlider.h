@@ -47,6 +47,7 @@ public:
     static LookAndFeel* getLookAndFeelFromComponentProperty(const String &lookAndFeelComponentProperty);
     void resetLookAndFeelOverrides();
     void updatePropertiesPanel();
+    void showTextEditor();
 
     //==============================================================================
     juce_UseDebuggingNewOperator
