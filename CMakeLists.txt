@@ -264,6 +264,9 @@ target_link_libraries(SharedCode INTERFACE
 # Enforce explicit static engine binary targeting
 if(CTRLRX_USE_LUAJIT)
     target_link_libraries(SharedCode INTERFACE "${LUA_STATIC_LIB_TARGET}")
+    if(APPLE)
+        target_link_libraries(SharedCode INTERFACE "-framework Security")
+    endif()
 else()
     # If you ever fallback to global system lua linking on standard 5.1:
     # target_link_libraries(SharedCode INTERFACE lua5.1)

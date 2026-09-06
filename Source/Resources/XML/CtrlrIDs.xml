@@ -80,6 +80,8 @@
   <id name="uiPanelColourScheme"            text="LookAndFeel V4 colour scheme" type="VarText" defaults="@colourSchemes" />
   <id name="uiPanelLegacyMode"              text="LookAndFeel V3 for older panels" type="Bool" defaults="Legacy Mode/Disabled" />
   
+  <id name="uiPanelJitMode"                 text="LuaJIT Mode" type="Bool" defaults="Compiler (macOS codesign required)/Interpreter" />
+  
   <id name="uiPanelUIColourWindowBackground"    text="Window background colour"  type="Colour" />
   <id name="uiPanelUIColourWidgetBackground"    text="Widget Background Colour"  type="Colour" />
   <id name="uiPanelUIColourMenuBackground"      text="Menu background colour"    type="Colour" />
