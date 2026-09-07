@@ -328,3 +328,8 @@ void CtrlrImageSlider::updatePropertiesPanel()
         props->refreshAll(); // Needs extra code to prevent scrolling back to top on refresh
     }
 }
+
+void CtrlrImageSlider::showTextEditor()
+{
+    ctrlrSlider->showTextBox();
+}

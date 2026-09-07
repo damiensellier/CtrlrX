@@ -103,6 +103,8 @@ namespace Ids
     DECLARE_ID (uiPanelModulatorListViewTree);
     DECLARE_ID (uiPanelModulatorListTreeState);
     DECLARE_ID (uiPanelDisableCombosOnEdit);
+	
+    DECLARE_ID (uiPanelJitMode);
     
     DECLARE_ID (uiPanelLegacyMode);
     DECLARE_ID (uiPanelLookAndFeel);

@@ -153,4 +153,5 @@ class CtrlrPanelEditor  :	public Component,
         WeakReference<CtrlrNotificationCallback> notificationCallback;
         Component* editorComponentsInEditMode[3];
         Component* editorComponents[2];
+        bool isAppSignedWithEntitlements();
 };

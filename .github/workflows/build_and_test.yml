@@ -229,15 +229,16 @@ jobs:
         if: ${{ matrix.name == 'macOS' && env.HAVE_MACOS_SIGNING_SECRETS == 'true' }}
         run: |
           APP_IDENTITY="${{ secrets.DEVELOPER_ID_APPLICATION }}"
+          ENTITLEMENTS="Source/Misc/macOS/Entitlements.plist"
           echo "--- AVAILABLE SIGNING IDENTITIES ---"
           security find-identity -p codesigning -v
           echo "------------------------------------"
-          codesign --force -s "$APP_IDENTITY" -v "${{ env.VST3_PATH }}" --deep --strict --options=runtime --timestamp
-          codesign --force -s "$APP_IDENTITY" -v "${{ env.AU_PATH }}" --deep --strict --options=runtime --timestamp
+          codesign --force -s "$APP_IDENTITY" -v "${{ env.VST3_PATH }}" --deep --strict --options=runtime --entitlements "$ENTITLEMENTS" --timestamp
+          codesign --force -s "$APP_IDENTITY" -v "${{ env.AU_PATH }}" --deep --strict --options=runtime --entitlements "$ENTITLEMENTS" --timestamp
           if [ -f "${{ env.CLAP_PATH }}" ]; then
-            codesign --force -s "$APP_IDENTITY" -v "${{ env.CLAP_PATH }}" --deep --strict --options=runtime --timestamp
+            codesign --force -s "$APP_IDENTITY" -v "${{ env.CLAP_PATH }}" --deep --strict --options=runtime --entitlements "$ENTITLEMENTS" --timestamp
           fi
-          codesign --force -s "$APP_IDENTITY" -v "${{ env.STANDALONE_PATH }}" --deep --strict --options=runtime --timestamp
+          codesign --force -s "$APP_IDENTITY" -v "${{ env.STANDALONE_PATH }}" --deep --strict --options=runtime --entitlements "$ENTITLEMENTS" --timestamp
 
       - name: Add Custom Icons (macOS)
         if: ${{ matrix.name == 'macOS' }}

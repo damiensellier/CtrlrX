@@ -159,7 +159,10 @@ namespace luabind
 				String* wp = object_cast<String*>(obj);
 				return String(*wp);
 			}
-			return String(lua_tostring(L, index));
+			// return String(lua_tostring(L, index));
+			size_t len = 0; // Added v5.6.36. Support for Unicode UTF8
+			const char* s = lua_tolstring(L, index, &len);
+			return String::fromUTF8(s, (int) len);
 		}
 
 		void to(lua_State* L, String const &value)

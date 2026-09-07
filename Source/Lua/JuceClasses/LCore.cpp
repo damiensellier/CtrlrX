@@ -223,7 +223,8 @@ std::string LGlobalFunctions::stringToLua (const String &string)
 
 String LGlobalFunctions::toJuceString (const std::string &string)
 {
-    return (String(string.c_str()));
+    // return (String(string.c_str()));
+    return String::fromUTF8(string.c_str(), (int)string.size()); // Updated v5.6.36
 }
 
 void LGlobalFunctions::console (const String &arg)
@@ -233,7 +234,8 @@ void LGlobalFunctions::console (const String &arg)
 
 void LGlobalFunctions::console (const std::string &arg)
 {
-    _LUA(removeInvalidChars(_STR(arg), true));
+    // _LUA(removeInvalidChars(_STR(arg), true));
+    console(String::fromUTF8(arg.c_str(), (int)arg.size())); // Updated v5.6.36
 }
 
 void LGlobalFunctions::sleep(const int milliseconds)
@@ -257,24 +259,23 @@ void LGlobalFunctions::wrapForLua (lua_State *L)
 
 	module(L)
     [
-        def("getNativeKeyMapping", &getNativeKeyMapping)
-        ,
-        //def("console", (void (*) (const std::string &)) &LGlobalFunctions::console),
-        def("console", (void (*) (const String &)) &LGlobalFunctions::console)
-        ,
+		def("getNativeKeyMapping", &getNativeKeyMapping),
+		
+		// v5.6.36 String binding removed: it prevent cluttering Luabind's overload table
+		// with heavy JUCE classes at the function definition layer,
+		// relying entirely on the custom type-converter to handle the translation cleanly.
+		def("console", (void (*) (const std::string &)) &LGlobalFunctions::console), // Re added v5.6.36.
+		// def("console", (void (*) (const String &)) &LGlobalFunctions::console), // Disabled
+		
 		def("J", (const String (*) (const std::string &)) &LGlobalFunctions::toJuceString),
-		def("toJuceString", (const String (*) (const std::string &)) &LGlobalFunctions::toJuceString)
-		,
+		def("toJuceString", (const String (*) (const std::string &)) &LGlobalFunctions::toJuceString),
 		def("L", &LGlobalFunctions::stringToLua),
-		def("toLuaString", &LGlobalFunctions::stringToLua)
-        ,
+		def("toLuaString", &LGlobalFunctions::stringToLua),
         def("print_debug", (void (*)(const String &))&LGlobalFunctions::debug),
         def("print_d", (void (*)(const String &))&LGlobalFunctions::debug),
         def("_DBG", (void (*)(const String &))&LGlobalFunctions::debug),
-        def("_debug", (void (*)(const String &))&LGlobalFunctions::debug)
-        ,
-        def("sleep", &LGlobalFunctions::sleep)
-        ,
+		def("_debug", (void (*)(const String &))&LGlobalFunctions::debug),
+		def("sleep", &LGlobalFunctions::sleep),
 		class_<LGlobalFunctions>("juce")
 			.def(constructor<>())
 			.scope
@@ -285,10 +286,10 @@ void LGlobalFunctions::wrapForLua (lua_State *L)
 		,
 		class_<CtrlrNative>("CtrlrNative")
             .def("sendKeyPressEvent", (const Result (CtrlrNative::*) (const KeyPress &, const String &)) &CtrlrNative::sendKeyPressEvent)
-			.def("sendKeyPressEvent", (const Result (CtrlrNative::*) (const KeyPress &)) &CtrlrNative::sendKeyPressEvent)
+            .def("sendKeyPressEvent", (const Result (CtrlrNative::*) (const KeyPress &)) &CtrlrNative::sendKeyPressEvent),
             // The static getNativeObject() factory binding was removed: it allocated a fresh
             // CtrlrNative on every call that nothing freed. Scripts use the `native` global instead.
-		,
+
 		def("jmax", (double (*) (const double, const double))&juce::jmax<double>),
 		def("jmax", (double (*) (const double, const double, const double))&juce::jmax<double>),
 		def("jmax", (double (*) (const double, const double, const double, const double))&juce::jmax<double>),

@@ -446,3 +446,8 @@ void CtrlrSlider::updatePropertiesPanel()
         props->refreshAll(); // Needs extra code to prevent scrolling back to top on refresh
     }
 }
+
+void CtrlrSlider::showTextEditor() 
+{
+    ctrlrSlider.showTextBox();
+}

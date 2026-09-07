@@ -623,7 +623,7 @@ void CtrlrPanel::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChange
 	{
 		if (getProperty(property).toString() == "" || getProperty(property).toString() == COMBO_ITEM_NONE)
 		{
-			if (outputDevicePtr)
+			if (outputDevicePtr != nullptr) // Updated v5.6.36. Guard to prevent crash if ptr is null
 				outputDevicePtr->closeDevice();
 		}
 		else

@@ -276,6 +276,9 @@ target_link_libraries(SharedCode INTERFACE
 # Enforce explicit static engine binary targeting
 if(CTRLRX_USE_LUAJIT)
     target_link_libraries(SharedCode INTERFACE libluajit)
+    if(APPLE)
+        target_link_libraries(SharedCode INTERFACE "-framework Security")
+    endif()
 # else()
 #   Nothing to link. Vanilla Lua is a SharedCode *source*, not a library.
 endif()
