@@ -91,7 +91,12 @@ if(CTRLRX_USE_LUAJIT)
     add_subdirectory(cmake/luajit)
 else()
     # FALLBACK: Standard Vanilla Lua 5.1 Configuration
+    #
+    # There is no library to build or link here. Source/Misc/lua/src/lua.c is a
+    # self-contained Lua 5.1.4 amalgamation and is compiled straight into
+    # SharedCode
     set(LUA_INCLUDE_TARGET "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/lua/include")
+    message(STATUS "Lua: building the vendored Lua 5.1.4 amalgamation (CTRLRX_USE_LUAJIT=OFF)")
 endif()
 
 # -----------------------------------------------------------------------
@@ -172,7 +177,14 @@ endif()
 
 # Exclude generated/foreign sources
 list(FILTER SourceFiles EXCLUDE REGEX ".*/Source/Misc/luajit/.*")
-list(FILTER SourceFiles EXCLUDE REGEX ".*/Source/Misc/lua/src/.*")
+
+if(CTRLRX_USE_LUAJIT)
+    # Vanilla Lua's symbols would collide with LuaJIT's, so keep it out.
+    #
+    # With CTRLRX_USE_LUAJIT=OFF it is compiled in instead.
+    list(FILTER SourceFiles EXCLUDE REGEX ".*/Source/Misc/lua/src/.*")
+endif()
+
 list(FILTER SourceFiles EXCLUDE REGEX ".*/Source/Misc/luabind/(examples|build[^/]*|test|tests)/.*")
 list(FILTER SourceFiles EXCLUDE REGEX ".*/Source/Lua/Deprecated/CtrlrLuaFile\\.cpp$")
 
@@ -264,9 +276,8 @@ target_link_libraries(SharedCode INTERFACE
 # Enforce explicit static engine binary targeting
 if(CTRLRX_USE_LUAJIT)
     target_link_libraries(SharedCode INTERFACE libluajit)
-else()
-    # If you ever fallback to global system lua linking on standard 5.1:
-    # target_link_libraries(SharedCode INTERFACE lua5.1)
+# else()
+#   Nothing to link. Vanilla Lua is a SharedCode *source*, not a library.
 endif()
 
 if(LINUX)
