@@ -468,7 +468,6 @@ const Result CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bo
                 std::cout << "MAC Certificate Identity: " << panelCertificateMacIdentity << std::endl;
                 logger.log("MAC Certificate Identity: " + panelCertificateMacIdentity);
                 
-                //const Result codesignResult = codesignFileMac(newMePathName, panelCertificateMacIdentity);
                 juce::String codesignLog;
                 const Result codesignResult = codesignFileMac(newMePathName, panelCertificateMacIdentity, codesignLog);
                 logger.log("Codesign Result wasOk(): " + String(codesignResult.wasOk() ? "true" : "false"));
@@ -554,71 +553,64 @@ bool CtrlrMac::plugTypeIsNotSplit(const juce::MemoryBlock& executableData, const
 }
 
 
-// CodeSign exported instance v5.6.32
-const Result CtrlrMac::codesignFileMac(const juce::String& newMePathName, const juce::String& panelCertificateMacIdentity) {
-    juce::StringArray commandParts;
-    commandParts.add("codesign");
-    commandParts.add("-f");
-    commandParts.add("-s");
-
-    if (panelCertificateMacIdentity.isNotEmpty()) //Check if there is a certificate identity
-    {
-        commandParts.add(panelCertificateMacIdentity); // Use the provided certificate identity
-    }
-    else
-    {
-        commandParts.add("-"); // Use the default identity
-    }
-
-    commandParts.add(newMePathName);
-
-    juce::ChildProcess childProcess;
-    if (childProcess.start(commandParts)) {
-        childProcess.waitForProcessToFinish(-1);
-
-        if (!childProcess.isRunning()) { // Check if process has finished
-            if (childProcess.getExitCode() == 0) {
-                return juce::Result::ok(); // Codesign successful
-                std::cout << "Codesign successful. " << newMePathName << std::endl;
-
-            } else {
-                return juce::Result::fail("Codesign failed with exit code: " + juce::String(childProcess.getExitCode())); // Codesign failed
-            }
-        } else {
-            return juce::Result::fail("Codesign process did not finish properly."); // Process still running
-        }
-
-    } else {
-        return juce::Result::fail("Failed to start codesign process."); // Failed to start process
-    }
-}
-
-
-// CodeSign exported instance 5.6.33
+// CodeSign exported instance 5.6.36
 const Result CtrlrMac::codesignFileMac(const juce::String& newMePathName, const juce::String& panelCertificateMacIdentity, juce::String& logOutput) {
+    // 1. Create the entitlements file content directly from compiled BinaryData
+    static const unsigned char temp_binary_data_0[] =
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+    "<plist version=\"1.0\">\n"
+    "<dict>\n"
+    "    <key>com.apple.security.cs.allow-jit</key>\n"
+    "    <true/>\n"
+    "    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>\n"
+    "    <true/>\n"
+    "</dict>\n"
+    "</plist>\n";
+    
+    juce::File tempEntitlements = juce::File::getSpecialLocation(juce::File::tempDirectory)
+        .getChildFile("CtrlrX_DynamicEntitlements.plist");
+    
+    // Write using raw data and exact size (excluding the trailing null terminator)
+    if (!tempEntitlements.existsAsFile()) {
+        if (!tempEntitlements.replaceWithData(temp_binary_data_0, sizeof(temp_binary_data_0) - 1)) {
+            logOutput = "Failed to create temporary entitlements file at: " + tempEntitlements.getFullPathName();
+            return Result::fail(logOutput);
+        }
+    }
+    
     juce::StringArray commandParts;
-    commandParts.add("/usr/bin/codesign"); // Use full path
-    commandParts.add("-f");
+    commandParts.add("/usr/bin/codesign");
+    commandParts.add("--force");
     commandParts.add("-s");
-
     if (panelCertificateMacIdentity.isNotEmpty()) {
         commandParts.add(panelCertificateMacIdentity);
     } else {
         commandParts.add("-"); // Use the default identity
     }
-
+    commandParts.add("-v");
+    commandParts.add("--deep");
+    commandParts.add("--strict");
+    commandParts.add("--options");
+    commandParts.add("runtime");
+    commandParts.add("--entitlements");
+    commandParts.add(tempEntitlements.getFullPathName());
+    commandParts.add("--timestamp");
     commandParts.add(newMePathName);
-
+    
     juce::ChildProcess childProcess;
 
     logOutput = ("Codesign command: " + commandParts.joinIntoString(" "));
     if (childProcess.start(commandParts)) {
         const bool finished = childProcess.waitForProcessToFinish(-1); // Wait for infinity
-        //const bool finished = childProcess.waitForProcessToFinish(500); // Wait for up to 500ms
 
         if (finished) {
             int exitCode = childProcess.getExitCode();
             logOutput += "\nCodesign process finished with exit code: " + String(exitCode);
+            
+            // Clean up the temporary file now that codesign has consumed it
+            tempEntitlements.deleteFile();
+
             if (exitCode == 0) {
                 return Result::ok();
             } else {
@@ -627,62 +619,15 @@ const Result CtrlrMac::codesignFileMac(const juce::String& newMePathName, const 
             }
         } else {
             logOutput += "\nCodesign process timed out.";
+            tempEntitlements.deleteFile();
             return Result::fail(logOutput);
         }
     } else {
         logOutput = "Failed to start codesign process. Command: " + commandParts.joinIntoString(" ");
+        tempEntitlements.deleteFile();
         return Result::fail(logOutput);
     }
 }
-
-
-// CodeSign exported instance 5.6.33 ALTERNATE METHOD
-//const Result CtrlrMac::codesignFileMac(const juce::String& newMePathName, const juce::String& panelCertificateMacIdentity, juce::String& logOutput) {
-//    juce::StringArray commandParts;
-//    commandParts.add("/usr/bin/codesign"); // Use full path
-//    commandParts.add("-f");
-//    commandParts.add("-s");
-//
-//    if (panelCertificateMacIdentity.isNotEmpty()) {
-//        commandParts.add(panelCertificateMacIdentity);
-//    } else {
-//        commandParts.add("-"); // Use the default identity
-//    }
-//
-//    commandParts.add(newMePathName);
-//
-//    juce::ChildProcess childProcess;
-//
-//    logOutput = ("Codesign command: " + commandParts.joinIntoString(" "));
-//    std::cout << "Codesign command: " << logOutput << std::endl;
-//
-//    if (childProcess.start(commandParts)) {
-//        std::cout << "Codesign process started." << std::endl;
-//        while (childProcess.isRunning()) {
-//            std::cout << "Codesign process is running..." << std::endl;
-//            Thread::sleep(100); // Sleep for a short time to avoid busy-waiting
-//        }
-//
-//        const int exitCode = childProcess.getExitCode();
-//        logOutput += "\nCodesign process finished with exit code: " + String(exitCode);
-//        std::cout << "Codesign process finished with exit code: " << exitCode << std::endl;
-//
-//        if (exitCode == 0) {
-//            logOutput += "\nCodesign successful.";
-//            std::cout << "Codesign successful." << std::endl;
-//            return Result::ok();
-//        } else {
-//            const String processOutput = childProcess.readAllProcessOutput();
-//            logOutput += "\nCodesign failed with output:\n" + processOutput;
-//            std::cerr << "Codesign failed with output:\n" << processOutput << std::endl;
-//            return Result::fail(logOutput);
-//        }
-//    } else {
-//        logOutput = "Failed to start codesign process. Command: " + commandParts.joinIntoString(" ");
-//        std::cerr << "Failed to start codesign process. Command: " << logOutput << std::endl;
-//        return Result::fail(logOutput);
-//    }
-//}
 
 
 // Convert hex string to binary data
