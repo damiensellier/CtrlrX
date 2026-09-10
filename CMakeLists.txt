@@ -79,17 +79,24 @@ endif()
 # Lua / LuaJIT Architecture Routing (Isolated cleanly)
 # -----------------------------------------------------------------------
 if(CTRLRX_USE_LUAJIT)
-    set(LUAJIT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/luajit")
-    set(LUAJIT_INCLUDE_TARGET "${LUAJIT_DIR}/src")
-    
-    if(MSVC)
-        set(LUA_STATIC_LIB_TARGET "${LUAJIT_DIR}/src/lua51.lib")
-    else()
-        set(LUA_STATIC_LIB_TARGET "${LUAJIT_DIR}/src/libluajit.a")
-    endif()
+    # cmake/luajit/CMakeLists.txt builds the LuaJIT source vendored in
+    # Source/Misc/luajit and defines the `libluajit` target. It carries the
+    # LuaJIT include directories (both the source tree and the generated
+    # headers) as INTERFACE include directories, so linking it is enough.
+    #
+    # It lives under cmake/ rather than in the vendored tree so that tree stays
+    # pristine upstream; it finds the sources via CTRLRX_LUAJIT_SOURCE_DIR,
+    # which defaults to Source/Misc/luajit. Generated files land in
+    # ${CMAKE_BINARY_DIR}/cmake/luajit/gen/.
+    add_subdirectory(cmake/luajit)
 else()
     # FALLBACK: Standard Vanilla Lua 5.1 Configuration
+    #
+    # There is no library to build or link here. Source/Misc/lua/src/lua.c is a
+    # self-contained Lua 5.1.4 amalgamation and is compiled straight into
+    # SharedCode
     set(LUA_INCLUDE_TARGET "${CMAKE_CURRENT_SOURCE_DIR}/Source/Misc/lua/include")
+    message(STATUS "Lua: building the vendored Lua 5.1.4 amalgamation (CTRLRX_USE_LUAJIT=OFF)")
 endif()
 
 # -----------------------------------------------------------------------
@@ -170,7 +177,14 @@ endif()
 
 # Exclude generated/foreign sources
 list(FILTER SourceFiles EXCLUDE REGEX ".*/Source/Misc/luajit/.*")
-list(FILTER SourceFiles EXCLUDE REGEX ".*/Source/Misc/lua/src/.*")
+
+if(CTRLRX_USE_LUAJIT)
+    # Vanilla Lua's symbols would collide with LuaJIT's, so keep it out.
+    #
+    # With CTRLRX_USE_LUAJIT=OFF it is compiled in instead.
+    list(FILTER SourceFiles EXCLUDE REGEX ".*/Source/Misc/lua/src/.*")
+endif()
+
 list(FILTER SourceFiles EXCLUDE REGEX ".*/Source/Misc/luabind/(examples|build[^/]*|test|tests)/.*")
 list(FILTER SourceFiles EXCLUDE REGEX ".*/Source/Lua/Deprecated/CtrlrLuaFile\\.cpp$")
 
@@ -199,9 +213,7 @@ target_include_directories(SharedCode INTERFACE
 )
 
 # Conditional Engine Include Routing
-if(CTRLRX_USE_LUAJIT)
-    target_include_directories(SharedCode INTERFACE "${LUAJIT_INCLUDE_TARGET}")
-else()
+if(NOT CTRLRX_USE_LUAJIT)
     target_include_directories(SharedCode INTERFACE "${LUA_INCLUDE_TARGET}")
 endif()
 
@@ -263,13 +275,12 @@ target_link_libraries(SharedCode INTERFACE
 
 # Enforce explicit static engine binary targeting
 if(CTRLRX_USE_LUAJIT)
-    target_link_libraries(SharedCode INTERFACE "${LUA_STATIC_LIB_TARGET}")
+    target_link_libraries(SharedCode INTERFACE libluajit)
     if(APPLE)
         target_link_libraries(SharedCode INTERFACE "-framework Security")
     endif()
-else()
-    # If you ever fallback to global system lua linking on standard 5.1:
-    # target_link_libraries(SharedCode INTERFACE lua5.1)
+# else()
+#   Nothing to link. Vanilla Lua is a SharedCode *source*, not a library.
 endif()
 
 if(LINUX)

@@ -1,0 +1,16 @@
+{
+  "luajit_src": "218edc882bb1eafe1cd14c7a0471e28b98d5d86a",
+  "luajit_dynasm": "22758f92e035c83a9b378009df209a4c899559df",
+  "luajit_relver": "7563394a5070753f984c09fa9e6dda8dd035cd1f",
+  "cmake_luajit": "8f7f5d4da53132019363589458eed8bf632c589c",
+  "platform": "windows",
+  "arch": [
+    "x64"
+  ],
+  "crt": [
+    "MD",
+    "MDd"
+  ],
+  "built_by_run": "33463945188",
+  "built_from_commit": "5e033cd1103529642d1d207a139c2e46d6caf0c1"
+}

@@ -39,20 +39,6 @@ set "LUAJIT_FLAG="
 echo PATH CHECK: "%~dp0Source\Misc\luajit\src\msvcbuild.bat"
 if exist "%~dp0Source\Misc\luajit\src\msvcbuild.bat" (
     set "LUAJIT_FLAG=-DCTRLRX_USE_LUAJIT=ON"
-    if not exist "%~dp0Source\Misc\luajit\src\lua51.lib" (
-        echo Building LuaJIT...
-        pushd "%~dp0Source\Misc\luajit\src"
-        call msvcbuild.bat static
-        popd
-        if not exist "%~dp0Source\Misc\luajit\src\lua51.lib" (
-            echo ERROR: LuaJIT build failed - lua51.lib not found.
-            pause
-            exit /b 1
-        )
-        echo LuaJIT built successfully.
-    ) else (
-        echo LuaJIT lua51.lib already exists - skipping build.
-    )
 ) else (
     echo LuaJIT source not found - building without LuaJIT.
 )

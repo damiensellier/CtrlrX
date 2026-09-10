@@ -1,0 +1,251 @@
+# All LuaJIT-specific CI. Kept out of build_and_test.yml for two reasons:
+#
+#  * that workflow sets `cancel-in-progress: true` on ${{ github.ref }}, which
+#    would kill a precompiled-bundle build (and destroy the artifact someone was
+#    about to download) every time another push lands on the same branch;
+#  * none of these jobs build or test the plugin, and build_and_test.yml is long
+#    enough already.
+#
+# `needs:` cannot cross workflow files, which is why the check and the build that
+# it gates both live here rather than the build moving to a workflow of its own.
+name: LuaJIT
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        type: boolean
+        description: 'Rebuild the precompiled bundles even if the check says they are current'
+        required: false
+        default: true
+
+concurrency:
+  group: luajit-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # cmake/luajit/CMakeLists.txt hand-transcribes three source lists and the DynASM flag
+  # set from the vendored LuaJIT's src/Makefile, which upstream can change on any
+  # upgrade. LJLIB_C's order fixes fast-function and bytecode numbering, so drift there
+  # miscompiles silently rather than failing the build -- hence a check of its own.
+  # Parsing only: no build.
+  #
+  # NOTE: the `name:` below is what GitHub uses as the check name, and what any
+  # branch-protection rule matches on. It is unchanged from when this job lived in
+  # build_and_test.yml, so those rules keep matching. Do not rename it casually.
+  luajit_drift:
+    name: LuaJIT source lists match src/Makefile
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout the two files being compared
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            cmake/luajit
+            Source/Misc/luajit/src
+          submodules: false
+
+      - name: Compare CMakeLists.txt against src/Makefile
+        run: python3 cmake/luajit/check_makefile_drift.py
+
+  # Source/Misc/luajit/precompiled/ ships prebuilt LuaJIT so that Projucer users
+  # (Visual Studio, Xcode) need no local CMake. Nothing links those binaries to the
+  # sources, so this compares the git object ids each bundle's manifest recorded for
+  # its inputs against the current tree. Parsing only: no build, seconds.
+  luajit_precompiled_check:
+    name: LuaJIT precompiled bundles are current
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      stale: ${{ steps.check.outputs.stale }}
+
+    steps:
+      # Sparse checkout still carries full git metadata, so `git rev-parse HEAD:<path>`
+      # resolves paths that were not materialised in the working tree -- which is why
+      # Source/Misc/luajit/src and dynasm need not be checked out here.
+      - name: Checkout the manifests and the checker
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            cmake/luajit
+            Source/Misc/luajit/precompiled
+          submodules: false
+
+      # continue-on-error so that a stale bundle still surfaces `stale=true` to the
+      # build job below. The check itself is reported red by the final step.
+      - name: Compare manifests against the vendored source
+        id: check
+        continue-on-error: true
+        run: python3 cmake/luajit/check_precompiled_drift.py --github-output
+
+      - name: Fail if stale
+        if: steps.check.outputs.stale == 'true'
+        run: |
+          echo "The precompiled LuaJIT bundles are stale. The luajit_precompiled_build"
+          echo "job in this same run has rebuilt them -- download its artifacts, unzip"
+          echo "each over Source/Misc/luajit/precompiled/, and commit the .zip and .json."
+          exit 1
+
+  # Rebuilds the bundles only when they are actually stale (or on demand). Uploads
+  # them as artifacts; a human commits them. Deliberately NOT an auto-commit: that
+  # needs contents:write, cannot work on fork PRs, fights branch protection on master,
+  # and would put binaries into git with nobody looking at them.
+  #
+  # These libraries are built by a job of their own rather than lifted out of
+  # build_and_test.yml because they need DIFFERENT settings from the plugin build:
+  # cmake/JUCEDefaults.cmake forces the static CRT (/MT) for CMake builds, but the
+  # Projucer exporters set no winRuntimeLibrary and so use the dynamic CRT (/MD,
+  # /MDd). Shipping the plugin build's LuaJIT would mean LNK4098 and two CRT heaps
+  # in one process.
+  luajit_precompiled_build:
+    name: Build precompiled LuaJIT (${{ matrix.name }})
+    needs: luajit_precompiled_check
+    if: ${{ !cancelled() && (needs.luajit_precompiled_check.outputs.stale == 'true' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows
+            os: windows-2022
+          - name: macos
+            os: macos-14
+
+    steps:
+      - name: Setup MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # Full checkout: the standalone LuaJIT build needs src/ and dynasm/ on disk,
+      # and the manifest needs git metadata for every fingerprinted path.
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      # Two configures, one per CRT model, because /MD and /MDd are not
+      # interchangeable. CTRLRX_LUAJIT_SOURCE_DIR defaults to Source/Misc/luajit,
+      # so only the runtime flag differs between them.
+      - name: Build LuaJIT (Windows, /MD and /MDd)
+        if: runner.os == 'Windows'
+        run: |
+          set -euxo pipefail
+          for pair in "Release:MultiThreadedDLL" "Debug:MultiThreadedDebugDLL"; do
+            cfg="${pair%%:*}"; crt="${pair##*:}"
+            cmake -S cmake/luajit -B "lj-$cfg" \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_MSVC_RUNTIME_LIBRARY="$crt"
+            cmake --build "lj-$cfg" --config Release --target luajit_all
+          done
+
+      # One universal library. CMAKE_OSX_* must be passed explicitly: 10.13 is set by
+      # cmake/PamplejuceMacOS.cmake, which only the ROOT CMakeLists.txt includes -- a
+      # standalone configure of cmake/luajit never sees it, and would silently take the
+      # macos-14 SDK default, making Xcode warn "built for newer macOS version".
+      - name: Build LuaJIT (macOS, universal)
+        if: runner.os == 'macOS'
+        run: |
+          set -euxo pipefail
+          cmake -S cmake/luajit -B lj \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
+          cmake --build lj --config Release --target luajit_all
+
+      # Layout must match what the .jucer exporters' libraryPath/headerPath expect:
+      #   windows/include/luajit.h, windows/lib/x64/{Release,Debug}/lua51.lib
+      #   macos/include/luajit.h,   macos/lib/libluajit.a
+      # The Windows rename is because the .jucer says externalLibraries="lua51.lib"
+      # (LuaJIT's conventional Windows name) while CMake emits luajit_native.lib.
+      - name: Stage the bundle
+        id: stage
+        run: |
+          set -euxo pipefail
+          OS="${{ matrix.name }}"
+          OUT="staging/$OS"
+          mkdir -p "$OUT/include"
+
+          if [ "$OS" = windows ]; then
+            mkdir -p "$OUT/lib/x64/Release" "$OUT/lib/x64/Debug"
+            cp "$(find lj-Release -name 'luajit_native.lib' | head -n1)" "$OUT/lib/x64/Release/lua51.lib"
+            cp "$(find lj-Debug   -name 'luajit_native.lib' | head -n1)" "$OUT/lib/x64/Debug/lua51.lib"
+            cp lj-Release/gen/common/luajit.h "$OUT/include/luajit.h"
+          else
+            mkdir -p "$OUT/lib"
+            cp "$(find lj -name 'libluajit.a' -not -path '*/gen/*' | head -n1)" "$OUT/lib/libluajit.a"
+            cp lj/gen/common/luajit.h "$OUT/include/luajit.h"
+            lipo -info "$OUT/lib/libluajit.a"
+          fi
+
+          python3 - "$OS" "$OUT" <<'PY'
+          import json, os, subprocess, sys
+          os_name, out = sys.argv[1], sys.argv[2]
+          paths = {"luajit_src": "Source/Misc/luajit/src",
+                   "luajit_dynasm": "Source/Misc/luajit/dynasm",
+                   "luajit_relver": "Source/Misc/luajit/.relver",
+                   "cmake_luajit": "cmake/luajit"}
+          m = {k: subprocess.run(["git", "rev-parse", "HEAD:" + p],
+                                 check=True, capture_output=True, text=True).stdout.strip()
+               for k, p in paths.items()}
+          m["platform"] = os_name
+          m["arch"] = ["x64"] if os_name == "windows" else ["arm64", "x86_64"]
+          m["crt"] = ["MD", "MDd"] if os_name == "windows" else None
+          m["built_by_run"] = os.environ.get("GITHUB_RUN_ID", "?")
+          m["built_from_commit"] = os.environ.get("GITHUB_SHA", "?")
+          text = json.dumps(m, indent=2) + "\n"
+          # Once inside the zip (so a bundle is self-describing) and once beside it
+          # (so the drift check reads it without extracting, and git diffs it).
+          open(os.path.join(out, "manifest.json"), "w").write(text)
+          open("manifest-%s.json" % os_name, "w").write(text)
+          PY
+
+          cat "manifest-$OS.json"
+
+      - name: Zip the bundle
+        run: |
+          set -euxo pipefail
+          OS="${{ matrix.name }}"
+          # Zip from staging/ so the archive's top-level entry is <os>/, which means
+          # `tar -xf ... -C Source/Misc/luajit/precompiled` lands it in the right place.
+          # python -m zipfile rather than 7z/zip: it is the one archiver that is present
+          # and behaves identically on all three runner images.
+          cd staging && python3 -m zipfile -c "../luajit-$OS.zip" "$OS"
+
+      - name: Upload the bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: luajit-precompiled-${{ matrix.name }}
+          path: |
+            luajit-${{ matrix.name }}.zip
+            manifest-${{ matrix.name }}.json
+          if-no-files-found: error
+
+      - name: How to install this
+        run: |
+          {
+            echo "### LuaJIT precompiled bundle: ${{ matrix.name }}"
+            echo
+            echo "To adopt it:"
+            echo
+            echo '1. Download the `luajit-precompiled-${{ matrix.name }}` artifact from this run.'
+            echo '2. Unzip it, and copy `luajit-${{ matrix.name }}.zip` and `manifest-${{ matrix.name }}.json`'
+            echo '   into `Source/Misc/luajit/precompiled/`.'
+            echo '3. Commit both. Do NOT unzip the inner zip into the repo -- the .jucer'
+            echo '   pre-build step extracts it, and the extracted files are gitignored.'
+            echo
+            echo 'See Doc/LUAJIT.md, "Regenerating the precompiled bundles".'
+          } >> "$GITHUB_STEP_SUMMARY"
