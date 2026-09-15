@@ -28,6 +28,8 @@ void CtrlrLuaManager::wrapJuceCoreClasses(lua_State *L)
 	LAudioFormat::wrapForLua(L);
 	LAudioSampleBuffer::wrapForLua(L);
 	LBorderSize::wrapForLua(L);
+	LPluginHostType::wrapForLua(L); // Added v5.6.36
+	LSystemStats::wrapForLua(L); // Added v5.6.36
 }
 
 void CtrlrLuaManager::wrapJuceClasses(lua_State *L)

@@ -464,6 +464,8 @@
           <FILE id="bAt3NK" name="LOnlineUnlockStatusCheck.h" compile="0" resource="0"
                 file="Source/Lua/JuceClasses/LOnlineUnlockStatusCheck.h"/>
           <FILE id="TcCoRB" name="LPath.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LPath.h"/>
+          <FILE id="yrwfyj" name="LPluginHostType.h" compile="0" resource="0"
+                file="Source/Lua/JuceClasses/LPluginHostType.h"/>
           <FILE id="Uj0e4s" name="LPoint.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LPoint.h"/>
           <FILE id="P4G1qS" name="LPopupMenu.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LPopupMenu.h"/>
           <FILE id="Pfl8z7" name="LRandom.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LRandom.h"/>
@@ -477,6 +479,7 @@
           <FILE id="R7yz2D" name="LSlider.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LSlider.h"/>
           <FILE id="X47Oxl" name="LSparseSet.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LSparseSet.h"/>
           <FILE id="lf5Hgm" name="LString.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LString.h"/>
+          <FILE id="krOL6q" name="LSystemStats.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LSystemStats.h"/>
           <FILE id="XociC4" name="LTextButton.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LTextButton.h"/>
           <FILE id="ZIpO4Z" name="LTextEditor.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LTextEditor.h"/>
           <FILE id="fy0AkO" name="LThread.h" compile="0" resource="0" file="Source/Lua/JuceClasses/LThread.h"/>

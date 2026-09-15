@@ -1117,3 +1117,69 @@ void LInputStream::wrapForLua (lua_State *L) // Updated v5.6.34. Thanks to @dnal
                 .def("isExhausted", &InputStream::isExhausted)
         ];
 }
+
+
+void LPluginHostType::wrapForLua(lua_State* L) // Added v5.6.36.
+{
+    using namespace luabind;
+
+    module(L)
+    [
+        class_<PluginHostType>("PluginHostType")
+            .def(constructor<>())
+            .def("getHostDescription", &PluginHostType::getHostDescription)
+            .def("getHostPath", &PluginHostType::getHostPath)
+            .def("getPluginLoadedAs", &PluginHostType::getPluginLoadedAs)
+            .def("isAbletonLive", &PluginHostType::isAbletonLive)
+            .def("isBitwigStudio", &PluginHostType::isBitwigStudio)
+            .def("isCubase", &PluginHostType::isCubase)
+            .def("isCubaseBridged", &PluginHostType::isCubaseBridged)
+            .def("isDigitalPerformer", &PluginHostType::isDigitalPerformer)
+            .def("isFruityLoops", &PluginHostType::isFruityLoops)
+            .def("isGarageBand", &PluginHostType::isGarageBand)
+            .def("isLogic", &PluginHostType::isLogic)
+            .def("isMainStage", &PluginHostType::isMainStage)
+            .def("isNuendo", &PluginHostType::isNuendo)
+            .def("isPremiere", &PluginHostType::isPremiere)
+            .def("isProTools", &PluginHostType::isProTools)
+            .def("isReason", &PluginHostType::isReason)
+            .def("isReaper", &PluginHostType::isReaper)
+            .def("isReceptor", &PluginHostType::isReceptor)
+            .def("isRenoise", &PluginHostType::isRenoise)
+            .def("isSamplitude", &PluginHostType::isSamplitude)
+            .def("isSonar", &PluginHostType::isSonar)
+            .def("isTracktion", &PluginHostType::isTracktion)
+            .def("isWaveBurner", &PluginHostType::isWaveBurner)
+            .def("isWavelabLegacy", &PluginHostType::isWavelabLegacy)
+    ];
+}
+
+
+void LSystemStats::wrapForLua (lua_State *L) // Added v5.6.36.
+{
+    using namespace luabind;
+
+    module(L)
+    [
+        class_<SystemStats>("SystemStats")
+            .scope
+            [
+                def("getOperatingSystemName", &SystemStats::getOperatingSystemName),
+                def("getOperatingSystemType", &SystemStats::getOperatingSystemType),
+                def("getDeviceDescription", &SystemStats::getDeviceDescription),
+                def("getDeviceManufacturer", &SystemStats::getDeviceManufacturer),
+                def("isOperatingSystem64Bit", &SystemStats::isOperatingSystem64Bit),
+                def("getMemorySizeInMegabytes", &SystemStats::getMemorySizeInMegabytes),
+                def("getCpuVendor", &SystemStats::getCpuVendor),
+                def("getCpuModel", &SystemStats::getCpuModel),
+                def("getCpuSpeedInMegahertz", &SystemStats::getCpuSpeedInMegahertz),
+                def("getLogonName", &SystemStats::getLogonName),
+                def("getFullUserName", &SystemStats::getFullUserName), // can return errors in debug mode with special characters, is sanitized in release mode anyway.
+                def("getComputerName", &SystemStats::getComputerName),
+                def("getUserLanguage", &SystemStats::getUserLanguage),
+                def("getUserRegion", &SystemStats::getUserRegion),
+                def("getDisplayLanguage", &SystemStats::getDisplayLanguage),
+                def("getPageSize", &SystemStats::getPageSize)
+            ]
+    ];
+}
