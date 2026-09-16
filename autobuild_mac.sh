@@ -17,8 +17,9 @@ echo "  2) Full Debug         (Clean + Configure + Build)"
 echo "  3) Full RelWithDebInfo (Clean + Configure + Build)"
 echo "  4) Clean Rebuild      (Ninja Clean + Build)"
 echo "  5) Quick Build        (Ninja Only)"
+echo "  6) Test"
 echo ""
-read -p "Enter choice [1-5]: " choice
+read -p "Enter choice [1-6]: " choice
 
 case $choice in
     1|2|3)
@@ -29,15 +30,6 @@ case $choice in
         echo ""
         echo "--- Starting Full $BUILD_TYPE Build ---"
         rm -rf "$BUILD_DIR"
-
-        LUAJIT_ZIP="$PROJECT_ROOT/Source/Resources/LuaJIT/luajit.zip"
-        LUAJIT_TARGET_DIR="$PROJECT_ROOT/Source/Misc/luajit"
-
-        if [ -f "$LUAJIT_ZIP" ] && [ ! -d "$LUAJIT_TARGET_DIR" ]; then
-            echo "Extracting LuaJIT resource..."
-            mkdir -p "$PROJECT_ROOT/Source/Misc"
-            unzip -q "$LUAJIT_ZIP" -d "$PROJECT_ROOT/Source/Misc"
-        fi
 
         cmake -S "$PROJECT_ROOT" \
               -B "$BUILD_DIR" \
@@ -73,7 +65,13 @@ case $choice in
         echo "--- Fast Incremental Build ---"
         cmake --build "$BUILD_DIR" --parallel "$NUM_CORES"
         ;;
-
+    6)
+        echo "--- Running Tests ---"
+        pushd "${BUILD_DIR}/Tests"
+        GTEST_OUTPUT="xml:test-results/" GTEST_COLOR=1 ctest -j"$(nproc)" --verbose
+        ../../Tests/ci_check_test_results.py --allow ../../Tests/known_failures_macos.txt "test-results/*.xml"
+        popd
+        ;;
     *)
         echo "Invalid selection. Exiting."
         exit 1

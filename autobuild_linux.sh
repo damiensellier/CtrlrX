@@ -5,22 +5,13 @@
 PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build"
 
-# Extract LuaJIT archive if it hasn't been extracted yet
-LUAJIT_ZIP="$PROJECT_ROOT/Source/Resources/LuaJIT/luajit.zip"
-LUAJIT_TARGET_DIR="$PROJECT_ROOT/Source/Misc/luajit"
-
-if [ -f "$LUAJIT_ZIP" ] && [ ! -d "$LUAJIT_TARGET_DIR" ]; then
-    echo "Extracting LuaJIT resource..."
-    mkdir -p "$PROJECT_ROOT/Source/Misc"
-    unzip -q "$LUAJIT_ZIP" -d "$PROJECT_ROOT/Source/Misc"
-fi
-
 echo "Select build type (Using Ninja):"
 echo "1) Full Release (Clean + Configure + Build)"
 echo "2) Full Debug (Clean + Configure + Build)"
 echo "3) Clean Rebuild (Ninja Clean + Build)"
 echo "4) Quick Build (Ninja Only)"
-read -p "Enter choice [1-4]: " choice
+echo "5) Test"
+read -p "Enter choice [1-5]: " choice
 
 case $choice in
     1|2)
@@ -46,6 +37,13 @@ case $choice in
         cmake --build "$BUILD_DIR" -j$(nproc)
         ;;
 
+    5)
+        echo "--- Running Tests ---"
+        pushd "${BUILD_DIR}/Tests"
+        GTEST_OUTPUT="xml:test-results/" GTEST_COLOR=1 ctest -j"$(nproc)" --verbose #--repeat until-fail:10
+        ../../Tests/ci_check_test_results.py --allow ../../Tests/known_failures_linux.txt "test-results/*.xml"
+        popd
+        ;;
     *)
         echo "Invalid selection. Exiting."
         exit 1

@@ -1,57 +1,94 @@
-# Operating System & IDE Specific Files
-.DS_Store                 # macOS directory metadata
-Thumbs.db                 # Windows thumbnail cache
-Desktop.ini               # Windows custom folder settings
-.vs/                      # Visual Studio 2017+ hidden solution folder
-*.user                    # Visual Studio user options file
-*.suo                     # Visual Studio solution user options (older VS)
-*.sln.ide                 # Some Visual Studio versions
-*.VC.opendb               # Visual Studio temporary database
-*.VC.db                   # Visual Studio code Browse database
-*.VC.VC.opendb            # Visual Studio
-.idea/                    # IntelliJ/CLion project files
+### Operating System & IDE Specific Files
+# macOS directory metadata
+.DS_Store
+# Windows thumbnail cache
+Thumbs.db
+# Windows custom folder settings
+Desktop.ini
+# Visual Studio 2017+ hidden solution folder
+.vs/
+# Visual Studio user options file
+*.user
+# Visual Studio solution user options (older VS)
+*.suo
+# Some Visual Studio versions
+*.sln.ide
+# Visual Studio temporary database
+*.VC.opendb
+# Visual Studio code Browse database
+*.VC.db
+# Visual Studio
+*.VC.VC.opendb
+# IntelliJ/CLion project files
+.idea/
 # VS Code workspace settings (optional - commit if shared config is vital)
 .vscode/
-# !.vscode/settings.json  # Example: Keep settings.json if needed
+# Example: Keep settings.json if needed
+# !.vscode/settings.json
 # !.vscode/tasks.json
 # !.vscode/launch.json
 
-# Code::Blocks Specific Files
-# *.cbp                     # Code::Blocks project file
-# *.depend                  # Code::Blocks dependency file
-# *.layout                  # Code::Blocks layout file
+### Code::Blocks Specific Files
+# Code::Blocks project file
+# *.cbp
+# Code::Blocks dependency file
+# *.depend
+# Code::Blocks layout file
+# *.layout
 
-# Compilation and Build Output
-# General build output directories and files for various platforms
-# IMPORTANT: These should NOT contain your source code or essential project definitions.
-# If your project definitions (e.g., .xcodeproj) are INSIDE these,
-# you'll need explicit exceptions later.
+### Compilation and Build Output
+### General build output directories and files for various platforms
+### IMPORTANT: These should NOT contain your source code or essential project definitions.
+### If your project definitions (e.g., .xcodeproj) are INSIDE these,
+### you'll need explicit exceptions later.
 # Common build output directory (e.g., CMake out-of-source builds)
-build*
+build*/
+# Or if you symlink to a specific build output directory
+/build
 # clangd cache
 .cache/
-bin/                      # Compiled binaries directory
-obj/                      # Object files directory
-*.o                       # Object files (Unix/MinGW)
-*.lo                      # Library object files
-*.la                      # Libtool files
-*.so                      # Shared libraries
-*.dll                     # Windows dynamic link libraries
-*.dylib                   # macOS dynamic libraries
-*.exe                     # Executables
-*.obj                     # Windows object files
-*.lib                     # Windows static libraries
-*.pdb                     # Program Database (debug info)
-*.ilk                     # Incremental Linker File
-*.exp                     # Export files
-*.idb                     # Intermediate Debugging Information
+# Compiled binaries directory
+bin/
+# Object files directory
+obj/
+# Object files (Unix/MinGW)
+*.o
+# Library object files
+*.lo
+# Libtool files
+*.la
+# Shared libraries
+*.so
+# Windows dynamic link libraries
+*.dll
+# macOS dynamic libraries
+*.dylib
+# Executables
+*.exe
+# Windows object files
+*.obj
+# Windows static libraries
+*.lib
+# Program Database (debug info)
+*.pdb
+# Incremental Linker File
+*.ilk
+# Export files
+*.exp
+# Intermediate Debugging Information
+*.idb
 
-# Audio Plugin & Application Formats (Built output, ignore these)
-*.aaxplugin/              # Avid AAX plugin bundles (macOS directory/bundle)
-*.vst/                    # Older VST 1/2 plugin bundles (macOS directory/bundle)
-*.vst3/                   # VST3 plugin bundles (macOS directory/bundle)
-*.component/              # Audio Unit plugin bundles (macOS directory/bundle)
-*.app/                    # macOS Application bundles (as directory)
+### Audio Plugin & Application Formats (Built output, ignore these)
+# Avid AAX plugin bundles (macOS directory/bundle)
+*.aaxplugin/
+# Older VST 1/2 plugin bundles (macOS directory/bundle)
+*.vst/
+# VST3 plugin bundles (macOS directory/bundle)
+*.vst3/
+# Audio Unit plugin bundles (macOS directory/bundle)
+*.component/
+# macOS Application bundles (as directory)
+*.app/
 # For completeness, also ignore these as files, though typically covered by directory ignores
 *.aaxplugin
 *.vst
@@ -60,21 +97,32 @@ obj/                      # Object files directory
 *.exe
 *.app
 
-# Specific IDE/Compiler Temporary Directories and Files
-# Visual Studio
-Debug/                    # VS Debug build output directory
-Release/                  # VS Release build output directory
-x64/                      # Often used for build configurations directory
-Win32/                    # Often used for build configurations directory
-IPCH/                     # Precompiled header cache directory
-*.ipch                    # Precompiled header cache files
-*.aps                     # VS resource script cache
-*.ncb                     # IntelliSense database
-*.opendb                  # VS database
-*.sdf                     # IntelliSense database
-*.tlog                    # Build log files
+### Specific IDE/Compiler Temporary Directories and Files
+### Visual Studio
+# VS Debug build output directory
+Debug/
+# VS Release build output directory
+Release/
+# Often used for build configurations directory
+x64/
+# Often used for build configurations directory
+Win32/
+# Precompiled header cache directory
+IPCH/
+# Precompiled header cache files
+*.ipch
+# VS resource script cache
+*.aps
+# IntelliSense database
+*.ncb
+# VS database
+*.opendb
+# IntelliSense database
+*.sdf
+# Build log files
+*.tlog
 
-# Builds Specific Ignores
+### Builds Specific Ignores
 # Ignore the entire Builds folder
 Builds/
 Builds/MacOSX/
@@ -85,7 +133,7 @@ Builds/VisualStudio2022/
 # EXCEPTION: Unignore the LinuxMakefile subfolder and all its contents
 !Builds/LinuxMakefile/
 
-# Juce Specific
+### Juce Specific
 # JuceLibraryCode/ (Commented out - these files MUST be tracked for CI/CD)
 # NOTE: If any other specific Juce-generated files consistently appear and should NOT be tracked,
 # add them here, but be careful not to ignore essential source code.
@@ -96,17 +144,30 @@ Source/Misc/boost/
 !Source/Misc/boost/boost-version-info.txt
 .DS_Store
 
-# Other project-specific ignores
-Panels/                   # Ignore the Panels directory and its contents
-# /Panels                 # If 'Panels' can also exist as a file in root and needs ignoring, use this
+### Other project-specific ignores
+# Ignore the Panels directory and its contents
+Panels/
+# If 'Panels' can also exist as a file in root and needs ignoring, use this
+# /Panels
 
 # Steinberg VST2 SDK ignores
 Source/Misc/vst2sdk/
 
-# macOS Specific Files
-.DS_Store                 # macOS directory metadata
+### macOS Specific Files
+# macOS directory metadata
+.DS_Store
 Builds/MacOSX/build/Release/libCtrlrX.a
 Builds/MacOSX/CtrlrX.xcodeproj/project.xcworkspace/xcuserdata/DYREC.xcuserdatad/UserInterfaceState.xcuserstate
 Source/Core/CtrlrRevision.h
 .vs/
 
+### LuaJIT precompiled bundles for Projucer builds
+# CI-produced, tracked so a Projucer user needs no CMake -- see Doc/LUAJIT.md.
+# Track the zips and their manifests only; the extracted contents are recreated
+# by each build's pre-build step and must never be committed. Note the `*` in
+# the first pattern: a trailing `/` would stop git descending into the directory
+# and the negations below would never fire.
+Source/Misc/luajit/precompiled/*
+!Source/Misc/luajit/precompiled/*.zip
+!Source/Misc/luajit/precompiled/*.json
+!Source/Misc/luajit/precompiled/README.md

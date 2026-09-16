@@ -1,3 +1,8 @@
+# Files LuaJIT's own build generates in this directory. cmake/luajit/ generates
+# them into the build tree instead and refuses to configure if any turn up here
+# -- see the stale-file guard in cmake/luajit/CMakeLists.txt and Doc/LUAJIT.md.
+
+# Generated headers and sources
 luajit
 luajit.h
 luajit_relver.txt
@@ -7,3 +12,18 @@ lj_libdef.h
 lj_recdef.h
 lj_folddef.h
 lj_vm.[sS]
+
+# Compiled output. Nothing here is ever committed: the CMake build never writes
+# to this tree, and the precompiled bundles for Projucer users live in
+# ../precompiled/ and are never copied in here. *.o/*.lib/*.dll are already
+# covered by the root .gitignore; *.a is NOT, which is how libluajit.a came to
+# be committed once before (removed in d1168d3f / 5dc9defe).
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+host/*.o
+host/*.obj
