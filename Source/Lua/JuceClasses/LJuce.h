@@ -72,5 +72,7 @@
 #include "LRSAKey.h" // Added v5.6.34
 #include "LMachineIDUtilities.h" // Added v5.6.34
 #include "LOnlineUnlockStatus.h" // Added v5.6.34
+#include "LPluginHostType.h" // Added v5.6.36
+#include "LSystemStats.h" // Added v5.6.36
 
 #endif

@@ -2797,6 +2797,40 @@
       <method name="PathStrokeType" args="(LPathStrokeType other) : PathStrokeType(other)" />
     </constructors>
   </class>
+  <class name="PluginHostType" cpp_name="PluginHostType">
+    <methods>
+      <method name="getHostDescription" args="()" type="instance"/>
+      <method name="getHostPath" args="()" type="instance"/>
+      <method name="getPluginLoadedAs" args="()" type="instance"/>
+      <method name="isAbletonLive" args="()" type="instance"/>
+      <method name="isBitwigStudio" args="()" type="instance"/>
+      <method name="isCubase" args="()" type="instance"/>
+      <method name="isCubaseBridged" args="()" type="instance"/>
+      <method name="isDigitalPerformer" args="()" type="instance"/>
+      <method name="isFruityLoops" args="()" type="instance"/>
+      <method name="isGarageBand" args="()" type="instance"/>
+      <method name="isLogic" args="()" type="instance"/>
+      <method name="isMainStage" args="()" type="instance"/>
+      <method name="isNuendo" args="()" type="instance"/>
+      <method name="isPremiere" args="()" type="instance"/>
+      <method name="isProTools" args="()" type="instance"/>
+      <method name="isReason" args="()" type="instance"/>
+      <method name="isReaper" args="()" type="instance"/>
+      <method name="isReceptor" args="()" type="instance"/>
+      <method name="isRenoise" args="()" type="instance"/>
+      <method name="isSamplitude" args="()" type="instance"/>
+      <method name="isSonar" args="()" type="instance"/>
+      <method name="isTracktion" args="()" type="instance"/>
+      <method name="isWaveBurner" args="()" type="instance"/>
+      <method name="isWavelabLegacy" args="()" type="instance"/>
+    </methods>
+    <static_methods>
+      <method name="PluginHostType" args="()" type="constructor"/>
+    </static_methods>
+    <constructors>
+      <method name="PluginHostType" args="()" />
+    </constructors>
+  </class>
   <class name="Point<float" cpp_name="Point<float">
     <methods>
       <method name="addXY" args="()" type="instance"/>
@@ -3413,6 +3447,26 @@
     <constructors>
       <method name="TextButton" args="(isIncrement ? &quot;+&quot; : &quot;-&quot;, &quot;&quot;)" />
     </constructors>
+  </class>
+  <class name="SystemStats" cpp_name="SystemStats">
+    <static_methods>
+      <method name="getCpuModel" args="()" type="static"/>
+      <method name="getCpuSpeedInMegahertz" args="()" type="static"/>
+      <method name="getCpuVendor" args="()" type="static"/>
+      <method name="getDeviceDescription" args="()" type="static"/>
+      <method name="getDeviceManufacturer" args="()" type="static"/>
+      <method name="getDisplayLanguage" args="()" type="static"/>
+      <method name="getEnvironmentVariable" args="(const String &amp;name, const String &amp;defaultValue)" type="static"/>
+      <method name="getJUCEVersion" args="()" type="static"/>
+      <method name="getNumCpus" args="()" type="static"/>
+      <method name="getNumPhysicalCpus" args="()" type="static"/>
+      <method name="getOperatingSystemName" args="()" type="static"/>
+      <method name="getOperatingSystemType" args="()" type="static"/>
+      <method name="getUniqueDeviceID" args="()" type="static"/>
+      <method name="getUserLanguage" args="()" type="static"/>
+      <method name="getUserRegion" args="()" type="static"/>
+      <method name="isOperatingSystem64Bit" args="()" type="static"/>
+    </static_methods>
   </class>
   <class name="TextEditor" cpp_name="TextEditor">
     <methods>

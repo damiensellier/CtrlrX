@@ -24,7 +24,7 @@
 
 ## Changelog
 
-#### Version 5.6.36 | 2026.08.30
+#### Version 5.6.36 | 2026.09.16
 
 * **FIXED** CtrlrTabsComponents.cpp and CtrlrGroup.cpp keep component owner group on uiTabs. `CtrlrTabsComponent.cpp`, `CtrlrGroup.cpp`
 * **FIXED** Doubling of menu item causing potential crash. `CtrlrEditor.cpp`. Thanks to [John Goodland](https://github.com/dnaldoog) `CtrlrEditorApplicationCommandsHandlers.cpp`
@@ -57,6 +57,8 @@
 * **ADDED** uiLabel showTextEditor() to display the text field editor. `CtrlrLabel.cpp` & `.h`, `CtrlrComponentLuaRegistration.cpp`, `CtrlrComponentLuaRegistration.cpp`
 * **UPDATED** UTF8 support for LUA string. Thanks to [John Goodland](https://github.com/dnaldoog). `LCore.cpp`, `stdafx_luabind.h`
 * **ADDED** uiSlider (all types) showTextEditor() to display the value field editor. `CtrlrComponentLuaRegistration.cpp`, `CtrlrSlider.cpp`  & `.h`, `CtrlrFixedImageSlider.cpp`  & `.h`, `CtrlrFixedSlider.cpp`  & `.h`,, `CtrlrImageSlider.cpp`  & `.h`
+* **ADDED** JUCE PluginHostType & SystemStats to LuaBind. `LJuce.cpp`  & `.h`, `LCore.cpp`, `LPluginHostType.h`, `LSystemStats.h`, `LuaAPI.xml`
+* **UPDATED** CI/CD LuaJIT compilation via CMake. Thanks to [Sgorpi](https://github.com/sgorpi)
 
 #### Version 5.6.35 | 2026.04.20
 
