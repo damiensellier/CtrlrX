@@ -296,6 +296,14 @@ endif()
 # Final Plugin Target Linking
 target_link_libraries("${PROJECT_NAME}" PRIVATE SharedCode)
 
+if(LINUX)
+    if(TARGET "${PROJECT_NAME}_VST3")
+        target_link_options("${PROJECT_NAME}_VST3" PRIVATE
+            -Wl,--exclude-libs,ALL
+        )
+    endif()
+endif()
+
 include(PamplejuceIPP)
 
 # Everything related to the tests target
