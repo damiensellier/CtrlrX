@@ -59,6 +59,7 @@
 * **ADDED** uiSlider (all types) showTextEditor() to display the value field editor. `CtrlrComponentLuaRegistration.cpp`, `CtrlrSlider.cpp`  & `.h`, `CtrlrFixedImageSlider.cpp`  & `.h`, `CtrlrFixedSlider.cpp`  & `.h`,, `CtrlrImageSlider.cpp`  & `.h`
 * **ADDED** JUCE PluginHostType & SystemStats to LuaBind. `LJuce.cpp`  & `.h`, `LCore.cpp`, `LPluginHostType.h`, `LSystemStats.h`, `LuaAPI.xml`
 * **UPDATED** CI/CD LuaJIT compilation via CMake. Thanks to [Sgorpi](https://github.com/sgorpi)
+* **UPDATED** CtrlrEditor::showAboutDialog to prevent CtrlrAbout.cpp hiding behind the main window. `CtrlrEditorApplicationCommandsHandlers.cpp`
 
 #### Version 5.6.35 | 2026.04.20
 

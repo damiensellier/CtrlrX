@@ -220,10 +220,38 @@ bool CtrlrEditor::perform (const InvocationInfo &info) // Updated v5.6.34. Will 
                 // Use toggle() on all Linux to avoid Wayland/compositor issues
                 owner.getWindowManager().toggle(CtrlrManagerWindowManager::AboutWindow, true);
             #else
-                // Non-modal dialog on Windows/macOS
+                // Modal dialog on Windows/macOS
                 {
-                    CtrlrAbout* aboutWindow = new CtrlrAbout(owner);
-                    owner.getWindowManager().showModalDialog ("CtrlrX/About", aboutWindow, false, this);
+                    auto* aboutComp = new CtrlrAbout(owner);
+
+                    juce::DialogWindow::LaunchOptions options;
+                    options.dialogTitle                   = "CtrlrX/About";
+                    options.dialogBackgroundColour        = juce::LookAndFeel::getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId);
+                    options.content.setOwned(aboutComp);
+                    options.escapeKeyTriggersCloseButton  = true;
+                    options.useNativeTitleBar             = true;
+                    options.resizable                     = false;
+
+                    if (auto* dw = options.create())
+                    {
+                        void* nativeHandle = getPeer() ? getPeer()->getNativeHandle() : nullptr;
+
+                        int flags = juce::ComponentPeer::windowAppearsOnTaskbar
+                                  | juce::ComponentPeer::windowIsTemporary;
+
+                        dw->addToDesktop(flags, nativeHandle);
+
+                        // --- CENTER-TO-CENTER ALIGNMENT ---
+                        // Gets the absolute screen center of the CtrlrEditor frame
+                        const juce::Point<int> editorScreenCenter = getScreenBounds().getCentre();
+                        
+                        // Align the center of the DialogWindow to the editor's screen center
+                        dw->setCentrePosition(editorScreenCenter);
+
+                        dw->setAlwaysOnTop(true);
+                        dw->setVisible(true);
+                        dw->enterModalState(true, nullptr, true);
+                    }
                 }
             #endif
             break;
