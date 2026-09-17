@@ -209,9 +209,39 @@ bool CtrlrEditor::perform (const InvocationInfo &info) // Updated v5.6.34. Will 
                 // Use toggle() on all Linux to avoid Wayland/compositor issues
                 owner.getWindowManager().toggle(CtrlrManagerWindowManager::GlobalSettings, true);
             #else
-                // Modal dialog on Windows/macOS where it's stable
-                owner.getWindowManager().showModalDialog ("CtrlrX/Settings",
-                    ScopedPointer <CtrlrSettings> (new CtrlrSettings(owner)), true, this);
+                // Modal dialog on Windows/macOS
+                {
+                    auto* settingsComp = new CtrlrSettings(owner);
+
+                    juce::DialogWindow::LaunchOptions options;
+                    options.dialogTitle                   = "CtrlrX/Settings";
+                    options.dialogBackgroundColour        = juce::LookAndFeel::getDefaultLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId);
+                    options.content.setOwned(settingsComp);
+                    options.escapeKeyTriggersCloseButton  = true;
+                    options.useNativeTitleBar             = true;
+                    options.resizable                     = false;
+
+                    if (auto* dw = options.create())
+                    {
+                        void* nativeHandle = getPeer() ? getPeer()->getNativeHandle() : nullptr;
+
+                        int flags = juce::ComponentPeer::windowAppearsOnTaskbar
+                                  | juce::ComponentPeer::windowIsTemporary;
+
+                        dw->addToDesktop(flags, nativeHandle);
+
+                        // --- CENTER-TO-CENTER ALIGNMENT ---
+                        // Gets the absolute screen center of the CtrlrEditor frame
+                        const juce::Point<int> editorScreenCenter = getScreenBounds().getCentre();
+                        
+                        // Align the center of the DialogWindow to the editor's screen center
+                        dw->setCentrePosition(editorScreenCenter);
+
+                        dw->setAlwaysOnTop(true);
+                        dw->setVisible(true);
+                        dw->enterModalState(true, nullptr, true);
+                    }
+                }
             #endif
             break;
 
@@ -555,16 +585,43 @@ void CtrlrEditor::performShowKeyboardMappingDialog(const int menuItemID)
 	return;
 	
 #else
-	// Modal on other platforms (original code)
-	ScopedPointer<KeyMappingEditorComponent> keys(new KeyMappingEditorComponent(*owner.getCommandManager().getKeyMappings(), true));
-	owner.getWindowManager().showModalDialog("Keyboard mapping", keys, true, this);
+    // Modal on macOS/Windows attached to host peer
+    auto* keys = new KeyMappingEditorComponent(*owner.getCommandManager().getKeyMappings(), true);
+    keys->setSize(600, 400);
 
-	ScopedPointer <XmlElement> keysXml (owner.getCommandManager().getKeyMappings()->createXml (true).release());
+    juce::DialogWindow::LaunchOptions options;
+    options.dialogTitle                  = "Keyboard mapping";
+    options.dialogBackgroundColour       = juce::Colours::lightgrey;
+    options.content.setOwned(keys);
+    options.escapeKeyTriggersCloseButton = true;
+    options.useNativeTitleBar            = true;
+    options.resizable                    = true;
 
-	if (keysXml)
-	{
-		owner.setProperty (Ids::ctrlrKeyboardMapping, keysXml->createDocument(""));
-	}
+    if (auto* dw = options.create())
+    {
+        void* nativeHandle = getPeer() ? getPeer()->getNativeHandle() : nullptr;
+
+        int flags = juce::ComponentPeer::windowAppearsOnTaskbar
+                  | juce::ComponentPeer::windowIsTemporary;
+
+        dw->addToDesktop(flags, nativeHandle);
+
+        // Center-to-center placement over the editor frame
+        const juce::Point<int> editorScreenCenter = getScreenBounds().getCentre();
+        dw->setCentrePosition(editorScreenCenter);
+
+        dw->setAlwaysOnTop(true);
+        dw->setVisible(true);
+
+        // Blocks execution modally until the user closes the dialog
+        dw->enterModalState(true, nullptr, true);
+    }
+
+    // Save mapping updates immediately after the modal window is dismissed
+    if (auto keysXml = owner.getCommandManager().getKeyMappings()->createXml(true))
+    {
+        owner.setProperty(Ids::ctrlrKeyboardMapping, keysXml->createDocument(""));
+    }
 #endif
 }
 
