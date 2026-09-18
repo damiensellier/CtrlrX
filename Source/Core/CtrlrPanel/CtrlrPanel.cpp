@@ -453,6 +453,30 @@ void CtrlrPanel::bootstrapPanel(const bool setInitialProgram)
     boostrapStateStatus = false;
     bootstrapStartTime = juce::Time::getMillisecondCounter();
     isBootstrapTimerActive = true;
+
+	const int needed = owner.getNumModulators(true); // largest vstIndex + 1, manager-wide
+	const int advertised = owner.getProcessorOwner()->getNumParameters();
+
+	if (needed > advertised) {
+		const String msg = "Panel exports " + String(needed) +
+						   " VST parameters but this instance "
+						   "advertises " +
+						   String(advertised) + ". Host automation for parameters " + String(advertised) + "-" +
+						   String(needed - 1) + " is unavailable.";
+		_WRN(msg);
+
+		// Show the warning if the editor is already open/created.
+		if (getDialogStatus())
+			if (CtrlrPanelEditor *ed = getEditor(false))
+				ed->notify(msg, nullptr, NotifyWarning);
+	}
+
+	if (needed > 0) {
+		// Parameter names were read by the host at init as " ", before any panel was loaded.
+		// Ask the host to re-read them now that modulators are attached.
+		owner.getProcessorOwner()->updateHostDisplay(
+			AudioProcessorListener::ChangeDetails().withParameterInfoChanged(true));
+	}
 }
 
 CtrlrPanelEditor *CtrlrPanel::getEditor(const bool createNewEditorIfNeeded)
