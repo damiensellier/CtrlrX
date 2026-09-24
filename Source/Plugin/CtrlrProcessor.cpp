@@ -25,6 +25,10 @@ CtrlrProcessor::CtrlrProcessor() :
                                         #endif
 
                                     overridesTree (Ids::ctrlrOverrides),
+                                    // Safe default until the snapshot is taken at the end of this
+                                    // constructor: the embedded-panel load below can already reach
+                                    // getNumParameters() via setParameterNotifyingHost().
+                                    numExportedParameters (CTRLR_MAX_EXPORTED_VST_PARAMETERS),
                                     ctrlrManager (nullptr),
                                     ctrlrLog (nullptr) // Added v5.6.34. Could be useful
 {
@@ -71,6 +75,24 @@ CtrlrProcessor::CtrlrProcessor() :
 			ctrlrManager->getActivePanel()->initEmbeddedInstance();
 		}
 	}
+
+	numExportedParameters = computeExportedParameterCount();
+	_INF ("CtrlrProcessor: advertising " + String (numExportedParameters) + " VST parameters");
+}
+
+int CtrlrProcessor::computeExportedParameterCount() const
+{
+	if (ctrlrManager != nullptr && ctrlrManager->isSingleInstance())
+	{
+		// An exported single-instance build has already loaded its embedded panel inside this
+		// constructor, so the modulator count is final and correct.
+		return (ctrlrManager->getNumModulators (true));
+	}
+
+	// Generic CtrlrX: no panel exists yet, so advertise a fixed budget.
+	// The .overrides file may raise this but never lower it.
+	return (jmax (CTRLR_MAX_EXPORTED_VST_PARAMETERS,
+	              (int) overridesTree.getProperty (Ids::ctrlrMaxExportedVstParameters)));
 }
 
 CtrlrProcessor::~CtrlrProcessor() // Updated v5.6.34. Prevents AAX from crashing when deleting the plugin from the instrument track insert slot.
@@ -212,19 +234,11 @@ void CtrlrProcessor::processBlock (juce::AudioSampleBuffer& buffer, juce::MidiBu
 //JUCE_DEPRECATED (virtual const String getParameterText (int parameterIndex));
 //JUCE_DEPRECATED (virtual String getParameterText (int parameterIndex, int maximumStringLength));
 
-int CtrlrProcessor::getNumParameters() // Updated 5.6.31. VST Host was assigned (64) params most of the time since panels hardly have more than 64 params passed as VST controls
+int CtrlrProcessor::getNumParameters()
 {
-    if (ctrlrManager)
-        if (ctrlrManager->isSingleInstance()) // Added v5.6.31
-        {
-            return (ctrlrManager->getNumModulators(true)); // Added v5.6.31. Will pass the highest vstIndex value as the total number of VST params to the host.
-        }
-        else
-        {
-            return (jmax(ctrlrManager->getNumModulators(true), (int)overridesTree.getProperty (Ids::ctrlrMaxExportedVstParameters))); // Pass jmax ctrlrMaxExportedVstParameters value or default (64) params to the host when designing or loading a panel in ctrlr.vst or ctrlr.vst3
-        }
-    else
-        return (CTRLR_DEFAULT_PARAMETER_COUNT);
+	// Must be constant for the lifetime of this instance, because VST3 and AU hosts
+	// snapshot the parameter list at initialisation and may never re-read it.
+	return (numExportedParameters);
 }
 
 String CtrlrProcessor::getParameterID(int index) // Added v5.6.33. Will pass vstIndex as VST3 ID

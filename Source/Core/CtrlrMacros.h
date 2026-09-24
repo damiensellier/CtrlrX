@@ -21,7 +21,12 @@
 #define CTRLR_PROPERTIES_FILTER_STATE	"CTRLR_FILTER_STATE"
 #define CTRLR_PROPERTIES_WINDOW_STATE	"CTRLR_WINDOW_STATE"
 #define CTRLR_MENUBAR_HEIGHT			24
-#define	CTRLR_DEFAULT_PARAMETER_COUNT	128
+
+// The number of VST/AU parameters an instance advertises to the host. VST3 and AU hosts read
+// the parameter list once at initialisation (before any panel is loaded),
+// so this must not change for the lifetime of an instance.
+#define CTRLR_MAX_EXPORTED_VST_PARAMETERS	64
+#define	CTRLR_DEFAULT_PARAMETER_COUNT	CTRLR_MAX_EXPORTED_VST_PARAMETERS
 
 #define DEBUGGER __asm int 3
 

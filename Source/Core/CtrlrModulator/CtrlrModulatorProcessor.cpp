@@ -356,6 +356,12 @@ void CtrlrModulatorProcessor::setParameterNotifyingHost() // CtrlrX->VST Host
     
 	if (owner.getVstIndex() >= 0 && owner.isExportedToVst())
 	{
+		// The host was told how many parameters exist at init and sized its parameter-ID array
+		// to match. Indices at or above that count must never reach the wrapper.
+		// Reported once per panel load in CtrlrPanel::bootstrapPanel(); deliberately silent here
+		if (owner.getVstIndex() >= getProcessor()->getNumParameters())
+			return;
+
 		getProcessor()->setParameterNotifyingHost (owner.getVstIndex(), normalizeValue (currentValue.value, minValue, maxValue));
 	}
 }

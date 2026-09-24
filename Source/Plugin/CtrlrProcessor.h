@@ -156,6 +156,8 @@ class CtrlrProcessor : public AudioProcessor, public ChangeBroadcaster
 		MidiMessage logResult;
 		int logSamplePos;
 		ValueTree overridesTree;
+		int numExportedParameters;          // snapshotted in the constructor; see getNumParameters()
+		int computeExportedParameterCount() const;
 		MidiMessageCollector midiCollector;
 		Array <PanelProcessorReference,CriticalSection> panelProcessors;
 		Array <CtrlrParameterFromHost,CriticalSection> parameterUpdates;
