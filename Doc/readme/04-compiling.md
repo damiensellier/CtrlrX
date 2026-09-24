@@ -6,6 +6,8 @@
 
 > **TL;DR**
 > - Building CtrlrX from scratch utilizes native CMake workflows alongside environment-specific IDE project tools.
+>   - configure: `cmake -B "build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCTRLRX_USE_LUAJIT=ON`
+>   - compile:   `cmake --build "build" --config Release -j$(nproc)`
 > - Ensure the vendored `boost.zip` asset is unzipped directly in place before running initial environment configurations.
 > - Explicit platform dependency chains are detailed for Debian and Fedora Linux distributions below.
 
@@ -30,9 +32,9 @@
 * **Windows:** Compiling targets modern environments such as Visual Studio 2022 or Visual Studio 2019. Refer to community configuration manuals for step-by-step IDE instructions.
 * **macOS:** Standard generation builds run via Xcode development tools and CMake configurations.
 
-* **Boost Setup:** Regardless of your operating system, navigate to `Source/Misc/boost/` and fully extract the packed `boost.zip` archive. Ensure that its contents are extracted into the `/Source/Misc/boost/` directory, resulting in a structure like `/Source/Misc/boost/boost/_boost_content_` (where `_boost_content_` represents the actual Boost library files and subfolders).
+* **Boost Setup:** Regardless of your operating system, [boost](https://www.boost.org/) is required. You may have varying success with a version already installed on your system, so we recommend using the vendored version (1.88): Navigate to `Source/Misc/boost/` and fully extract the packed `boost.zip` archive. Ensure that its contents are extracted into the `/Source/Misc/boost/` directory, resulting in a structure like `/Source/Misc/boost/boost/_boost_content_` (where `_boost_content_` represents the actual Boost library files and subfolders).
 
-* **LuaJIT Setup:** LuaJIT is included as source in `Source/Misc/luajit` with a pre-built `lua51.lib` already committed to the repository. Under normal circumstances **you do not need to rebuild it**. You only need to rebuild if you are upgrading LuaJIT to a newer version, if the committed `lua51.lib` was accidentally built for x86 or you are switching between Debug/Release configurations of LuaJIT itself.
+* **LuaJIT Setup:** LuaJIT is included as source in `Source/Misc/luajit`, and automatically compiled for your target system in the CMake workflow.
 > 💡 **Build LuaJIT (optional):** follow the instructions from [building LuaJIT for CtrlrX](../../Source/Resources/LuaJIT/LUAJIT_BUILD.md) for **Windows / macOS / Linux**.
 
 ---
@@ -44,11 +46,29 @@ A summary will be added here in the future. Links to PDF build guides by @bijlev
 * [Compiling on Windows 11 with Visual Studio 2022](https://github.com/user-attachments/files/19642077/How.to.compile.Ctrlr.or.CtrlrX.5.6.versions.in.Visual.Studio.2022.pdf)
 * [Compiling on Windows 10 with Visual Studio 2019](https://godlike.com.au/fileadmin/godlike/techtools/ctrlr/guides/Compiling_Ctrlr_for_Windows_10_v2.1.pdf)
 
+If you have all the dependencies installed, try:
+```
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCTRLRX_USE_LUAJIT=ON
+cmake --build build -j 4
+```
+(where 4 is the number of parallel jobs, match it to your CPU core count), or the batch-script around these commands: `autobuild_win.bat`
+
 ---
 
 ### macOS
 
 * [Compiling on OSX](https://godlike.com.au/fileadmin/godlike/techtools/ctrlr/guides/My_guide_to_compiling_Ctrlr_for_macOS__Mojave__v2.pdf)
+
+If you have all the dependencies installed, try:
+```
+cmake -B "build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCTRLRX_USE_LUAJIT=ON
+cmake --build "build" --config Release -j$(sysctl -n hw.ncpu)
+```
+or use the 'autobuild' script:
+```
+./autobuild_mac.sh
+```
+
 
 ---
 
@@ -88,10 +108,11 @@ sudo apt install -y \
     libxinerama-dev \
     libxcursor-dev \
     libfreetype-dev \
+    ninja-build \
     pkg-config
 ```
 
-**Note 1: Boost Library:** Boost is already included with CtrlrX. You need to unzip the file located at `/Source/Misc/boost/boost.zip`. Ensure that its contents are extracted into the `/Source/Misc/boost/` directory, resulting in a structure like `/Source/Misc/boost/boost/_boost_content_` (where `_boost_content_` represents the actual Boost library files and subfolders).
+**Note 1: Boost Library:** The Boost libraries may be available from your distribution, but we haven't tested all Boost versions. Boost 1.88 is included with CtrlrX. If the version from your distribution doesn't work, unzip the file located at `/Source/Misc/boost/boost.zip`. Ensure that its contents are extracted into the `/Source/Misc/boost/` directory, resulting in a structure like `/Source/Misc/boost/boost/_boost_content_` (where `_boost_content_` represents the actual Boost library files and subfolders).
 
 **Note 2:** For other Linux distributions (e.g., Fedora, Arch Linux), the package names and installation commands may differ. Please consult your distribution's documentation for the equivalent packages.
 
@@ -136,27 +157,30 @@ sudo dnf install gtk3-devel -y
 --- optional Extras 
 sudo dnf install luajit-devel -y
 ```
-### Create CtrlrX folder
 
-```
-mkdir ~/CtrlrX
-cd ~/CtrlrX
-```
 ### Retrieve CtrlrX from GitHub
 
 ```
 git clone https://github.com/damiensellier/CtrlrX
-cd ~/CtrlrX/Source/Misc/boost
+```
+and if you want to use the vendored Boost libraries:
+```
+pushd CtrlrX/Source/Misc/boost
 unzip boost.zip 
-cd ~/CtrlrX
+popd
 ```
 
 ### Recompile CtrlrX (If required)
 
 ```
-cd ~/CtrlrX/build
-make clean
-make -j$(nproc)
+cd CtrlrX
+cmake -B "build" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCTRLRX_USE_LUAJIT=ON
+cmake --build "build" --config Release -j$(nproc)
+```
+
+or use the 'autobuild' script:
+```
+./autobuild_linux.sh
 ```
 
 ### Change CtrlrX branch
