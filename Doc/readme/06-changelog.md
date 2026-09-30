@@ -24,7 +24,7 @@
 
 ## Changelog
 
-#### Version 5.6.36 | 2026.09.16
+#### Version 5.6.36 | 2026.09.24
 
 * **FIXED** CtrlrTabsComponents.cpp and CtrlrGroup.cpp keep component owner group on uiTabs. `CtrlrTabsComponent.cpp`, `CtrlrGroup.cpp`
 * **FIXED** Doubling of menu item causing potential crash. `CtrlrEditor.cpp`. Thanks to [John Goodland](https://github.com/dnaldoog) `CtrlrEditorApplicationCommandsHandlers.cpp`
@@ -59,7 +59,11 @@
 * **ADDED** uiSlider (all types) showTextEditor() to display the value field editor. `CtrlrComponentLuaRegistration.cpp`, `CtrlrSlider.cpp`  & `.h`, `CtrlrFixedImageSlider.cpp`  & `.h`, `CtrlrFixedSlider.cpp`  & `.h`,, `CtrlrImageSlider.cpp`  & `.h`
 * **ADDED** JUCE PluginHostType & SystemStats to LuaBind. `LJuce.cpp`  & `.h`, `LCore.cpp`, `LPluginHostType.h`, `LSystemStats.h`, `LuaAPI.xml`
 * **UPDATED** CI/CD LuaJIT compilation via CMake. Thanks to [Sgorpi](https://github.com/sgorpi)
-* **UPDATED** CtrlrEditor::showAboutDialog to prevent CtrlrAbout.cpp hiding behind the main window. `CtrlrEditorApplicationCommandsHandlers.cpp`
+* **UPDATED** CtrlrEditorApplicationCommandsHandlers to prevent child windows to hide behind the main window. `CtrlrEditorApplicationCommandsHandlers.cpp`
+* **UPDATED** panel resources submodule. Thanks to [Sgorpi](https://github.com/sgorpi)
+* **UDPATED** getNumParameters to prevent notifying param UPDT with parameter index > getNumParameters. Thanks to [Sgorpi](https://github.com/sgorpi)
+
+
 
 #### Version 5.6.35 | 2026.04.20
 
