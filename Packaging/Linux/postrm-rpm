@@ -1,0 +1,33 @@
+#!/bin/sh
+# RPM %postun passes a numeric $1: 0 means this was the last installed
+# copy (a genuine erase), 1+ means an upgrade is in progress (the new
+# package's %post will have already replaced the plugin). Only clean up
+# on a genuine erase.
+set -e
+
+if [ "$1" -eq 0 ] 2>/dev/null; then
+    REAL_USER="${SUDO_USER:-}"
+    if [ -z "$REAL_USER" ]; then
+        REAL_USER="$(logname 2>/dev/null || true)"
+    fi
+
+    if [ -n "$REAL_USER" ] && [ "$REAL_USER" != "root" ]; then
+        REAL_HOME="$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6)"
+        if [ -n "$REAL_HOME" ] && [ -d "$REAL_HOME" ]; then
+            rm -rf "${REAL_HOME:?}/.vst3/CtrlrX.vst3"
+        fi
+    fi
+fi
+
+HICOLOR_DIR="/usr/share/icons/hicolor"
+APPS_DIR="/usr/share/applications"
+
+if command -v gtk-update-icon-cache >/dev/null 2>&1 && [ -d "$HICOLOR_DIR" ]; then
+    gtk-update-icon-cache -f -q "$HICOLOR_DIR" || true
+fi
+
+if command -v update-desktop-database >/dev/null 2>&1 && [ -d "$APPS_DIR" ]; then
+    update-desktop-database -q "$APPS_DIR" || true
+fi
+
+exit 0
