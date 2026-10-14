@@ -304,6 +304,157 @@ if(LINUX)
     endif()
 endif()
 
+# -----------------------------------------------------------------------
+# Packaging & Distribution (CPack for Linux .deb / .rpm)
+# -----------------------------------------------------------------------
+if(LINUX)
+    include(GNUInstallDirs)
+
+    set(CTRLR_SVG_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Icons/ctrlrx_logo.svg")
+    set(APPSTREAM_ID "com.ctrlrx.CtrlrX")
+
+    install(FILES "${CTRLR_SVG_ICON}"
+            DESTINATION "share/icons/hicolor/scalable/apps"
+            RENAME "${APPSTREAM_ID}.svg")
+
+    set(ICON_SIZES 16 32 48 64 128 256 512)
+    find_program(RSVG_CONVERT_EXECUTABLE rsvg-convert)
+
+    if(RSVG_CONVERT_EXECUTABLE)
+        foreach(SIZE ${ICON_SIZES})
+            set(PNG_OUT "${CMAKE_BINARY_DIR}/icons/${SIZE}x${SIZE}/${APPSTREAM_ID}.png")
+            
+            add_custom_command(
+                OUTPUT "${PNG_OUT}"
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/icons/${SIZE}x${SIZE}"
+                COMMAND ${RSVG_CONVERT_EXECUTABLE} -w ${SIZE} -h ${SIZE} -f png -o "${PNG_OUT}" "${CTRLR_SVG_ICON}"
+                DEPENDS "${CTRLR_SVG_ICON}"
+                COMMENT "Generating transparent ${SIZE}x${SIZE} AppStream-compliant PNG icon..."
+            )
+
+            add_custom_target(ctrlrx_icon_${SIZE} ALL DEPENDS "${PNG_OUT}")
+
+            install(FILES "${PNG_OUT}"
+                    DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/${SIZE}x${SIZE}/apps")
+        endforeach()
+    else()
+        message(FATAL_ERROR
+            "rsvg-convert not found — required to generate hicolor PNG icons for Linux packaging. "
+            "Install it first: 'sudo apt install librsvg2-bin' (Debian/Ubuntu) or "
+            "'sudo dnf install librsvg2-tools' (Fedora).")
+    endif()
+
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Linux/com.ctrlrx.CtrlrX.desktop.in")
+        configure_file(
+            "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Linux/com.ctrlrx.CtrlrX.desktop.in"
+            "${CMAKE_BINARY_DIR}/com.ctrlrx.CtrlrX.desktop"
+            @ONLY
+        )
+
+        install(FILES "${CMAKE_BINARY_DIR}/com.ctrlrx.CtrlrX.desktop"
+                DESTINATION "/usr/share/applications")
+    endif()
+
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Linux/com.ctrlrx.CtrlrX.metainfo.xml")
+        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Linux/com.ctrlrx.CtrlrX.metainfo.xml"
+                DESTINATION "${CMAKE_INSTALL_DATADIR}/metainfo")
+    endif()
+
+    if(TARGET "${PROJECT_NAME}_Standalone")
+        install(TARGETS "${PROJECT_NAME}_Standalone" DESTINATION "${CMAKE_INSTALL_BINDIR}" RENAME "CtrlrX")
+    elseif(TARGET "${PROJECT_NAME}")
+        install(TARGETS "${PROJECT_NAME}" DESTINATION "${CMAKE_INSTALL_BINDIR}" RENAME "CtrlrX")
+    endif()
+
+    if(NOT DEFINED VST3_STAGE_DIR)
+        set(VST3_STAGE_DIR "lib/vst3")
+    endif()
+
+    if(CMAKE_BUILD_TYPE)
+        set(CURRENT_BUILD_CONFIG "${CMAKE_BUILD_TYPE}")
+    else()
+        set(CURRENT_BUILD_CONFIG "Release")
+    endif()
+
+    set(VST3_BUNDLE_SOURCE "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/${CURRENT_BUILD_CONFIG}/VST3/${PRODUCT_NAME}.vst3")
+
+    install(DIRECTORY "${VST3_BUNDLE_SOURCE}"
+            DESTINATION "${VST3_STAGE_DIR}"
+            FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+            DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
+    set(CPACK_PACKAGE_NAME "ctrlrx")
+    set(CPACK_PACKAGE_VENDOR "CtrlrX")
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MIDI Control Surface Framework & Editor")
+    set(CPACK_PACKAGE_DESCRIPTION "With CtrlrX, control any MIDI enabled hardware")
+    set(CPACK_PACKAGE_VERSION "${CURRENT_VERSION}")
+    set(CPACK_PACKAGE_CONTACT "CtrlrX Team <https://github.com>")
+    set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com")
+    
+    if(RSVG_CONVERT_EXECUTABLE)
+        set(CPACK_GUI_ICON "${CMAKE_BINARY_DIR}/ctrlrx_cpack_icon.png")
+        execute_process(COMMAND ${RSVG_CONVERT_EXECUTABLE} -w 128 -h 128 -f png -o "${CPACK_GUI_ICON}" "${CTRLR_SVG_ICON}")
+        set(CPACK_PACKAGE_ICON "${CPACK_GUI_ICON}")
+    endif()
+
+    set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
+    set(CPACK_MONOLITHIC_INSTALL ON)
+
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "CtrlrX Team <https://github.com>")
+    set(CPACK_DEBIAN_PACKAGE_SECTION "sound")
+    set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+    set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com")
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
+        "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postinst;${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postrm-deb")
+
+    set(CPACK_RPM_PACKAGE_LICENSE "GPLv3 and BSD")
+    set(CPACK_RPM_PACKAGE_GROUP "Applications/Multimedia")
+    set(CPACK_RPM_PACKAGE_URL "https://github.com")
+    set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postinst")
+    set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postrm-rpm")
+    
+    set(CPACK_RPM_PACKAGE_SUMMARY "MIDI Control Surface Framework & Editor")
+    set(CPACK_RPM_PACKAGE_DESCRIPTION "With CtrlrX, control any MIDI enabled hardware: synthesizers, drum machines, effects, samplers.")
+
+    set(CPACK_GENERATOR "DEB;RPM")
+
+    set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
+        "/usr"
+        "/usr/share"
+        "/usr/share/applications"
+        "/usr/share/icons"
+        "/usr/share/icons/hicolor"
+    )
+
+    include(CPack)
+endif()
+
+# -----------------------------------------------------------------------
+# Portable tarball target
+# -----------------------------------------------------------------------
+if(LINUX)
+    set(PORTABLE_TARBALL_NAME "${CPACK_PACKAGE_NAME}-${CURRENT_VERSION}-linux-x86_64")
+    set(PORTABLE_TARBALL_STAGE "${CMAKE_BINARY_DIR}/portable_tarball_stage")
+
+    add_custom_target(portable_tarball
+        COMMAND ${CMAKE_COMMAND} -E remove_directory "${PORTABLE_TARBALL_STAGE}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${PORTABLE_TARBALL_STAGE}/${PORTABLE_TARBALL_NAME}/vst3"
+        COMMAND ${CMAKE_COMMAND} -E copy
+                "$<TARGET_FILE:${PROJECT_NAME}_Standalone>"
+                "${PORTABLE_TARBALL_STAGE}/${PORTABLE_TARBALL_NAME}/${PRODUCT_NAME}"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${VST3_BUNDLE_SOURCE}"
+                "${PORTABLE_TARBALL_STAGE}/${PORTABLE_TARBALL_NAME}/vst3/${PRODUCT_NAME}.vst3"
+        COMMAND ${CMAKE_COMMAND} -E chdir "${PORTABLE_TARBALL_STAGE}"
+                ${CMAKE_COMMAND} -E tar cfz "${CMAKE_BINARY_DIR}/${PORTABLE_TARBALL_NAME}.tar.gz" "${PORTABLE_TARBALL_NAME}"
+        DEPENDS "${PROJECT_NAME}_Standalone"
+        COMMENT "Building portable tarball (executable + vst3/ only)"
+        VERBATIM
+    )
+endif()
+
+
 include(PamplejuceIPP)
 
 # Everything related to the tests target

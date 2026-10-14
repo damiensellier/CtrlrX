@@ -1,0 +1,61 @@
+#!/bin/sh
+# Copies the VST3 bundle CtrlrX ships under a package-owned path
+# (/usr/share/ctrlrx/vst3) into the invoking (non-root) user's
+# ~/.vst3, since dpkg/rpm run this as root and cannot target a specific
+# user's home directly from the package's own file list.
+set -e
+
+VST3_STAGE_DIR="/usr/share/ctrlrx/vst3/CtrlrX.vst3"
+
+# Figure out who actually ran the install, not root.
+REAL_USER="${SUDO_USER:-}"
+if [ -z "$REAL_USER" ]; then
+    REAL_USER="$(logname 2>/dev/null || true)"
+fi
+
+if [ -z "$REAL_USER" ] || [ "$REAL_USER" = "root" ]; then
+    echo "ctrlrx: could not determine a non-root invoking user; skipping"
+    echo "ctrlrx: automatic ~/.vst3 install. Copy it yourself with:"
+    echo "ctrlrx:   cp -r $VST3_STAGE_DIR ~/.vst3/"
+    exit 0
+fi
+
+REAL_HOME="$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6)"
+
+if [ -z "$REAL_HOME" ] || [ ! -d "$REAL_HOME" ]; then
+    echo "ctrlrx: could not resolve a home directory for $REAL_USER;"
+    echo "ctrlrx: copy the plugin yourself with:"
+    echo "ctrlrx:   cp -r $VST3_STAGE_DIR ~/.vst3/"
+    exit 0
+fi
+
+if [ ! -d "$VST3_STAGE_DIR" ]; then
+    echo "ctrlrx: staged VST3 bundle not found at $VST3_STAGE_DIR, skipping"
+    exit 0
+fi
+
+mkdir -p "$REAL_HOME/.vst3"
+rm -rf "${REAL_HOME:?}/.vst3/CtrlrX.vst3"
+cp -r "$VST3_STAGE_DIR" "$REAL_HOME/.vst3/"
+chown -R "$REAL_USER:$REAL_USER" "$REAL_HOME/.vst3" 2>/dev/null || true
+
+echo "ctrlrx: installed VST3 plugin to $REAL_HOME/.vst3/CtrlrX.vst3"
+
+# Refresh the shared GTK icon cache and desktop database now that our
+# files actually exist on this machine's real hicolor tree. This must
+# happen here, live, on install — never at package-build time, since a
+# cache generated from a build-time staging tree (containing only
+# CtrlrX's own icons) would overwrite the real system-wide cache instead
+# of merging with it.
+HICOLOR_DIR="/usr/share/icons/hicolor"
+APPS_DIR="/usr/share/applications"
+
+if command -v gtk-update-icon-cache >/dev/null 2>&1 && [ -d "$HICOLOR_DIR" ]; then
+    gtk-update-icon-cache -f -q "$HICOLOR_DIR" || true
+fi
+
+if command -v update-desktop-database >/dev/null 2>&1 && [ -d "$APPS_DIR" ]; then
+    update-desktop-database -q "$APPS_DIR" || true
+fi
+
+exit 0

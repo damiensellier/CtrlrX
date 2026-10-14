@@ -224,6 +224,17 @@ cd CtrlrX
 needed to compile, so if you already cloned without it: `git submodule update --init --recursive`
 adds it later, or you can skip it entirely.
 
+> 💡 **Having submodule path or checkout errors when switching branches?**
+If you switch between branches where `Panels/` changed structure (e.g., from a single submodule to nested submodules like `Panels/dnaldoog`), Git may throw errors like `fatal: exec '--super-prefix=Panels/': cd to 'Panels'` failed or `report untracked/modified submodule content`.
+
+To resolve this and cleanly sync your submodules:
+
+```git config submodule.recurse false
+git reset --hard HEAD
+git submodule sync --recursive
+git submodule update --init --recursive
+```
+
 **Boost headers are required** (luabind needs them) and there are two ways to provide them — pick
 one:
 
