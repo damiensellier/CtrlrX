@@ -119,7 +119,7 @@ CtrlrSettings::~CtrlrSettings()
     }
     else{
         // For VST/AU instances
-        AlertWindow::showMessageBox (AlertWindow::WarningIcon, "CtrlrX", "Restart to apply new settings."); // Added v5.6.31
+        // AlertWindow::showMessageBox (AlertWindow::WarningIcon, "CtrlrX", "Restart to apply new settings."); // Removed v5.6.36. Added v5.6.31
     }
 }
 
