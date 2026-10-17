@@ -357,21 +357,21 @@ if(LINUX)
                 DESTINATION "${CMAKE_INSTALL_DATADIR}/metainfo")
     endif()
 
-    # 4. Define Staging Directory for Binaries & Plugins
+    # 4. Define Staging Paths & Global Configuration
     set(CPACK_STAGING_DIR "${CMAKE_BINARY_DIR}/cpack_staging")
     if(NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release")
     endif()
 
-    set(BUILT_STANDALONE "$<TARGET_FILE:${PROJECT_NAME}_Standalone>")
-    set(BUILT_VST3_DIR "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/${CMAKE_BUILD_TYPE}/VST3/${PRODUCT_NAME}.vst3")
+    set(VST3_BUNDLE_SOURCE "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/${CMAKE_BUILD_TYPE}/VST3/${PRODUCT_NAME}.vst3")
+    set(STANDALONE_BINARY_PATH "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/${CMAKE_BUILD_TYPE}/Standalone/${PRODUCT_NAME}")
 
     # Custom target to stage binaries right after they build, ensuring they exist for CPack
     add_custom_target(stage_for_cpack ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CPACK_STAGING_DIR}/bin"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${CPACK_STAGING_DIR}/share/ctrlrx/vst3"
-        COMMAND ${CMAKE_COMMAND} -E copy "${BUILT_STANDALONE}" "${CPACK_STAGING_DIR}/bin/CtrlrX"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${BUILT_VST3_DIR}" "${CPACK_STAGING_DIR}/share/ctrlrx/vst3/${PRODUCT_NAME}.vst3"
+        COMMAND ${CMAKE_COMMAND} -E copy "${STANDALONE_BINARY_PATH}" "${CPACK_STAGING_DIR}/bin/CtrlrX"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${VST3_BUNDLE_SOURCE}" "${CPACK_STAGING_DIR}/share/ctrlrx/vst3/${PRODUCT_NAME}.vst3"
         DEPENDS "${PROJECT_NAME}_Standalone"
         COMMENT "Staging compiled binaries and VST3 bundle for CPack..."
     )
@@ -444,14 +444,14 @@ if(LINUX)
         COMMAND ${CMAKE_COMMAND} -E remove_directory "${PORTABLE_TARBALL_STAGE}"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${PORTABLE_TARBALL_STAGE}/${PORTABLE_TARBALL_NAME}/vst3"
         COMMAND ${CMAKE_COMMAND} -E copy
-                "$<TARGET_FILE:${PROJECT_NAME}_Standalone>"
+                "${STANDALONE_BINARY_PATH}"
                 "${PORTABLE_TARBALL_STAGE}/${PORTABLE_TARBALL_NAME}/${PRODUCT_NAME}"
         COMMAND ${CMAKE_COMMAND} -E copy_directory
                 "${VST3_BUNDLE_SOURCE}"
                 "${PORTABLE_TARBALL_STAGE}/${PORTABLE_TARBALL_NAME}/vst3/${PRODUCT_NAME}.vst3"
         COMMAND ${CMAKE_COMMAND} -E chdir "${PORTABLE_TARBALL_STAGE}"
                 ${CMAKE_COMMAND} -E tar cfz "${CMAKE_BINARY_DIR}/${PORTABLE_TARBALL_NAME}.tar.gz" "${PORTABLE_TARBALL_NAME}"
-        DEPENDS "${PROJECT_NAME}_Standalone"
+        DEPENDS "${PROJECT_NAME}_Standalone" stage_for_cpack
         COMMENT "Building portable tarball (executable + vst3/ only)"
         VERBATIM
     )
