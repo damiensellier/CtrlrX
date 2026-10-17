@@ -323,7 +323,7 @@ if(LINUX)
     set(ICON_SIZES 16 32 48 64 128 256 512)
     find_program(RSVG_CONVERT_EXECUTABLE rsvg-convert)
 
-if(RSVG_CONVERT_EXECUTABLE)
+    if(RSVG_CONVERT_EXECUTABLE)
         foreach(SIZE ${ICON_SIZES})
             set(PNG_OUT "${CMAKE_BINARY_DIR}/icons/${SIZE}x${SIZE}/${APPSTREAM_ID}.png")
             
@@ -440,14 +440,21 @@ if(RSVG_CONVERT_EXECUTABLE)
     set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postinst")
     set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postrm-rpm")
 
-    set(CPACK_GENERATOR "DEB;RPM")
+    set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
+        "/usr"
+        "/usr/share"
+        "/usr/share/applications"
+        "/usr/share/icons"
+        "/usr/share/icons/hicolor"
+    )
 
-    include(CPack)    
-    
+    include(CPack)
+endif()
 
-    # -----------------------------------------------------------------------
-    # Portable tarball target
-    # -----------------------------------------------------------------------
+# -----------------------------------------------------------------------
+# Portable tarball target
+# -----------------------------------------------------------------------
+if(LINUX)
     set(PORTABLE_TARBALL_NAME "${CPACK_PACKAGE_NAME}-${CURRENT_VERSION}-linux-x86_64")
     set(PORTABLE_TARBALL_STAGE "${CMAKE_BINARY_DIR}/portable_tarball_stage")
 
