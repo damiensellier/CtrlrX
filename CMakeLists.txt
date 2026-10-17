@@ -371,17 +371,11 @@ if(LINUX)
         set(VST3_STAGE_DIR "share/ctrlrx/vst3")
     endif()
 
-    if(CMAKE_BUILD_TYPE)
-        set(CURRENT_BUILD_CONFIG "${CMAKE_BUILD_TYPE}")
-    else()
-        set(CURRENT_BUILD_CONFIG "Release")
+    if(NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE "Release")
     endif()
 
-    if(EXISTS "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/${CMAKE_BUILD_TYPE}/VST3/${PRODUCT_NAME}.vst3")
-        set(VST3_BUNDLE_SOURCE "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/${CMAKE_BUILD_TYPE}/VST3/${PRODUCT_NAME}.vst3")
-    else()
-        set(VST3_BUNDLE_SOURCE "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/VST3/${PRODUCT_NAME}.vst3")
-    endif()
+    set(VST3_BUNDLE_SOURCE "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/${CMAKE_BUILD_TYPE}/VST3/${PRODUCT_NAME}.vst3")
 
     install(DIRECTORY "${VST3_BUNDLE_SOURCE}"
             DESTINATION "${VST3_STAGE_DIR}"
