@@ -313,13 +313,10 @@ if(LINUX)
     set(CTRLR_SVG_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Icons/ctrlrx_logo.svg")
     set(APPSTREAM_ID "com.ctrlrx.CtrlrX")
 
-    # 1. Install scalable SVG icon
     install(FILES "${CTRLR_SVG_ICON}"
             DESTINATION "share/icons/hicolor/scalable/apps"
             RENAME "${APPSTREAM_ID}.svg")
 
-
-    # 2. Rasterize and install PNG icons across standard desktop sizes with an off-white background
     set(ICON_SIZES 16 32 48 64 128 256 512)
     find_program(RSVG_CONVERT_EXECUTABLE rsvg-convert)
 
@@ -330,9 +327,9 @@ if(LINUX)
             add_custom_command(
                 OUTPUT "${PNG_OUT}"
                 COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/icons/${SIZE}x${SIZE}"
-                COMMAND ${RSVG_CONVERT_EXECUTABLE} -w ${SIZE} -h ${SIZE} -b "#f7f8f9" -f png -o "${PNG_OUT}" "${CTRLR_SVG_ICON}"
+                COMMAND ${RSVG_CONVERT_EXECUTABLE} -w ${SIZE} -h ${SIZE} -f png -o "${PNG_OUT}" "${CTRLR_SVG_ICON}"
                 DEPENDS "${CTRLR_SVG_ICON}"
-                COMMENT "Generating ${SIZE}x${SIZE} PNG icon with off-white background..."
+                COMMENT "Generating transparent ${SIZE}x${SIZE} AppStream-compliant PNG icon..."
             )
 
             add_custom_target(ctrlrx_icon_${SIZE} ALL DEPENDS "${PNG_OUT}")
@@ -347,34 +344,30 @@ if(LINUX)
             "'sudo dnf install librsvg2-tools' (Fedora).")
     endif()
 
-    # 3. Desktop Application Entry
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Linux/ctrlr-x.desktop.in")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Linux/com.ctrlrx.CtrlrX.desktop.in")
         configure_file(
-            "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Linux/ctrlr-x.desktop.in"
-            "${CMAKE_BINARY_DIR}/ctrlr-x.desktop"
+            "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Linux/com.ctrlrx.CtrlrX.desktop.in"
+            "${CMAKE_BINARY_DIR}/com.ctrlrx.CtrlrX.desktop"
             @ONLY
         )
 
-        install(FILES "${CMAKE_BINARY_DIR}/ctrlr-x.desktop"
-                DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
+        install(FILES "${CMAKE_BINARY_DIR}/com.ctrlrx.CtrlrX.desktop"
+                DESTINATION "/usr/share/applications")
     endif()
-    
-    # 4. AppStream MetaInfo for GNOME Software / KDE Discover
+
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Linux/com.ctrlrx.CtrlrX.metainfo.xml")
         install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Linux/com.ctrlrx.CtrlrX.metainfo.xml"
                 DESTINATION "${CMAKE_INSTALL_DATADIR}/metainfo")
     endif()
 
-    # 5. Install Standalone executable target to system bin path
     if(TARGET "${PROJECT_NAME}_Standalone")
-        install(TARGETS "${PROJECT_NAME}_Standalone" DESTINATION "${CMAKE_INSTALL_BINDIR}")
+        install(TARGETS "${PROJECT_NAME}_Standalone" DESTINATION "${CMAKE_INSTALL_BINDIR}" RENAME "CtrlrX")
     elseif(TARGET "${PROJECT_NAME}")
-        install(TARGETS "${PROJECT_NAME}" DESTINATION "${CMAKE_INSTALL_BINDIR}")
+        install(TARGETS "${PROJECT_NAME}" DESTINATION "${CMAKE_INSTALL_BINDIR}" RENAME "CtrlrX")
     endif()
 
-    # 6. Stage VST3 bundle for postinst rollout
     if(NOT DEFINED VST3_STAGE_DIR)
-        set(VST3_STAGE_DIR "share/ctrlrx/vst3")
+        set(VST3_STAGE_DIR "lib/vst3")
     endif()
 
     if(CMAKE_BUILD_TYPE)
@@ -383,62 +376,48 @@ if(LINUX)
         set(CURRENT_BUILD_CONFIG "Release")
     endif()
 
-    if(EXISTS "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/${CMAKE_BUILD_TYPE}/VST3/${PRODUCT_NAME}.vst3")
-        set(VST3_BUNDLE_SOURCE "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/${CMAKE_BUILD_TYPE}/VST3/${PRODUCT_NAME}.vst3")
-    else()
-        set(VST3_BUNDLE_SOURCE "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/VST3/${PRODUCT_NAME}.vst3")
-    endif()
-    
+    set(VST3_BUNDLE_SOURCE "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/${CURRENT_BUILD_CONFIG}/VST3/${PRODUCT_NAME}.vst3")
+
     install(DIRECTORY "${VST3_BUNDLE_SOURCE}"
             DESTINATION "${VST3_STAGE_DIR}"
             FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
             DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
-    # 7. NOTE: we deliberately do NOT ship our own hicolor index.theme.
-    #    A previous version wrote a minimal fallback here, but it only
-    #    listed Directories= without a [<dir>] section + Size= key for
-    #    each one, which is invalid per the freedesktop icon theme spec.
-    #    Worse, because /usr/local/share ranks ahead of /usr/share in
-    #    XDG_DATA_DIRS, GTK picked *our* broken index.theme as the
-    #    authoritative metadata for the whole merged "hicolor" theme
-    #    instead of the correct, complete one hicolor-icon-theme ships at
-    #    /usr/share/icons/hicolor/index.theme — breaking icon resolution
-    #    system-wide, not just for CtrlrX. hicolor-icon-theme is a base
-    #    dependency of any GTK desktop, so it's always present; our own
-    #    icon files under /usr/local/share/icons/hicolor/<size>/apps/
-    #    still merge into that theme correctly without us shipping any
-    #    index.theme of our own.
-
-    # -----------------------------------------------------------------------
-    # CPack Variable Definitions (MUST BE BEFORE include(CPack))
-    # -----------------------------------------------------------------------
     set(CPACK_PACKAGE_NAME "ctrlrx")
-    set(CPACK_PACKAGE_VENDOR "CtrlrX Project")
+    set(CPACK_PACKAGE_VENDOR "CtrlrX")
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MIDI Control Surface Framework & Editor")
     set(CPACK_PACKAGE_DESCRIPTION "With CtrlrX, control any MIDI enabled hardware")
     set(CPACK_PACKAGE_VERSION "${CURRENT_VERSION}")
-    set(CPACK_PACKAGE_CONTACT "CtrlrX Team <https://github.com/damiensellier/CtrlrX>")
-    set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/damiensellier/CtrlrX")
-    set(CPACK_PACKAGE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Icons/ctrlrx_logo.svg")
+    set(CPACK_PACKAGE_CONTACT "CtrlrX Team <https://github.com>")
+    set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com")
+    
+    if(RSVG_CONVERT_EXECUTABLE)
+        set(CPACK_GUI_ICON "${CMAKE_BINARY_DIR}/ctrlrx_cpack_icon.png")
+        execute_process(COMMAND ${RSVG_CONVERT_EXECUTABLE} -w 128 -h 128 -f png -o "${CPACK_GUI_ICON}" "${CTRLR_SVG_ICON}")
+        set(CPACK_PACKAGE_ICON "${CPACK_GUI_ICON}")
+    endif()
 
     set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
     set(CPACK_MONOLITHIC_INSTALL ON)
 
-    # Debian Specific Graphical Metadata
-    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "CtrlrX Team <https://github.com/damiensellier/CtrlrX>")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "CtrlrX Team <https://github.com>")
     set(CPACK_DEBIAN_PACKAGE_SECTION "sound")
     set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
     set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/damiensellier/CtrlrX")
+    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com")
     set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
         "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postinst;${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postrm-deb")
 
-    # RPM Specific Graphical Metadata
     set(CPACK_RPM_PACKAGE_LICENSE "GPLv3 and BSD")
     set(CPACK_RPM_PACKAGE_GROUP "Applications/Multimedia")
-    set(CPACK_RPM_PACKAGE_URL "https://github.com/damiensellier/CtrlrX")
+    set(CPACK_RPM_PACKAGE_URL "https://github.com")
     set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postinst")
     set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postrm-rpm")
+    
+    set(CPACK_RPM_PACKAGE_SUMMARY "MIDI Control Surface Framework & Editor")
+    set(CPACK_RPM_PACKAGE_DESCRIPTION "With CtrlrX, control any MIDI enabled hardware: synthesizers, drum machines, effects, samplers.")
+
+    set(CPACK_GENERATOR "DEB;RPM")
 
     set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
         "/usr"
