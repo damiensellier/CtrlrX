@@ -313,10 +313,12 @@ if(LINUX)
     set(CTRLR_SVG_ICON "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Icons/ctrlrx_logo.svg")
     set(APPSTREAM_ID "com.ctrlrx.CtrlrX")
 
+    # 1. Install scalable SVG icon
     install(FILES "${CTRLR_SVG_ICON}"
             DESTINATION "share/icons/hicolor/scalable/apps"
             RENAME "${APPSTREAM_ID}.svg")
 
+    # 2. Rasterize and install PNG icons across standard desktop sizes
     set(ICON_SIZES 16 32 48 64 128 256 512)
     find_program(RSVG_CONVERT_EXECUTABLE rsvg-convert)
 
@@ -337,20 +339,15 @@ if(LINUX)
             install(FILES "${PNG_OUT}"
                     DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/${SIZE}x${SIZE}/apps")
         endforeach()
-    else()
-        message(FATAL_ERROR
-            "rsvg-convert not found — required to generate hicolor PNG icons for Linux packaging. "
-            "Install it first: 'sudo apt install librsvg2-bin' (Debian/Ubuntu) or "
-            "'sudo dnf install librsvg2-tools' (Fedora).")
     endif()
 
+    # 3. Desktop Application Entry & AppStream MetaInfo
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Linux/com.ctrlrx.CtrlrX.desktop.in")
         configure_file(
             "${CMAKE_CURRENT_SOURCE_DIR}/Source/Resources/Linux/com.ctrlrx.CtrlrX.desktop.in"
             "${CMAKE_BINARY_DIR}/com.ctrlrx.CtrlrX.desktop"
             @ONLY
         )
-
         install(FILES "${CMAKE_BINARY_DIR}/com.ctrlrx.CtrlrX.desktop"
                 DESTINATION "/usr/share/applications")
     endif()
@@ -360,28 +357,35 @@ if(LINUX)
                 DESTINATION "${CMAKE_INSTALL_DATADIR}/metainfo")
     endif()
 
-    if(TARGET "${PROJECT_NAME}_Standalone")
-        install(TARGETS "${PROJECT_NAME}_Standalone" DESTINATION "${CMAKE_INSTALL_BINDIR}" RENAME "CtrlrX")
-    elseif(TARGET "${PROJECT_NAME}")
-        install(TARGETS "${PROJECT_NAME}" DESTINATION "${CMAKE_INSTALL_BINDIR}" RENAME "CtrlrX")
-    endif()
-
-    # 6. Stage VST3 bundle matching postinst expectation
-    if(NOT DEFINED VST3_STAGE_DIR)
-        set(VST3_STAGE_DIR "share/ctrlrx/vst3")
-    endif()
-
+    # 4. Define Staging Directory for Binaries & Plugins
+    set(CPACK_STAGING_DIR "${CMAKE_BINARY_DIR}/cpack_staging")
     if(NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release")
     endif()
 
-    set(VST3_BUNDLE_SOURCE "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/${CMAKE_BUILD_TYPE}/VST3/${PRODUCT_NAME}.vst3")
+    set(BUILT_STANDALONE "$<TARGET_FILE:${PROJECT_NAME}_Standalone>")
+    set(BUILT_VST3_DIR "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/${CMAKE_BUILD_TYPE}/VST3/${PRODUCT_NAME}.vst3")
 
-    install(DIRECTORY "${VST3_BUNDLE_SOURCE}"
-            DESTINATION "${VST3_STAGE_DIR}"
+    # Custom target to stage binaries right after they build, ensuring they exist for CPack
+    add_custom_target(stage_for_cpack ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CPACK_STAGING_DIR}/bin"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CPACK_STAGING_DIR}/share/ctrlrx/vst3"
+        COMMAND ${CMAKE_COMMAND} -E copy "${BUILT_STANDALONE}" "${CPACK_STAGING_DIR}/bin/CtrlrX"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${BUILT_VST3_DIR}" "${CPACK_STAGING_DIR}/share/ctrlrx/vst3/${PRODUCT_NAME}.vst3"
+        DEPENDS "${PROJECT_NAME}_Standalone"
+        COMMENT "Staging compiled binaries and VST3 bundle for CPack..."
+    )
+
+    # 5. Install from the guaranteed staging directory
+    install(PROGRAMS "${CPACK_STAGING_DIR}/bin/CtrlrX"
+            DESTINATION "${CMAKE_INSTALL_BINDIR}")
+
+    install(DIRECTORY "${CPACK_STAGING_DIR}/share/ctrlrx/vst3"
+            DESTINATION "share/ctrlrx"
             FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
             DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
+    # 6. CPack Configuration Definitions
     set(CPACK_PACKAGE_NAME "ctrlrx")
     set(CPACK_PACKAGE_VENDOR "CtrlrX Project")
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MIDI Control Surface Framework & Editor")
