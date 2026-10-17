@@ -3,8 +3,10 @@
 #define PACKAGE "Ctrlr"
 
 #include "CtrlrMacros.h"
+#include "BinaryData.h"
 #include "CtrlrLinux.h"
 #include "CtrlrPanel/CtrlrPanel.h"
+#include "CtrlrPanel/CtrlrPanelResource.h"
 #include "CtrlrManager/CtrlrManager.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -39,6 +41,18 @@ static MemoryBlock stringToFixedBytes(const String& str, int fixedSize) {
     memcpy(result.getData(), chars, copySize);
     
     return result;
+}
+
+static MemoryBlock makeUtf16Buffer(const String &text, const String &templateText) {
+    int targetCharCount = templateText.length();
+    MemoryBlock block(targetCharCount * 2, true);
+    
+    String paddedText =
+        text.length() > targetCharCount ? text.substring(0, targetCharCount) : text.paddedRight(' ', targetCharCount);
+    
+    const CharPointer_UTF16 utf16Ptr = paddedText.toUTF16();
+    block.copyFrom(utf16Ptr.getAddress(), 0, targetCharCount * 2);
+    return block;
 }
 
 static int replaceAllOccurrences(MemoryBlock& target, const MemoryBlock& search, const MemoryBlock& replace) {
@@ -117,6 +131,15 @@ static bool isVST2Plugin() {
     bool isNotHost = (me != File::getSpecialLocation(File::currentApplicationFile));
     
     return isNotHost && hasSOExtension && notInVST3;
+}
+
+static String sanitizeAppId(const String &name) {
+    String clean = name.toLowerCase().retainCharacters("abcdefghijklmnopqrstuvwxyz0123456789-_ ");
+    clean = clean.replaceCharacter(' ', '-');
+    while (clean.contains("--")) {
+        clean = clean.replace("--", "-");
+    }
+    return clean.trim();
 }
 
 // --- SimpleEmbeddedDataManager Class ---
@@ -455,10 +478,94 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
         }
     }
     
+    
+    // --- MINIMAL ADDITION: CREATE .DESKTOP ENTRY & EXTRACT GNOME MENU ICON ---
+    if (!isVST3 && !isVST2) {
+        _DBG("Entering Standalone Desktop/Icon generation pipeline...");
+
+        // 1. Prepare icon directory (~/.local/share/icons)
+        File iconDir = File::getSpecialLocation(File::userHomeDirectory).getChildFile(".local/share/icons");
+        if (!iconDir.createDirectory()) {
+            _DBG("ERROR: Could not create directory: " + iconDir.getFullPathName());
+        }
+
+        File svgIcon = iconDir.getChildFile("ctrlrx_logo.svg");
+        File pngIcon = iconDir.getChildFile("ctrlrx_logo.png");
+
+        // 2. Write embedded BinaryData SVG icon
+        if (!svgIcon.existsAsFile()) {
+            if (BinaryData::ctrlrx_logo_svg != nullptr) {
+                // Write raw bytes directly from BinaryData buffer
+                svgIcon.replaceWithData(BinaryData::ctrlrx_logo_svg, (size_t)BinaryData::ctrlrx_logo_svgSize);
+                _DBG("Wrote SVG icon to: " + svgIcon.getFullPathName());
+            } else {
+                _DBG("ERROR: BinaryData::ctrlrx_logo_svg is null!");
+            }
+        }
+
+        // 3. Render PNG fallback for GNOME compatibility
+        if (svgIcon.existsAsFile() && !pngIcon.existsAsFile()) {
+            if (auto drawable = Drawable::createFromSVGFile(svgIcon)) {
+                const int size = 256;
+                Image pngImage(Image::ARGB, size, size, true, SoftwareImageType());
+                Graphics g(pngImage);
+                drawable->drawWithin(g, Rectangle<float>(0, 0, (float)size, (float)size), RectanglePlacement::centred,
+                                     1.0f);
+
+                PNGImageFormat pngFormat;
+                FileOutputStream out(pngIcon);
+                if (out.openedOk())
+                    pngFormat.writeImageToStream(pngImage, out);
+            }
+        }
+
+        // 4. Create .desktop launcher in ~/.local/share/applications/
+        File appsDir = File::getSpecialLocation(File::userHomeDirectory).getChildFile(".local/share/applications");
+        appsDir.createDirectory();
+
+        String appName = panelToWrite->getProperty(Ids::name).toString();
+        String safeFileName = File::createLegalFileName(appName).toLowerCase().replaceCharacter(' ', '-');
+        if (safeFileName.isEmpty()) {
+            safeFileName = "ctrlrx-instance";
+        }
+
+        File desktopFile = appsDir.getChildFile(safeFileName + ".desktop");
+
+        String iconPath = pngIcon.existsAsFile() ? pngIcon.getFullPathName() : svgIcon.getFullPathName();
+
+        String desktopContent = "[Desktop Entry]\n"
+                                "Type=Application\n"
+                                "Name=" +
+                                appName +
+                                "\n"
+                                "Exec=\"" +
+                                newMe.getFullPathName() +
+                                "\"\n"
+                                "Icon=" +
+                                iconPath +
+                                "\n"
+                                "Terminal=false\n"
+                                "Categories=AudioVideo;Audio;\n";
+
+        if (desktopFile.replaceWithText(desktopContent)) {
+            _DBG("Created .desktop file: " + desktopFile.getFullPathName());
+        } else {
+            _DBG("ERROR: Failed to write .desktop file!");
+        }
+
+        chmod(desktopFile.getFullPathName().toUTF8().getAddress(),
+              S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+
+        // Refresh GNOME desktop database cache
+        String cmd = "update-desktop-database " + appsDir.getFullPathName();
+        int dummy = system(cmd.toUTF8().getAddress());
+        (void)dummy;
+    }
+    
     return Result::ok();
 }
 
-// --- Getter functions (unchanged logic) ---
+// --- Getter functions ---
 
 const Result CtrlrLinux::getDefaultPanel(MemoryBlock& dataToWrite)
 {

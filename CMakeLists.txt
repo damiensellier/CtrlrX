@@ -57,11 +57,13 @@ if(LINUX)
     pkg_check_modules(zlib REQUIRED zlib)
     pkg_check_modules(gtk3 REQUIRED gtk+-3.0) 
     pkg_check_modules(webkit REQUIRED webkit2gtk-4.1)
+    pkg_check_modules(curl REQUIRED libcurl)
 
     include_directories(SYSTEM
         ${gtk3_INCLUDE_DIRS}
         ${webkit_INCLUDE_DIRS}
         ${x11_INCLUDE_DIRS}
+        ${curl_INCLUDE_DIRS}
     )
     set(JUCE_USE_WEBKIT_4_1 ON CACHE INTERNAL "")
 endif()
@@ -290,6 +292,7 @@ if(LINUX)
         ${webkit_LIBRARIES}
         ${libudev_LIBRARIES}
         ${zlib_LIBRARIES}
+        ${curl_LIBRARIES}
     )
 endif()
 
@@ -367,7 +370,7 @@ if(LINUX)
     endif()
 
     if(NOT DEFINED VST3_STAGE_DIR)
-        set(VST3_STAGE_DIR "lib/vst3")
+        set(VST3_STAGE_DIR "share/ctrlrx/vst3")
     endif()
 
     if(CMAKE_BUILD_TYPE)
@@ -384,12 +387,12 @@ if(LINUX)
             DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
     set(CPACK_PACKAGE_NAME "ctrlrx")
-    set(CPACK_PACKAGE_VENDOR "CtrlrX")
+    set(CPACK_PACKAGE_VENDOR "CtrlrX Project")
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MIDI Control Surface Framework & Editor")
     set(CPACK_PACKAGE_DESCRIPTION "With CtrlrX, control any MIDI enabled hardware")
     set(CPACK_PACKAGE_VERSION "${CURRENT_VERSION}")
-    set(CPACK_PACKAGE_CONTACT "CtrlrX Team <https://github.com>")
-    set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com")
+    set(CPACK_PACKAGE_CONTACT "CtrlrX Team <https://github.com/damiensellier/CtrlrX>")
+    set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/damiensellier/CtrlrX")
     
     if(RSVG_CONVERT_EXECUTABLE)
         set(CPACK_GUI_ICON "${CMAKE_BINARY_DIR}/ctrlrx_cpack_icon.png")
@@ -400,20 +403,22 @@ if(LINUX)
     set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
     set(CPACK_MONOLITHIC_INSTALL ON)
 
-    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "CtrlrX Team <https://github.com>")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "CtrlrX Team <https://github.com/damiensellier/CtrlrX>")
     set(CPACK_DEBIAN_PACKAGE_SECTION "sound")
     set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
     set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com")
+    set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/damiensellier/CtrlrX")
     set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
-        "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postinst;${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postrm-deb")
-
+        "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postinst;${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postrm")
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_STRICT_PERMISSION TRUE)
+    # RPM Specific Graphical Metadata
     set(CPACK_RPM_PACKAGE_LICENSE "GPLv3 and BSD")
     set(CPACK_RPM_PACKAGE_GROUP "Applications/Multimedia")
-    set(CPACK_RPM_PACKAGE_URL "https://github.com")
+    set(CPACK_RPM_PACKAGE_URL "https://github.com/damiensellier/CtrlrX")
     set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postinst")
     set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/Linux/postrm-rpm")
-    
+    set(CPACK_RPM_PACKAGE_AUTOREQ "OFF")
+    set(CPACK_RPM_PACKAGE_REQUIRES "libcurl, systemd-libs, libX11, gtk3, webkit2gtk4.1")
     set(CPACK_RPM_PACKAGE_SUMMARY "MIDI Control Surface Framework & Editor")
     set(CPACK_RPM_PACKAGE_DESCRIPTION "With CtrlrX, control any MIDI enabled hardware: synthesizers, drum machines, effects, samplers.")
 

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.ctrlrx.CtrlrX</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <!-- Combined SPDX License Identifiers -->
+  <project_license>GPL-3.0-only AND BSD-3-Clause</project_license>
+  <name>CtrlrX</name>
+  <summary>MIDI Control Surface Framework &amp; Editor</summary>
+  <description>
+    <p>
+      With CtrlrX, control any MIDI enabled hardware: synthesizers, drum machines, effects,
+      and samplers. Create custom user interfaces for your favorite MIDI devices, and host
+      your device as VST or AU plugins in your favorite DAW, or run it as standalone software.
+    </p>
+    <p>
+      CtrlrX is based on the JUCE audio framework by PACE Anti-Piracy Inc. Audio Unit is a
+      trademark of Apple Computer Inc. VST is a trademark of Steinberg Media Technologies GmbH.
+    </p>
+  </description>
+  <launchable type="desktop-id">com.ctrlrx.CtrlrX.desktop</launchable>
+  <url type="homepage">https://github.com/damiensellier/CtrlrX</url>
+  <categories>
+    <category>Audio</category>
+    <category>AudioVideo</category>
+  </categories>
+  <provides>
+    <binary>CtrlrX</binary>
+  </provides>
+  <developer id="com.ctrlrx">
+    <name>Damien Sellier</name>
+  </developer>
+  <content_rating type="oars-1.1" />
+  <icon type="stock">com.ctrlrx.CtrlrX</icon>
+</component>

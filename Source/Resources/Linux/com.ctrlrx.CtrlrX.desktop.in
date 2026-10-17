@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=CtrlrX
+Comment=MIDI Control Surface Framework
+Exec=CtrlrX %U
+Icon=com.ctrlrx.CtrlrX
+Terminal=false
+Categories=AudioVideo;Audio;
+StartupWMClass=ctrlr-x
+
