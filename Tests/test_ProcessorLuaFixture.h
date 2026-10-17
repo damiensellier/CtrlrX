@@ -5,8 +5,11 @@
 #include "CtrlrPanel.h"
 #include "CtrlrLuaManager.h"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
+#include <string>
+#include <vector>
 
 // Raw Lua 5.1 C API, for reading globals back. Lua is vendored with C linkage.
 extern "C"
@@ -28,9 +31,30 @@ class LuaPanel : public ProcessorInstance
 protected:
     CtrlrPanel* panel = nullptr;
 
-    // Load a fixture from Tests/fixtures and let the load-time async work settle.
+    // Destroy the processor here, not in the fixture's destructor: deviceSends is destroyed
+    // before `processor` there, while JUCE's MidiOutput thread may still be delivering a send
+    // into it (use-after-free). Destroying the processor joins that thread first.
+    void TearDown() override
+    {
+        panel = nullptr;
+        processor.reset();
+        ProcessorInstance::TearDown();
+    }
+
+    // Host-side observer: what a VST3/AU wrapper would be told (parameter index per notification).
+    struct HostRecorder : public juce::AudioProcessorListener
+    {
+        std::vector<int> indices;
+        void audioProcessorParameterChanged (juce::AudioProcessor*, int index, float) override { indices.push_back (index); }
+        void audioProcessorChanged (juce::AudioProcessor*, const ChangeDetails&) override {}
+        int count (int index) const { return (int) std::count (indices.begin(), indices.end(), index); }
+    };
+
+    // Load a fixture from Tests/fixtures and let the load-time async work settle. Device sends are
+    // permitted and recorded (fixtures may route modulators to the mock output device).
     CtrlrPanel* loadLuaPanel(const std::string& file)
     {
+        allowAndRecordDeviceSends();
         panel = loadPanel(file);
         processor->prepareToPlay(44100, BLOCK_SIZE);
         pumpInputThreads(100);
@@ -54,6 +78,17 @@ protected:
         lua_getglobal(L, name);
         const double v = lua_isnumber(L, -1) ? lua_tonumber(L, -1)
                                              : std::numeric_limits<double>::quiet_NaN();
+        lua_pop(L, 1);
+        return v;
+    }
+
+    // A Lua global as a string ("" if it is nil; numbers are converted by Lua).
+    std::string luaString(const char* name)
+    {
+        lua_State* L = panel->getCtrlrLuaManager().getLuaState();
+        lua_getglobal(L, name);
+        const char* s = lua_tostring(L, -1);
+        const std::string v = s != nullptr ? s : "";
         lua_pop(L, 1);
         return v;
     }

@@ -32,3 +32,8 @@ MidiRouting.pause_in_blocks_host_echo
 # once. Acceptance criterion for the rework's input path.
 MidiLua.device_input_invokes_lua_multiMidiReceived_once
 
+
+# NRPN/Multi bursts from different modulators interleave CC by CC at panelMidiGlobalDelay 0:
+# buffers sent within one millisecond get the same start time (CtrlrMIDIDevice::sendMidiBuffer).
+# Desired: each burst stays contiguous. Passes at delay 2 (pinned by ..._with_global_delay).
+LuaValues.nrpn_bursts_stay_contiguous_at_zero_delay
