@@ -1,0 +1,35 @@
+#!/bin/sh
+# dpkg calls postrm as: postrm remove | purge | upgrade | failed-upgrade |
+# abort-install | abort-upgrade | disappear. Only clean up ~/.vst3 on a
+# genuine remove/purge, not on upgrade (a new postinst will overwrite it
+# anyway) or the various abort cases.
+set -e
+
+case "$1" in
+    remove|purge)
+        REAL_USER="${SUDO_USER:-}"
+        if [ -z "$REAL_USER" ]; then
+            REAL_USER="$(logname 2>/dev/null || true)"
+        fi
+
+        if [ -n "$REAL_USER" ] && [ "$REAL_USER" != "root" ]; then
+            REAL_HOME="$(getent passwd "$REAL_USER" 2>/dev/null | cut -d: -f6)"
+            if [ -n "$REAL_HOME" ] && [ -d "$REAL_HOME" ]; then
+                rm -rf "${REAL_HOME:?}/.vst3/CtrlrX.vst3"
+            fi
+        fi
+        ;;
+esac
+
+HICOLOR_DIR="/usr/share/icons/hicolor"
+APPS_DIR="/usr/share/applications"
+
+if command -v gtk-update-icon-cache >/dev/null 2>&1 && [ -d "$HICOLOR_DIR" ]; then
+    gtk-update-icon-cache -f -q "$HICOLOR_DIR" || true
+fi
+
+if command -v update-desktop-database >/dev/null 2>&1 && [ -d "$APPS_DIR" ]; then
+    update-desktop-database -q "$APPS_DIR" || true
+fi
+
+exit 0
