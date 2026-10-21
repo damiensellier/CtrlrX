@@ -178,7 +178,8 @@ class CtrlrEditor  : public AudioProcessorEditor,
 		ScopedPointer<LookAndFeel> currentLookAndFeel; // Updated v5.6.34. ScopedPointed will handle its destruction properly
     
 		bool menuHandlerCalled;
-		TooltipWindow tooltipWindow;
+		// TooltipWindow tooltipWindow;
+		juce::SharedResourcePointer<juce::TooltipWindow> tooltipWindow;
 		CtrlrManager &owner;
 		ResizableCornerComponent resizer;
 		CtrlrProcessor *ownerFilter;

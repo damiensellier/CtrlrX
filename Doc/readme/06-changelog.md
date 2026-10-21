@@ -24,7 +24,7 @@
 
 ## Changelog
 
-#### Version 5.6.36 | 2026.10.14
+#### Version 5.6.36 | 2026.10.21
 
 * **FIXED** CtrlrTabsComponents.cpp and CtrlrGroup.cpp keep component owner group on uiTabs. `CtrlrTabsComponent.cpp`, `CtrlrGroup.cpp`
 * **FIXED** Doubling of menu item causing potential crash. `CtrlrEditor.cpp`. Thanks to [John Goodland](https://github.com/dnaldoog) `CtrlrEditorApplicationCommandsHandlers.cpp`
@@ -63,6 +63,7 @@
 * **UPDATED** panel resources submodule. Thanks to [Sgorpi](https://github.com/sgorpi)
 * **UDPATED** getNumParameters to prevent notifying param UPDT with parameter index > getNumParameters. Thanks to [Sgorpi](https://github.com/sgorpi)
 * **UPDATED** CI/CD to deliver CPack configuration for DEB/RPM packages with the portable tarball target. Thanks to [John Goodland](https://github.com/dnaldoog). `CMakeLists.txt`, `build_and_test.yml`
+* **UPDATED** debugger for LuaJIT. Thanks to [John Goodland](https://github.com/dnaldoog).
 
 
 #### Version 5.6.35 | 2026.04.20

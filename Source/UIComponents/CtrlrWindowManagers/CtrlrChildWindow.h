@@ -43,7 +43,8 @@ class CtrlrChildWindow  : public DocumentWindow, public KeyListener
 		CtrlrChildWindowContainer *containerComponent;
 		CtrlrChildWindowContent *contentComponent;
 		CtrlrWindowManager &owner;
-		TooltipWindow window;
+        juce::SharedResourcePointer<juce::TooltipWindow> window;
+
 #if JUCE_LINUX
 		std::unique_ptr<LinuxFadeInWindow> fadeInTimer;
 #endif

@@ -1,4 +1,3 @@
-
 --{{{  history
 
 --15/03/06 DCN Created based on RemDebug
@@ -72,6 +71,15 @@ local _g      = _G
 local cocreate, cowrap = coroutine.create, coroutine.wrap
 local pausemsg = 'pause'
 
+-- PATCH: self-debugging protection
+-- in_debugger : true while the debugger UI loop is active (we are inside read())
+-- own_source  : chunk name of this file; frames from it are never traced/stepped
+-- (the filter is only enabled when the chunk name looks like the debugger's own,
+--  so a generic chunk name like "=?" can never hide user scripts)
+local in_debugger      = false
+local own_source       = (debug.getinfo(1, 'S') or {}).source
+local filter_own       = type(own_source) == 'string' and string.find(string.lower(own_source), 'debugger', 1, true) ~=
+nil
 --{{{  make Lua 5.2 compatible
 
 if not setfenv then -- Lua 5.2
@@ -127,7 +135,7 @@ pause(msg[,lines][,force]) -- start/resume a debugger session|
 This can only be used in your code or from the console as a means to
 start/resume a debug session.
 If msg is given that is shown when the session starts/resumes. Useful to
-give a context if you've instrumented your code with pause() statements.
+give a context if you have instrumented your code with pause() statements.
 
 If lines is given, the script pauses after that many lines, else it pauses
 immediately.
@@ -465,8 +473,9 @@ local function dumpval( level, name, value, limit )
         end
 
         if type(value) == 'userdata' then
-            info = class_info (value)
-            indented (level, index, string.format ("{\"userdata\": %q}", info.name) , ',')
+      local ok, uname = pcall(function() return class_info(value).name end)
+      if not ok or uname == nil then uname = 'userdata' end
+      indented(level, index, string.format("{\"userdata\": %q}", tostring(uname)), ',')
         end
 
         if type(value) == 'number' then
@@ -541,30 +550,29 @@ end
 --}}}
 --{{{  local function tracestack(l)
 
-local function gi( i )
-  return function() i=i+1 return debug.getinfo(i),i end
-end
-
-local function gl( level, j )
-  return function() j=j+1 return debug.getlocal( level, j ) end
-end
-
-local function gu( func, k )
-  return function() k=k+1 return debug.getupvalue( func, k ) end
-end
-
+-- PATCH (LuaJIT): the original used iterator closures (gi/gl) whose absolute stack
+-- levels are only valid at one fixed call depth. LuaJIT counts frames differently
+-- ("level out of range"), so levels are now taken directly inside tracestack.
 local  traceinfo
 
 local function tracestack(l)
   local l = l + 1                        --NB: +1 to get level relative to caller
   traceinfo = {}
   traceinfo.pausemsg = pausemsg
-  for ar,i in gi(l) do
+  local i = l - 1 --levels below are relative to tracestack itself
+  while true do
+    i = i + 1
+    local ar = debug.getinfo(i)
+    if not ar then break end
     table.insert( traceinfo, ar )
     if ar.what ~= 'C' then
       local names  = {}
       local values = {}
-      for n,v in gl(i,0) do
+      local j      = 0
+      while true do
+        j = j + 1
+        local n, v = debug.getlocal(i, j)
+        if not n then break end
         if string.sub(n,1,1) ~= '(' then   --ignore internal control variables
           table.insert( names, n )
           table.insert( values, v )
@@ -578,7 +586,11 @@ local function tracestack(l)
     if ar.func then
       local names  = {}
       local values = {}
-      for n,v in gu(ar.func,0) do
+      local k      = 0
+      while true do
+        k = k + 1
+        local n, v = debug.getupvalue(ar.func, k)
+        if not n then break end
         if string.sub(n,1,1) ~= '(' then   --ignore internal control variables
           table.insert( names, n )
           table.insert( values, v )
@@ -1153,10 +1165,10 @@ local function debugger_loop(ev, vars, file, line, idx_watch)
           if def then
             ctrlrDebugger:write(def.what..' in '..def.short_src..' '..def.linedefined..'..'..def.lastlinedefined..'\n')
           else
-            ctrlrDebugger:write('Cannot get info for '..v..'\n')
+            ctrlrDebugger:write('Cannot get info for ' .. tostring(v) .. '\n')
           end
         else
-          ctrlrDebugger:write(v..' is not a function\n')
+          ctrlrDebugger:write(tostring(v) .. ' is not a function\n')
         end
       else
         ctrlrDebugger:write("Bad request\n")
@@ -1292,11 +1304,52 @@ local function debugger_loop(ev, vars, file, line, idx_watch)
 end
 
 --}}}
+--{{{  PATCH: LuaJIT support
+
+-- In LuaJIT debug.sethook is global: a hook set inside a coroutine replaces the hook of
+-- every other thread too (PUC Lua 5.1 keeps one hook per thread). The coroutine.create/wrap
+-- overrides below therefore must not install a per-thread hook on LuaJIT; the single global
+-- hook already sees all coroutines. The running coroutine is used as the thread key instead.
+local is_luajit = type(rawget(_G, 'jit')) == 'table'
+
+local function init_thread(t)
+  if stack_level[t] == nil then stack_level[t] = 0 end
+  if trace_level[t] == nil then trace_level[t] = 0 end
+  if step_level[t] == nil then step_level[t] = 0 end
+end
+
+--}}}
+--{{{  PATCH: real stack depth (LuaJIT fires call/return hooks differently from PUC Lua)
+
+-- Counting call/return events drifts on LuaJIT (e.g. around C functions like
+-- coroutine.wrap), which made 'over'/'out' run away. On line events the counter is
+-- therefore re-synchronised with the real stack depth. Both the stored step_level
+-- and the compared stack_level then use the same unit.
+local function real_depth()
+  local n = 0
+  while debug.getinfo(2 + n, 'l') do n = n + 1 end
+  return n
+end
+
+--}}}
 --{{{  local function debug_hook(event, line, level, thread)
 
 local function debug_hook(event, line, level, thread)
-  if not started then debug.sethook(); coro_debugger = nil; return end
+  if not started then
+    in_debugger = false; debug.sethook(); coro_debugger = nil; return
+  end
+  -- PATCH: never trace or step through the debugger's own code
+  if filter_own then
+    local info = debug.getinfo(thread and 3 or 2, 'S')
+    if info and info.source == own_source then return end
+  end
   current_thread = thread or 'main'
+  if is_luajit and not thread then current_thread = coroutine.running() or 'main' end -- PATCH
+  init_thread(current_thread)                                                         -- PATCH
+  if rawget(_G, 'DEBUGGER_TRACE_EVENTS') then                                         -- PATCH: set DEBUGGER_TRACE_EVENTS = true to log every hook event
+    ctrlrDebugger:write(string.format('[ev] %s line=%s depth=%d stack_level=%s into=%s over=%s\n', event, tostring(line),
+      real_depth(), tostring(stack_level[current_thread]), tostring(step_into), tostring(step_over)))
+  end
   local level = level or 2
   trace_event(event,line,level)
   if event == "call" then
@@ -1305,6 +1358,7 @@ local function debug_hook(event, line, level, thread)
     stack_level[current_thread] = stack_level[current_thread] - 1
     if stack_level[current_thread] < 0 then stack_level[current_thread] = 0 end
   else
+    if step_over then stack_level[current_thread] = real_depth() end -- PATCH
     local vars,file,line = capture_vars(level,1,line)
     local stop, ev, idx = false, events.STEP, 0
     while true do
@@ -1332,6 +1386,8 @@ local function debug_hook(event, line, level, thread)
       end
       return
     end
+    stack_level[current_thread] = real_depth() -- PATCH: keep step_level/stack_level in one unit
+    in_debugger = true                         -- PATCH
     if not coro_debugger then
       ctrlrDebugger:write("Lua Debugger\n")
       vars, file, line = report(ev, vars, file, line, idx)
@@ -1348,8 +1404,10 @@ local function debug_hook(event, line, level, thread)
       if next == 'ask' then
         next = debugger_loop(ev, vars, file, line, idx)
       elseif next == 'cont' then
+        in_debugger = false -- PATCH
         return
       elseif next == 'stop' then
+        in_debugger = false -- PATCH
         started = false
         debug.sethook()
         coro_debugger = nil
@@ -1388,7 +1446,7 @@ end
 _G.coroutine.create = function(f)
   local thread
   local hook, mask, count = debug.gethook()
-  if hook then
+  if hook and not is_luajit then -- PATCH: see is_luajit
     local function thread_hook(event,line)
       hook(event,line,3,thread)
     end
@@ -1414,7 +1472,7 @@ end
 _G.coroutine.wrap = function(f)
   local thread
   local hook, mask, count = debug.gethook()
-  if hook then
+  if hook and not is_luajit then -- PATCH: see is_luajit
     local function thread_hook(event,line)
       hook(event,line,3,thread)
     end
@@ -1442,6 +1500,9 @@ end
 function pause(x,l,f)
   if not f and pause_off then return end       --being told to ignore pauses
   pausemsg = x or 'pause'
+  if is_luajit then
+    current_thread = coroutine.running() or 'main'; init_thread(current_thread)
+  end                                                                                               -- PATCH
   local lines
   local src = getinfo(2,'short_src')
   if l then
@@ -1449,7 +1510,8 @@ function pause(x,l,f)
   elseif src == "stdin" then
     lines = 1   --if in a console session, stop now
   else
-    lines = 2   --if in a script, stop when get out of pause()
+    lines = filter_own and 1 or
+    2                             --if in a script, stop when get out of pause() (PATCH: debugger lines no longer counted)
   end
   if started then
     --we'll stop now 'cos the existing debug hook will grab us
@@ -1487,6 +1549,13 @@ local _traceback = debug.traceback       --note original function
 --override standard function
 debug.traceback = function(x)
   local assertmsg = _traceback(x)        --do original function
+  -- PATCH: never start (or restart) a debug session from inside the debugger itself,
+  -- e.g. when an error is raised in the debugger loop or while read() is blocking
+  if in_debugger then return assertmsg end
+  if filter_own then
+    local info = debug.getinfo(2, 'S')
+    if info and info.source == own_source then return assertmsg end
+  end
   pause(x)                               --let user have a look at stuff
   return assertmsg                       --carry on
 end

@@ -57,7 +57,7 @@ CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor
     debuggerInput->setText ("");
 
     addAndMakeVisible (debugContinue = new ImageButton ("Continue"));
-    debugContinue->setTooltip (TRANS("Continue"));
+	debugContinue->setTooltip(TRANS("Run/Continue"));
     debugContinue->addListener (this);
 
     debugContinue->setImages (false, true, true,
@@ -93,7 +93,7 @@ CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor
                              Image(), 0.850f, Colour (0x00000000),
                              Image(), 1.000f, Colour (0x00000000));
     addAndMakeVisible (debugRestart = new ImageButton ("Restart"));
-    debugRestart->setTooltip (TRANS("Restart"));
+	debugRestart->setTooltip(TRANS("Stop debugging and resume"));
     debugRestart->addListener (this);
 
     debugRestart->setImages (false, true, true,
@@ -101,7 +101,7 @@ CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor
                              Image(), 0.850f, Colour (0x00000000),
                              Image(), 1.000f, Colour (0x00000000));
     addAndMakeVisible (debugStop = new ImageButton ("Stop"));
-    debugStop->setTooltip (TRANS("Stop"));
+	debugStop->setTooltip(TRANS("Stop debugging and resume"));
     debugStop->addListener (this);
 
     debugStop->setImages (false, true, true,
@@ -242,6 +242,28 @@ void CtrlrLuaMethodDebuggerPrompt::buttonClicked (Button* buttonThatWasClicked)
     if (buttonThatWasClicked == debugContinue)
     {
         //[UserButtonCode_debugContinue] -- add your button handler code here..
+		debugStop->setImages(false, true, true,
+							 ImageCache::getFromMemory(BinaryData::appbar_debug_running_stop_png,
+													   BinaryData::appbar_debug_running_stop_pngSize),
+							 0.550f, Colour(0x00000000),
+							 ImageCache::getFromMemory(BinaryData::appbar_debug_running_stop_png,
+													   BinaryData::appbar_debug_running_stop_pngSize),
+							 0.850f, Colour(0x00000000),
+							 ImageCache::getFromMemory(BinaryData::appbar_debug_running_stop_png,
+													   BinaryData::appbar_debug_running_stop_pngSize),
+							 1.000f, Colour(0x00000000));
+                             
+		debugContinue->setImages(false, true, true,
+								 ImageCache::getFromMemory(BinaryData::appbar_control_play_clicked_png,
+														   BinaryData::appbar_control_play_clicked_pngSize),
+								 0.550f, Colour(0x00000000),
+								 ImageCache::getFromMemory(BinaryData::appbar_control_play_clicked_png,
+														   BinaryData::appbar_control_play_clicked_pngSize),
+								 0.850f, Colour(0x00000000),
+								 ImageCache::getFromMemory(BinaryData::appbar_control_play_clicked_png,
+														   BinaryData::appbar_control_play_clicked_pngSize),
+								 1.000f, Colour(0x00000000));
+
         sendCommand ("run");
         //[/UserButtonCode_debugContinue]
     }
@@ -262,16 +284,52 @@ void CtrlrLuaMethodDebuggerPrompt::buttonClicked (Button* buttonThatWasClicked)
         //[UserButtonCode_debugStepOut] -- add your button handler code here..
         sendCommand ("out");
         //[/UserButtonCode_debugStepOut]
-    }
-    else if (buttonThatWasClicked == debugRestart)
-    {
+	} else if (buttonThatWasClicked == debugRestart) {
         //[UserButtonCode_debugRestart] -- add your button handler code here..
+		// Revert back to the default stop icon
+
+		debugStop->setImages(
+			false, true, true,
+			ImageCache::getFromMemory(BinaryData::appbar_debug_stop_png, BinaryData::appbar_debug_stop_pngSize), 0.550f,
+			Colour(0x00000000),
+			ImageCache::getFromMemory(BinaryData::appbar_debug_stop_png, BinaryData::appbar_debug_stop_pngSize), 0.850f,
+			Colour(0x00000000),
+			ImageCache::getFromMemory(BinaryData::appbar_debug_stop_png, BinaryData::appbar_debug_stop_pngSize), 1.000f,
+			Colour(0x00000000));
+
+		debugContinue->setImages(
+			false, true, true,
+			ImageCache::getFromMemory(BinaryData::appbar_control_play_png, BinaryData::appbar_control_play_pngSize),
+			0.550f, Colour(0x00000000),
+			ImageCache::getFromMemory(BinaryData::appbar_control_play_png, BinaryData::appbar_control_play_pngSize),
+			0.850f, Colour(0x00000000),
+			ImageCache::getFromMemory(BinaryData::appbar_control_play_png, BinaryData::appbar_control_play_pngSize),
+			1.000f, Colour(0x00000000));
+
         sendCommand ("exit");
         //[/UserButtonCode_debugRestart]
-    }
-    else if (buttonThatWasClicked == debugStop)
-    {
+	} else if (buttonThatWasClicked == debugStop) {
         //[UserButtonCode_debugStop] -- add your button handler code here..
+		// Revert back to the default stop icon
+		debugStop->setImages(
+			false, true, true,
+			ImageCache::getFromMemory(BinaryData::appbar_debug_stop_png, BinaryData::appbar_debug_stop_pngSize), 0.550f,
+			Colour(0x00000000),
+			ImageCache::getFromMemory(BinaryData::appbar_debug_stop_png, BinaryData::appbar_debug_stop_pngSize), 0.850f,
+			Colour(0x00000000),
+			ImageCache::getFromMemory(BinaryData::appbar_debug_stop_png, BinaryData::appbar_debug_stop_pngSize), 1.000f,
+			Colour(0x00000000));
+
+		debugContinue->setImages(
+			false, true, true,
+			ImageCache::getFromMemory(BinaryData::appbar_control_play_png, BinaryData::appbar_control_play_pngSize),
+			0.550f, Colour(0x00000000),
+			ImageCache::getFromMemory(BinaryData::appbar_control_play_png, BinaryData::appbar_control_play_pngSize),
+			0.850f, Colour(0x00000000),
+			ImageCache::getFromMemory(BinaryData::appbar_control_play_png, BinaryData::appbar_control_play_pngSize),
+			1.000f, Colour(0x00000000));
+
+		sendCommand("exit");
         //[/UserButtonCode_debugStop]
     }
 	else if (buttonThatWasClicked == clearOutput)
@@ -403,6 +461,23 @@ void CtrlrLuaMethodDebuggerPrompt::insertToOutput(const String &what, Colour tex
     debuggerOutput->setCaretPosition (debuggerOutput->getText().length());
     debuggerOutput->insertTextAtCaret (what);
     debuggerOutput->setColour (TextEditor::textColourId, lastColourUsed);
+}
+
+const String CtrlrLuaMethodDebuggerPrompt::waitForCommand() {
+	Component *modalTarget = owner.getParentComponent(); // the SAME component sendCommand() tests
+
+	if (modalTarget == nullptr) {
+		_WRN("CtrlrLuaMethodDebuggerPrompt::waitForCommand editor has no parent, continuing");
+		return ("run");
+	}
+
+	commandQueue.clear(); // drop stale commands from a previous stop
+	debuggerInput->grabKeyboardFocus();
+
+	modalTarget->runModalLoop(); // blocks; sendCommand() ends it via exitModalState(1)
+
+	const String cmd = getCurrentDebuggerCommand().trim();
+	return cmd.isNotEmpty() ? cmd : String("run"); // never return empty
 }
 //[/MiscUserCode]
 

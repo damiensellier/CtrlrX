@@ -59,6 +59,12 @@ namespace BinaryData
     extern const char*   FONT_ZX81_ttf;
     const int            FONT_ZX81_ttfSize = 17176;
 
+    extern const char*   appbar_control_play_clicked_png;
+    const int            appbar_control_play_clicked_pngSize = 806;
+
+    extern const char*   appbar_debug_running_stop_png;
+    const int            appbar_debug_running_stop_pngSize = 251;
+
     extern const char*   appbar_control_play_png;
     const int            appbar_control_play_pngSize = 434;
 
@@ -294,7 +300,7 @@ namespace BinaryData
     const int            wysiwyg_svgSize = 326;
 
     extern const char*   debugger_lua;
-    const int            debugger_luaSize = 44867;
+    const int            debugger_luaSize = 47377;
 
     extern const char*   LICENSE;
     const int            LICENSESize = 1099;
@@ -369,7 +375,7 @@ namespace BinaryData
     const int            CtrlrMIDIVendors_xmlSize = 15061;
 
     // Number of elements in the namedResourceList and originalFileNames arrays.
-    const int namedResourceListSize = 120;
+    const int namedResourceListSize = 122;
 
     // Points to the start of a list of resource names.
     extern const char* namedResourceList[];

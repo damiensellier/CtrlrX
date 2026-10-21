@@ -62,6 +62,7 @@ public:
     void visibilityChanged();
     void insertToOutput(const String &what, const Colour textColour=Colour (0xff5c5c5c));
     void finishDataCollection();
+    const String waitForCommand();
     //[/UserMethods]
 
     void paint (Graphics& g);
