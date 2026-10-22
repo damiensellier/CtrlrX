@@ -232,7 +232,7 @@ TEST_F(LuaValues, unchanged_value_without_force_does_nothing)
  * Setting an unchanged value with force (setValue(v, true), or setModulatorValue, which always
  * forces) resends the MIDI and re-runs the callback, but does not notify the host.
  *
- * Characterization: current behaviour, see PR text. The forced same-value branch of
+ * Characterization: current behaviour. The forced same-value branch of
  * CtrlrModulatorProcessor::setValueGeneric does not store the new change source, so the callback
  * receives the source of the *previous* change: after a host change, a Lua call reports
  * source 1 (host), not 5 (Lua); after setModulatorValue(..., ui = true) it does not run at all.
@@ -350,7 +350,7 @@ TEST_F(LuaValues, callbacks_run_after_the_chunk_in_the_order_values_were_set)
  * Setting one modulator twice in a chunk sends MIDI twice and notifies the host twice, but runs
  * the callback only once, with the last value (the async updates coalesce).
  *
- * Characterization: current behaviour, see PR text.
+ * Characterization: current behaviour.
  */
 TEST_F(LuaValues, two_sets_in_one_chunk_run_the_callback_once_with_the_last_value)
 {
@@ -392,7 +392,7 @@ TEST_F(LuaValues, callback_chain_between_two_modulators_terminates)
  * "clamp" pattern) does not re-enter: the callback ran once with the unclamped value and the
  * value ends clamped. With midi = false the device only ever saw the unclamped value.
  *
- * Characterization: current behaviour, see PR text.
+ * Characterization: current behaviour.
  */
 TEST_F(LuaValues, callback_clamping_its_own_modulator_with_ui_flag_runs_once)
 {
@@ -422,7 +422,7 @@ TEST_F(LuaValues, callback_clamping_its_own_modulator_with_ui_flag_runs_once)
  * cooldown (~400 ms) -- and callbacks already run during that cooldown.
  *
  * Characterization: callbacks are skipped while bootstrapping (the callback gate in
- * CtrlrModulatorProcessor, 5.6.32 "stricter conditions"); see PR text.
+ * CtrlrModulatorProcessor, 5.6.32 "stricter conditions");
  */
 TEST_F(LuaValues, value_set_in_panel_loaded_keeps_value_and_midi_but_skips_callback)
 {
@@ -543,7 +543,7 @@ TEST_F(LuaValues, typed_component_getters_return_their_class_or_nil)
  * string.format("%d", i) form) or as a number. On a miss it returns a placeholder modulator,
  * not nil; the placeholder has no component.
  *
- * Characterization: the miss is not nil (CtrlrManager's invalid modulator), see PR text.
+ * Characterization: the miss is not nil (CtrlrManager's invalid modulator).
  */
 TEST_F(LuaValues, modulator_with_property_finds_by_string_or_number_and_misses_to_a_placeholder)
 {

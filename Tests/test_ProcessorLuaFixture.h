@@ -31,13 +31,9 @@ class LuaPanel : public ProcessorInstance
 protected:
     CtrlrPanel* panel = nullptr;
 
-    // Destroy the processor here, not in the fixture's destructor: deviceSends is destroyed
-    // before `processor` there, while JUCE's MidiOutput thread may still be delivering a send
-    // into it (use-after-free). Destroying the processor joins that thread first.
     void TearDown() override
     {
-        panel = nullptr;
-        processor.reset();
+        panel = nullptr; // owned by the processor, which ProcessorInstance::TearDown() destroys
         ProcessorInstance::TearDown();
     }
 
