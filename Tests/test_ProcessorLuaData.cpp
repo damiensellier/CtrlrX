@@ -19,10 +19,12 @@ protected:
     }
 
     // A fresh, empty directory under the system temp dir, also published to Lua as `_dir`.
+    // The name shall be unique per process: ctest -j runs tests as parallel processes
     juce::File makeTempDir()
     {
+        const auto* test = ::testing::UnitTest::GetInstance()->current_test_info();
         tempDir = juce::File::getSpecialLocation(juce::File::tempDirectory)
-                      .getNonexistentChildFile("ctrlrx_lua_data_test", "", false);
+                      .getChildFile(juce::String("ctrlrx_") + test->name() + "_" + juce::Uuid().toString());
         EXPECT_TRUE(tempDir.createDirectory().wasOk());
         EXPECT_TRUE(runLua("_dir = '" + tempDir.getFullPathName().replace("\\", "\\\\") + "'"));
         return tempDir;
