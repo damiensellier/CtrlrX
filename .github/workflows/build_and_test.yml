@@ -22,6 +22,8 @@ env:
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   SCCACHE_GHA_ENABLED: true
   SCCACHE_CACHE_MULTIARCH: 1
+  # Outlive the long MSVC /LTCG links (~12 min without compiles), so the post-step stats are real
+  SCCACHE_IDLE_TIMEOUT: 1800
   IPP_DIR: C:\Program Files (x86)\Intel\oneAPI\ipp\latest\lib\cmake\ipp
 
 defaults:

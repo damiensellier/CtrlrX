@@ -78,6 +78,11 @@ protected:
     virtual void TearDown() override {
         std::cout << "-------- teardown starting --------" << std::endl;
         midiMessages.clear();
+        // Destroy the processor here, not in the fixture's destructor: members are destroyed in
+        // reverse order, so deviceSends would go before `processor` while JUCE's MidiOutput
+        // thread may still be delivering a send into it (use-after-free that corrupts the heap
+        // for the next test in the same process). Destroying the processor joins that thread.
+        processor.reset();
     }
 
     void expectNoMidiMessagesInBuffer(std::string message);
