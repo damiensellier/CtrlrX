@@ -421,12 +421,20 @@ TEST_F(LuaValues, callback_clamping_its_own_modulator_with_ui_flag_runs_once)
  * Right after loading, getBootstrapState() is already false while isLoading() stays true for a
  * cooldown (~400 ms) -- and callbacks already run during that cooldown.
  *
+ * The cooldown is wall-clock time from the end of bootstrapPanel(), so the cooldown check is only
+ * asserted when the probe provably ran inside it; a slow (loaded CI) run skips just that check.
+ *
  * Characterization: callbacks are skipped while bootstrapping (the callback gate in
  * CtrlrModulatorProcessor, 5.6.32 "stricter conditions");
  */
 TEST_F(LuaValues, value_set_in_panel_loaded_keeps_value_and_midi_but_skips_callback)
 {
+    const juce::uint32 loadStartMs = juce::Time::getMillisecondCounter();
     ASSERT_NE(loadLuaPanel("fixture_lua_values.panel"), nullptr);
+    ASSERT_TRUE(runLua("_bootstrapAfter = panel:getBootstrapState() and 1 or 0\n"
+                       "_loadingAfter = panel:isLoading() and 1 or 0"));
+    // bootstrapPanel() ended after loadStartMs, so this bounds the time spent in the cooldown.
+    const juce::uint32 msSinceLoadStart = juce::Time::getMillisecondCounter() - loadStartMs;
     const auto loadSends = takeSendsAfterDelivery(150);
 
     EXPECT_EQ(luaNumber("_loadedBootstrap"), 1.0) << "getBootstrapState() inside luaPanelLoaded";
@@ -435,16 +443,18 @@ TEST_F(LuaValues, value_set_in_panel_loaded_keeps_value_and_midi_but_skips_callb
     if (deviceObservable())
         EXPECT_EQ(loadSends, (std::vector<juce::MidiMessage>{ bootCC(7) })) << "the MIDI goes out during load";
 
-    ASSERT_TRUE(runLua("_bootstrapAfter = panel:getBootstrapState() and 1 or 0\n"
-                       "_loadingAfter = panel:isLoading() and 1 or 0\n"
-                       "_bootValue = panel:getModulatorByName('boot'):getModulatorValue()\n"
+    ASSERT_TRUE(runLua("_bootValue = panel:getModulatorByName('boot'):getModulatorValue()\n"
                        "panel:getModulatorByName('target'):setValue(11, false)"));
     const auto sends = pumpAndTakeDeviceSends();
 
     EXPECT_TRUE(luaIsNil("_bootCalls")) << "boot's callback never ran";
     EXPECT_EQ(luaNumber("_bootValue"), 7.0);
     EXPECT_EQ(luaNumber("_bootstrapAfter"), 0.0) << "getBootstrapState() once loading returned";
-    EXPECT_EQ(luaNumber("_loadingAfter"), 1.0) << "isLoading() still true in the cooldown";
+    if (msSinceLoadStart < 400)
+        EXPECT_EQ(luaNumber("_loadingAfter"), 1.0) << "isLoading() still true in the cooldown";
+    else
+        std::cout << "note: isLoading() cooldown check skipped, probe ran " << msSinceLoadStart
+                  << " ms after load start" << std::endl;
     EXPECT_EQ(count("_targetCalls"), 1) << "callbacks run during the isLoading() cooldown";
     if (deviceObservable())
         EXPECT_EQ(sends, (std::vector<juce::MidiMessage>{ targetCC(11) }));
