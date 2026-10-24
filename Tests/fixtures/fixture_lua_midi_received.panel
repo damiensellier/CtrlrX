@@ -39,7 +39,6 @@
   <luaManager>
     <luaManagerMethods>
       <luaMethodGroup name="Built-In" uuid="49c3f79ca3dc4f868d5cfc5e48e56199">
-<luaMethod luaMethodName="midiReceived" luaMethodCode="midiReceivedCount = 0&#10;midiReceived = function(midi)&#10;&#9;midiReceivedCount = midiReceivedCount + 1&#10;&#9;panel:getModulator(&quot;test-modulator-1&quot;):setValue(midiReceivedCount, false)&#10;&#9;-- round-trip sentinel: distinct CC ch7 / cc77 / val77&#10;&#9;panel:sendMidi(CtrlrMidiMessage(MemoryBlock({0xB6, 0x4D, 0x4D})), 0)&#10;end" luaMethodLinkedProperty="" luaMethodSource="0" uuid="00000000000000000000000000000011" luaMethodValid="1"/>
         <luaMethod luaMethodName="table_dump" luaMethodCode="-- @1.1&#10;--&#10;-- Print table contents&#10;--&#10;function table_dump(table)&#10;&#9;for key,value in ipairs(table) do&#10;&#9;&#9;_DBG (&quot;KEY= [&quot;..key..&quot;]&quot;)&#10;&#10;&#9;&#9;if (type(value) == &quot;table&quot;) then&#10;&#9;&#9;&#9;table_dump(value)&#10;&#9;&#9;elseif (type(value) == &quot;nil&quot;) then&#10;&#9;&#9;&#9;_DBG (&quot; = NIL&quot;)&#10;&#9;&#9;else&#10;&#9;&#9;&#9;what (value)&#10;&#9;&#9;end&#10;&#9;end&#10;end"
                    luaMethodLinkedProperty="" luaMethodSource="0" uuid="00000000000000000000000000000001"
                    luaMethodValid="1"/>
@@ -59,6 +58,7 @@
                    luaMethodLinkedProperty="" luaMethodSource="0" uuid="00000000000000000000000000000006"
                    luaMethodValid="1"/>
       </luaMethodGroup>
+      <luaMethod luaMethodName="midiReceived" luaMethodCode="midiReceivedCount = 0&#10;midiReceived = function(midi)&#10;&#9;midiReceivedCount = midiReceivedCount + 1&#10;&#9;panel:getModulator(&quot;test-modulator-1&quot;):setValue(midiReceivedCount, false)&#10;&#9;-- round-trip sentinel: distinct CC ch7 / cc77 / val77&#10;&#9;panel:sendMidi(CtrlrMidiMessage(MemoryBlock({0xB6, 0x4D, 0x4D})), 0)&#10;end" luaMethodLinkedProperty="" luaMethodSource="0" uuid="00000000000000000000000000000011" luaMethodValid="1"/>
     </luaManagerMethods>
   </luaManager>
   <panelResources/>
