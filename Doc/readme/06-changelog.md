@@ -24,6 +24,9 @@
 
 ## Changelog
 
+#### Version 5.6.37 | 2026.10.24
+
+
 #### Version 5.6.36 | 2026.10.21
 
 * **FIXED** CtrlrTabsComponents.cpp and CtrlrGroup.cpp keep component owner group on uiTabs. `CtrlrTabsComponent.cpp`, `CtrlrGroup.cpp`

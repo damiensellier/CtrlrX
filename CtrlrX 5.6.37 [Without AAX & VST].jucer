@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="hrcYoO" name="CtrlrX" reportAppUsage="1" projectType="audioplug"
-              version="5.6.36" bundleIdentifier="com.CtrlrX.CtrlrX" includeBinaryInAppConfig="1"
-              buildVST="1" buildVST3="1" buildAU="1" buildAUv3="0" buildRTAS="0"
+              version="5.6.37" bundleIdentifier="com.CtrlrX.CtrlrX" includeBinaryInAppConfig="1"
+              buildVST="0" buildVST3="1" buildAU="1" buildAUv3="0" buildRTAS="0"
               buildAAX="0" buildStandalone="1" enableIAA="0" pluginName="CtrlrX                          "
               pluginManufacturer="CtrlrX Project                  " pluginManufacturerCode="cTrX"
               pluginCode="cTrl" pluginIsSynth="1" pluginWantsMidiIn="1" pluginProducesMidiOut="1"
               pluginIsMidiEffectPlugin="0" pluginEditorRequiresKeys="1" pluginAUExportPrefix="CtrlrXAU"
               pluginRTASCategory="" aaxIdentifier="com.CtrlrX.CtrlrX" companyName="CtrlrX"
-              pluginFormats="buildAU,buildStandalone,buildVST,buildVST3" jucerFormatVersion="1"
+              pluginFormats="buildAU,buildStandalone,buildVST3" jucerFormatVersion="1"
               pluginAUMainType="'aumu'" displaySplashScreen="1" pluginRTASDisableBypass="0"
               pluginRTASDisableMultiMono="0" pluginAAXDisableBypass="0" pluginAAXDisableMultiMono="0"
               cppLanguageStandard="14" pluginVST3Category="Instrument,Tools"
@@ -626,9 +626,9 @@
           <FILE id="OOpHQ2" name="FONT_ZX81.ttf" compile="0" resource="1" file="Source/Resources/Fonts/FONT_ZX81.ttf"/>
         </GROUP>
         <GROUP id="{57CA4634-99B0-23FB-F19C-154181EAAE85}" name="Icons">
-          <FILE id="IppKad" name="appbar.control.play.clicked.png" compile="0"
+          <FILE id="Rr27GK" name="appbar.control.play.clicked.png" compile="0"
                 resource="1" file="Source/Resources/Icons/appbar.control.play.clicked.png"/>
-          <FILE id="xJw5fn" name="appbar.debug.running.stop.png" compile="0"
+          <FILE id="gbafr5" name="appbar.debug.running.stop.png" compile="0"
                 resource="1" file="Source/Resources/Icons/appbar.debug.running.stop.png"/>
           <FILE id="J8fX6Q" name="appbar.control.play.png" compile="0" resource="1"
                 file="Source/Resources/Icons/appbar.control.play.png"/>
