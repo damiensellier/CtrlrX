@@ -62,7 +62,7 @@
     </luaManagerMethods>
   </luaManager>
   <panelResources/>
-  <uiPanelEditor uiPanelCanvasRectangle="0 0 600 400" name="Test Panel" uiPanelEditMode="1"
+  <uiPanelEditor uiPanelCanvasRectangle="0 0 600 400" name="Test Panel" uiPanelEditMode="0"
                  uiViewPortWidth="1048" uiViewPortHeight="512" uiPanelLock="0"
                  uiPanelDisabledOnEdit="0" uiPanelMenuBarVisible="1" uiPanelMenuBarHideOnExport="0"
                  uiPanelProgramsMenuHideOnExport="0" uiPanelMidiControllerMenuHideOnExport="0"
