@@ -60,7 +60,7 @@ jobs:
             pluginval-binary: ./pluginval
             extra-flags: -G Ninja -DJUCE_LINUX=1
           - name: macOS
-            os: macos-14
+            os: macos-15
             pluginval-binary: pluginval.app/Contents/MacOS/pluginval
             extra-flags: -G Ninja -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
           - name: Windows
@@ -105,11 +105,13 @@ jobs:
         if: matrix.name == 'macOS'
         run: brew install osxutils boost
 
-      - name: Use latest Xcode on system (macOS)
+      # Pinned rather than latest-stable: on macos-15 that picks Xcode 26 (macOS 26 SDK),
+      # which JUCE 6.0.8 has not been tried against. Keep in step with luajit.yml.
+      - name: Select Xcode 16.4 (macOS)
         if: matrix.name == 'macOS'
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: '16.4'
 
       - name: Checkout code
         uses: actions/checkout@v4
