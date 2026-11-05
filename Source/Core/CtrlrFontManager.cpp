@@ -28,8 +28,22 @@ void CtrlrFontManager::reloadOSFonts()
 	osFonts.clear();
 	osTypefaceNames.clear();
 	osTypefaceStyles.clear();
+	osFontArrayLoaded = false;
 
+	// Names only: Font::findAllTypefaceNames() costs ~26 ms on Windows 11.
+	// The full Font array (Font::findFonts) costs ~3.9 s under JUCE 6's GDI path,
+	// because it instantiates a Font for every face. It is only needed to populate
+	// the font picker, so ensureOSFontArray() builds it on first use instead.
 	osTypefaceNames = Font::findAllTypefaceNames();
+}
+
+void CtrlrFontManager::ensureOSFontArray()
+{
+	if (osFontArrayLoaded)
+		return;
+
+	osFontArrayLoaded = true;
+	osFonts.clear();
 	Font::findFonts (osFonts);
 }
 
@@ -87,6 +101,7 @@ void CtrlrFontManager::reloadImportedFonts(CtrlrPanel *panelToLoadFrom)
 
 const Array<Font> &CtrlrFontManager::getOsFontArray()
 {
+	ensureOSFontArray();
 	return (osFonts);
 }
 
@@ -133,6 +148,7 @@ void CtrlrFontManager::fillCombo (ComboBox &comboToFill, const bool showOsFonts,
 
 	if (showOsFonts)
 	{
+		ensureOSFontArray();
 		comboToFill.addSectionHeading ("OS Fonts");
 		for (i=0; i<osFonts.size(); i++)
 		{
@@ -145,6 +161,9 @@ void CtrlrFontManager::fillCombo (ComboBox &comboToFill, const bool showOsFonts,
 
 Font CtrlrFontManager::getFont(const int fontIndex)
 {
+	if (fontIndex >= (int) (importedFonts.size() + builtInFonts.size() + juceFonts.size()))
+		ensureOSFontArray();
+
 	if (fontIndex >= 0 && fontIndex < juceFonts.size())
 	{
 		return (juceFonts[fontIndex]);
@@ -368,10 +387,11 @@ CtrlrFontManager::FontSet CtrlrFontManager::getFontSetEnum (const Font &font)
 			return (builtInFontSet);
 	}
 
-	for (int i=0; i<osFonts.size(); i++)
+	// Classify from the names list (always loaded): the Font array is built lazily
+	// and may legitimately be empty until a font picker is shown.
+	if (osTypefaceNames.contains(font.getTypefaceName()))
 	{
-		if (osFonts[i].getTypefaceName() == font.getTypefaceName())
-			return (osFontSet);
+		return (osFontSet);
 	}
 
 	for (int i=0; i<juceFonts.size(); i++)
@@ -388,6 +408,7 @@ Array<Font> &CtrlrFontManager::getFontSet (const FontSet fontSetToFetch)
 	switch (fontSetToFetch)
 	{
 		case osFontSet:
+			ensureOSFontArray();
 			return (osFonts);
 		case builtInFontSet:
 			return (builtInFonts);
