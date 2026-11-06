@@ -341,6 +341,7 @@ void XmlDocument::skipNextWhiteSpace()
 void XmlDocument::readQuotedString (String& result)
 {
     auto quote = readNextChar();
+    MemoryOutputStream accumulated;
 
     while (! outOfData)
     {
@@ -353,26 +354,31 @@ void XmlDocument::readQuotedString (String& result)
 
         if (c == '&')
         {
-            readEntity (result);
+            String entityText;
+            readEntity (entityText);
+            if (entityText.isNotEmpty())
+                accumulated.write (entityText.toRawUTF8(), (size_t) entityText.getNumBytesAsUTF8());
         }
         else
         {
             auto start = input;
-
             for (;;)
             {
                 auto character = *input;
 
                 if (character == quote)
                 {
-                    result.appendCharPointer (start, input);
+                    if (input.getAddress() != start.getAddress())
+                        accumulated.write (start.getAddress(), (size_t) (input.getAddress() - start.getAddress()));
                     ++input;
+                    result = accumulated.toString();
                     return;
                 }
 
                 if (character == '&')
                 {
-                    result.appendCharPointer (start, input);
+                    if (input.getAddress() != start.getAddress())
+                        accumulated.write (start.getAddress(), (size_t) (input.getAddress() - start.getAddress()));
                     break;
                 }
 
@@ -387,6 +393,8 @@ void XmlDocument::readQuotedString (String& result)
             }
         }
     }
+
+    result = accumulated.toString();
 }
 
 XmlElement* XmlDocument::readNextElement (const bool alsoParseSubElements)
