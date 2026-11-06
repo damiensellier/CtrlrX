@@ -123,12 +123,19 @@ jobs:
           - name: windows
             os: windows-2022
           - name: macos
-            os: macos-14
+            os: macos-15
 
     steps:
       - name: Setup MSVC
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
+
+      # Same Xcode as build_and_test.yml, so the bundle and the plugin share a toolchain.
+      - name: Select Xcode 16.4
+        if: runner.os == 'macOS'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.4'
 
       # Full checkout: the standalone LuaJIT build needs src/ and dynasm/ on disk,
       # and the manifest needs git metadata for every fingerprinted path.
@@ -155,7 +162,7 @@ jobs:
       # One universal library. CMAKE_OSX_* must be passed explicitly: 10.13 is set by
       # cmake/PamplejuceMacOS.cmake, which only the ROOT CMakeLists.txt includes -- a
       # standalone configure of cmake/luajit never sees it, and would silently take the
-      # macos-14 SDK default, making Xcode warn "built for newer macOS version".
+      # host macOS version as the target, making Xcode warn "built for newer macOS version".
       - name: Build LuaJIT (macOS, universal)
         if: runner.os == 'macOS'
         run: |

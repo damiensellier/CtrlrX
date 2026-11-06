@@ -64,6 +64,9 @@ else()
             "-DCMAKE_BUILD_TYPE=Debug"
             "-DJUCE_BUILD_HELPER_TOOLS=ON"
             "-DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}"
+            # CtrlrX: juceaide otherwise targets the host macOS version, where the macOS 15 SDK
+            # makes CGWindowListCreateImage a hard error
+            "-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}"
         WORKING_DIRECTORY "${JUCE_SOURCE_DIR}"
         OUTPUT_VARIABLE command_output
         ERROR_VARIABLE command_output
