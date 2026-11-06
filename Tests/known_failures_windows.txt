@@ -21,3 +21,8 @@ MidiLua.device_input_invokes_lua_multiMidiReceived_once
 # 120s TIMEOUT under runner load (time is not mocked). A timed-out test emits no JUnit XML, so it is
 # invisible to ci_check_test_results.py and cannot be allowlisted here; recorded only for awareness.
 # It does not reproduce deterministically.
+
+# NRPN/Multi bursts from different modulators interleave CC by CC at panelMidiGlobalDelay 0:
+# buffers sent within one millisecond get the same start time (CtrlrMIDIDevice::sendMidiBuffer).
+# Desired: each burst stays contiguous. Passes at delay 2 (pinned by ..._with_global_delay).
+LuaValues.nrpn_bursts_stay_contiguous_at_zero_delay
