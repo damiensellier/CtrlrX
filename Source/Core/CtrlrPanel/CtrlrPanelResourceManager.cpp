@@ -233,6 +233,29 @@ bool CtrlrPanelResourceManager::resourceExists(const File &resourceFile)
 Result CtrlrPanelResourceManager::importResource (const ValueTree &resourceTree) // Updated v5.6.36. Thanks to @dnaldoog
 {
 	String resourceName = resourceTree.getProperty(Ids::resourceName).toString();
+
+	// Perf (backported from 8.7.8): the embedded payload is byte-identical to the file already
+	// on disk. Resolve the destination BEFORE the in-memory registry check and BEFORE decoding:
+	// when it exists at the expected size there is nothing to decode or write, so just register
+	// the on-disk file (or do nothing if it is already registered).
+	{
+		File pathProbe = File::getCurrentWorkingDirectory()
+			.getChildFile(resourceTree.getProperty(Ids::resourceFile).toString());
+		File cachedDest = resourcesDirectory.getChildFile(pathProbe.getFileName());
+		const int64 expectedSize = resourceTree.getProperty(Ids::resourceSize).toString().getLargeIntValue();
+		const bool exists = cachedDest.existsAsFile();
+		const int64 diskSize = exists ? cachedDest.getSize() : (int64) -1;
+		const bool memNull = (getResource(resourceName) == nullptr);
+		const bool hit = exists && diskSize > 0 && (expectedSize <= 0 || diskSize == expectedSize);
+
+		if (hit)
+		{
+			if (!memNull)
+				return Result::ok();
+
+			return addResource(cachedDest, resourceTree.getProperty(Ids::resourceName));
+		}
+	}
 	
 	// _DBG("importResource: [" + resourceName + "] exists="
 	//      + String(getResource(resourceName) != nullptr ? "YES" : "NO")
@@ -327,7 +350,10 @@ Result CtrlrPanelResourceManager::addResource (const File &source, const String 
 
 	if (resourcesDirectory.isDirectory())
 	{
-		source.copyFileTo (resourceDest);
+		// Perf (backported from 8.7.8): importResource() can now hand us the already-on-disk
+		// destination file as the source. Copying a file onto itself truncates it, so skip.
+		if (source != resourceDest)
+			source.copyFileTo (resourceDest);
 	}
 	else
 	{
@@ -454,12 +480,25 @@ const String CtrlrPanelResourceManager::getTypeDescription(const CtrlrPanelResou
 
 CtrlrPanelResourceType CtrlrPanelResourceManager::guessType(const File &resourceFile)
 {
-	// Image ?
-	Image image = ImageCache::getFromFile (resourceFile);
-
-	if (!image.isNull())
+	// Perf (backported from 8.7.8): identify images from their header instead of decoding them.
+	// ImageCache::getFromFile() fully decoded every PNG merely to answer "is this an image?" --
+	// 228 decodes per panel load -- even though the resource decodes lazily on first paint.
 	{
-		return (ImageRes);
+		unsigned char hdr[8] = {};
+
+		FileInputStream in(resourceFile);
+		if (in.openedOk())
+			in.read(hdr, 8);
+
+		const bool isPng = (hdr[0] == 0x89 && hdr[1] == 'P' && hdr[2] == 'N' && hdr[3] == 'G');
+		const bool isJpg = (hdr[0] == 0xFF && hdr[1] == 0xD8);
+		const bool isGif = (hdr[0] == 'G' && hdr[1] == 'I' && hdr[2] == 'F');
+		const bool isBmp = (hdr[0] == 'B' && hdr[1] == 'M');
+
+		if (isPng || isJpg || isGif || isBmp || resourceFile.hasFileExtension("ico;tga;webp;tif;tiff"))
+		{
+			return (ImageRes);
+		}
 	}
 
 	// Audio ?

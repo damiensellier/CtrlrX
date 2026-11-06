@@ -21,6 +21,7 @@ class CtrlrFontManager
 		CtrlrFontManager(CtrlrManager &_owner);
 		~CtrlrFontManager();
 		void reloadOSFonts();
+		void ensureOSFontArray();
 		void reloadBuiltInFonts();
 		void reloadImportedFonts(CtrlrPanel *panelToLoadFrom=nullptr);
 		void reloadJuceFonts();
@@ -51,6 +52,7 @@ class CtrlrFontManager
 	private:
 	    CtrlrManager &owner;
 		Array<Font> osFonts;
+		bool osFontArrayLoaded = false;
 		Array<Font> builtInFonts;
 		Array<Font> juceFonts;
 		Array<Font> importedFonts;
