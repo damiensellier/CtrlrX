@@ -190,6 +190,23 @@ jobs:
           path: ${{ env.BUILD_DIR }}/Tests/test-results/
           if-no-files-found: warn
 
+      - name: Zip CtrlrPanelProbe
+        # The headless panel probe (Doc/PanelProbe.md), built with the tests. Zipped before the
+        # upload because upload-artifact drops the executable bit.
+        run: |
+          PROBE_DIR="CtrlrPanelProbe-${{ matrix.name }}"
+          rm -rf "$PROBE_DIR" && mkdir -p "$PROBE_DIR"
+          cp "${{ env.BUILD_DIR }}/Tests/CtrlrPanelProbe${{ runner.os == 'Windows' && '.exe' || '' }}" "$PROBE_DIR/"
+          cp Doc/PanelProbe.md LICENSE-GPL LICENSE-BSD "$PROBE_DIR/"
+          cmake -E tar cf "$PROBE_DIR.zip" --format=zip "$PROBE_DIR"
+
+      - name: Upload CtrlrPanelProbe
+        uses: actions/upload-artifact@v4
+        with:
+          name: CtrlrPanelProbe-${{ matrix.name }}
+          path: CtrlrPanelProbe-${{ matrix.name }}.zip
+          if-no-files-found: warn
+
       - name: Read in .env from CMake
         run: |
           cat .env
@@ -434,6 +451,90 @@ jobs:
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: Packaging/${{ env.ARTIFACT_NAME }}.pkg
+
+      # -----------------------------------------------------------------
+      # CTRLRPANELPROBE SIGNING
+      # -----------------------------------------------------------------
+      # The unsigned CtrlrPanelProbe-<OS> artifact is uploaded earlier, before pluginval. With the
+      # signing secrets, these steps sign the binary in CtrlrPanelProbe-<OS>/, re-zip it and replace
+      # that artifact. They run last and are continue-on-error, so a probe signing problem can never
+      # hold back the plugin packages; the unsigned artifact then stays in place.
+      - name: Codesign and Notarize CtrlrPanelProbe (macOS)
+        id: probe_sign_macos
+        if: ${{ matrix.name == 'macOS' && env.HAVE_MACOS_SIGNING_SECRETS == 'true' }}
+        continue-on-error: true
+        timeout-minutes: 30
+        run: |
+          PROBE_DIR="CtrlrPanelProbe-${{ matrix.name }}"
+          # A bare executable: no --deep, and -i gives it the identifier a bundle would have.
+          # LuaJIT needs the same JIT entitlements as the plugins.
+          codesign --force -s "${{ secrets.DEVELOPER_ID_APPLICATION }}" -v "$PROBE_DIR/CtrlrPanelProbe" -i "${{ env.BUNDLE_ID }}.CtrlrPanelProbe" --options=runtime --entitlements "Source/Misc/macOS/Entitlements.plist" --timestamp
+          codesign --verify --strict --verbose=2 "$PROBE_DIR/CtrlrPanelProbe"
+          rm -f "$PROBE_DIR.zip"
+          ditto -c -k --keepParent "$PROBE_DIR" "$PROBE_DIR.zip"
+          # A ticket can't be stapled to a bare executable; Gatekeeper fetches it online on first
+          # run. So there is no stapler step to catch a rejection: check the status instead.
+          xcrun notarytool submit "$PROBE_DIR.zip" --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --password ${{ secrets.NOTARIZATION_PASSWORD }} --team-id ${{ secrets.TEAM_ID }} --wait --output-format json > notarize_probe.json || true
+          cat notarize_probe.json
+          STATUS=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("status", ""))' notarize_probe.json || true)
+          if [ "$STATUS" != "Accepted" ]; then
+            SUBMISSION_ID=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("id", ""))' notarize_probe.json || true)
+            if [ -n "$SUBMISSION_ID" ]; then
+              xcrun notarytool log "$SUBMISSION_ID" --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --password ${{ secrets.NOTARIZATION_PASSWORD }} --team-id ${{ secrets.TEAM_ID }} || true
+            fi
+            echo "::warning::CtrlrPanelProbe notarization status '$STATUS'; keeping the unsigned artifact."
+            exit 1
+          fi
+
+      - name: Sign CtrlrPanelProbe (Linux)
+        id: probe_sign_linux
+        if: ${{ matrix.name == 'Linux' && env.HAVE_GPG_KEY == 'true' }}
+        continue-on-error: true
+        run: |
+          PROBE_DIR="CtrlrPanelProbe-${{ matrix.name }}"
+          gpg --batch --yes --pinentry-mode loopback \
+              --passphrase "${{ secrets.GPG_SIGNING_PASSPHRASE }}" \
+              --default-key "CtrlrX Project" \
+              --output "$PROBE_DIR/CtrlrPanelProbe.sig" \
+              --detach-sign "$PROBE_DIR/CtrlrPanelProbe"
+          gpg --verify "$PROBE_DIR/CtrlrPanelProbe.sig" "$PROBE_DIR/CtrlrPanelProbe"
+          rm -f "$PROBE_DIR.zip"
+          cmake -E tar cf "$PROBE_DIR.zip" --format=zip "$PROBE_DIR"
+
+      - name: Codesign CtrlrPanelProbe with Azure Trusted Signing (Windows)
+        id: probe_sign_windows
+        if: ${{ matrix.name == 'Windows' && env.HAVE_AZURE_CLIENT_SECRET == 'true' }}
+        continue-on-error: true
+        uses: azure/trusted-signing-action@v0.5.1
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_CODE_SIGNING_NAME }}
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE_NAME }}
+          files-folder: CtrlrPanelProbe-${{ matrix.name }}
+          files-folder-filter: exe
+          files-folder-recurse: false
+
+      - name: Zip signed CtrlrPanelProbe (Windows)
+        id: probe_zip_windows
+        if: ${{ steps.probe_sign_windows.outcome == 'success' }}
+        continue-on-error: true
+        run: |
+          PROBE_DIR="CtrlrPanelProbe-${{ matrix.name }}"
+          rm -f "$PROBE_DIR.zip"
+          cmake -E tar cf "$PROBE_DIR.zip" --format=zip "$PROBE_DIR"
+
+      - name: Upload signed CtrlrPanelProbe
+        if: ${{ steps.probe_sign_macos.outcome == 'success' || steps.probe_sign_linux.outcome == 'success' || steps.probe_zip_windows.outcome == 'success' }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: CtrlrPanelProbe-${{ matrix.name }}
+          path: CtrlrPanelProbe-${{ matrix.name }}.zip
+          if-no-files-found: warn
+          overwrite: true
 
       - name: Setup tmate session if failed
         uses: mxschmitt/action-tmate@v3

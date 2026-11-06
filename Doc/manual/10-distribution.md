@@ -122,6 +122,9 @@ ship. To go further:
 - **Look up an API** → [Lua API Reference](lua/02-lua-reference.md)
 - **Study real panels** — open existing `.panel` files in Edit mode and read their mappings and
   methods. This was the original community's #1 learning tip, and it still is.
+- **Let an AI coding agent edit the panel file** → the `ctrlrx-panel-builder` skill in
+  [skills/](../../skills/README.md) teaches agents such as Claude Code or GitHub Copilot to edit
+  `.panel` files directly and test them with [CtrlrPanelProbe](../PanelProbe.md).
 
 ---
 

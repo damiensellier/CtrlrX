@@ -9,6 +9,7 @@
 > - **Lua console** (Panel → LUA Console, or the LUA Editor's **Console** tab) runs Lua live and prints `console(...)` output.
 > - `how()` lists all classes bound to Lua; `what(obj)` lists the methods of one object.
 > - Most "it doesn't work" cases are: wrong mode, unassigned Lua method, or a MIDI device not selected.
+> - **CtrlrPanelProbe** checks a panel's behaviour from a script, with no hardware and no window.
 
 ## Contents
 
@@ -16,6 +17,7 @@
 - [Tool 2 — the Lua console](#tool-2--the-lua-console)
 - [Tool 3 — introspection: `how()` and `what()`](#tool-3--introspection-how-and-what)
 - [Reading Lua errors](#reading-lua-errors)
+- [Testing a panel without hardware](#testing-a-panel-without-hardware)
 - [The usual suspects — a checklist](#the-usual-suspects--a-checklist)
 
 ---
@@ -83,6 +85,26 @@ The number **between the colons** (`42`) is the line in your method. Common caus
 | `attempt to index a nil value` | `getModulatorByName(...)` returned `nil` — check the name (case-sensitive!). |
 | `'<eof>' expected` / unfinished long comment | A `--[[` block comment never closed with `]]`. |
 | Method never runs | It isn't assigned in the callback dropdown ([Chapter 7](07-making-responsive.md)). |
+
+## Testing a panel without hardware
+
+`CtrlrPanelProbe` is a small command-line tool built next to the test suite. It loads a panel, runs
+a script of actions against it (move a control, click a button, feed in MIDI as if it came from the
+synth, call a Lua method) and prints a JSON report: the MIDI bytes the panel sent, any Lua errors,
+and the final value of every modulator. No synth, MIDI interface or open window is needed, so you
+can check a panel in a script or in CI, and re-check it after every edit.
+
+```bash
+cat > check.json <<'EOF'
+{ "steps": [ { "action": "setValue", "modulator": "filterCutoff", "value": 64 } ] }
+EOF
+CtrlrPanelProbe MySynth.panel check.json | jq '.steps[0].deviceMidiOut, .summary.errorCount'
+```
+
+If the first line prints `[]`, moving that control sends nothing and its MIDI wiring is dead.
+
+> 🔗 Deeper: [CtrlrPanelProbe](../PanelProbe.md) covers how to build or download it, every action,
+> and the full report format.
 
 ## The usual suspects — a checklist
 

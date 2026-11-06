@@ -55,7 +55,8 @@ One code base produces several targets at once. A full Release build gives you:
 | Audio Unit plugin | `AU/CtrlrX.component` | macOS only |
 
 `<Config>` is one of: `Release`, `Debug` or `RelWithDebInfo`. The test
-runner is built alongside them, at `build/Tests/TestsProcessor`.
+runner is built alongside them, at `build/Tests/TestsProcessor`, and so is the
+`build/Tests/CtrlrPanelProbe` command-line tool (see [step 5](#5--run-the-tests-optional)).
 
 Budget roughly **3 GB of free disk space** and, on a modern 8-core machine, **10–30 minutes** for a
 first full build. Later incremental builds take seconds. The Standalone binary itself is ~50 MB
@@ -290,6 +291,7 @@ cmake --build build -j1                        # one job at a time, readable err
 cmake --build build --target CtrlrX_Standalone # just the app
 cmake --build build --target CtrlrX_VST3       # just the plugin
 cmake --build build --target TestsProcessor    # just the test runner
+cmake --build build --target CtrlrPanelProbe   # just the panel probe
 cmake --build build --target clean             # throw away objects, keep the CMake cache
 ```
 
@@ -345,6 +347,13 @@ GTEST_OUTPUT="xml:test-results/" ctest -j 8 --output-on-failure
 > 🔗 **Deeper:** [Tests/test_ProcessorFixture.h](../../Tests/test_ProcessorFixture.h) holds the
 > shared helpers, and `Tests/mock_MidiDevice*.cpp` fakes the platform MIDI layer at link time so
 > tests need no hardware.
+
+The same mock layer powers **`CtrlrPanelProbe`**, a command-line tool that loads any panel, drives it
+from a JSON script and reports the MIDI it sent, its Lua errors and its final state, all without
+hardware. It is built with the tests (`cmake --build build --target CtrlrPanelProbe` builds only
+the probe) and checked by its own CTest case, `PanelProbeSelfTest`, which needs Python 3. You don't
+have to build it yourself: every CI run uploads a Release build per platform as the workflow
+artifact `CtrlrPanelProbe-<Linux|macOS|Windows>`. See [Doc/PanelProbe.md](../PanelProbe.md).
 
 ---
 

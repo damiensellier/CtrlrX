@@ -1,0 +1,6 @@
+{
+  "settleMs": 400,
+  "steps": [
+    { "action": "setValue", "modulator": "src", "value": 40 }
+  ]
+}

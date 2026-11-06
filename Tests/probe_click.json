@@ -1,0 +1,3 @@
+{ "settleMs": 300, "steps": [
+  { "action": "click", "modulator": "navBtn" }
+] }

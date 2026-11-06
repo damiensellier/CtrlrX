@@ -1,0 +1,356 @@
+{
+  "skill_name": "ctrlrx-panel-builder",
+  "environment": {
+    "preamble": "You are working non-interactively: do not ask questions; make reasonable assumptions and state them. Your working directory is the current directory; leave all results there. A read-only CtrlrX source checkout is at ./ctrlrx, and a built CtrlrPanelProbe binary is at $CTRLRX_PANEL_PROBE.",
+    "setup": "Each run starts in a fresh empty directory containing the eval's `files` (copied by basename) and a `ctrlrx` symlink to a read-only CtrlrX checkout that has Doc/PanelProbe.md. CTRLRX_PANEL_PROBE points at a built probe. With a skill under test, its directory is copied to ./skill/<name>/ and the prompt is prefixed with: 'Instructions for this kind of task are in skill/<name>/SKILL.md - read it first.'",
+    "grading": "python3 <grader> <run-dir>, where <run-dir>/outputs is the working directory after the run and <run-dir>/final_message.txt the agent's last message. Needs CTRLRX_PANEL_PROBE; optional EVAL_JUDGE_CMD for the one LLM-judged expectation (eval 2), else a keyword fallback."
+  },
+  "evals": [
+    {
+      "id": 0,
+      "name": "new-panel-two-cc-knobs",
+      "prompt": "Create a new CtrlrX panel file called filter_section.panel with two rotary knobs: 'cutoff' sending CC 74 on MIDI channel 1 (range 0-127) and 'resonance' sending CC 71 on MIDI channel 1 (range 0-127). It has to load in CtrlrX.",
+      "expected_output": "A loadable filter_section.panel with two uiSlider modulators named cutoff and resonance, range 0..127, that emit b0 4a vv and b0 47 vv.",
+      "files": [],
+      "grader": "evals/graders/eval_00_two_cc_knobs.py",
+      "expectations": [
+        "filter_section.panel was created",
+        "panel_tool lint passes",
+        "panel loads and runs in the probe with no errors",
+        "modulators 'cutoff' and 'resonance' are uiSliders with range 0..127",
+        "cutoff at 100 sends exactly CC 74 = 100 on channel 1 (b0 4a 64)",
+        "resonance at 33 sends exactly CC 71 = 33 on channel 1 (b0 47 21)"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "callback-updates-label",
+      "prompt": "synth.panel has a 'cutoff' knob. Make a copy of it called cutoff_with_label.panel (leave synth.panel itself untouched). In the copy, add a label named 'cutoffLabel', and make the cutoff knob run a Lua method whenever its value changes that prints the value to the CtrlrX console and shows it in that label.",
+      "expected_output": "cutoff_with_label.panel with a uiLabel 'cutoffLabel', an escaped <luaMethod> wired via luaModulatorValueChange; moving cutoff updates the label and prints the value; synth.panel unchanged.",
+      "files": [
+        "evals/files/synth.panel"
+      ],
+      "grader": "evals/graders/eval_01_callback_label.py",
+      "expectations": [
+        "original synth.panel is unchanged",
+        "cutoff_with_label.panel was created",
+        "panel_tool lint passes",
+        "a uiLabel modulator named 'cutoffLabel' exists",
+        "cutoff's luaModulatorValueChange names an existing Lua method",
+        "moving cutoff raises no errors in the probe",
+        "after moving cutoff to 77 the label shows 77",
+        "the value is printed to the console",
+        "cutoff still sends its CC 74 (b0 4a 4d)"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "debug-dead-control",
+      "prompt": "My panel broken_panel.panel loads fine, but the cutoff knob is dead: turning it sends nothing to my synth (the resonance knob works). Find out why and fix the file in place. Tell me what was wrong.",
+      "expected_output": "Diagnoses that cutoff's luaModulatorValueChange points at 'onCutoffChange', which does not exist (the method is 'onCutoffChanged'); fixes the reference so cutoff sends b0 4a vv once.",
+      "files": [
+        "evals/files/broken_panel.panel"
+      ],
+      "grader": "evals/graders/eval_02_debug_dead_control.py",
+      "expectations": [
+        "broken_panel.panel is still there",
+        "the fixed panel passes panel_tool lint",
+        "fixed panel runs with no errors",
+        "cutoff at 90 now sends CC 74 = 90 exactly once (b0 4a 5a)",
+        "resonance still sends CC 71 (b0 47 21)",
+        "[judge] the explanation identifies the callback pointing at a non-existent method ('onCutoffChange' vs the defined 'onCutoffChanged')"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "nrpn-14bit",
+      "prompt": "Add a knob 'filterEnvAmount' to synth.panel that controls NRPN parameter 291 on MIDI channel 3 with the full 14-bit range (0-16383). My synth expects the standard NRPN order: CC 99 (parameter MSB), CC 98 (parameter LSB), CC 6 (data MSB), CC 38 (data LSB). Edit synth.panel in place.",
+      "expected_output": "filterEnvAmount 0..16383 emitting b2 63 02, b2 62 23, b2 06 MSB, b2 26 LSB per change, once; existing cutoff unaffected.",
+      "files": [
+        "evals/files/synth.panel"
+      ],
+      "grader": "evals/graders/eval_03_nrpn_14bit.py",
+      "expectations": [
+        "synth.panel is still there",
+        "panel_tool lint passes",
+        "panel runs with no errors",
+        "filterEnvAmount exists with a 0..16383 range (modulator and slider)",
+        "value 1000 sends NRPN 291 on ch 3 in order 99/98/6/38 (b2 63 02, b2 62 23, b2 06 07, b2 26 68)",
+        "value 16383 sends b2 63 02, b2 62 23, b2 06 7f, b2 26 7f",
+        "existing cutoff knob still sends b0 4a 40"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "sysex-roland-checksum",
+      "prompt": "Add a knob 'detune' (0-127) to synth.panel. Each change must send this SysEx: F0 41 10 42 12 40 01 30 vv cs F7, where vv is the knob value and cs is a Roland checksum over the address and data bytes (40 01 30 vv): the sum of those bytes modulo 128, subtracted from 128, where a result of 128 becomes 0. Edit synth.panel in place.",
+      "expected_output": "detune 0..127 emitting the exact SysEx with a correct checksum, including cs = 00 when the sum is a multiple of 128 (vv = 0F).",
+      "files": [
+        "evals/files/synth.panel"
+      ],
+      "grader": "evals/graders/eval_04_sysex_checksum.py",
+      "expectations": [
+        "synth.panel is still there",
+        "panel_tool lint passes",
+        "panel runs with no errors",
+        "detune exists with range 0..127",
+        "value 16 sends exactly f0 41 10 42 12 40 01 30 10 7f f7",
+        "value 100 sends exactly f0 41 10 42 12 40 01 30 64 2b f7",
+        "value 15 sends exactly f0 41 10 42 12 40 01 30 0f 00 f7 (checksum 128 -> 0)"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "combo-value-map",
+      "prompt": "Create a panel lfo.panel with a dropdown 'lfoShape' offering Sine, Triangle, Saw, Square and S&H. Selecting an entry should send CC 20 on MIDI channel 1 with the values 0, 32, 64, 96 and 127 respectively.",
+      "expected_output": "lfo.panel with a uiCombo lfoShape whose entries map to CC 20 values 0/32/64/96/127; 'S&H' correctly XML-escaped.",
+      "files": [],
+      "grader": "evals/graders/eval_05_combo_value_map.py",
+      "expectations": [
+        "lfo.panel was created",
+        "panel_tool lint passes",
+        "panel runs with no errors",
+        "lfoShape is a uiCombo",
+        "each entry sends CC 20 on ch 1 with its mapped value (Triangle 32, Square 96, Sine 0, S&H 127)",
+        "the last entry is displayed as 'S&H' (ampersand survived XML escaping)"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "parse-sysex-dump",
+      "prompt": "My synth sends its current patch as a SysEx dump: F0 00 20 33 01 10 aa bb cc F7, where aa, bb and cc are the values of Osc 1 level, Osc 2 level and filter cutoff (0-127 each). Make dump_receiver.panel update its three knobs (osc1Level, osc2Level, filterCutoff) whenever such a dump arrives from the synth. Any other SysEx must be ignored. Edit the file in place.",
+      "expected_output": "A luaPanelMidiReceived (or equivalent) handler that matches the header, reads bytes via MemoryBlock/getData and sets the three modulators; foreign SysEx ignored.",
+      "files": [
+        "evals/files/dump_receiver.panel"
+      ],
+      "grader": "evals/graders/eval_06_parse_sysex_dump.py",
+      "expectations": [
+        "dump_receiver.panel is still there",
+        "panel_tool lint passes",
+        "panel handles the dumps with no errors",
+        "dump 11 22 33 sets osc1Level=17, osc2Level=34, filterCutoff=51",
+        "a SysEx with a different header leaves the knobs alone",
+        "a second dump 7F 00 40 updates the knobs to 127, 0, 64"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "timer-throttled-burst",
+      "prompt": "Add a button 'sendAll' to synth.panel. Clicking it must send CC 20 through CC 35 on MIDI channel 1, where CC n gets the value (n - 20) * 8. My synth drops messages that arrive less than 20 ms apart, so space them out with a timer instead of sending them all at once. Edit synth.panel in place.",
+      "expected_output": "A button whose callback queues 16 CCs and drains them from a timer (>= 20 ms apart), stopping the timer when done; re-clicking repeats cleanly.",
+      "files": [
+        "evals/files/synth.panel"
+      ],
+      "grader": "evals/graders/eval_07_timer_burst.py",
+      "expectations": [
+        "synth.panel is still there",
+        "panel_tool lint passes",
+        "panel runs with no errors",
+        "sendAll is a button",
+        "the click does not send all 16 at once (spaced by a timer)",
+        "first click: all 16 CCs (20..35, value (n-20)*8) arrive in order, none dropped",
+        "second click: the full sequence again, nothing left over from the first"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "show-hide-by-type",
+      "prompt": "fx.panel has an effect-type dropdown 'fxType' (Reverb, Delay, Chorus) and six knobs. Make it show only the knobs that belong to the selected effect: reverbTime and reverbSize for Reverb, delayTime and delayFeedback for Delay, chorusRate and chorusDepth for Chorus. Edit the file in place.",
+      "expected_output": "A value-change callback on fxType that sets component visibility so exactly the selected effect's two knobs are effectively visible.",
+      "files": [
+        "evals/files/fx.panel"
+      ],
+      "grader": "evals/graders/eval_08_show_hide.py",
+      "expectations": [
+        "fx.panel is still there",
+        "panel_tool lint passes",
+        "selecting effect types raises no errors",
+        "Delay: exactly its two knobs are effectively visible",
+        "Chorus: exactly its two knobs are effectively visible",
+        "Reverb (after switching away and back): exactly its two knobs are effectively visible"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "custom-step-grid",
+      "prompt": "Add an 8-step sequencer grid to synth.panel as a uiCustomComponent named 'stepGrid' (400 x 50 pixels, 8 cells side by side). It should paint each cell (active cells filled, inactive ones outlined) and toggle the cell under the mouse when clicked. Keep the step state in a global Lua table named 'stepState' with entries stepState[1] to stepState[8] that are true or false, so I can inspect it from scripts. All steps start off. Edit synth.panel in place.",
+      "expected_output": "A uiCustomComponent with paint + mouse callbacks; stepState initialised to 8 false; paint runs without errors; a click toggles the cell under the mouse.",
+      "files": [
+        "evals/files/synth.panel"
+      ],
+      "grader": "evals/graders/eval_09_custom_grid.py",
+      "expectations": [
+        "synth.panel is still there",
+        "panel_tool lint passes",
+        "stepGrid is a 400x50 uiCustomComponent",
+        "paint and mouse callbacks name existing Lua methods",
+        "load, paint (screenshot), and clicks raise no errors",
+        "stepState starts as 8 false entries",
+        "screenshot rendered the canvas",
+        "a centre click turns on exactly one cell (4 or 5)",
+        "a second click turns it off again"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "write-probe-test",
+      "prompt": "octave.panel has an 'octave' knob (0-3) and a label 'octaveDisplay'. I want an automated check for this behaviour: moving 'octave' to 2 sends CC 51 with value 64 on MIDI channel 1, and the label then reads '+2 oct'. Write a shell script check_octave.sh that runs this check with CtrlrPanelProbe (the binary is at $CTRLRX_PANEL_PROBE), takes the panel file as its only argument, and exits 0 if the panel behaves and non-zero otherwise. Don't change octave.panel.",
+      "expected_output": "check_octave.sh drives setValue octave=2 through the probe and asserts exact MIDI (b0 33 40), the exact label text and errorCount 0; it passes on the panel and fails on mutated panels.",
+      "files": [
+        "evals/files/octave.panel"
+      ],
+      "grader": "evals/graders/eval_10_write_probe_test.py",
+      "expectations": [
+        "octave.panel is unchanged",
+        "check_octave.sh was created",
+        "the script exits 0 on the correct panel",
+        "the script fails on a mutant: CC number 52 instead of 51",
+        "the script fails on a mutant: value expression *31 (sends 62)",
+        "the script fails on a mutant: label off by one ('+3 oct')"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "lua-files-inlined",
+      "prompt": "In lua_project/ I keep my panel at panel/synth.panel, and I want to keep its Lua in separate files under lua/ instead of editing XML attributes. Please (1) write a script tools/inline_lua.py that, when run from lua_project/ as `python3 tools/inline_lua.py`, inlines every lua/*.lua file into panel/synth.panel as a Lua method named after the file (lua/foo.lua becomes method foo), replacing the method if it already exists; (2) create lua/onCutoff.lua with a method onCutoff that prints 'cutoff ' followed by the value to the console; (3) wire onCutoff as the cutoff knob's value-change callback, run the script, and make sure the panel works.",
+      "expected_output": "An idempotent inliner that XML-escapes file contents into <luaMethod> entries (replace, not duplicate); onCutoff wired and printing; re-runs pick up edits and new files.",
+      "files": [
+        "evals/files/lua_project"
+      ],
+      "grader": "evals/graders/eval_11_lua_files_inlined.py",
+      "expectations": [
+        "lua/onCutoff.lua and tools/inline_lua.py exist",
+        "panel_tool lint passes",
+        "the onCutoff method in the panel is exactly lua/onCutoff.lua",
+        "moving cutoff prints 'cutoff 42' with no errors",
+        "re-running tools/inline_lua.py after edits succeeds",
+        "an edited file replaces its method (one onCutoff, prints 'CUT 42')",
+        "a new lua/helper.lua becomes a callable method returning 7"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "edit-bpanelz",
+      "prompt": "I only have my panel as vintage.bpanelz. Change the resonance knob so it sends CC 16 instead of CC 71, and save the result as vintage_edited.panel that I can open in CtrlrX. Keep everything else the same.",
+      "expected_output": "Decodes the binary ValueTree (e.g. panel_tool.py dump/summary), writes an XML vintage_edited.panel with resonance on CC 16 and nothing else lost.",
+      "files": [
+        "evals/files/vintage.bpanelz"
+      ],
+      "grader": "evals/graders/eval_12_edit_bpanelz.py",
+      "expectations": [
+        "vintage_edited.panel was created",
+        "it is plain XML with a <panel> root",
+        "panel_tool lint passes",
+        "it loads and runs in the probe with no errors",
+        "resonance now sends CC 16 (b0 10 32)",
+        "cutoff still sends CC 74 (b0 4a 32)",
+        "nothing else was lost (2 modulators, 6 Lua methods)"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "shared-callback-dispatch",
+      "prompt": "params.panel has four knobs: cutoff, resonance, attack and release. They don't send any MIDI yet. My synth takes parameter changes as SysEx: F0 7D 10 pp vv F7, where vv is the knob value and pp is the parameter number: 10 (hex) for cutoff, 11 for resonance, 12 for attack and 13 for release. Write ONE Lua method that all four knobs call when they change (I'll add many more knobs later, so no copy per knob) and wire the knobs to it. Edit params.panel in place.",
+      "expected_output": "One luaMethod named by all four knobs' luaModulatorValueChange; it identifies the knob by something that compares as a Lua value (getVstIndex(), getProperty(\"name\"), ...), not by comparing mod:getName() (a juce String userdata) to a Lua string, and sends F0 7D 10 pp vv F7.",
+      "files": [
+        "evals/files/params.panel"
+      ],
+      "grader": "evals/graders/eval_13_shared_callback.py",
+      "expectations": [
+        "params.panel is still there",
+        "panel_tool lint passes",
+        "all four knobs run the same existing Lua method on a value change",
+        "moving the knobs raises no errors",
+        "cutoff at 100 sends exactly f0 7d 10 10 64 f7",
+        "resonance at 33 sends exactly f0 7d 10 11 21 f7",
+        "attack at 5 sends exactly f0 7d 10 12 05 f7",
+        "release at 127 sends exactly f0 7d 10 13 7f f7"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "second-device-channel",
+      "prompt": "synth.panel controls my synth on MIDI channel 1. On the same MIDI port I also have an effects unit that listens on MIDI channel 5. Add a knob 'fxMix' (0-127) to synth.panel that sends CC 91 to the effects unit, and that follows along when I turn the mix knob on the effects unit itself (the unit then sends CC 91 on channel 5). The synth's own controls must stay on channel 1. Edit synth.panel in place.",
+      "expected_output": "fxMix sends b4 5b vv and follows inbound CC 91 on channel 5 only: midiMessageChannel=5 together with midiMessageChannelOverride=1 (without the override the panel's channel wins in both directions), or an equivalent Lua path.",
+      "files": [
+        "evals/files/synth.panel"
+      ],
+      "grader": "evals/graders/eval_14_second_device_channel.py",
+      "expectations": [
+        "synth.panel is still there",
+        "panel_tool lint passes",
+        "the panel runs with no errors",
+        "fxMix exists with range 0..127",
+        "fxMix at 100 sends exactly CC 91 = 100 on channel 5 (b4 5b 64)",
+        "cutoff still sends CC 74 on channel 1 (b0 4a 40)",
+        "CC 91 = 51 arriving on channel 5 moves fxMix to 51",
+        "CC 91 arriving on channel 1 leaves fxMix alone"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "dump-without-echo",
+      "prompt": "patch_sync.panel has three knobs (osc1Level, osc2Level, filterCutoff), and each already sends its own parameter change to my synth from Lua (the method sendParam). When I press a button on the synth it sends its current patch as F0 7D 02 aa bb cc F7, where aa, bb and cc are the three knob values. Make the panel update the knobs from such a dump. Important: while the panel loads a dump it must not send anything back to the synth, because every message it receives makes the synth reload and glitch. Turning a knob by hand must still send the parameter change as before. Edit patch_sync.panel in place.",
+      "expected_output": "A luaPanelMidiReceived handler that sets the knobs without triggering sendParam (setModulatorValue(v, false, false, true), or sendParam gated on the change source) - a flag set around setValue does not work because value-change callbacks run asynchronously - and the panel's device-to-device MIDI thru switched off so the dump is not echoed.",
+      "files": [
+        "evals/files/patch_sync.panel"
+      ],
+      "grader": "evals/graders/eval_15_dump_without_echo.py",
+      "expectations": [
+        "patch_sync.panel is still there",
+        "panel_tool lint passes",
+        "the panel handles the dumps with no errors",
+        "dump 11 22 33 sets osc1Level=17, osc2Level=34, filterCutoff=51",
+        "loading a dump sends no parameter change (or anything else) back to the synth",
+        "the dump itself is not echoed back to the synth",
+        "a second dump 7F 00 40 updates the knobs to 127, 0, 64 before osc2Level is moved",
+        "moving osc2Level by hand to 99 still sends exactly f0 7d 01 02 63 f7"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "trigger-buttons",
+      "held_out": true,
+      "prompt": "Add two buttons to synth.panel: 'storePatch', which tells my synth to store the current patch by sending F0 7D 01 20 F7, and 'requestDump', which asks it for a patch dump by sending F0 7D 01 30 F7. Every click must send its message. Edit synth.panel in place.",
+      "expected_output": "Two uiButtons wired to a mouse-up Lua callback (or another hook that fires on every click) that sends each button's frame exactly once per click; the cutoff knob is untouched.",
+      "files": [
+        "evals/files/synth.panel"
+      ],
+      "grader": "evals/graders/eval_16_trigger_buttons.py",
+      "expectations": [
+        "synth.panel is still there",
+        "panel_tool lint passes",
+        "panel runs with no errors",
+        "storePatch is a button",
+        "requestDump is a button",
+        "every click on storePatch sends exactly f0 7d 01 20 f7, once",
+        "every click on requestDump sends exactly f0 7d 01 30 f7, once",
+        "cutoff still sends CC 74"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "format-for-diff",
+      "held_out": true,
+      "prompt": "editor.panel is under git, and its long single-line tags make every diff unreadable. Write tools/format_panel.py, used as `python3 tools/format_panel.py FILE`, that rewrites a panel file in place in one canonical layout: every attribute on its own line, consistently ordered and indented, so that diffs show only real changes. Running it twice must change nothing. Run it on editor.panel. The panel has to behave exactly as before.",
+      "expected_output": "A formatter that keeps each element's attributes in file order (CtrlrX applies them in order; sorting changes the one-line buttons' range), writes one attribute per line, keeps Lua code byte for byte, and is idempotent; editor.panel reformatted with identical behaviour.",
+      "files": [
+        "evals/files/editor.panel"
+      ],
+      "grader": "evals/graders/eval_17_format_for_diff.py",
+      "expectations": [
+        "editor.panel is still there",
+        "tools/format_panel.py exists",
+        "editor.panel was reformatted",
+        "panel_tool lint passes",
+        "every attribute is on its own line",
+        "running the formatter again changes nothing",
+        "every Lua method's code is unchanged, byte for byte",
+        "every element keeps its attributes and values",
+        "the formatted panel runs with no errors",
+        "the panel loads to the same state as before (range, value, visibility of every control)",
+        "each trigger button still sends its frame"
+      ]
+    }
+  ]
+}

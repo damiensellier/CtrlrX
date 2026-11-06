@@ -1,0 +1,4 @@
+{ "settleMs": 300, "steps": [
+  { "action": "callLuaMethod", "method": "sayHello" },
+  { "action": "callLuaMethod", "method": "echo", "args": [7, "x", true] }
+] }

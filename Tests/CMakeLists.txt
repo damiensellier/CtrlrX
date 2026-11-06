@@ -55,3 +55,56 @@ gtest_discover_tests(TestsProcessor
     DISCOVERY_MODE PRE_TEST
     PROPERTIES TIMEOUT 120)
 
+# ----------------------------------------------------------------------------------------------
+# CtrlrPanelProbe -- headless one-shot panel behaviour probe (see Doc/PanelProbe.md).
+#
+# Not a gtest binary: it drives a real CtrlrProcessor outside any TEST, but reuses the same mock
+# MIDI layer (${MockFiles}) and links SharedCode (${PROJECT_NAME}) exactly like TestsProcessor.
+# ----------------------------------------------------------------------------------------------
+file(GLOB_RECURSE ProbeFiles CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/probe_*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/probe_*.h")
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/ PREFIX "" FILES ${ProbeFiles})
+
+add_executable(CtrlrPanelProbe ${MockFiles} ${ProbeFiles})
+# Links gmock (for NiceMock/ON_CALL used by the mock MIDI layer) but provides its own main().
+target_link_libraries(CtrlrPanelProbe
+    PRIVATE
+    gtest
+    gmock
+    ${PROJECT_NAME})
+target_compile_definitions(CtrlrPanelProbe PRIVATE $<TARGET_PROPERTY:${PROJECT_NAME},COMPILE_DEFINITIONS>)
+target_include_directories(CtrlrPanelProbe PRIVATE $<TARGET_PROPERTY:${PROJECT_NAME},INCLUDE_DIRECTORIES>)
+target_compile_features(CtrlrPanelProbe PRIVATE cxx_std_17)
+# The Source/ headers mix `override` with unmarked overrides, which Clang reports once per including
+# translation unit. SharedCode itself builds with -w; keep the probe's own build log readable.
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(CtrlrPanelProbe PRIVATE -Wno-inconsistent-missing-override)
+endif ()
+
+if ((DEFINED ENV{CI}))
+    target_compile_definitions(CtrlrPanelProbe PUBLIC CI=1)
+endif ()
+
+# Self-test: drives the probe against known fixtures and validates the JSON report + exit codes.
+# Registered as an individual ctest case, fitting the existing per-test parallel layout.
+configure_file("probe_selftest.json" "probe_selftest.json" COPYONLY)
+configure_file("probe_selftest.py" "probe_selftest.py" COPYONLY)
+configure_file("png_sample.py" "png_sample.py" COPYONLY) # pixel sampler the self-test imports
+# Probe fixtures are moved with the fixtures glob above.
+# Probe scripts (click, visibility, console/args, setLayerVisible).
+configure_file("probe_click.json"      "probe_click.json"      COPYONLY)
+configure_file("probe_visibility.json" "probe_visibility.json" COPYONLY)
+configure_file("probe_console.json"    "probe_console.json"    COPYONLY)
+configure_file("probe_layers.json"     "probe_layers.json"     COPYONLY)
+# Located rather than hardcoded: Windows installs `python`, not `python3`.
+find_package(Python3 COMPONENTS Interpreter)
+if (Python3_Interpreter_FOUND)
+    add_test(NAME PanelProbeSelfTest
+        COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_BINARY_DIR}/probe_selftest.py" $<TARGET_FILE:CtrlrPanelProbe>)
+    # Scenario 14 is a timing guard (30 steps must finish well inside 3 s of step time), so give the
+    # whole self-test enough headroom to stay meaningful on a loaded CI box without going flaky.
+    set_tests_properties(PanelProbeSelfTest PROPERTIES TIMEOUT 300)
+else ()
+    message(STATUS "Python 3 not found: PanelProbeSelfTest is not registered")
+endif ()
+
