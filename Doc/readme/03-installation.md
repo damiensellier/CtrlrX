@@ -59,10 +59,10 @@ You must have **GnuPG** (often just `gpg`) installed on your system.
 
 ##### 1. Import the Public Signing Key
 
-The files are signed with the **CtrlrX Project Key** (`FC9F02DE24F1BC96`). Fetch this key from a public keyserver:
+The files are signed with the **CtrlrX Project Key** (`BDD8B991FDD59BDC`). Fetch this key from a public keyserver:
 
 ```bash
-gpg --keyserver hkps://keys.openpgp.org --recv-keys FC9F02DE24F1BC96
+gpg --keyserver hkps://keys.openpgp.org --recv-keys BDD8B991FDD59BDC
 ```
 
 ##### 2. Extract and Verify

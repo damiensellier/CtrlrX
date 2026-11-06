@@ -84,7 +84,7 @@ ones the plugin packages use. Builds of forks and pull requests never have them,
   CtrlrX Project Key (see [03 — Installation Guide](readme/03-installation.md#linux-signature-verification-gpg)):
 
   ```bash
-  gpg --keyserver hkps://keys.openpgp.org --recv-keys FC9F02DE24F1BC96
+  gpg --keyserver hkps://keys.openpgp.org --recv-keys BDD8B991FDD59BDC
   gpg --verify CtrlrPanelProbe.sig CtrlrPanelProbe    # expect: Good signature from "CtrlrX Project …"
   ```
 
