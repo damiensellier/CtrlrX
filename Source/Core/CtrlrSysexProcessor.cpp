@@ -614,7 +614,7 @@ void CtrlrSysexProcessor::showMidiHelp()
         "-2       = Parent component number\n\n"
         "SysEx Messages:\n"
         "Use the same formula as in the SysEx editor (F0 .. F7)\n\n"
-        "Use the Custom ... option to add custom MIDI.\n\n"
+       // "Use the Custom ... option to add custom MIDI.\n\n"
         "Use Latch & Stream to send Header once followed by data(NRPN/RPN).";
 
 #if JUCE_MAJOR_VERSION >= 8
