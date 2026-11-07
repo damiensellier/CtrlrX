@@ -236,7 +236,7 @@ class CtrlrPanel:	public ValueTree::Listener,
 		void panelReceivedMidi(const MidiBuffer &buffer, const CtrlrMIDIDeviceType source = inputDevice);
 		void handleAsyncUpdate();
 		void sendSnapshotOnLoad();
-		bool isLoading();
+		bool isLoading() const;
 		bool getRestoreState();
 		bool getProgramState();
 		bool getBootstrapState();
@@ -356,11 +356,15 @@ class CtrlrPanel:	public ValueTree::Listener,
     
     
 	private:
+		std::atomic<bool> restoreStateStatus{false};
+		std::atomic<bool> programState{false};
+		std::atomic<bool> boostrapStateStatus{false};
+		std::atomic<bool> postBootstrapGate{false};
 		ValueTree initialProgram, panelTree;
 		ReadWriteLock panelLock;
 		CtrlrLuaManager *ctrlrLuaManager;
 		double globalMidiDelay;
-		bool restoreStateStatus, boostrapStateStatus, programState, editMode;
+		bool editMode;
 		ListenerList <CtrlrPanel::Listener> listeners;
 		WeakReference<CtrlrPanelEditor> ctrlrPanelEditor;
 		CtrlrManager &owner;

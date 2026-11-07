@@ -374,110 +374,73 @@ void CtrlrPanel::sendSnapshotOnLoad()
 	}
 }
 
-bool CtrlrPanel::isLoading()
+bool CtrlrPanel::isLoading() const
 {
-    const ScopedReadLock lock (panelLock);
-
-    // 1. Structural Gates: Immediate block if loading a DAW project or preset bank
-    if (restoreStateStatus || programState)
-    {
-        return true;
-    }
-
-    // 2. Core Bootstrap Gate: If C++ is actively inside bootstrapPanel(), ALWAYS block
-    if (boostrapStateStatus)
-    {
-        return true;
-    }
-
-    // 3. The Asynchronous Cooldown Gate (Your Timer Rule)
-    if (isBootstrapTimerActive)
-    {
-        uint32 currentTime = juce::Time::getMillisecondCounter();
-        
-        // Use a tight 300ms to 500ms cooldown window AFTER boostrapStateStatus drops to false
-        if (currentTime - bootstrapStartTime > 400)
-        {
-            const_cast<CtrlrPanel*>(this)->isBootstrapTimerActive = false;
-			//juce::Logger::writeToLog("[CtrlrX Engine] >>> 400ms Cooldown Passed. GATE IS OPEN! <<<");
-            return false;
-        }
-        
-        return true;
-    }
-
-    return false;
+    return restoreStateStatus.load()
+        || programState.load()
+        || boostrapStateStatus.load()
+        || postBootstrapGate.load();
 }
-void CtrlrPanel::bootstrapPanel(const bool setInitialProgram)
-{
-    _DBG("CtrlrPanel::bootstrapPanel");
-    if (getRestoreState())
-        return;
 
-    boostrapStateStatus = true;
-    
-    // Capture the exact system time when boot started
-    bootstrapStartTime = juce::Time::getMillisecondCounter();
-    isBootstrapTimerActive = true;
-    for (int i=0; i<ctrlrModulators.size(); i++)
-    {
-        ctrlrModulators[i]->allModulatorsInitialized();
-    }
+void CtrlrPanel::bootstrapPanel(const bool setInitialProgram) {
+	_DBG("CtrlrPanel::bootstrapPanel");
+	if (getRestoreState())
+		return;
 
-    if (setInitialProgram)
-        setProgram (initialProgram);
+	boostrapStateStatus = true;
+	_DBG("[Gate] bootstrap START, isLoading=" + String(isLoading() ? "true" : "false"));
 
-    if (luaPanelLoadedCbk.get())
-    {
-        if (luaPanelLoadedCbk->isValid())
-        {
-            getCtrlrLuaManager().getMethodManager().call (luaPanelLoadedCbk, (uint8)owner.getInstanceMode());
-        }
-    }
-
-    if ((bool)getProperty (Ids::panelMidiSendProgramChangeOnLoad) == true)
-    {
-        sendMidiProgramChange();
-    }
-
-    editModeChanged(getProperty(Ids::uiPanelEditMode));
-
-    sendSnapshotOnLoad();
-
-    // Synchronously dispatch any pending change message in each modulator to prevent Lua Callback functions beeing called on startup
-    for (int i = 0; i<ctrlrModulators.size(); i++)
-    {
-        ctrlrModulators[i]->getProcessor().handleUpdateNowIfNeeded();
-    }
-
-    boostrapStateStatus = false;
-    bootstrapStartTime = juce::Time::getMillisecondCounter();
-    isBootstrapTimerActive = true;
-
-	const int needed = owner.getNumModulators(true); // largest vstIndex + 1, manager-wide
-	const int advertised = owner.getProcessorOwner()->getNumParameters();
-
-	if (needed > advertised) {
-		const String msg = "Panel exports " + String(needed) +
-						   " VST parameters but this instance "
-						   "advertises " +
-						   String(advertised) + ". Host automation for parameters " + String(advertised) + "-" +
-						   String(needed - 1) + " is unavailable.";
-		_WRN(msg);
-
-		// Show the warning if the editor is already open/created.
-		if (getDialogStatus())
-			if (CtrlrPanelEditor *ed = getEditor(false))
-				ed->notify(msg, nullptr, NotifyWarning);
+	for (int i = 0; i < ctrlrModulators.size(); i++) {
+		ctrlrModulators[i]->allModulatorsInitialized();
 	}
 
-	if (needed > 0) {
-		// Parameter names were read by the host at init as " ", before any panel was loaded.
-		// Ask the host to re-read them now that modulators are attached.
-		owner.getProcessorOwner()->updateHostDisplay(
-			AudioProcessorListener::ChangeDetails().withParameterInfoChanged(true));
+	if (setInitialProgram)
+		setProgram(initialProgram);
+
+	if (luaPanelLoadedCbk.get()) {
+		if (luaPanelLoadedCbk->isValid()) {
+			getCtrlrLuaManager().getMethodManager().call(luaPanelLoadedCbk, (uint8)owner.getInstanceMode());
+		}
 	}
+
+	if ((bool)getProperty(Ids::panelMidiSendProgramChangeOnLoad) == true) {
+		sendMidiProgramChange();
+	}
+
+	editModeChanged(getProperty(Ids::uiPanelEditMode));
+
+	sendSnapshotOnLoad();
+
+	// Synchronously dispatch any pending change message in each modulator to prevent Lua Callback functions beeing
+	// called on startup
+	for (int i = 0; i < ctrlrModulators.size(); i++) {
+		ctrlrModulators[i]->getProcessor().handleUpdateNowIfNeeded();
+	}
+
+	boostrapStateStatus = false;
+	postBootstrapGate = true;
+	const double gateStartMs = juce::Time::getMillisecondCounterHiRes();
+	_DBG("[Gate] bootstrap END, isLoading=" + String(isLoading() ? "true" : "false"));
+
+	juce::MessageManager::callAsync([safe = juce::WeakReference<CtrlrPanel>(this), gateStartMs] {
+		if (safe == nullptr)
+			return;
+
+		_DBG("[Gate] hop 1 reached, +" +
+			 String(juce::Time::getMillisecondCounterHiRes() - gateStartMs, 3) +
+			 " ms, isLoading=" + String(safe->isLoading() ? "true" : "false"));
+
+		juce::MessageManager::callAsync([safe, gateStartMs] {
+			if (safe != nullptr) {
+				safe->postBootstrapGate = false;
+				_DBG("[Gate] hop 2 reached, gate CLOSED, +" +
+					 String(juce::Time::getMillisecondCounterHiRes() - gateStartMs, 3) +
+					 " ms, isLoading=" + String(safe->isLoading() ? "true" : "false"));
+			}
+		});
+	});
 }
+
 
 CtrlrPanelEditor *CtrlrPanel::getEditor(const bool createNewEditorIfNeeded)
 {
