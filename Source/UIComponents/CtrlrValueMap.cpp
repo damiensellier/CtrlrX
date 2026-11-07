@@ -203,7 +203,7 @@ int CtrlrValueMap::getNonMappedMin() const
 
 int CtrlrValueMap::getMappedValue(const int valueIndex) const
 {
-	return (values[valueIndex].numericValue);
+	return values.isEmpty() ? valueIndex : values[jlimit(0, values.size() - 1, valueIndex)].numericValue;
 }
 
 const String CtrlrValueMap::getTextForIndex(const int valueIndex) const

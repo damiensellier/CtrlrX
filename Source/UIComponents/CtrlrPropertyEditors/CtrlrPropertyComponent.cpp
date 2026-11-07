@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "CtrlrPropertyComponent.h"
 #include "CtrlrLua/MethodEditor/CtrlrLuaMethodEditor.h"
 #include "CtrlrLuaManager.h"
@@ -1524,37 +1524,17 @@ void CtrlrMultiMidiPropertyComponent::buttonClicked(Button* buttonThatWasClicked
 			if (i % 3 == 0)
 				m.addSeparator();
 			m.addItem(standardStartId + i, standardTypes[i].name);
-		}
-		m.addSeparator();
+        }
 
-		// Custom editor
-		int customId = standardStartId + numElementsInArray(standardTypes);
-		m.addItem(customId, "Custom...");
-
-		// Show popup and handle selection
+        // Show popup and handle selection
 		int ret = m.show();
 
 		if (ret <= 0)
 			return; // cancelled
 
-		if (ret == customId) // Custom editor
-		{
-			CtrlrSysexProcessor sysexProcessor;
-			String newCsv = sysexProcessor.openAdvancedMessageEditor();
-
-			if (newCsv.isNotEmpty())
-			{
-				String currentValue = valueToControl.toString();
-				if (currentValue.isNotEmpty())
-					valueToControl = currentValue + ":" + newCsv;
-				else
-					valueToControl = newCsv;
-				refresh();
-			}
-		}
-		else if (ret <= templateKeys.size()) // XML template
-		{
-			String data = templates.getValue(templateKeys[ret - 1], "");
+        if (ret <= templateKeys.size()) // XML template
+        {
+            String data = templates.getValue(templateKeys[ret - 1], "");
 			if (data.isNotEmpty())
 			{
 				String currentValue = valueToControl.toString();
@@ -1564,10 +1544,9 @@ void CtrlrMultiMidiPropertyComponent::buttonClicked(Button* buttonThatWasClicked
 					valueToControl = data;
 				refresh();
 			}
-		}
-		else // Standard MIDI type
-		{
-			int index = ret - standardStartId;
+        } else // Standard MIDI type
+        {
+            int index = ret - standardStartId;
 			if (index >= 0 && index < numElementsInArray(standardTypes))
 			{
 				String currentValue = valueToControl.toString();
@@ -1577,8 +1556,8 @@ void CtrlrMultiMidiPropertyComponent::buttonClicked(Button* buttonThatWasClicked
 					valueToControl = standardTypes[index].defaultCsv;
 				refresh();
 			}
-		}
-	}
+        }
+    }
 	else if (buttonThatWasClicked == removeMulti)
 	{
 		int selectedRow = listMulti->getSelectedRow();
