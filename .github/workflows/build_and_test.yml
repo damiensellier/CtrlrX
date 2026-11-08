@@ -8,8 +8,18 @@ on:
         description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
         required: false
         default: false
+  # Skip pushes/PRs that only touch *.md or *.txt files. `paths` (with `!` negation) instead of
+  # `paths-ignore`, because some .txt files ARE build inputs and must be re-included: a later
+  # pattern overrides an earlier one. Tag pushes ignore path filters, so releases still run.
   push:
+    paths: &build_paths
+      - '**'
+      - '!**.md'
+      - '!**.txt'
+      - '**/CMakeLists.txt'
+      - 'Tests/known_failures_*.txt'
   pull_request:
+    paths: *build_paths
 
 concurrency:
   group: ${{ github.ref }}
