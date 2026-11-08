@@ -20,7 +20,7 @@ PointerAlignment: Right
 
 # --- BRACE BREAKING STYLE ---
 # The project uses a variation of Allman/GNU where braces break onto new lines
-BreakBeforeBrackets: Custom
+BreakBeforeBraces: Custom
 BraceWrapping:
   AfterClass: true
   AfterControlStatement: false
