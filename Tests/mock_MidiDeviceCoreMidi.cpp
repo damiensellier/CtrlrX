@@ -56,6 +56,7 @@ InformMockMidiOfSubsystem mockMidiSubsystem;
 #include <cstdio>
 #include <cstring>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -147,6 +148,11 @@ namespace
     std::vector<MIDIPortRef> g_connectedInputs;            // input ports with a connected source
     MIDIPortRef  g_nextPort = kPortBase;
     juce::uint32 g_startMillis = 0;
+
+    // One UMP -> bytestream converter per output port, kept across
+    // MIDISendEventList calls: JUCE splits a long sysex over several calls (see there). JUCE
+    // creates one output port per opened MidiOutput and disposes it on close (MIDIPortDispose).
+    std::map<MIDIPortRef, std::unique_ptr<ump::ToBytestreamConverter>> g_outputConverters;
 
     // Build a MIDIEventList (MIDI 1.0 UMP) from one MidiMessage and invoke each connected input
     // block. GenericUMPConverter splits sysex into sysex7 UMP packets; JUCE's U32ToBytestreamHandler
@@ -341,7 +347,7 @@ OSStatus MIDIOutputPortCreate (MIDIClientRef, CFStringRef portName, MIDIPortRef*
     return noErr;
 }
 
-OSStatus MIDISendEventList (MIDIPortRef, MIDIEndpointRef dest, const MIDIEventList* evtList)
+OSStatus MIDISendEventList (MIDIPortRef outPort, MIDIEndpointRef dest, const MIDIEventList* evtList)
 {
     int dev, port; bool isSource;
     if (! decodeEndpoint (dest, dev, port, isSource) || evtList == nullptr)
@@ -352,46 +358,57 @@ OSStatus MIDISendEventList (MIDIPortRef, MIDIEndpointRef dest, const MIDIEventLi
     if (m == nullptr)
         return noErr;
 
-    // A persistent translator would be needed to reassemble a sysex split across multiple
-    // MIDISendEventList calls; the fixture sends each sysex in one list, so a per-call converter
-    // suffices (and avoids cross-device interleave).
-    ump::ToBytestreamConverter converter (4096);
-
-    const MIDIEventPacket* packet = &evtList->packet[0];
-    for (UInt32 i = 0; i < evtList->numPackets; ++i)
+    // Updated v5.6.37. JUCE fills a fixed-size MIDIEventList on the stack and calls
+    // MIDISendEventList each time it is full (juce_mac_CoreMidi.mm, juce_CoreMidi_mac.mm), so a
+    // long sysex (~6 bytes per sysex7 packet) arrives over several calls. The converter that
+    // reassembles it must outlive one call: it is kept per output port. The mock used to make a new
+    // converter per call, which silently dropped every sysex longer than one list.
+    // Finished messages are collected under the lock and sent to the mock after it.
+    std::vector<juce::MidiMessage> messages;
     {
-        ump::Iterator it   (packet->words, packet->wordCount * sizeof (juce::uint32));
-        ump::Iterator end  (packet->words + packet->wordCount, 0);
-        for (; it != end; ++it)
-            // GUARD 3: JUCE 6's translator hands the callback a ready-made MidiMessage. As of JUCE
-            // 8.0.12 SingleGroupMidi1ToBytestreamTranslator::dispatch instead calls
-            // `callback (BytesOnGroup { 0, bytes }, time)`, so the message must be rebuilt from the
-            // bytes. The body is the same either way.
-#if JUCE_MAJOR_VERSION >= 8
-            converter.convert (*it, 0.0, [&] (const ump::BytesOnGroup& groupBytes, double)
-            {
-                if (groupBytes.bytes.empty())
-                    return;
+        std::lock_guard<std::mutex> lock (g_mutex);
+        auto& converter = g_outputConverters[outPort];
+        if (converter == nullptr)
+            converter = std::make_unique<ump::ToBytestreamConverter> (4096);
 
-                m->sendMidiEvent (dev, port,
-                                  juce::MidiMessage (groupBytes.bytes.data(),
-                                                     (int) groupBytes.bytes.size()));
-            });
+        const MIDIEventPacket* packet = &evtList->packet[0];
+        for (UInt32 i = 0; i < evtList->numPackets; ++i)
+        {
+            ump::Iterator it   (packet->words, packet->wordCount * sizeof (juce::uint32));
+            ump::Iterator end  (packet->words + packet->wordCount, 0);
+            for (; it != end; ++it)
+                // GUARD 3: JUCE 6's translator hands the callback a ready-made MidiMessage. As of JUCE
+                // 8.0.12 SingleGroupMidi1ToBytestreamTranslator::dispatch instead calls
+                // `callback (BytesOnGroup { 0, bytes }, time)`, so the message must be rebuilt from the
+                // bytes. The body is the same either way.
+#if JUCE_MAJOR_VERSION >= 8
+                converter->convert (*it, 0.0, [&] (const ump::BytesOnGroup& groupBytes, double)
+                {
+                    if (groupBytes.bytes.empty())
+                        return;
+
+                    messages.emplace_back (groupBytes.bytes.data(), (int) groupBytes.bytes.size());
+                });
 #else
-            converter.convert (*it, 0.0, [&] (const juce::MidiMessage& msg)
-            {
-                m->sendMidiEvent (dev, port, msg);
-            });
+                converter->convert (*it, 0.0, [&] (const juce::MidiMessage& msg)
+                {
+                    messages.push_back (msg);
+                });
 #endif
 
-        packet = MIDIEventPacketNext (packet);
+            packet = MIDIEventPacketNext (packet);
+        }
     }
+
+    for (const auto& msg : messages)
+        m->sendMidiEvent (dev, port, msg);
     return noErr;
 }
 
 OSStatus MIDIPortDispose (MIDIPortRef port)
 {
     std::lock_guard<std::mutex> lock (g_mutex);
+    g_outputConverters.erase (port);
     auto it = g_inputBlocks.find (port);
     if (it != g_inputBlocks.end())
     {
