@@ -79,11 +79,13 @@ def describe_last_run():
             f"stderr ends:\n{stderr_tail}")
 
 
-def run(probe, *args):
+def run(probe, *args, env=None):
     """Run the probe; return (exit_code, parsed_stdout_json_or_None, raw_stdout).
 
-    --verbose sends the probe's stderr (Lua, JUCE, X errors) to the pipe; stdout is the same."""
-    proc = _record(subprocess.run([probe, "--verbose", *args], capture_output=True, text=True, timeout=90))
+    --verbose sends the probe's stderr (Lua, JUCE, X errors) to the pipe; stdout is the same.
+    env: variables to set on top of this process's environment."""
+    proc = _record(subprocess.run([probe, "--verbose", *args], capture_output=True, text=True, timeout=90,
+                                  env=None if env is None else {**os.environ, **env}))
     try:
         report = json.loads(proc.stdout)
     except json.JSONDecodeError:
@@ -1067,6 +1069,33 @@ def scenario_34_unreadable_panel(probe):
             os.unlink(path)
 
 
+def scenario_35_no_x_display(probe):
+    # Without an X display (here: DISPLAY names a server that doesn't exist) the
+    # probe still runs a panel without dialogs, and on Linux the report warns that a modal dialog
+    # would crash it. It used to say nothing until the dialog's segfault.
+    code, rep, raw = run(probe, "fixtures/fixture_lua_valuechange.panel", env={"DISPLAY": ":987"})
+    rep = require_report(rep, "scenario 35")
+    require(code == 0, f"scenario 35 expected exit 0, got {code}: {rep.get('summary')}")
+    display = [w for w in rep["warnings"] if w["type"] == "display"]
+    if sys.platform.startswith("linux"):
+        require(len(display) == 1 and display[0]["modulator"] == "" and ":987" in display[0]["message"]
+                and "xvfb-run" in display[0]["message"],
+                f"scenario 35 one load-time 'display' warning that names DISPLAY: {rep['warnings']}")
+    else:
+        require(display == [], f"scenario 35 'display' warnings are Linux-only: {rep['warnings']}")
+    require(rep["summary"]["errorCount"] == 0, f"scenario 35 the warning is not an error: {rep['summary']}")
+
+    # Each --stdin report stands alone, so each one repeats the warning.
+    if sys.platform.startswith("linux"):
+        proc = _record(subprocess.run([probe, "--stdin", "fixtures/fixture_lua_valuechange.panel"],
+                                      input='{"steps": []}\n{"steps": []}\n', capture_output=True,
+                                      text=True, timeout=90, env={**os.environ, "DISPLAY": ":987"}))
+        reports = [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
+        require(len(reports) == 2 and all(len([w for w in r["warnings"] if w["type"] == "display"]) == 1
+                                          for r in reports),
+                f"scenario 35 every --stdin report carries the warning: {[r.get('warnings') for r in reports]}")
+
+
 SCENARIOS = [
     # --- Scenarios 1-16: report structure, exit codes, Lua values, visibility, speed, --stdin ---
     scenario_01_clean_run,
@@ -1112,6 +1141,9 @@ SCENARIOS = [
 
     # --- Scenario 34: an unreadable panel file is fatal, not an empty clean run ---
     scenario_34_unreadable_panel,
+
+    # --- Scenario 35: no X display is a warning, not a crash ---
+    scenario_35_no_x_display,
 ]
 
 
