@@ -13,22 +13,77 @@ the step did.
 
 The fixtures and the scripts this drives are copied next to this file in the build dir, so we
 chdir here first.
+
+Every scenario_NN_* function runs, in number order, also after an earlier one failed. The exit
+code is 1 if any scenario failed. If GTEST_OUTPUT is "xml:<dir>/" (as in CI), the result is also
+written to <dir>/PanelProbeSelfTest.xml, one JUnit test case per scenario, so the CI allowlist
+check (ci_check_test_results.py) sees each scenario. (Updated v5.6.37)
 """
 
 import json
 import os
+import re
+import signal
 import subprocess
 import sys
 import tempfile
 import time
+import traceback
+import xml.etree.ElementTree as ET
 from typing import NoReturn
 
 import png_sample  # next to this file, as in the build dir
 
 
+class ScenarioFailed(Exception):
+    """A check in a scenario failed. main() records it and goes on with the next scenario."""
+
+
+# The latest probe process, so require_report() can say why it gave no report.
+_last_run = None
+
+
+def _record(proc):
+    global _last_run
+    _last_run = proc
+    return proc
+
+
+# What a Debug build prints when it exits without teardown: JUCE's leak detector and gmock's
+# leaked-mock check. Hundreds of lines that would push the real cause out of the stderr tail.
+_EXIT_NOISE = re.compile(r"Leaked objects detected|juce_LeakedObjectDetector\.h|juce_Singleton\.h"
+                         r"|leaked mock|mock object should be deleted|^\s*$")
+
+
+def describe_last_run():
+    """The latest probe run's exit code (a signal by name), the start of stdout, the end of stderr
+    without the exit-time leak noise."""
+    if _last_run is None:
+        return "(no probe run yet)"
+    code = _last_run.returncode
+    code_text = str(code)
+    if code < 0:
+        try:
+            code_text = f"{code} ({signal.Signals(-code).name})"
+        except ValueError:
+            pass
+    elif code > 0x7FFFFFFF:  # Windows: an NTSTATUS, e.g. 0xC0000005 access violation
+        code_text = f"{code} (0x{code:08X})"
+    lines = (_last_run.stderr or "").splitlines()
+    kept = [line for line in lines if not _EXIT_NOISE.search(line)]
+    stderr_tail = "\n".join(kept[-25:])
+    if len(kept) < len(lines):
+        stderr_tail += f"\n({len(lines) - len(kept)} leak-detector or empty lines left out)"
+    return (f"exit code {code_text}\n"
+            f"stdout starts: {(_last_run.stdout or '')[:300]!r}\n"
+            f"stderr ends:\n{stderr_tail}")
+
+
 def run(probe, *args):
-    """Run the probe; return (exit_code, parsed_stdout_json_or_None, raw_stdout)."""
-    proc = subprocess.run([probe, *args], capture_output=True, text=True, timeout=90)
+    """Run the probe; return (exit_code, parsed_stdout_json_or_None, raw_stdout).
+
+    --verbose sends the probe's stderr (Lua, JUCE, X errors) to the pipe; stdout is the same."""
+    proc = _record(subprocess.run([probe, "--verbose", *args], capture_output=True, text=True, timeout=90))
     try:
         report = json.loads(proc.stdout)
     except json.JSONDecodeError:
@@ -50,23 +105,32 @@ def run_script(probe, panel, script, *flags):
 def run_stdin(probe, panel, scripts):
     """Feed several script dicts to one --stdin process; return the list of reports."""
     payload = "".join(json.dumps(s) + "\n" for s in scripts)
-    proc = subprocess.run([probe, "--stdin", panel], input=payload,
-                          capture_output=True, text=True, timeout=90)
+    proc = _record(subprocess.run([probe, "--verbose", "--stdin", panel], input=payload,
+                                  capture_output=True, text=True, timeout=90))
     reports = []
     for line in proc.stdout.splitlines():
         if line.strip():
-            reports.append(json.loads(line))
+            try:
+                reports.append(json.loads(line))
+            except json.JSONDecodeError:
+                fail(f"--stdin output line is not JSON: {line[:200]!r}\n{describe_last_run()}")
     return proc.returncode, reports
 
 
 def fail(msg) -> NoReturn:
-    print("SELFTEST FAIL:", msg, file=sys.stderr)
-    sys.exit(1)
+    raise ScenarioFailed(msg)
 
 
 def require(cond, msg):
     if not cond:
         fail(msg)
+
+
+def require_report(rep, what):
+    """Return rep; fail with the probe's exit code and output if it gave no JSON report."""
+    if rep is None:
+        fail(f"{what}: stdout was not a JSON report\n{describe_last_run()}")
+    return rep
 
 
 def find_mod(report, name):
@@ -75,6 +139,268 @@ def find_mod(report, name):
         if m["name"] == name:
             return m
     fail(f"no modulator named '{name}' in finalState")
+
+
+def scenario_01_clean_run(probe):
+    # Clean run with a setValue driving an onChange callback (exit 0)
+    code, rep, raw = run(probe, "fixtures/fixture_lua_valuechange.panel", "probe_selftest.json")
+    rep = require_report(rep, "scenario 1")
+    require(code == 0, f"scenario 1 expected exit 0, got {code}")
+
+    # Structure
+    for key in ("panel", "steps", "finalState", "summary"):
+        require(key in rep, f"scenario 1 report missing top-level key '{key}'")
+    require(rep["panel"]["luaCompileErrors"] == [], "scenario 1 expected no compile errors")
+    require(len(rep["steps"]) == 1, "scenario 1 expected exactly one step")
+
+    require(rep["reportVersion"] == 1, "scenario 1 report should carry reportVersion 1")
+
+    step = rep["steps"][0]
+    for key in ("index", "action", "deviceMidiOut", "hostMidiOut", "errors", "ok"):
+        require(key in step, f"scenario 1 step missing key '{key}'")
+    require(step["ok"] is True, f"scenario 1 step not ok: {step['errors']}")
+    require(step["errors"] == [], f"scenario 1 unexpected errors: {step['errors']}")
+
+    # Observations: the onChange callback fired once with the driven value, via the GUI source (4).
+    require(find_mod(rep, "src")["value"] == 40.0, "scenario 1 'src' should read 40")
+    require(find_mod(rep, "change-count")["value"] == 1.0,
+            "scenario 1 onChange should fire exactly once (change-count == 1)")
+    require(find_mod(rep, "last-value")["value"] == 40.0,
+            "scenario 1 onChange should receive value 40")
+    require(find_mod(rep, "last-source")["value"] == 4.0,
+            "scenario 1 onChange source should be changedByGUI (4)")
+    require(rep["summary"]["exitCode"] == 0, "scenario 1 summary.exitCode should be 0")
+
+
+def scenario_02_invalid_lua(probe):
+    # Panel with an invalid Lua method -> exit 1, compile error reported
+    code, rep, raw = run(probe, "fixtures/fixture_lua_invalid.panel")
+    rep = require_report(rep, "scenario 2")
+    require(code == 1, f"scenario 2 expected exit 1, got {code}")
+    require(len(rep["panel"]["luaCompileErrors"]) >= 1,
+            "scenario 2 should report at least one luaCompileError")
+    require(rep["summary"]["exitCode"] == 1, "scenario 2 summary.exitCode should be 1")
+    # errorCount is the single number a caller asserts on: it must include compile errors.
+    require(rep["summary"]["errorCount"] == rep["summary"]["luaCompileErrorCount"] >= 1,
+            f"scenario 2 errorCount should total the compile errors: {rep['summary']}")
+
+
+def scenario_03_missing_panel(probe):
+    # Nonexistent panel -> fatal exit 2 with a JSON error object
+    code, rep, raw = run(probe, "this_panel_does_not_exist.panel")
+    rep = require_report(rep, "scenario 3")
+    require(code == 2, f"scenario 3 expected exit 2, got {code}")
+    require("error" in rep, "scenario 3 should report an 'error' field")
+
+
+def scenario_04_click(probe):
+    # Click drives the component mouse-up path -> componentLuaMouseUp fires
+    code, rep, raw = run(probe, "fixtures/fixture_probe_click.panel", "probe_click.json")
+    rep = require_report(rep, "scenario 4")
+    require(code == 0, f"scenario 4 expected exit 0, got {code}")
+    require("clicked" in rep["steps"][0]["console"],
+            f"scenario 4 click should log 'clicked' via componentLuaMouseUp: {rep['steps'][0]['console']}")
+
+
+def scenario_05_subtype_visibility(probe):
+    # Sub-type value flips dependent controls' reported visibility
+    code, rep, raw = run(probe, "fixtures/fixture_probe_visibility.panel", "probe_visibility.json")
+    rep = require_report(rep, "scenario 5")
+    require(code == 0, f"scenario 5 expected exit 0, got {code}")
+    # value 100 (>= 64): change-count hidden, last-value shown.
+    require(find_mod(rep, "change-count")["visible"] is False,
+            "scenario 5 'change-count' should be hidden after setValue 100")
+    require(find_mod(rep, "last-value")["visible"] is True,
+            "scenario 5 'last-value' should be visible after setValue 100")
+    require(len(rep["finalState"]["layers"]) >= 1, "scenario 5 report should carry layers")
+    require("uid" in rep["finalState"]["layers"][0], "scenario 5 layers should carry a uid")
+
+
+def scenario_06_console_and_args(probe):
+    # console() capture + callLuaMethod with args + return value
+    code, rep, raw = run(probe, "fixtures/fixture_probe_console.panel", "probe_console.json")
+    rep = require_report(rep, "scenario 6")
+    require(code == 0, f"scenario 6 expected exit 0, got {code}")
+    require("hello 42" in rep["steps"][0]["console"],
+            f"scenario 6 step 0 should capture console('hello 42'): {rep['steps'][0]['console']}")
+    require(rep["steps"][1].get("returnValue") == "7:x:true",
+            f"scenario 6 echo(7,'x',true) return should be '7:x:true': {rep['steps'][1].get('returnValue')}")
+
+
+def scenario_07_layer_visibility(probe):
+    # setLayerVisible flips a layer's reported visibility
+    code, rep, raw = run(probe, "fixtures/fixture_probe_layers.panel", "probe_layers.json")
+    rep = require_report(rep, "scenario 7")
+    require(code == 0, f"scenario 7 expected exit 0, got {code}")
+    page2 = [l for l in rep["finalState"]["layers"] if l["name"] == "Page 2"]
+    require(len(page2) == 1, "scenario 7 should have a 'Page 2' layer")
+    require(page2[0]["visible"] is False, "scenario 7 'Page 2' should be hidden after setLayerVisible")
+
+
+def scenario_08_nullary_return(probe):
+    # A nullary callLuaMethod reports its return value
+    # Used to go through CtrlrLuaMethodManager::call(), which discarded the return -- so callers
+    # passed a dummy argument purely to reach the raw-Lua path and read a value back.
+    code, rep, raw = run_script(probe, "fixtures/fixture_probe_console.panel", {"steps": [
+        {"action": "callLuaMethod", "method": "echo"},
+    ]})
+    rep = require_report(rep, "scenario 8")
+    require("returnValue" in rep["steps"][0],
+            "scenario 8 a nullary callLuaMethod should still report returnValue")
+    require(rep["steps"][0]["returnValue"] == "nil:nil:nil",
+            f"scenario 8 echo() should return 'nil:nil:nil': {rep['steps'][0].get('returnValue')}")
+
+
+def scenario_09_eval_and_tables(probe):
+    # eval reaches panel internals; tables convert both ways
+    code, rep, raw = run_script(probe, "fixtures/fixture_probe_console.panel", {"steps": [
+        {"action": "eval", "lua": "return {1, 2, {a = 1, b = 'two'}}"},
+        {"action": "eval", "lua": "string.rep('ab', 2)"},                  # REPL-style expression
+        {"action": "eval", "lua": "local t = {} t.self = t return t"},     # cycle
+        {"action": "callLuaMethod", "method": "echo", "args": [[10, 20], {"k": "v"}, 1]},
+    ]})
+    rep = require_report(rep, "scenario 9")
+    require(code == 0, f"scenario 9 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
+    require(rep["steps"][0]["returnValue"] == [1.0, 2.0, {"a": 1.0, "b": "two"}],
+            f"scenario 9 nested table should convert to JSON: {rep['steps'][0].get('returnValue')}")
+    require(rep["steps"][1]["returnValue"] == "abab",
+            f"scenario 9 a bare expression should yield its value: {rep['steps'][1].get('returnValue')}")
+    require(rep["steps"][2]["returnValue"] == {"self": "<cycle>"},
+            f"scenario 9 a self-referential table should report <cycle>: {rep['steps'][2].get('returnValue')}")
+    # Non-scalar args used to silently arrive as nil; now they are real Lua tables.
+    require(rep["steps"][3]["returnValue"].startswith("table:"),
+            f"scenario 9 an array arg should reach Lua as a table: {rep['steps'][3].get('returnValue')}")
+
+
+def scenario_10_lua_error_counted(probe):
+    # A throwing method lands in errors[] as type 'lua' AND in errorCount
+    # The old split (step.error vs step.luaErrors) let a test assert on luaErrorCount and pass
+    # green while the method it called threw on every invocation.
+    code, rep, raw = run_script(probe, "fixtures/fixture_probe_console.panel", {"steps": [
+        {"action": "eval", "lua": "error('boom')"},
+        {"action": "setValue", "modulator": "no-such-modulator", "value": 1},
+    ]})
+    rep = require_report(rep, "scenario 10")
+    require(code == 1, f"scenario 10 expected exit 1, got {code}")
+    require([e["type"] for e in rep["steps"][0]["errors"]] == ["lua"],
+            f"scenario 10 a raising chunk should be a 'lua' error: {rep['steps'][0]['errors']}")
+    require("boom" in rep["steps"][0]["errors"][0]["message"],
+            f"scenario 10 the Lua message should survive: {rep['steps'][0]['errors']}")
+    require([e["type"] for e in rep["steps"][1]["errors"]] == ["action"],
+            f"scenario 10 a missing modulator should be an 'action' error: {rep['steps'][1]['errors']}")
+    require(rep["steps"][0]["ok"] is False and rep["steps"][1]["ok"] is False,
+            "scenario 10 both steps should be not-ok")
+    s = rep["summary"]
+    require(s["errorCount"] == 2 and s["luaRuntimeErrorCount"] == 1 and s["actionErrorCount"] == 1,
+            f"scenario 10 errorCount must total every channel: {s}")
+
+
+def scenario_11_lua_setvisible(probe):
+    # A Lua setVisible(false) shows up in liveVisible/effectiveVisible
+    # componentVisibility (what `visible` reports) is never written by comp:setVisible(), so the
+    # tree-only report claimed visible: true for a control that was plainly hidden.
+    code, rep, raw = run_script(probe, "fixtures/fixture_probe_setvisible.panel", {"steps": [
+        {"action": "callLuaMethod", "method": "hideTarget"},
+    ]})
+    rep = require_report(rep, "scenario 11")
+    require(code == 0, f"scenario 11 expected exit 0, got {code}: {rep['steps'][0]['errors']}")
+    hidden = find_mod(rep, "last-value")
+    require(hidden["visible"] is True,
+            "scenario 11 the tree property should still say visible (that is the point)")
+    require(hidden["liveVisible"] is False,
+            f"scenario 11 liveVisible should be False after setVisible(false): {hidden}")
+    require(hidden["effectiveVisible"] is False,
+            f"scenario 11 effectiveVisible should be False after setVisible(false): {hidden}")
+    shown = find_mod(rep, "change-count")
+    require(shown["liveVisible"] is True and shown["effectiveVisible"] is True,
+            f"scenario 11 an untouched control should stay visible: {shown}")
+    require("canvasRectangle" in shown,
+            f"scenario 11 a placed control should report absolute bounds: {shown}")
+
+
+def scenario_12_overlaps(probe):
+    # Two overlapping controls are reported in finalState.overlaps
+    code, rep, raw = run(probe, "fixtures/fixture_probe_overlap.panel")
+    rep = require_report(rep, "scenario 12")
+    require(code == 0, f"scenario 12 expected exit 0, got {code}")
+    laps = rep["finalState"]["overlaps"]
+    require(len(laps) == 1, f"scenario 12 expected exactly one overlap: {laps}")
+    require({laps[0]["a"], laps[0]["b"]} == {"change-count", "last-value"},
+            f"scenario 12 wrong pair reported: {laps}")
+    require(laps[0]["rect"] == "150 40 38 72", f"scenario 12 wrong intersection: {laps}")
+    # The same panel's non-overlapping controls must not be reported.
+    code, rep2, _ = run(probe, "fixtures/fixture_probe_setvisible.panel")
+    rep2 = require_report(rep2, "scenario 12")
+    require(rep2["finalState"]["overlaps"] == [],
+            f"scenario 12 a clean layout should report no overlaps: {rep2['finalState']['overlaps']}")
+
+
+def scenario_13_screenshot(probe):
+    # screenshot writes a real PNG of the laid-out canvas
+    shot = os.path.abspath("probe_selftest_shot.png")
+    if os.path.exists(shot):
+        os.unlink(shot)
+    code, rep, raw = run_script(probe, "fixtures/fixture_probe_setvisible.panel", {"steps": [
+        {"action": "screenshot", "file": shot},
+    ]})
+    rep = require_report(rep, "scenario 13")
+    require(code == 0, f"scenario 13 expected exit 0, got {code}: {rep['steps'][0]['errors']}")
+    got = rep["steps"][0].get("screenshot")
+    require(got is not None, f"scenario 13 step should report a screenshot: {rep['steps'][0]}")
+    require(got["width"] > 0 and got["height"] > 0, f"scenario 13 empty image: {got}")
+    require(os.path.exists(shot) and os.path.getsize(shot) > 0,
+            "scenario 13 should have written a non-empty PNG")
+    with open(shot, "rb") as f:
+        require(f.read(8) == b"\x89PNG\r\n\x1a\n", "scenario 13 output is not a PNG")
+    os.unlink(shot)
+
+
+def scenario_14_settle_ceiling(probe):
+    # Settle is a ceiling, not a floor (regression guard on the speed fix)
+    # 30 no-op steps used to cost ~450 ms each (~13.5 s). They must now finish well inside 3 s of
+    # step time. Console output must still be captured -- CtrlrLog is an AsyncUpdater, so a settle
+    # that skipped pumping entirely would silently drop it.
+    started = time.monotonic()
+    code, rep, raw = run_script(probe, "fixtures/fixture_probe_console.panel", {
+        "steps": [{"action": "callLuaMethod", "method": "sayHello"} for _ in range(30)]})
+    elapsed = time.monotonic() - started
+    rep = require_report(rep, "scenario 14")
+    require(code == 0, f"scenario 14 expected exit 0, got {code}")
+    require(len(rep["steps"]) == 30, "scenario 14 expected 30 steps")
+    require(elapsed < 8.0, f"scenario 14 30 no-op steps took {elapsed:.1f}s -- settle has regressed")
+    require(all("hello 42" in s["console"] for s in rep["steps"]),
+            "scenario 14 every step must still capture its console() output")
+
+
+def scenario_15_wait_for(probe):
+    # waitFor polls until truthy, and reports a timeout as an action error
+    code, rep, raw = run_script(probe, "fixtures/fixture_probe_console.panel", {"steps": [
+        {"action": "eval", "lua": "probe_t0 = os.time()"},
+        {"action": "waitFor", "lua": "return os.time() > probe_t0", "timeoutMs": 5000, "pollMs": 20},
+        {"action": "waitFor", "lua": "return false", "timeoutMs": 100, "pollMs": 20},
+    ]})
+    rep = require_report(rep, "scenario 15")
+    require(rep["steps"][1]["returnValue"] is True and rep["steps"][1]["errors"] == [],
+            f"scenario 15 waitFor should succeed once the condition goes true: {rep['steps'][1]}")
+    require([e["type"] for e in rep["steps"][2]["errors"]] == ["action"],
+            f"scenario 15 a waitFor timeout should be an action error: {rep['steps'][2]['errors']}")
+
+
+def scenario_16_stdin(probe):
+    # --stdin runs several scripts in one process, one report per line
+    code, reports = run_stdin(probe, "fixtures/fixture_probe_console.panel", [
+        {"steps": [{"action": "eval", "lua": "probe_marker = 'first'"}]},
+        {"steps": [{"action": "eval", "lua": "return probe_marker"}]},
+        {"steps": [{"action": "callLuaMethod", "method": "sayHello"}]},
+    ])
+    require(code == 0, f"scenario 16 --stdin should exit 0 at EOF, got {code}")
+    require(len(reports) == 3, f"scenario 16 expected one report per script, got {len(reports)}")
+    require(all(r["reportVersion"] == 1 for r in reports), "scenario 16 every report needs a version")
+    # Documented contract: scripts in one process SHARE state. Isolation means respawning.
+    require(reports[1]["steps"][0]["returnValue"] == "first",
+            f"scenario 16 state should persist across scripts: {reports[1]['steps'][0]}")
+    require("hello 42" in reports[2]["steps"][0]["console"],
+            f"scenario 16 later scripts still capture console: {reports[2]['steps'][0]}")
 
 
 # A uiCustomComponent `surface` (200 x 100) whose paint callback counts into `paintCount` and whose
@@ -103,8 +429,7 @@ def scenario_17_callback_families(probe):
         {"action": "click", "modulator": "btn"},
         {"action": "eval", "lua": "return probeKinds()"},
     ]})
-    require(rep is not None, f"scenario 17 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 17")
     require(code == 0, f"scenario 17 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
     require(rep["steps"][1]["returnValue"] == ["down@100,50", "up@100,50"],
             f"scenario 17 a custom component should get only uiCustomMouse*: {rep['steps'][1]}")
@@ -127,8 +452,7 @@ def scenario_18_paint(probe):
         {"action": "paint", "modulator": "surface", "file": shot},
         {"action": "paint", "modulator": "no-such-modulator"},
     ]})
-    require(rep is not None, f"scenario 18 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 18")
     require(code == 1, f"scenario 18 expected exit 1 (the unknown modulator), got {code}")
     got = rep["steps"][0].get("paint")
     require(got is not None and got["modulator"] == "surface" and got["width"] == 200
@@ -156,7 +480,7 @@ def scenario_18_paint(probe):
         {"action": "paint", "modulator": "surface"},
         {"action": "eval", "lua": "return paintCount"},
     ]})
-    assert rep is not None
+    rep = require_report(rep, "scenario 18")
     require(code == 0 and rep["steps"][1]["errors"] == [],
             f"scenario 18 painting a hidden component is not an error: {rep['steps'][1]}")
     require(rep["steps"][1].get("paint", {}).get("effectiveVisible") is False,
@@ -175,8 +499,7 @@ def scenario_19_silent_repaint(probe):
         {"action": "wait", "ms": 300},
         {"action": "eval", "lua": "return paintCount"},
     ]})
-    require(rep is not None, f"scenario 19 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 19")
     require(code == 0, f"scenario 19 a warning must not change the exit code, got {code}")
     require(rep["steps"][2]["returnValue"] == 0,
             f"scenario 19 repaint() is expected NOT to paint headlessly: {rep['steps'][2]}")
@@ -196,7 +519,7 @@ def scenario_19_silent_repaint(probe):
         {"action": "eval", "lua": "panel:getModulatorByName('surface'):getComponent():repaint() return 1"},
         {"action": "paint", "modulator": "surface"},
     ]})
-    assert rep is not None
+    rep = require_report(rep, "scenario 19")
     p = find_mod(rep, "surface").get("paint")
     require(p is not None and p["pendingRepaint"] is False and p["paints"] == 1,
             f"scenario 19 a paint after the repaint should clear it: {p}")
@@ -207,7 +530,7 @@ def scenario_19_silent_repaint(probe):
     code, rep, raw = run_script(probe, CUSTOM, {"paintWarnings": False, "steps": [
         {"action": "eval", "lua": "panel:getModulatorByName('surface'):getComponent():repaint() return 1"},
     ]})
-    assert rep is not None
+    rep = require_report(rep, "scenario 19")
     require(not [w for w in rep["warnings"] if w.get("type") == "paint"],
             f"scenario 19 paintWarnings false should silence the warning: {rep['warnings']}")
     p = find_mod(rep, "surface").get("paint")
@@ -221,8 +544,7 @@ def scenario_20_mouse_click(probe):
         {"action": "mouse", "modulator": "surface", "gesture": "click", "x": 30, "y": 70},
         {"action": "eval", "lua": "return probeLog"},
     ]})
-    require(rep is not None, f"scenario 20 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 20")
     require(code == 0, f"scenario 20 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
     log = probe_log(rep, 1)
     require([r["kind"] for r in log] == ["down", "up"], f"scenario 20 expected down, up: {log}")
@@ -242,7 +564,7 @@ def scenario_20_mouse_click(probe):
         {"action": "mouse", "modulator": "surface", "gesture": "click", "x": 5, "y": 5},
         {"action": "eval", "lua": "return #probeLog"},
     ]})
-    assert rep is not None
+    rep = require_report(rep, "scenario 20")
     for i, why in ((0, "outside the component"), (1, "an unknown gesture"), (3, "a hidden component")):
         require(action_error_types(rep["steps"][i]) == ["action"],
                 f"scenario 20 {why} should be an action error: {rep['steps'][i]['errors']}")
@@ -254,7 +576,7 @@ def scenario_20_mouse_click(probe):
         {"action": "mouse", "modulator": "btn", "gesture": "click", "x": 5, "y": 5},
         {"action": "eval", "lua": "return #probeLog"},
     ]})
-    assert rep is not None
+    rep = require_report(rep, "scenario 20")
     require(action_error_types(rep["steps"][0]) == ["action"],
             f"scenario 20 mouse on a non-custom component should be an action error: {rep['steps'][0]['errors']}")
     require(rep["steps"][1]["returnValue"] == 0,
@@ -271,8 +593,7 @@ def scenario_21_mouse_drag(probe):
         {"action": "mouse", "modulator": "surface", "gesture": "up"},
         {"action": "eval", "lua": "return probeLog"},
     ]})
-    require(rep is not None, f"scenario 21 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 21")
     require(code == 0, f"scenario 21 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
     require(rep["steps"][2]["returnValue"] == ["down@10,10", "drag@35,20", "drag@60,30", "drag@85,40",
                                                "drag@110,50"],
@@ -294,7 +615,7 @@ def scenario_21_mouse_drag(probe):
         {"action": "mouse", "modulator": "surface", "gesture": "down", "x": 5, "y": 5},
         {"action": "mouse", "modulator": "surface", "gesture": "down", "x": 6, "y": 6},
     ]})
-    assert rep is not None
+    rep = require_report(rep, "scenario 21")
     for i, why in ((0, "drag with no press"), (1, "up with no press")):
         require(action_error_types(rep["steps"][i]) == ["action"],
                 f"scenario 21 {why} should be an action error: {rep['steps'][i]['errors']}")
@@ -318,8 +639,7 @@ def scenario_22_mouse_mods(probe):
         {"action": "mouse", "modulator": "surface", "gesture": "doubleClick", "x": 50, "y": 50},
         {"action": "eval", "lua": "return probeLog"},
     ]})
-    require(rep is not None, f"scenario 22 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 22")
     require(code == 0, f"scenario 22 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
     log = probe_log(rep, 2)
     right = log[0]
@@ -342,8 +662,7 @@ def scenario_23_mouse_wheel_and_move(probe):
         {"action": "mouse", "modulator": "surface", "gesture": "move", "x": 5, "y": 5},
         {"action": "eval", "lua": "return probeLog"},
     ]})
-    require(rep is not None, f"scenario 23 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 23")
     require(code == 0, f"scenario 23 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
     log = probe_log(rep, 2)
     require(len(log) == 2, f"scenario 23 expected a wheel and a move: {log}")
@@ -364,8 +683,7 @@ def scenario_24_virtual_press_clock(probe):
         {"action": "mouse", "modulator": "surface", "gesture": "up", "holdMs": 500},
         {"action": "eval", "lua": "return probeLog"},
     ]})
-    require(rep is not None, f"scenario 24 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 24")
     require(code == 0, f"scenario 24 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
     ups = [r for r in probe_log(rep, 5) if r["kind"] == "up"]
     require(len(ups) == 2, f"scenario 24 expected two ups: {probe_log(rep, 5)}")
@@ -388,8 +706,7 @@ def scenario_25_drag_and_drop_trap(probe):
         {"action": "mouse", "modulator": "dndSurface", "gesture": "up"},
         {"action": "eval", "lua": "return dadStarted"},
     ]})
-    require(rep is not None, f"scenario 25 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 25")
     require(code == 0, f"scenario 25 a warning must not change the exit code, got {code}: "
                        f"{[s['errors'] for s in rep['steps']]}")
     require(rep["steps"][3]["returnValue"] == 3, f"scenario 25 dadStart should run per drag: {rep['steps'][3]}")
@@ -403,7 +720,7 @@ def scenario_25_drag_and_drop_trap(probe):
         {"action": "mouse", "modulator": "surface", "gesture": "drag", "x": 60, "y": 30},
         {"action": "mouse", "modulator": "surface", "gesture": "up"},
     ]})
-    assert rep is not None
+    rep = require_report(rep, "scenario 25")
     require(not [w for w in rep["warnings"] if w["type"] == "mouse"],
             f"scenario 25 a drag on a plain surface is not a DnD trap: {rep['warnings']}")
 
@@ -437,7 +754,7 @@ def scenario_26_disabled_paint_callback(probe):
             f"scenario 26 the disabled callback must not have run: {second['steps']}")
 
     code, rep, raw = run_script(probe, CUSTOM, {"steps": [{"action": "paint", "modulator": "surface"}]})
-    assert rep is not None
+    rep = require_report(rep, "scenario 26")
     require(rep["summary"]["disabledMethods"] == [] and find_mod(rep, "surface")["paint"]["paintMethodValid"] is True,
             f"scenario 26 a fresh process starts with nothing disabled: {rep['summary']}")
 
@@ -460,8 +777,7 @@ def scenario_27_midi_out_per_component(probe):
         {"action": "setValue", "modulator": "mode", "value": 2},
         {"action": "setValue", "modulator": "bipolar", "value": -12},
     ]})
-    require(rep is not None, f"scenario 27 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 27")
     require(code == 0, f"scenario 27 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
     dev = [s["deviceMidiOut"] for s in rep["steps"]]
     require(dev[0] == ["b3 07 55"], f"scenario 27 a CC slider sends one CC: {dev[0]}")
@@ -493,8 +809,7 @@ def scenario_28_bulk_output(probe):
         {"action": "callLuaMethod", "method": "sendDump", "args": [3]},
         {"action": "eval", "lua": "panel:sendMidiMessageNow(CtrlrMidiMessage(MemoryBlock({0xC0, 0x05}))) return 1"},
     ]})
-    require(rep is not None, f"scenario 28 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 28")
     require(code == 0, f"scenario 28 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
     dev = rep["steps"][0]["deviceMidiOut"]
     sysex = [i % 128 for i in range(1, 298)]
@@ -521,8 +836,7 @@ def scenario_29_device_input(probe):
         {"action": "injectDeviceMidi", "bytes": " ".join(f"{b:02X}" for b in request)},
         {"action": "eval", "lua": "return {ccCount, midiInCount}"},
     ]})
-    require(rep is not None, f"scenario 29 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 29")
     require(code == 0, f"scenario 29 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
     require(find_mod(rep, "cc")["value"] == 34.0, f"scenario 29 an inbound CC 7 should set 'cc' to 34: {find_mod(rep, 'cc')}")
     require("in 3" in rep["steps"][0]["console"],
@@ -539,8 +853,7 @@ def scenario_30_timers_and_dialogs(probe):
         {"action": "callLuaMethod", "method": "startTick", "args": [50]},
         {"action": "wait", "ms": 500},
     ]})
-    require(rep is not None, f"scenario 30 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 30")
     ticks = [(s["deviceMidiOut"], s["console"]) for s in rep["steps"]]
     require(code == 0 and ticks[0] == ([], []) and ticks[1] == (["b0 1e 63"], ["tick"]),
             f"scenario 30 the timer's MIDI and console belong to the wait it fired in: {ticks}")
@@ -554,7 +867,7 @@ def scenario_30_timers_and_dialogs(probe):
         {"action": "callLuaMethod", "method": "startBadTick", "args": [50]},
         {"action": "waitFor", "lua": "return not timer:isTimerRunning(8)", "timeoutMs": 3000},
     ]})
-    assert rep is not None
+    rep = require_report(rep, "scenario 30")
     require(code == 1, f"scenario 30 a raising timer callback must fail the run, got exit {code}")
     errs = rep["steps"][1]["errors"]
     require(len(errs) == 1 and errs[0]["type"] == "lua" and "tick boom" in errs[0]["message"],
@@ -568,7 +881,7 @@ def scenario_30_timers_and_dialogs(probe):
         {"action": "eval", "lua": "return utils.questionWindow('Erase?', 'Erase all programs?', 'Erase', 'Keep')"},
         {"action": "eval", "lua": "utils.infoWindow('Done', 'All sent') return 1"},
     ]})
-    assert rep is not None
+    rep = require_report(rep, "scenario 30")
     require(code == 0, f"scenario 30 a dismissed dialog is not an error, got {code}: {[s['errors'] for s in rep['steps']]}")
     require(rep["steps"][0]["returnValue"] is False,
             f"scenario 30 a dismissed question answers false: {rep['steps'][0].get('returnValue')}")
@@ -596,8 +909,7 @@ def scenario_31_value_shapes(probe):
         {"action": "eval", "lua": "return {[0] = 'a', [1] = 'b'}"},
         {"action": "callLuaMethod", "method": "setName", "args": ["hello"]},
     ]})
-    require(rep is not None, f"scenario 31 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 31")
     require(code == 0, f"scenario 31 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
     rv = [s.get("returnValue") for s in rep["steps"]]
     require(rv[0] == "number,nil,string", f"scenario 31 a null argument keeps its place as nil: {rv[0]}")
@@ -623,8 +935,7 @@ def scenario_32_png_pixels(probe):
         {"action": "paint", "modulator": "surface", "file": paint_png},
         {"action": "screenshot", "file": shot_png},
     ]})
-    require(rep is not None, f"scenario 32 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
+    rep = require_report(rep, "scenario 32")
     require(code == 0, f"scenario 32 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
     try:
         fill = (0x20, 0x60, 0xA0, 0xFF)  # surfacePaint: g:fillAll(Colour(0xff2060a0))
@@ -666,8 +977,7 @@ def scenario_33_edit_mode(probe):
                 {"action": "setValue", "modulator": "cc", "value": 42},
                 {"action": "screenshot", "file": shots[mode]},
             ]}, *flags)
-            require(rep is not None, f"scenario 33 ({mode}) stdout was not valid JSON:\n{raw}")
-            assert rep is not None
+            rep = require_report(rep, f"scenario 33 ({mode})")
             require(code == 0, f"scenario 33 ({mode}) expected exit 0, got {code}: "
                                f"{[s['errors'] for s in rep['steps']]}")
             # Actions are the same in both modes: setValue drives the component directly.
@@ -719,7 +1029,7 @@ def scenario_33_edit_mode(probe):
 
     # A file saved in run mode says so, and gets no warning.
     code, rep, raw = run_script(probe, "fixtures/fixture_probe_visibility.panel", {"steps": []})
-    assert rep is not None
+    rep = require_report(rep, "scenario 33")
     require(rep["panel"].get("savedEditMode") is False and rep["panel"].get("editMode") is False
             and not editmode_warnings(rep),
             f"scenario 33 a run-mode file: {rep['panel']} {rep.get('warnings')}")
@@ -744,7 +1054,7 @@ def scenario_34_unreadable_panel(probe):
             code, rep, raw = run(probe, path)
             require(code == 2 and rep is not None and rep.get("error") == "panel failed to load",
                     f"scenario 34 {name}: expected exit 2 with 'panel failed to load', got {code}: {raw[:300]}")
-            assert rep is not None
+            rep = require_report(rep, "scenario 34")
             require("summary" not in rep, f"scenario 34 {name}: a fatal report has no summary: {rep}")
             expect = "<notAPanel>" if name == "not-a-panel" else "does not parse"
             require(expect in rep.get("detail", ""), f"scenario 34 {name}: detail should say '{expect}': {rep}")
@@ -757,287 +1067,136 @@ def scenario_34_unreadable_panel(probe):
             os.unlink(path)
 
 
+SCENARIOS = [
+    # --- Scenarios 1-16: report structure, exit codes, Lua values, visibility, speed, --stdin ---
+    scenario_01_clean_run,
+    scenario_02_invalid_lua,
+    scenario_03_missing_panel,
+    scenario_04_click,
+    scenario_05_subtype_visibility,
+    scenario_06_console_and_args,
+    scenario_07_layer_visibility,
+    scenario_08_nullary_return,
+    scenario_09_eval_and_tables,
+    scenario_10_lua_error_counted,
+    scenario_11_lua_setvisible,
+    scenario_12_overlaps,
+    scenario_13_screenshot,
+    scenario_14_settle_ceiling,
+    scenario_15_wait_for,
+    scenario_16_stdin,
+
+    # --- Scenarios 17-26: custom components -- paint honesty and real mouse gestures ---
+    scenario_17_callback_families,
+    scenario_18_paint,
+    scenario_19_silent_repaint,
+    scenario_20_mouse_click,
+    scenario_21_mouse_drag,
+    scenario_22_mouse_mods,
+    scenario_23_mouse_wheel_and_move,
+    scenario_24_virtual_press_clock,
+    scenario_25_drag_and_drop_trap,
+    scenario_26_disabled_paint_callback,
+
+    # --- Scenarios 27-32: what the panel suites lean on hardest -- MIDI in and out, timers,
+    # dialogs, value shapes -- and pixels ---
+    scenario_27_midi_out_per_component,
+    scenario_28_bulk_output,
+    scenario_29_device_input,
+    scenario_30_timers_and_dialogs,
+    scenario_31_value_shapes,
+    scenario_32_png_pixels,
+
+    # --- Scenario 33: a panel saved in edit mode is probed as played ---
+    scenario_33_edit_mode,
+
+    # --- Scenario 34: an unreadable panel file is fatal, not an empty clean run ---
+    scenario_34_unreadable_panel,
+]
+
+
+def junit_dir():
+    """The directory of GTEST_OUTPUT="xml:<dir>/" as an absolute path, or None."""
+    out = os.environ.get("GTEST_OUTPUT", "")
+    if out.startswith("xml:") and out.endswith(("/", "\\")):
+        return os.path.abspath(out[len("xml:"):])
+    return None
+
+
+# XML 1.0 has no place for most control characters; a probe's stderr tail may hold some.
+_XML_INVALID = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f]")
+
+
+def write_junit(directory, results):
+    """Write <directory>/PanelProbeSelfTest.xml: one gtest-style test case per scenario.
+
+    results: a list of (name, seconds, failure message or None). The file name cannot clash with
+    the gtest results: test_ProcessorMain.cpp names those <suite>.<test>.xml."""
+    failures = sum(1 for _, _, msg in results if msg is not None)
+    total = sum(sec for _, sec, _ in results)
+    suites = ET.Element("testsuites", tests=str(len(results)), failures=str(failures), errors="0",
+                        time=f"{total:.3f}", name="AllTests")
+    suite = ET.SubElement(suites, "testsuite", name="PanelProbeSelfTest", tests=str(len(results)),
+                          failures=str(failures), errors="0", time=f"{total:.3f}")
+    for name, sec, msg in results:
+        case = ET.SubElement(suite, "testcase", name=name, status="run", result="completed",
+                             time=f"{sec:.3f}", classname="PanelProbeSelfTest")
+        if msg is not None:
+            msg = _XML_INVALID.sub("?", msg)
+            if len(msg) > 8000:
+                msg = msg[:8000] + "\n[... cut ...]"
+            failure = ET.SubElement(case, "failure", message=msg.splitlines()[0] if msg else "failed",
+                                    type="")
+            failure.text = msg
+    os.makedirs(directory, exist_ok=True)
+    ET.ElementTree(suites).write(os.path.join(directory, "PanelProbeSelfTest.xml"),
+                                 encoding="UTF-8", xml_declaration=True)
+
+
 def main():
     if len(sys.argv) < 2:
-        fail("usage: probe_selftest.py <path-to-CtrlrPanelProbe>")
-    probe = sys.argv[1]
+        print("usage: probe_selftest.py <path-to-CtrlrPanelProbe> [part-of-a-scenario-name ...]",
+              file=sys.stderr)
+        sys.exit(2)
+    probe = os.path.abspath(sys.argv[1])
+    only = sys.argv[2:]  # e.g. "scenario_30": run only the scenarios whose name contains one
+    junit = junit_dir()  # before the chdir: a relative GTEST_OUTPUT is relative to ctest's directory
 
     # Fixtures / scripts are copied next to this script in the build dir.
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    # --- Scenario 1: clean run with a setValue driving an onChange callback (exit 0) ---
-    code, rep, raw = run(probe, "fixtures/fixture_lua_valuechange.panel", "probe_selftest.json")
-    require(rep is not None, f"scenario 1 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 0, f"scenario 1 expected exit 0, got {code}")
+    # Run every scenario, also after a failure, so one red scenario does not hide the rest.
+    results = []
+    for scenario in SCENARIOS:
+        name = scenario.__name__
+        if only and not any(part in name for part in only):
+            continue
+        started = time.monotonic()
+        msg = None
+        try:
+            scenario(probe)
+        except ScenarioFailed as e:
+            msg = str(e)
+        except Exception:  # a broken report (KeyError, ...) or a probe timeout is a failure too
+            msg = traceback.format_exc()
+            if _last_run is not None:
+                msg += "\n" + describe_last_run()
+        elapsed = time.monotonic() - started
+        results.append((name, elapsed, msg))
+        if msg is None:
+            print(f"PASS {name} ({elapsed:.1f} s)", flush=True)
+        else:
+            print(f"FAIL {name} ({elapsed:.1f} s)", flush=True)
+            print(f"SELFTEST FAIL: {msg}", file=sys.stderr, flush=True)
 
-    # Structure
-    for key in ("panel", "steps", "finalState", "summary"):
-        require(key in rep, f"scenario 1 report missing top-level key '{key}'")
-    require(rep["panel"]["luaCompileErrors"] == [], "scenario 1 expected no compile errors")
-    require(len(rep["steps"]) == 1, "scenario 1 expected exactly one step")
+    if junit is not None:
+        write_junit(junit, results)
 
-    require(rep["reportVersion"] == 1, "scenario 1 report should carry reportVersion 1")
-
-    step = rep["steps"][0]
-    for key in ("index", "action", "deviceMidiOut", "hostMidiOut", "errors", "ok"):
-        require(key in step, f"scenario 1 step missing key '{key}'")
-    require(step["ok"] is True, f"scenario 1 step not ok: {step['errors']}")
-    require(step["errors"] == [], f"scenario 1 unexpected errors: {step['errors']}")
-
-    # Observations: the onChange callback fired once with the driven value, via the GUI source (4).
-    require(find_mod(rep, "src")["value"] == 40.0, "scenario 1 'src' should read 40")
-    require(find_mod(rep, "change-count")["value"] == 1.0,
-            "scenario 1 onChange should fire exactly once (change-count == 1)")
-    require(find_mod(rep, "last-value")["value"] == 40.0,
-            "scenario 1 onChange should receive value 40")
-    require(find_mod(rep, "last-source")["value"] == 4.0,
-            "scenario 1 onChange source should be changedByGUI (4)")
-    require(rep["summary"]["exitCode"] == 0, "scenario 1 summary.exitCode should be 0")
-
-    # --- Scenario 2: panel with an invalid Lua method -> exit 1, compile error reported ---
-    code, rep, raw = run(probe, "fixtures/fixture_lua_invalid.panel")
-    require(rep is not None, f"scenario 2 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 1, f"scenario 2 expected exit 1, got {code}")
-    require(len(rep["panel"]["luaCompileErrors"]) >= 1,
-            "scenario 2 should report at least one luaCompileError")
-    require(rep["summary"]["exitCode"] == 1, "scenario 2 summary.exitCode should be 1")
-    # errorCount is the single number a caller asserts on: it must include compile errors.
-    require(rep["summary"]["errorCount"] == rep["summary"]["luaCompileErrorCount"] >= 1,
-            f"scenario 2 errorCount should total the compile errors: {rep['summary']}")
-
-    # --- Scenario 3: nonexistent panel -> fatal exit 2 with a JSON error object ---
-    code, rep, raw = run(probe, "this_panel_does_not_exist.panel")
-    require(rep is not None, f"scenario 3 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 2, f"scenario 3 expected exit 2, got {code}")
-    require("error" in rep, "scenario 3 should report an 'error' field")
-
-    # --- Scenario 4: click drives the component mouse-up path -> componentLuaMouseUp fires ---
-    code, rep, raw = run(probe, "fixtures/fixture_probe_click.panel", "probe_click.json")
-    require(rep is not None, f"scenario 4 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 0, f"scenario 4 expected exit 0, got {code}")
-    require("clicked" in rep["steps"][0]["console"],
-            f"scenario 4 click should log 'clicked' via componentLuaMouseUp: {rep['steps'][0]['console']}")
-
-    # --- Scenario 5: sub-type value flips dependent controls' reported visibility ---
-    code, rep, raw = run(probe, "fixtures/fixture_probe_visibility.panel", "probe_visibility.json")
-    require(rep is not None, f"scenario 5 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 0, f"scenario 5 expected exit 0, got {code}")
-    # value 100 (>= 64): change-count hidden, last-value shown.
-    require(find_mod(rep, "change-count")["visible"] is False,
-            "scenario 5 'change-count' should be hidden after setValue 100")
-    require(find_mod(rep, "last-value")["visible"] is True,
-            "scenario 5 'last-value' should be visible after setValue 100")
-    require(len(rep["finalState"]["layers"]) >= 1, "scenario 5 report should carry layers")
-    require("uid" in rep["finalState"]["layers"][0], "scenario 5 layers should carry a uid")
-
-    # --- Scenario 6: console() capture + callLuaMethod with args + return value ---
-    code, rep, raw = run(probe, "fixtures/fixture_probe_console.panel", "probe_console.json")
-    require(rep is not None, f"scenario 6 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 0, f"scenario 6 expected exit 0, got {code}")
-    require("hello 42" in rep["steps"][0]["console"],
-            f"scenario 6 step 0 should capture console('hello 42'): {rep['steps'][0]['console']}")
-    require(rep["steps"][1].get("returnValue") == "7:x:true",
-            f"scenario 6 echo(7,'x',true) return should be '7:x:true': {rep['steps'][1].get('returnValue')}")
-
-    # --- Scenario 7: setLayerVisible flips a layer's reported visibility ---
-    code, rep, raw = run(probe, "fixtures/fixture_probe_layers.panel", "probe_layers.json")
-    require(rep is not None, f"scenario 7 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 0, f"scenario 7 expected exit 0, got {code}")
-    page2 = [l for l in rep["finalState"]["layers"] if l["name"] == "Page 2"]
-    require(len(page2) == 1, "scenario 7 should have a 'Page 2' layer")
-    require(page2[0]["visible"] is False, "scenario 7 'Page 2' should be hidden after setLayerVisible")
-
-    # --- Scenario 8: a nullary callLuaMethod reports its return value ---
-    # Used to go through CtrlrLuaMethodManager::call(), which discarded the return -- so callers
-    # passed a dummy argument purely to reach the raw-Lua path and read a value back.
-    code, rep, raw = run_script(probe, "fixtures/fixture_probe_console.panel", {"steps": [
-        {"action": "callLuaMethod", "method": "echo"},
-    ]})
-    require(rep is not None, f"scenario 8 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require("returnValue" in rep["steps"][0],
-            "scenario 8 a nullary callLuaMethod should still report returnValue")
-    require(rep["steps"][0]["returnValue"] == "nil:nil:nil",
-            f"scenario 8 echo() should return 'nil:nil:nil': {rep['steps'][0].get('returnValue')}")
-
-    # --- Scenario 9: eval reaches panel internals; tables convert both ways ---
-    code, rep, raw = run_script(probe, "fixtures/fixture_probe_console.panel", {"steps": [
-        {"action": "eval", "lua": "return {1, 2, {a = 1, b = 'two'}}"},
-        {"action": "eval", "lua": "string.rep('ab', 2)"},                  # REPL-style expression
-        {"action": "eval", "lua": "local t = {} t.self = t return t"},     # cycle
-        {"action": "callLuaMethod", "method": "echo", "args": [[10, 20], {"k": "v"}, 1]},
-    ]})
-    require(rep is not None, f"scenario 9 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 0, f"scenario 9 expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
-    require(rep["steps"][0]["returnValue"] == [1.0, 2.0, {"a": 1.0, "b": "two"}],
-            f"scenario 9 nested table should convert to JSON: {rep['steps'][0].get('returnValue')}")
-    require(rep["steps"][1]["returnValue"] == "abab",
-            f"scenario 9 a bare expression should yield its value: {rep['steps'][1].get('returnValue')}")
-    require(rep["steps"][2]["returnValue"] == {"self": "<cycle>"},
-            f"scenario 9 a self-referential table should report <cycle>: {rep['steps'][2].get('returnValue')}")
-    # Non-scalar args used to silently arrive as nil; now they are real Lua tables.
-    require(rep["steps"][3]["returnValue"].startswith("table:"),
-            f"scenario 9 an array arg should reach Lua as a table: {rep['steps'][3].get('returnValue')}")
-
-    # --- Scenario 10: a throwing method lands in errors[] as type 'lua' AND in errorCount ---
-    # The old split (step.error vs step.luaErrors) let a test assert on luaErrorCount and pass
-    # green while the method it called threw on every invocation.
-    code, rep, raw = run_script(probe, "fixtures/fixture_probe_console.panel", {"steps": [
-        {"action": "eval", "lua": "error('boom')"},
-        {"action": "setValue", "modulator": "no-such-modulator", "value": 1},
-    ]})
-    require(rep is not None, f"scenario 10 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 1, f"scenario 10 expected exit 1, got {code}")
-    require([e["type"] for e in rep["steps"][0]["errors"]] == ["lua"],
-            f"scenario 10 a raising chunk should be a 'lua' error: {rep['steps'][0]['errors']}")
-    require("boom" in rep["steps"][0]["errors"][0]["message"],
-            f"scenario 10 the Lua message should survive: {rep['steps'][0]['errors']}")
-    require([e["type"] for e in rep["steps"][1]["errors"]] == ["action"],
-            f"scenario 10 a missing modulator should be an 'action' error: {rep['steps'][1]['errors']}")
-    require(rep["steps"][0]["ok"] is False and rep["steps"][1]["ok"] is False,
-            "scenario 10 both steps should be not-ok")
-    s = rep["summary"]
-    require(s["errorCount"] == 2 and s["luaRuntimeErrorCount"] == 1 and s["actionErrorCount"] == 1,
-            f"scenario 10 errorCount must total every channel: {s}")
-
-    # --- Scenario 11: a Lua setVisible(false) shows up in liveVisible/effectiveVisible ---
-    # componentVisibility (what `visible` reports) is never written by comp:setVisible(), so the
-    # tree-only report claimed visible: true for a control that was plainly hidden.
-    code, rep, raw = run_script(probe, "fixtures/fixture_probe_setvisible.panel", {"steps": [
-        {"action": "callLuaMethod", "method": "hideTarget"},
-    ]})
-    require(rep is not None, f"scenario 11 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 0, f"scenario 11 expected exit 0, got {code}: {rep['steps'][0]['errors']}")
-    hidden = find_mod(rep, "last-value")
-    require(hidden["visible"] is True,
-            "scenario 11 the tree property should still say visible (that is the point)")
-    require(hidden["liveVisible"] is False,
-            f"scenario 11 liveVisible should be False after setVisible(false): {hidden}")
-    require(hidden["effectiveVisible"] is False,
-            f"scenario 11 effectiveVisible should be False after setVisible(false): {hidden}")
-    shown = find_mod(rep, "change-count")
-    require(shown["liveVisible"] is True and shown["effectiveVisible"] is True,
-            f"scenario 11 an untouched control should stay visible: {shown}")
-    require("canvasRectangle" in shown,
-            f"scenario 11 a placed control should report absolute bounds: {shown}")
-
-    # --- Scenario 12: two overlapping controls are reported in finalState.overlaps ---
-    code, rep, raw = run(probe, "fixtures/fixture_probe_overlap.panel")
-    require(rep is not None, f"scenario 12 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 0, f"scenario 12 expected exit 0, got {code}")
-    laps = rep["finalState"]["overlaps"]
-    require(len(laps) == 1, f"scenario 12 expected exactly one overlap: {laps}")
-    require({laps[0]["a"], laps[0]["b"]} == {"change-count", "last-value"},
-            f"scenario 12 wrong pair reported: {laps}")
-    require(laps[0]["rect"] == "150 40 38 72", f"scenario 12 wrong intersection: {laps}")
-    # The same panel's non-overlapping controls must not be reported.
-    code, rep2, _ = run(probe, "fixtures/fixture_probe_setvisible.panel")
-    assert rep2 is not None
-    require(rep2["finalState"]["overlaps"] == [],
-            f"scenario 12 a clean layout should report no overlaps: {rep2['finalState']['overlaps']}")
-
-    # --- Scenario 13: screenshot writes a real PNG of the laid-out canvas ---
-    shot = os.path.abspath("probe_selftest_shot.png")
-    if os.path.exists(shot):
-        os.unlink(shot)
-    code, rep, raw = run_script(probe, "fixtures/fixture_probe_setvisible.panel", {"steps": [
-        {"action": "screenshot", "file": shot},
-    ]})
-    require(rep is not None, f"scenario 13 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 0, f"scenario 13 expected exit 0, got {code}: {rep['steps'][0]['errors']}")
-    got = rep["steps"][0].get("screenshot")
-    require(got is not None, f"scenario 13 step should report a screenshot: {rep['steps'][0]}")
-    require(got["width"] > 0 and got["height"] > 0, f"scenario 13 empty image: {got}")
-    require(os.path.exists(shot) and os.path.getsize(shot) > 0,
-            "scenario 13 should have written a non-empty PNG")
-    with open(shot, "rb") as f:
-        require(f.read(8) == b"\x89PNG\r\n\x1a\n", "scenario 13 output is not a PNG")
-    os.unlink(shot)
-
-    # --- Scenario 14: settle is a ceiling, not a floor (regression guard on the speed fix) ---
-    # 30 no-op steps used to cost ~450 ms each (~13.5 s). They must now finish well inside 3 s of
-    # step time. Console output must still be captured -- CtrlrLog is an AsyncUpdater, so a settle
-    # that skipped pumping entirely would silently drop it.
-    started = time.monotonic()
-    code, rep, raw = run_script(probe, "fixtures/fixture_probe_console.panel", {
-        "steps": [{"action": "callLuaMethod", "method": "sayHello"} for _ in range(30)]})
-    elapsed = time.monotonic() - started
-    require(rep is not None, f"scenario 14 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(code == 0, f"scenario 14 expected exit 0, got {code}")
-    require(len(rep["steps"]) == 30, "scenario 14 expected 30 steps")
-    require(elapsed < 8.0, f"scenario 14 30 no-op steps took {elapsed:.1f}s -- settle has regressed")
-    require(all("hello 42" in s["console"] for s in rep["steps"]),
-            "scenario 14 every step must still capture its console() output")
-
-    # --- Scenario 15: waitFor polls until truthy, and reports a timeout as an action error ---
-    code, rep, raw = run_script(probe, "fixtures/fixture_probe_console.panel", {"steps": [
-        {"action": "eval", "lua": "probe_t0 = os.time()"},
-        {"action": "waitFor", "lua": "return os.time() > probe_t0", "timeoutMs": 5000, "pollMs": 20},
-        {"action": "waitFor", "lua": "return false", "timeoutMs": 100, "pollMs": 20},
-    ]})
-    require(rep is not None, f"scenario 15 stdout was not valid JSON:\n{raw}")
-    assert rep is not None
-    require(rep["steps"][1]["returnValue"] is True and rep["steps"][1]["errors"] == [],
-            f"scenario 15 waitFor should succeed once the condition goes true: {rep['steps'][1]}")
-    require([e["type"] for e in rep["steps"][2]["errors"]] == ["action"],
-            f"scenario 15 a waitFor timeout should be an action error: {rep['steps'][2]['errors']}")
-
-    # --- Scenario 16: --stdin runs several scripts in one process, one report per line ---
-    code, reports = run_stdin(probe, "fixtures/fixture_probe_console.panel", [
-        {"steps": [{"action": "eval", "lua": "probe_marker = 'first'"}]},
-        {"steps": [{"action": "eval", "lua": "return probe_marker"}]},
-        {"steps": [{"action": "callLuaMethod", "method": "sayHello"}]},
-    ])
-    require(code == 0, f"scenario 16 --stdin should exit 0 at EOF, got {code}")
-    require(len(reports) == 3, f"scenario 16 expected one report per script, got {len(reports)}")
-    require(all(r["reportVersion"] == 1 for r in reports), "scenario 16 every report needs a version")
-    # Documented contract: scripts in one process SHARE state. Isolation means respawning.
-    require(reports[1]["steps"][0]["returnValue"] == "first",
-            f"scenario 16 state should persist across scripts: {reports[1]['steps'][0]}")
-    require("hello 42" in reports[2]["steps"][0]["console"],
-            f"scenario 16 later scripts still capture console: {reports[2]['steps'][0]}")
-
-    # --- Scenarios 17-26: custom components -- paint honesty and real mouse gestures ---
-    scenario_17_callback_families(probe)
-    scenario_18_paint(probe)
-    scenario_19_silent_repaint(probe)
-    scenario_20_mouse_click(probe)
-    scenario_21_mouse_drag(probe)
-    scenario_22_mouse_mods(probe)
-    scenario_23_mouse_wheel_and_move(probe)
-    scenario_24_virtual_press_clock(probe)
-    scenario_25_drag_and_drop_trap(probe)
-    scenario_26_disabled_paint_callback(probe)
-
-    # --- Scenarios 27-32: what the panel suites lean on hardest -- MIDI in and out, timers,
-    # dialogs, value shapes -- and pixels ---
-    scenario_27_midi_out_per_component(probe)
-    scenario_28_bulk_output(probe)
-    scenario_29_device_input(probe)
-    scenario_30_timers_and_dialogs(probe)
-    scenario_31_value_shapes(probe)
-    scenario_32_png_pixels(probe)
-
-    # --- Scenario 33: a panel saved in edit mode is probed as played ---
-    scenario_33_edit_mode(probe)
-
-    # --- Scenario 34: an unreadable panel file is fatal, not an empty clean run ---
-    scenario_34_unreadable_panel(probe)
-
-    print("SELFTEST PASS: all 34 scenarios ok")
+    failed = [name for name, _, msg in results if msg is not None]
+    if failed:
+        print(f"SELFTEST FAIL: {len(failed)} of {len(results)} scenarios failed: {', '.join(failed)}")
+        sys.exit(1)
+    print(f"SELFTEST PASS: all {len(results)} scenarios ok")
     sys.exit(0)
 
 

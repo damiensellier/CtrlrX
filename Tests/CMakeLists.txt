@@ -87,6 +87,8 @@ endif ()
 
 # Self-test: drives the probe against known fixtures and validates the JSON report + exit codes.
 # Registered as an individual ctest case, fitting the existing per-test parallel layout.
+# With GTEST_OUTPUT=xml:<dir>/ it also writes <dir>/PanelProbeSelfTest.xml, one JUnit case per
+# scenario, for ci_check_test_results.py.
 configure_file("probe_selftest.json" "probe_selftest.json" COPYONLY)
 configure_file("probe_selftest.py" "probe_selftest.py" COPYONLY)
 configure_file("png_sample.py" "png_sample.py" COPYONLY) # pixel sampler the self-test imports
