@@ -1,5 +1,5 @@
 // CtrlrPanelProbe -- drives a panel from a script and reports what it did. Headless one-shot:
-// no hardware, no display.
+// no hardware; on Linux an X display only for modal dialogs.
 //
 // Loads an arbitrary .panel, rebinds its MIDI devices to the mocked test devices, (optionally)
 // runs a JSON action script, and prints a JSON report of everything observed. See
