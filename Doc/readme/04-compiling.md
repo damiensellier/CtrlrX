@@ -340,9 +340,12 @@ pass/fail verdict against that allowlist. For example (this is exactly what CI d
 
 ```bash
 cd build/Tests
-GTEST_OUTPUT="xml:test-results/" ctest -j 8 --output-on-failure
-../../Tests/ci_check_test_results.py --allow ../../Tests/known_failures_linux.txt "test-results/*.xml"
+GTEST_OUTPUT="xml:test-results/" ctest -j 8 --output-on-failure --output-junit test-results/ctest.junit
+../../Tests/ci_check_test_results.py --allow ../../Tests/known_failures_linux.txt \
+    --ctest-junit test-results/ctest.junit "test-results/*.xml"
 ```
+
+`--ctest-junit` also catches a test that crashed or timed out: such a test writes no gtest XML.
 
 > 🔗 **Deeper:** [Tests/test_ProcessorFixture.h](../../Tests/test_ProcessorFixture.h) holds the
 > shared helpers, and `Tests/mock_MidiDevice*.cpp` fakes the platform MIDI layer at link time so
