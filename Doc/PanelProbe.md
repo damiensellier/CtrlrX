@@ -2,9 +2,11 @@
 
 `CtrlrPanelProbe` loads an arbitrary CtrlrX panel, runs a JSON action script against it, and
 prints a JSON report of everything it observed, such as MIDI sent to the device, MIDI sent to the host,
-errors, and a final snapshot of every modulator. It needs **no hardware and no display**: the
+errors, and a final snapshot of every modulator. It needs **no hardware**: the
 panel's MIDI devices are transparently rebound to the mocked test devices used by the GoogleTest
-suite, and it drives the real `CtrlrProcessor` the same way the tests do.
+suite, and it drives the real `CtrlrProcessor` the same way the tests do. It renders in memory, so
+it needs no display either, except on Linux for modal dialogs (see
+[Linux: the X display](#linux-the-x-display)).
 
 `CtrlrPanelProbe` closes the gap between *"the panel loads"* and *"the panel behaves"*. Dead button
 wiring, a control that clamps silently, a `luaModulatorValueChange` that never fires, a SysEx
@@ -560,6 +562,7 @@ call a failure. They are **not** in `errorCount` and do not change the exit code
 | `"paint"` | A `uiCustomComponent` was invalidated and never painted after (end of script; off with `"paintWarnings": false`), or `paint` painted a component whose paint callback an earlier error disabled (`step` set). |
 | `"mouse"` | A `drag` reached a drag-and-drop container, where the drag-and-drop itself is not simulated (`step` set). |
 | `"editMode"` | The panel file is saved in edit mode (`modulator` is `""`, no `step`; in every report in `--stdin` mode). See [Edit mode](#edit-mode). |
+| `"display"` | Linux only: the probe found no X display, so a modal dialog will crash it (`modulator` is `""`, no `step`; in every report in `--stdin` mode). See [Linux: the X display](#linux-the-x-display). |
 
 ### Dialogs
 
@@ -577,16 +580,25 @@ dialog is listed in the step that opened it, `steps[i].dialogs`, as
 | `buttons` | The button captions, e.g. `["Erase", "Keep"]`. |
 | `result` | Always `0`: what dismissing returns. |
 
-On Linux the probe ignores `DISPLAY` and `WAYLAND_DISPLAY`, so nothing ever appears on screen. On
-macOS and Windows a dialog can flash up on the desktop for a few milliseconds before it is
-dismissed.
-
-The message text is not available. Dialogs opened while the panel loaded are in `panel.dialogs`
+A dialog can flash up on the desktop for a few milliseconds before it is dismissed. The message
+text is not available. Dialogs opened while the panel loaded are in `panel.dialogs`
 (repeated in every report in `--stdin` mode). A dismissed dialog is not an error by itself, with
 one exception: when a `timer` callback raises, CtrlrX disables the callback and reports it **only**
 in a dialog, *"Timer callback error, timer id that failed was: N"*. The probe turns that one into a
 `"lua"` error on the step, carrying the Lua message, so the run fails rather than going on with a
 dead timer.
+
+#### Linux: the X display
+
+Each dialog is a real window, so on Linux the probe needs an X display while a dialog is open. It
+needs none otherwise. It uses `DISPLAY` as every JUCE program does, or `:0.0` when `DISPLAY` is not
+set.
+
+| Where | What happens |
+|---|---|
+| A desktop | A dialog appears on screen until the probe dismisses it. |
+| Headless (CI, a server) | Run the probe under `xvfb-run` (package `xvfb`): `xvfb-run -a ./CtrlrPanelProbe panel.panel script.json`. A bare X server without a window manager works; the probe creates the window-manager atoms JUCE needs. `xvfb-run` merges stderr into stdout, so don't combine it with `--verbose` when you parse the report. |
+| No X display | A run without dialogs works. Every report gets a `"display"` [warning](#warnings) at load, and a dialog crashes the probe (no report, exit code from the signal). |
 
 ### Visibility
 
@@ -737,7 +749,8 @@ CtrlrPanelProbe MySynth.panel e.json | jq '.steps[0].returnValue, .summary.error
   "Callback error" dialog on a Lua error raised from a *callback*, and every dialog the panel's own
   Lua opens. Each one is listed in `steps[i].dialogs`, and a callback's error is still recorded in
   the step's `errors`; see [Dialogs](#dialogs). Errors from `callLuaMethod` / `eval` come back
-  through `lua_pcall` and never reach that path at all.
+  through `lua_pcall` and never reach that path at all. On headless Linux, use `xvfb-run`; see
+  [Linux: the X display](#linux-the-x-display).
 - **Hard exit.** The probe prints its report(s) and calls `_Exit()` without tearing down JUCE — the
   panel/Lua object graph is known to leak on shutdown and the Debug leak detector would otherwise
   fire after the report. This is deliberate.
@@ -765,6 +778,11 @@ CtrlrPanelProbe MySynth.panel e.json | jq '.steps[0].returnValue, .summary.error
   the clock of a mouse press, but not the clock of a panel's `timer` callbacks: those fire on real
   time, so a `wait` floor has to be long enough on the slowest machine.
 - **Self-test:** `ctest -R PanelProbeSelfTest` (see [probe_selftest.py](../Tests/probe_selftest.py)) —
-  34 scenarios, most of which pin a specific defect so it cannot come back silently. Run it after
+  35 scenarios, most of which pin a specific defect so it cannot come back silently. Run it after
   changing `probe_*.cpp`; it is also the best worked reference for what each report field looks
-  like in practice.
+  like in practice. It runs every scenario, also after a failure, and prints `PASS`/`FAIL` per
+  scenario. With `GTEST_OUTPUT=xml:<dir>/` (as in CI) it also writes
+  `<dir>/PanelProbeSelfTest.xml`, one JUnit test case per scenario
+  (`PanelProbeSelfTest.scenario_30_timers_and_dialogs`, …), which the CI allowlist check reads. To
+  run some scenarios only: `python3 probe_selftest.py ./CtrlrPanelProbe scenario_30 scenario_35`
+  in `build/Tests`.

@@ -93,7 +93,7 @@ Then: assert → change the panel → re-run the same script, until it passes.
 | `steps[i].dialogs`, `panel.dialogs` | Dialogs dismissed during the step / during load. |
 | `finalState.modulators[]` | Per control after the last step: `value`, `min`, `max`, `text` (the readout), `visible`, `liveVisible`, `effectiveVisible`, `componentRectangle`, `canvasRectangle`, `vstIndex`. |
 | `finalState.overlaps` | Pairs of visible controls whose rectangles intersect. |
-| `warnings[]` | Things that are not failures: `paint`, `mouse`, `editMode`. |
+| `warnings[]` | Things that are not failures: `paint`, `mouse`, `editMode`, `display` (Linux, no X display; from 5.6.37). |
 | `summary.disabledMethods` | Methods invalid now (compile error or disabled by a runtime error). |
 
 - Exit code: 0 clean, 1 `errorCount > 0`, 2 fatal (panel or script missing / unreadable). A fatal
@@ -135,6 +135,9 @@ Then: assert → change the panel → re-run the same script, until it passes.
   buttons (`kind`: `alert`, `fileChooser`, `component`). Code after it runs with that answer:
   `utils.questionWindow` and `AlertWindow.showOkCancelBox` return `false`. The message text is not
   reported. A dialog is not an error by itself.
+- On Linux a dialog needs an X display while it is open. On a headless machine run the probe
+  under `xvfb-run -a` (without `--verbose`: `xvfb-run` merges stderr into stdout). From 5.6.37,
+  with no display every report has a `display` warning; a dialog crashes the probe, no report.
 - A `timer` callback that raises is disabled by CtrlrX; the probe reports it as a `lua` error on
   the step plus a "Timer callback error" dialog.
 - Value-change callbacks, timer output and Lua-sent bursts arrive after the triggering action

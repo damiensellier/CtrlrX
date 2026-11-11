@@ -188,10 +188,12 @@ jobs:
           # test_ProcessorMain.cpp gives each run a unique <fqn>.xml (build/Tests/test-results/*.xml)
           # so the parallel runs don't clash. Those per-test JUnit files feed the separate,
           # non-blocking test_results checks below.
+          # ctest's own JUnit (test-results/ctest.junit, not *.xml) lists every ctest case, also
+          # one that crashed or timed out and so wrote no gtest XML; the checks read it too.
           GTEST_OUTPUT: "xml:test-results/"
         run: |
           rm -rf test-results && mkdir -p test-results
-          ctest -j"$(nproc)" --output-on-failure -C ${{ env.BUILD_TYPE }}
+          ctest -j"$(nproc)" --output-on-failure --output-junit test-results/ctest.junit -C ${{ env.BUILD_TYPE }}
 
       - name: Upload test results
         # All platforms upload their per-test JUnit XML; each is consumed by the
@@ -603,7 +605,7 @@ jobs:
           paths: "test-results/**/*.xml"
 
       - name: Evaluate results
-        run: python3 Tests/ci_check_test_results.py ${{ matrix.known_failures }} "test-results/**/*.xml"
+        run: python3 Tests/ci_check_test_results.py ${{ matrix.known_failures }} --ctest-junit "test-results/**/ctest.junit" "test-results/**/*.xml"
 
   # -----------------------------------------------------------------
   # RELEASE DISTRIBUTION

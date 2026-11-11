@@ -131,8 +131,9 @@ through ctest. Tests must run from `build/Tests/` (fixtures are found relative t
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Debug .
 cmake --build build --target TestsProcessor -j8
-cd build/Tests && GTEST_OUTPUT=xml:test-results/ ctest -j8 --output-on-failure
-python3 ../../Tests/ci_check_test_results.py --allow ../../Tests/known_failures_linux.txt "test-results/**/*.xml"
+cd build/Tests && GTEST_OUTPUT=xml:test-results/ ctest -j8 --output-on-failure --output-junit test-results/ctest.junit
+python3 ../../Tests/ci_check_test_results.py --allow ../../Tests/known_failures_linux.txt \
+    --ctest-junit test-results/ctest.junit "test-results/**/*.xml"
 ```
 
 - CI (`.github/workflows/build_and_test.yml`) builds and tests on Linux, macOS and Windows. A PR

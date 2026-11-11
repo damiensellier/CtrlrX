@@ -3,6 +3,7 @@
 #include "CtrlrManager.h"
 #include "CtrlrPanel.h"
 #include "CtrlrModulator.h"
+#include "CtrlrLuaManager.h"
 
 #include <chrono>
 #include <thread>
@@ -235,6 +236,41 @@ TEST_F(MidiLua, lua_sysex_hex_string_correct_bytes_once)
     auto sends = takeSendsAfterDelivery();
     EXPECT_EQ(count_equal(sends, sysex), 1)
         << "Lua sysex via hex string should reach the device exactly once with correct bytes";
+}
+
+/**
+ * SX-iii: a 301-byte sysex sent from Lua reaches the device as one message with
+ * all its bytes. On macOS JUCE splits a sysex this long over several MIDISendEventList calls; the
+ * CoreMIDI mock used to drop it (it reassembled each call on its own). Same dump as the probe's
+ * fixture_probe_midi.panel (self-test scenario 28).
+ */
+TEST_F(MidiLua, long_sysex_reaches_device_whole)
+{
+    if (!midi_mock.hasSubsystemMock())
+        GTEST_SKIP() << "no MIDI subsystem mock on this platform; device sends cannot be observed";
+
+    allowAndRecordDeviceSends();
+    CtrlrPanel* panel = loadPanel("fixture_lua_send.panel");
+    ASSERT_NE(panel, nullptr);
+
+    ASSERT_TRUE(panel->getCtrlrLuaManager().runCode(
+        "local bytes = {0xF0, 0x7D, 0x10}\n"
+        "for i = 1, 297 do bytes[#bytes + 1] = i % 128 end\n"
+        "bytes[#bytes + 1] = 0xF7\n"
+        "panel:sendMidiMessageNow(CtrlrMidiMessage(MemoryBlock(bytes)))\n",
+        "long_sysex"));
+
+    std::vector<juce::uint8> raw = { 0xF0, 0x7D, 0x10 };
+    for (int i = 1; i <= 297; i++)
+        raw.push_back((juce::uint8) (i % 128));
+    raw.push_back(0xF7);
+    ASSERT_EQ(raw.size(), 301u);
+    const juce::MidiMessage sysex(raw.data(), (int) raw.size());
+
+    auto sends = takeSendsAfterDelivery(500);
+    ASSERT_EQ(sends.size(), 1u) << "the device should get exactly one message (the whole sysex)";
+    EXPECT_EQ(sends[0].getRawDataSize(), 301);
+    EXPECT_EQ(count_equal(sends, sysex), 1) << "the 301-byte sysex should arrive whole, bytes in order";
 }
 
 // ----------------------------------------------------------------------------------------------
