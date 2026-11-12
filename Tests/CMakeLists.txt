@@ -40,8 +40,8 @@ target_link_libraries(TestsProcessor
 target_compile_definitions(TestsProcessor PRIVATE $<TARGET_PROPERTY:${PROJECT_NAME},COMPILE_DEFINITIONS>)
 target_include_directories(TestsProcessor PRIVATE $<TARGET_PROPERTY:${PROJECT_NAME},INCLUDE_DIRECTORIES>)
 
-# Change 14 to 17 if you use JUCE 8
-target_compile_features(TestsProcessor PRIVATE cxx_std_14)
+# JUCE 7 and later need C++17
+target_compile_features(TestsProcessor PRIVATE cxx_std_17)
 
 if ((DEFINED ENV{CI}))
     target_compile_definitions(TestsProcessor PUBLIC CI=1)
