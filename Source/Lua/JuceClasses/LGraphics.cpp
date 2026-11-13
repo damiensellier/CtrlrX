@@ -410,6 +410,19 @@ void LGraphics::wrapForLua (lua_State *L)
         
             .def("drawFittedText", (void (Graphics::*)(const String &, int, int, int, int, Justification, int, float, GlyphArrangementOptions) const)&Graphics::drawFittedText)
             .def("drawFittedText", (void (Graphics::*)(const String &, Rectangle<int>, Justification, int, float, GlyphArrangementOptions) const)&Graphics::drawFittedText)
+            // Added v8.0.85. JUCE 8 added a GlyphArrangementOptions argument and luabind ignores C++
+            // default arguments, so keep the 5.6.37 Lua forms (8 and 5 arguments) as lambdas.
+            // From John Goodland's v8.31 (b1048e469, 42f952f92).
+            .def("drawFittedText", +[](const Graphics *g, const String &text, int x, int y, int w, int h, Justification j,
+                                       int maxLines, float minScale) {
+                if (g != nullptr)
+                    g->drawFittedText(text, x, y, w, h, j, maxLines, minScale);
+            })
+            .def("drawFittedText", +[](const Graphics *g, const String &text, const Rectangle<int> &area, Justification j,
+                                       int maxLines, float minScale) {
+                if (g != nullptr)
+                    g->drawFittedText(text, area, j, maxLines, minScale);
+            })
 
 			.def("fillAll", (void (Graphics::*)() const)&Graphics::fillAll)
 			.def("fillAll", (void (Graphics::*)(const Colour) const)&Graphics::fillAll)

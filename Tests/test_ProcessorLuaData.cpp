@@ -287,3 +287,35 @@ TEST_F(LuaData, file_find_child_files_and_special_location)
     EXPECT_FALSE(luaString("_tempPath").empty());
     EXPECT_EQ(luaNumber("_emptyValid"), 0.0);
 }
+
+// ----------------------------------------------------------------------------------------------
+// Graphics
+// ----------------------------------------------------------------------------------------------
+
+/**
+ * Panels paint text with g:drawFittedText(text, x, y, w, h, justification, maxLines, minScale) and
+ * the Rectangle form. JUCE 8 added a GlyphArrangementOptions argument; luabind ignores C++ default
+ * arguments, so without the 5.6.37 forms these calls raise "No matching overload found" and the
+ * paint method is disabled (FireworX's fw_grid_paint).
+ */
+TEST_F(LuaData, graphics_draw_fitted_text_takes_the_5_6_37_arguments)
+{
+    ASSERT_NE(loadLuaPanel("fixture_lua_values.panel"), nullptr);
+
+    ASSERT_TRUE(runLua("local img = Image(Image.ARGB, 64, 32, true)\n"
+                       "local g = Graphics(img)\n"
+                       "g:setColour(Colour(0xffffffff))\n"
+                       "g:drawFittedText('XX', 0, 0, 64, 16, Justification(Justification.centred), 1, 1.0)\n"
+                       "g:drawFittedText('XX', Rectangle(0, 16, 64, 16), Justification(Justification.centred), 1, 1.0)\n"
+                       "local top, bottom = 0, 0\n"
+                       "for y = 0, 31 do for x = 0, 63 do\n"
+                       "  if img:getPixelAt(x, y):getAlpha() > 0 then\n"
+                       "    if y < 16 then top = top + 1 else bottom = bottom + 1 end\n"
+                       "  end\n"
+                       "end end\n"
+                       "_top = top\n"
+                       "_bottom = bottom"));
+
+    EXPECT_GT(luaNumber("_top"), 0.0) << "the x, y, w, h form drew nothing";
+    EXPECT_GT(luaNumber("_bottom"), 0.0) << "the Rectangle form drew nothing";
+}
