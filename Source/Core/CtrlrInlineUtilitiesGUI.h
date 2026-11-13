@@ -101,5 +101,29 @@ namespace gui {
     // Your existing colourSchemeFromProperty function (can now call createLookAndFeelFromDescription if it uses properties
     // that map directly to the names used in createLookAndFeelFromDescription)
     juce::LookAndFeel_V4::ColourScheme colourSchemeFromProperty(const juce::var &property);
+
+    // Added v8.0.85. JUCE 8's LookAndFeel::findColour() asserts on a colour ID that the LookAndFeel
+    // does not define. JUCE 6 in 5.6.37 had that jassert commented out (v5.6.34) and returned black.
+    // Define these IDs as black where they are missing, so the colours stay the same and Debug
+    // builds don't stop on panel load. From John Goodland's v8.08/v8.18 (dnaldoog e2ad82542).
+    inline void initLookAndFeelDefaults(juce::LookAndFeel &lf)
+    {
+        const int ids[] = {juce::Label::backgroundWhenEditingColourId,
+                           juce::Label::textWhenEditingColourId,
+                           juce::ScrollBar::backgroundColourId,
+                           juce::ScrollBar::thumbColourId,
+                           juce::ScrollBar::trackColourId,
+                           juce::TextEditor::highlightColourId,
+                           juce::TextEditor::highlightedTextColourId,
+                           juce::TextEditor::outlineColourId,
+                           juce::TextButton::textColourOffId,
+                           juce::ProgressBar::foregroundColourId,
+                           juce::CodeEditorComponent::backgroundColourId,
+                           juce::CodeEditorComponent::defaultTextColourId};
+
+        for (const int id : ids)
+            if (!lf.isColourSpecified(id))
+                lf.setColour(id, juce::Colours::black);
+    }
 }
 #endif

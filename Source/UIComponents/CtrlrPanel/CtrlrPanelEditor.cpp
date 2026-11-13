@@ -577,6 +577,7 @@ void CtrlrPanelEditor::valueTreePropertyChanged(ValueTree &treeWhosePropertyHasC
             //    The .get() method returns the raw pointer without transferring ownership.
             getCanvas()->setLookAndFeel(newLookAndFeel.get());
             setLookAndFeel(newLookAndFeel.get());
+            gui::initLookAndFeelDefaults(*newLookAndFeel);
             LookAndFeel::setDefaultLookAndFeel(newLookAndFeel.get());
 
             // 4. Finally, assign the new unique_ptr to the class member.

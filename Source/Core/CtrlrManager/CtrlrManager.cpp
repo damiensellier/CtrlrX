@@ -7,6 +7,7 @@
 #include "CtrlrApplicationWindow/CtrlrEditor.h"
 #include "CtrlrPanel/CtrlrPanelEditor.h"
 #include "CtrlrLog.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 
 CtrlrManager::CtrlrManager(CtrlrProcessor *_owner, CtrlrLog &_ctrlrLog)
 	:	managerTree(Ids::manager),
@@ -33,6 +34,8 @@ CtrlrManager::CtrlrManager(CtrlrProcessor *_owner, CtrlrLog &_ctrlrLog)
     nullPanel = new CtrlrPanel(*this);
     nullModulator = new CtrlrModulator (*nullPanel);
     ctrlrFontManager.reset(new CtrlrFontManager (*this));
+
+    gui::initLookAndFeelDefaults(LookAndFeel::getDefaultLookAndFeel()); // JUCE's own default, until a panel sets one
 }
 
 CtrlrManager::~CtrlrManager()
