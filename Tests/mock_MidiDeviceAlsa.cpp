@@ -59,6 +59,14 @@ struct FakeSndSeqState {
 		unsigned char inputAppPort = 0;			  // app port id last used to subscribe an input (device->host)
 };
 
+// Updated v5.6.37. The kernel's rawmidi -> sequencer bridge (sound/core/seq/seq_midi.c) parses with a
+// MAX_MIDI_EVENT_BUF (256, include/sound/seq_midi_event.h) byte snd_midi_event buffer and dispatches a
+// SNDRV_SEQ_EVENT_SYSEX each time it fills, and at F7 (snd_midi_event_encode_byte). So a long SysEx from
+// hardware reaches JUCE as <= 256-byte events (the first starting with F0, the last ending with F7) that
+// JUCE's MidiDataConcatenator reassembles. Other messages arrive as one event each.
+// MAX_MIDI_EVENT_BUF is kernel-internal (not in uapi or alsa-lib headers), hence the literal here.
+static constexpr size_t kSeqSysexChunkBytes = 256; // = MAX_MIDI_EVENT_BUF
+
 static FakeSndSeqState fakeHandle;
 
 // Wakes JUCE's input thread by making its poll() fd readable.
@@ -182,10 +190,21 @@ long snd_midi_event_decode(snd_midi_event_t *dev, unsigned char *buf, long count
 
 	std::lock_guard<std::mutex> lock(mock->inputMutex);
 	if (!mock->waitingMidiInput.empty()) {
-		juce::MidiMessage message = mock->waitingMidiInput.front();
-		std::memcpy(buf, message.getRawData(), message.getRawDataSize());
-		mock->waitingMidiInput.pop_front();
-		return message.getRawDataSize();
+		// Updated v5.6.37. Was: memcpy the whole message, ignoring `count` (overflowed JUCE's 16 KiB
+		// decode buffer for longer SysEx). Now one kernel-sized piece per event, never more than `count`.
+		const juce::MidiMessage &message = mock->waitingMidiInput.front();
+		size_t &offset = mock->frontInputBytesDelivered;
+		const size_t total = (size_t)message.getRawDataSize();
+		const size_t remaining = total - offset;
+		size_t numBytes = message.isSysEx() ? std::min(remaining, kSeqSysexChunkBytes) : remaining;
+		numBytes = std::min(numBytes, (size_t)std::max(count, 0L));
+		std::memcpy(buf, message.getRawData() + offset, numBytes);
+		offset += numBytes;
+		if (offset >= total) {
+			mock->waitingMidiInput.pop_front();
+			offset = 0;
+		}
+		return (long)numBytes;
 	}
 	return 0;
 }
@@ -268,6 +287,7 @@ int snd_seq_event_input_pending(snd_seq_t *seq, int fetch_sequencer) {
 	int numBytes = 0;
 	for (const auto &message : mock->waitingMidiInput)
 		numBytes += message.getRawDataSize();
+	numBytes -= (int)mock->frontInputBytesDelivered; // Updated v5.6.37. Minus what was already handed out.
 	return numBytes;
 }
 
