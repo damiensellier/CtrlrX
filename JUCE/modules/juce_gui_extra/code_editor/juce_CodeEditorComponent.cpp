@@ -1693,15 +1693,31 @@ int CodeEditorComponent::columnToIndex (int lineNum, int column) const noexcept
 }
 
 //==============================================================================
-void CodeEditorComponent::setFont (const Font& newFont)
+void CodeEditorComponent::setFont (const Font& newFont) // Updated v5.6.34.
 {
     font = newFont;
 
+    // Calculate charWidth and lineHeight
     JUCE_BEGIN_IGNORE_DEPRECATION_WARNINGS
-    charWidth = font.getStringWidthFloat ("0");
+    float calculatedCharWidth = font.getStringWidthFloat ("0");
     JUCE_END_IGNORE_DEPRECATION_WARNINGS
+    int calculatedLineHeight = roundToInt (font.getHeight());
 
-    lineHeight = roundToInt (font.getHeight());
+    // --- CRITICAL FIXES BELOW ---
+
+    // Ensure charWidth is never zero or negative
+    if (calculatedCharWidth <= 0.0f)
+        charWidth = 1.0f; // Set a minimum reasonable value, e.g., 1 pixel
+    else
+        charWidth = calculatedCharWidth;
+
+    // Ensure lineHeight is never zero or negative
+    if (calculatedLineHeight <= 0)
+        lineHeight = 1; // Set a minimum reasonable value, e.g., 1 pixel
+    else
+        lineHeight = calculatedLineHeight;
+    // --- END CRITICAL FIXES ---
+
     resized();
 }
 

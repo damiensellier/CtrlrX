@@ -43,6 +43,20 @@ TEST_F(ProcessorInstance, lookandfeel_defaults_add_missing_colours_as_black_only
     EXPECT_EQ(v4.findColour(juce::Label::textWhenEditingColourId), editText);
 }
 
+// patches/juce8_codeeditor_setfont.patch (5.6.37: v5.6.34, #140): a font of size 0, e.g. a Lua
+// editor font size set to 0 by the user, must not give the code editor a zero char width or line
+// height; it divides by them.
+TEST_F(ProcessorInstance, code_editor_font_of_size_zero_keeps_a_non_zero_cell)
+{
+    juce::CodeDocument document;
+    juce::CodeEditorComponent editor(document, nullptr);
+
+    editor.setFont(juce::Font(juce::FontOptions(0.0f))); // without the patch: SIGFPE here
+
+    EXPECT_GT(editor.getCharWidth(), 0.0f);
+    EXPECT_GE(editor.getLineHeight(), 1);
+}
+
 void ProcessorInstance::expectNoMidiMessagesInBuffer(std::string message) {
     EXPECT_EQ(midiMessages.getNumEvents(), 0) << "Unexpected midi events " << message;
     // print, to help to debug:
