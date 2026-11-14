@@ -45,33 +45,54 @@ void CtrlrPanelMIDIInputThread::run()
 
 void CtrlrPanelMIDIInputThread::process()
 {
-	const ScopedWriteLock sl (lock);
+    // Take the oversized messages out under the lock, then work on them outside it
+    Array<MidiMessage> big;
+    {
+        const ScopedWriteLock sl(lock);
+        big.swapWith(oversizedInput);
+    }
 
-	if (owner.getMidiOptionBool(panelMidiThruD2D))
-	{
-		owner.sendMidi (deviceInputBuffer);
-	}
+    {
+        const ScopedWriteLock sl(lock);
 
-	if (inputComparator)
-	{
-		inputComparator->match(deviceInputBuffer);
-	}
+        if (owner.getMidiOptionBool(panelMidiThruD2D)) {
+            owner.sendMidi(deviceInputBuffer);
+        }
 
-	if (owner.getMidiOptionBool(panelMidiInputFromHostCompare) && hostInputBuffer.getNumEvents() > 0)
-	{
-		if (inputComparator)
-			inputComparator->match(hostInputBuffer);
-	}
+        if (inputComparator) {
+            inputComparator->match(deviceInputBuffer);
+        }
 
-	if (owner.getMidiOptionBool(panelMidiThruD2H))
-	{
-		channelizeBuffer (deviceInputBuffer, junkBuffer, owner.getMidiChannel(panelMidiOutputChannelHost), owner.getMidiOptionBool(panelMidiThruD2HChannelize));
-		owner.getCtrlrManagerOwner().getProcessorOwner()->addMidiToOutputQueue (deviceInputBuffer);
-	}
+        if (owner.getMidiOptionBool(panelMidiInputFromHostCompare) && hostInputBuffer.getNumEvents() > 0) {
+            if (inputComparator)
+                inputComparator->match(hostInputBuffer);
+        }
 
-	hostInputBuffer.clear();
-	deviceInputBuffer.clear();
-	devicePartialBuffer.clear();
+        if (owner.getMidiOptionBool(panelMidiThruD2H)) {
+            channelizeBuffer(deviceInputBuffer, junkBuffer, owner.getMidiChannel(panelMidiOutputChannelHost),
+                             owner.getMidiOptionBool(panelMidiThruD2HChannelize));
+            owner.getCtrlrManagerOwner().getProcessorOwner()->addMidiToOutputQueue(deviceInputBuffer);
+        }
+
+        hostInputBuffer.clear();
+        deviceInputBuffer.clear();
+        devicePartialBuffer.clear();
+    }
+
+    // Messages too large for a MidiBuffer, handled one at a time, outside the lock
+    for (auto &m : big) {
+		DBG("process: oversized loop start, size=" + String(m.getRawDataSize()));
+        if (owner.getMidiOptionBool(panelMidiThruD2D))
+            owner.sendMidi(m);
+
+        if (inputComparator)
+            inputComparator->match(m);
+			DBG("process: oversized loop, calling panelReceivedMidi size=" + String(m.getRawDataSize()));
+owner.panelReceivedMidi (m, source);
+	DBG("process: after match, calling panelReceivedMidi");
+        if (owner.getMidiOptionBool(panelMidiThruD2H))
+            owner.getCtrlrManagerOwner().getProcessorOwner()->addMidiToOutputQueue(m); // dropped by its size guard
+    }
 }
 
 int CtrlrPanelMIDIInputThread::getListenerInputMidiChannel()
@@ -88,18 +109,18 @@ void CtrlrPanelMIDIInputThread::handlePartialMIDIFromDevice (const uint8* messag
 
 void CtrlrPanelMIDIInputThread::handleMIDIFromDevice (const MidiMessage &message)
 {
-	if (message.getRawDataSize() > 65535) {
-		Logger::writeToLog("CtrlrPanelMIDIInputThread: " + String(message.getRawDataSize()) +
-						   "-byte message exceeds MidiBuffer event limit, dropped");
-		return;
-	}
-
-	const ScopedWriteLock sl (lock);
+    const ScopedWriteLock sl (lock);
 
 	if (owner.getMidiOptionBool(panelMidiRealtimeIgnore) && message.getRawDataSize() <= 1)
 		return;
 
-	if (message.isNoteOnOrOff() || message.isMidiClock())
+    if (message.getRawDataSize() > 65535) {
+        oversizedInput.add(message); // whole message, no 16-bit limit
+        notify();
+        return;
+    }
+
+    if (message.isNoteOnOrOff() || message.isMidiClock())
 	{
 		deviceInputBuffer.addEvent (message, deviceInputBuffer.getNumEvents()+1);
 	}

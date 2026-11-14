@@ -9,19 +9,19 @@
 namespace BinaryData
 {
     extern const char*   build_information_hpp_cmake_in;
-    const int            build_information_hpp_cmake_inSize = 2032;
+    const int            build_information_hpp_cmake_inSize = 2087;
 
     extern const char*   getdeps_sh;
-    const int            getdeps_shSize = 457;
+    const int            getdeps_shSize = 477;
 
     extern const char*   INSTALL_txt;
-    const int            INSTALL_txtSize = 2054;
+    const int            INSTALL_txtSize = 2121;
 
     extern const char*   LICENSE_txt;
-    const int            LICENSE_txtSize = 1207;
+    const int            LICENSE_txtSize = 1230;
 
     extern const char*   README_md;
-    const int            README_mdSize = 7469;
+    const int            README_mdSize = 7609;
 
     extern const char*   CtrlrRevision_template;
     const int            CtrlrRevision_templateSize = 597;
@@ -75,55 +75,55 @@ namespace BinaryData
     const int            appbar_debug_stop_pngSize = 218;
 
     extern const char*   alignhorizontalleftsymbolic_svg;
-    const int            alignhorizontalleftsymbolic_svgSize = 3096;
+    const int            alignhorizontalleftsymbolic_svgSize = 3196;
 
     extern const char*   alignhorizontalrightsymbolic_svg;
-    const int            alignhorizontalrightsymbolic_svgSize = 3741;
+    const int            alignhorizontalrightsymbolic_svgSize = 3862;
 
     extern const char*   alignverticalbottomsymbolic_svg;
-    const int            alignverticalbottomsymbolic_svgSize = 3253;
+    const int            alignverticalbottomsymbolic_svgSize = 3358;
 
     extern const char*   alignverticaltopsymbolic_svg;
-    const int            alignverticaltopsymbolic_svgSize = 3454;
+    const int            alignverticaltopsymbolic_svgSize = 3565;
 
     extern const char*   boundingboxcentersymbolic_svg;
-    const int            boundingboxcentersymbolic_svgSize = 6295;
+    const int            boundingboxcentersymbolic_svgSize = 6471;
 
     extern const char*   distributehorizontalgapssymbolic_svg;
-    const int            distributehorizontalgapssymbolic_svgSize = 3762;
+    const int            distributehorizontalgapssymbolic_svgSize = 3892;
 
     extern const char*   distributeverticalgapssymbolic_svg;
-    const int            distributeverticalgapssymbolic_svgSize = 3849;
+    const int            distributeverticalgapssymbolic_svgSize = 3976;
 
     extern const char*   editcutsymbolic_svg;
-    const int            editcutsymbolic_svgSize = 2976;
+    const int            editcutsymbolic_svgSize = 3061;
 
     extern const char*   editdeletesymbolic_svg;
-    const int            editdeletesymbolic_svgSize = 2946;
+    const int            editdeletesymbolic_svgSize = 3032;
 
     extern const char*   editduplicatesymbolic_svg;
-    const int            editduplicatesymbolic_svgSize = 2198;
+    const int            editduplicatesymbolic_svgSize = 2279;
 
     extern const char*   editpastestylesymbolic_svg;
-    const int            editpastestylesymbolic_svgSize = 3295;
+    const int            editpastestylesymbolic_svgSize = 3387;
 
     extern const char*   objectlockedsymbolic_svg;
-    const int            objectlockedsymbolic_svgSize = 3108;
+    const int            objectlockedsymbolic_svgSize = 3210;
 
     extern const char*   objectunlockedsymbolic_svg;
-    const int            objectunlockedsymbolic_svgSize = 3091;
+    const int            objectunlockedsymbolic_svgSize = 3194;
 
     extern const char*   snapnodesmidpointsymbolic_svg;
-    const int            snapnodesmidpointsymbolic_svgSize = 6796;
+    const int            snapnodesmidpointsymbolic_svgSize = 6997;
 
     extern const char*   transformrotatesymbolic_svg;
-    const int            transformrotatesymbolic_svgSize = 3494;
+    const int            transformrotatesymbolic_svgSize = 3606;
 
     extern const char*   transformscalehorizontalsymbolic_svg;
-    const int            transformscalehorizontalsymbolic_svgSize = 2659;
+    const int            transformscalehorizontalsymbolic_svgSize = 2749;
 
     extern const char*   transformscaleverticalsymbolic_svg;
-    const int            transformscaleverticalsymbolic_svgSize = 2687;
+    const int            transformscaleverticalsymbolic_svgSize = 2777;
 
     extern const char*   CtrlrXLogo512x512DEF_png;
     const int            CtrlrXLogo512x512DEF_pngSize = 27821;
@@ -207,7 +207,7 @@ namespace BinaryData
     const int            copy_svgSize = 282;
 
     extern const char*   ctrlr_logo_svg;
-    const int            ctrlr_logo_svgSize = 23612;
+    const int            ctrlr_logo_svgSize = 23961;
 
     extern const char*   cut_svg;
     const int            cut_svgSize = 692;
@@ -243,7 +243,7 @@ namespace BinaryData
     const int            memory_svgSize = 348;
 
     extern const char*   midi_svg;
-    const int            midi_svgSize = 9017;
+    const int            midi_svgSize = 9089;
 
     extern const char*   nav_next_svg;
     const int            nav_next_svgSize = 201;
@@ -300,7 +300,7 @@ namespace BinaryData
     const int            wysiwyg_svgSize = 326;
 
     extern const char*   debugger_lua;
-    const int            debugger_luaSize = 47377;
+    const int            debugger_luaSize = 48942;
 
     extern const char*   LICENSE;
     const int            LICENSESize = 1099;
@@ -354,7 +354,7 @@ namespace BinaryData
     const int            RSRC_zipSize = 49800;
 
     extern const char*   LuaAPI_xml;
-    const int            LuaAPI_xmlSize = 246543;
+    const int            LuaAPI_xmlSize = 250465;
 
     extern const char*   CtrlrIDs_xml;
     const int            CtrlrIDs_xmlSize = 94011;
