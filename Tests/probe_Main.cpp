@@ -1,5 +1,5 @@
 // CtrlrPanelProbe -- drives a panel from a script and reports what it did. Headless one-shot:
-// no hardware, no display.
+// no hardware; on Linux an X display only for modal dialogs.
 //
 // Loads an arbitrary .panel, rebinds its MIDI devices to the mocked test devices, (optionally)
 // runs a JSON action script, and prints a JSON report of everything observed. See
@@ -1554,6 +1554,7 @@ namespace
         LogCapture& log;
         juce::File panelFile;
         bool editModeAsSaved = false; // --edit-mode-as-saved
+        juce::String displayWarning;  // no X display: repeated in every report
 
         // Rebuilt on every (re)load:
         CtrlrPanel* panel = nullptr;
@@ -1786,6 +1787,8 @@ namespace
                 : "saved in edit mode (uiPanelEditMode=1); probed in run mode, as played. CtrlrX opens "
                   "this file half in edit mode; save it with uiPanelEditMode=0, or run with "
                   "--edit-mode-as-saved to probe it as CtrlrX opens it");
+        if (s.displayWarning.isNotEmpty())
+            addWarning(ctx, "display", "", s.displayWarning);
 
         juce::Array<juce::var> stepResults;
         int actionErrorCount = 0;     // the probe could not carry out what a step asked for
@@ -1892,6 +1895,72 @@ namespace
 
         return report;
     }
+
+   #if defined(__linux__)
+    // Added v5.6.37. Make the X display usable for JUCE's windows, before JUCE opens it.
+    //
+    // The probe renders in memory and needs no display, except for modal dialogs: every
+    // TopLevelWindow (an AlertWindow, a Lua utils.questionWindow, ...) creates a native X window
+    // in its constructor, before ModalDialogSuppressor can dismiss it.
+    //
+    // JUCE looks up the window-manager atoms (WM_PROTOCOLS, _NET_WM_STATE, ...) with
+    // XInternAtom(only_if_exists = True). On a bare X server with no window manager (xvfb-run, CI)
+    // they don't exist yet, so JUCE gets None, the first XChangeProperty on a new window fails with
+    // BadAtom, and Xlib's default error handler calls exit(1): no report. Creating the atoms here
+    // fixes that. On a desktop with a window manager they already exist, so this changes nothing
+    // there.
+    //
+    // The connection stays open until the process exits: an X server without -noreset resets when
+    // its last client disconnects, and the reset deletes the atoms again before JUCE connects.
+    //
+    // The list is every atom JUCE 6.0.8 and 8.0.12 get with getIfExists (XWindowSystemUtilities::
+    // Atoms and the calls in juce_linux_XWindowSystem.cpp / juce_XWindowSystem_linux.cpp). Re-check
+    // it at the next JUCE upgrade.
+    //
+    // Returns false if there is no X display: then a modal dialog crashes the probe (JUCE has no
+    // window to put it in), and the report warns about it.
+    bool prepareX11Display(juce::String& displayName)
+    {
+        // The display JUCE opens (XWindowSystem::initialiseXDisplay): $DISPLAY, else ":0.0".
+        displayName = juce::String(std::getenv("DISPLAY") != nullptr ? std::getenv("DISPLAY") : "");
+        const juce::String openName = displayName.isEmpty() ? juce::String(":0.0") : displayName;
+
+        // libX11 is loaded at run time, as JUCE does (X11Symbols): no link dependency, no X headers.
+        // Both static: the library and the connection live until the process exits (see above).
+        using XOpenDisplayFn = void* (*) (const char*);
+        using XInternAtomsFn = int (*) (void*, char**, int, int, unsigned long*);
+        static juce::DynamicLibrary xLib;
+        if (! xLib.open("libX11.so.6"))
+            return false;
+        auto xOpenDisplay = (XOpenDisplayFn) xLib.getFunction("XOpenDisplay");
+        auto xInternAtoms = (XInternAtomsFn) xLib.getFunction("XInternAtoms");
+        if (xOpenDisplay == nullptr || xInternAtoms == nullptr)
+            return false;
+
+        static void* display = nullptr;
+        display = xOpenDisplay(openName.toRawUTF8());
+        if (display == nullptr)
+            return false;
+
+        static const char* const names[] = {
+            // XWindowSystemUtilities::Atoms
+            "WM_PROTOCOLS", "WM_TAKE_FOCUS", "WM_DELETE_WINDOW", "_NET_WM_PING", "WM_CHANGE_STATE",
+            "WM_STATE", "_NET_WM_WINDOW_TYPE", "_NET_WM_STATE", "_NET_WM_STATE_HIDDEN",
+            // XWindowSystem
+            "_NET_WM_STATE_FULLSCREEN", "_NET_FRAME_EXTENTS", "_NET_WORKAREA", "_MOTIF_WM_HINTS",
+            "_WIN_HINTS", "KWM_WIN_DECORATION", "_KDE_NET_WM_WINDOW_TYPE_OVERRIDE",
+            "_NET_WM_ALLOWED_ACTIONS", "_NET_WM_WINDOW_TYPE_COMBO", "_NET_WM_WINDOW_TYPE_NORMAL",
+            "_NET_WM_ACTION_RESIZE", "_NET_WM_ACTION_FULLSCREEN", "_NET_WM_ACTION_MINIMIZE",
+            "_NET_WM_ACTION_CLOSE", "_NET_WM_STATE_SKIP_TASKBAR",
+            "_NET_WM_MOVERESIZE", // JUCE 8 only
+        };
+        constexpr int numNames = (int) (sizeof(names) / sizeof(names[0]));
+        unsigned long atoms[numNames] = {};
+        // only_if_exists = False: create the missing ones. A round trip, so they exist on return.
+        xInternAtoms(display, const_cast<char**>(names), numNames, 0, atoms);
+        return true;
+    }
+   #endif
 }
 
 int main(int argc, char** argv)
@@ -1899,13 +1968,11 @@ int main(int argc, char** argv)
     // Isolate stdout up front: from here on only JSON reports reach the real stdout.
     redirectStdoutToStderr();
 
-   #if defined(__linux__)
-    // Never use the user's display. The probe needs none (rendering is in memory), and with one,
-    // every modal dialog the probe dismisses is put on screen first and flashes up on the desktop.
-    // Without one, dialogs run and are recorded the same way, and screenshots are byte-identical.
-    unsetenv("DISPLAY");
-    unsetenv("WAYLAND_DISPLAY");
-   #endif
+    // Updated v5.6.37. The probe used to unset DISPLAY and WAYLAND_DISPLAY here, "to never use
+    // the user's display". That had no effect: JUCE then opens ":0.0", and it has no Wayland
+    // backend. Now the probe uses DISPLAY (or JUCE's ":0.0") as JUCE does: on a desktop, a modal
+    // dialog appears on screen until the probe dismisses it. Headless, run it under xvfb-run. See
+    // prepareX11Display() for what makes a bare X server work.
 
     // InitGoogleMock initialises gmock (needed for NiceMock/ON_CALL) and strips its own flags,
     // leaving our positional arguments in place.
@@ -1934,7 +2001,8 @@ int main(int argc, char** argv)
         failFatal("usage: CtrlrPanelProbe [--verbose] [--global-console] [--stdin] [--edit-mode-as-saved] "
                   "<panel-file> [<script-file>]",
                   "CtrlrPanelProbe drives a CtrlrX panel from a JSON script and reports what it did "
-                  "-- MIDI out, Lua errors, final state. No hardware, no display. See Doc/PanelProbe.md.");
+                  "-- MIDI out, Lua errors, final state. No hardware; on Linux, an X display only for "
+                  "modal dialogs (xvfb-run). See Doc/PanelProbe.md.");
 
     // Quiet by default: silence all stderr chatter so stdout stays the clean JSON contract. The
     // reports are written to the saved real-stdout fd, so exit codes and output are unaffected.
@@ -1962,6 +2030,16 @@ int main(int argc, char** argv)
                 failFatal("script parse error", parseResult.getErrorMessage());
         }
     }
+
+    // Before JUCE opens the display: see prepareX11Display().
+    juce::String displayWarning;
+   #if defined(__linux__)
+    juce::String displayName;
+    if (! prepareX11Display(displayName))
+        displayWarning = "no X display (DISPLAY="
+                       + (displayName.isEmpty() ? juce::String("unset, so :0.0") : displayName)
+                       + "): a modal dialog will crash the probe; run it under xvfb-run";
+   #endif
 
     juce::ScopedJuceInitialiser_GUI juceGui;
     juce::MessageManager::getInstance()->setCurrentThreadAsMessageThread();
@@ -2012,6 +2090,7 @@ int main(int argc, char** argv)
 
     Session session{ *processor, midi, buffer, sendsMutex, deviceSends, logCapture, panelFile };
     session.editModeAsSaved = editModeAsSaved;
+    session.displayWarning = displayWarning;
 
     juce::String loadError;
     if (! openPanel(session, loadError))

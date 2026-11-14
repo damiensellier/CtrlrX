@@ -70,7 +70,13 @@ void CtrlrPanelResourceManager::initManager()
 
 	if (!resourcesDirectory.isDirectory())
 	{
-		if (!resourcesDirectory.createDirectory())
+		// Another process can create the folder, or its parent, between isDirectory() and
+		// createDirectory(): two plugin instances, or parallel tests, that load panels with
+		// the same panelUID. JUCE then fails with "already exists". Try once more, and
+		// accept a folder that exists now.
+		if (!resourcesDirectory.createDirectory() // Updated v5.6.37. Folder race between processes
+			&& !resourcesDirectory.createDirectory()
+			&& !resourcesDirectory.isDirectory())
 		{
 			_ERR("CtrlrResourceManager::ctor failed to create resources directory");
 			resourcesDirectory = File();

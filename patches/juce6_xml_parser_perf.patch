@@ -1,0 +1,73 @@
+# JUCE 6.0.8 -- make XML attribute parsing linear instead of O(n^2)
+#
+# Applies to: JUCE/modules/juce_core/xml/juce_XmlDocument.cpp  (CtrlrX 5.6.36 tree)
+# Apply from the JUCE directory:  git apply -p1 <this file>
+#
+# XmlDocument::readQuotedString() builds each attribute value with repeated
+# String::appendCharPointer() calls. Every call is O(n): it locates the end of the
+# accumulated text by scanning for the terminator, and upstream reallocates the buffer
+# to the exact required size. A value assembled from k chunks therefore costs O(n^2),
+# which dominated parsing of panels that keep large payloads in attributes (base64
+# images, entity-escaped Lua of several MB).
+#
+# The patch accumulates bytes in a MemoryOutputStream and converts once.
+#
+# Note: writes raw CharPointerType bytes, which assumes JUCE_STRING_UTF_TYPE == 8
+# (the default on Windows/MSVC). Patch and target are both CRLF, like the 5.6.36 tree.
+diff --git a/modules/juce_core/xml/juce_XmlDocument.cpp b/modules/juce_core/xml/juce_XmlDocument.cpp
+index c6b5026..bc80718 100644
+--- a/modules/juce_core/xml/juce_XmlDocument.cpp
++++ b/modules/juce_core/xml/juce_XmlDocument.cpp
+@@ -341,6 +341,7 @@ void XmlDocument::skipNextWhiteSpace()
+ void XmlDocument::readQuotedString (String& result)
+ {
+     auto quote = readNextChar();
++    MemoryOutputStream accumulated;
+ 
+     while (! outOfData)
+     {
+@@ -353,26 +354,31 @@ void XmlDocument::readQuotedString (String& result)
+ 
+         if (c == '&')
+         {
+-            readEntity (result);
++            String entityText;
++            readEntity (entityText);
++            if (entityText.isNotEmpty())
++                accumulated.write (entityText.toRawUTF8(), (size_t) entityText.getNumBytesAsUTF8());
+         }
+         else
+         {
+             auto start = input;
+-
+             for (;;)
+             {
+                 auto character = *input;
+ 
+                 if (character == quote)
+                 {
+-                    result.appendCharPointer (start, input);
++                    if (input.getAddress() != start.getAddress())
++                        accumulated.write (start.getAddress(), (size_t) (input.getAddress() - start.getAddress()));
+                     ++input;
++                    result = accumulated.toString();
+                     return;
+                 }
+ 
+                 if (character == '&')
+                 {
+-                    result.appendCharPointer (start, input);
++                    if (input.getAddress() != start.getAddress())
++                        accumulated.write (start.getAddress(), (size_t) (input.getAddress() - start.getAddress()));
+                     break;
+                 }
+ 
+@@ -387,6 +393,8 @@ void XmlDocument::readQuotedString (String& result)
+             }
+         }
+     }
++
++    result = accumulated.toString();
+ }
+ 
+ XmlElement* XmlDocument::readNextElement (const bool alsoParseSubElements)

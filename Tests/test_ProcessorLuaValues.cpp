@@ -418,8 +418,8 @@ TEST_F(LuaValues, callback_clamping_its_own_modulator_with_ui_flag_runs_once)
 /**
  * Inside luaPanelLoaded, getBootstrapState() and isLoading() are true, and a value set there
  * keeps its value and sends its MIDI but never runs its callback (not inside, not afterwards).
- * Callbacks run again as soon as loading returned (even while isLoading() is still in its
- * cooldown, see is_loading_stays_true_for_a_cooldown_after_load).
+ * Callbacks run again once loading returned and the message loop ran (see
+ * is_loading_stays_true_until_the_message_loop_ran_after_load).
  *
  * Characterization: callbacks are skipped while bootstrapping (the callback gate in
  * CtrlrModulatorProcessor, 5.6.32 "stricter conditions");
@@ -447,31 +447,27 @@ TEST_F(LuaValues, value_set_in_panel_loaded_keeps_value_and_midi_but_skips_callb
 }
 
 /**
- * Right after loading, getBootstrapState() is already false while isLoading() stays true for a
- * cooldown (~400 ms from the end of bootstrapPanel()), and turns false once it passed.
+ * Right after loading, getBootstrapState() is already false while isLoading() stays true until
+ * the message loop has run: bootstrapPanel() holds a post-bootstrap gate open across two
+ * MessageManager::callAsync hops, so work queued during load drains first. It is not time-based.
  *
- * The cooldown is wall-clock time, so the "still true" check is only asserted when the probe
- * provably ran inside it; a slow (loaded CI) run skips just that check.
+ * Loads with loadPanel() rather than loadLuaPanel(), which pumps the message loop (and so opens
+ * the gate) before returning.
  */
-TEST_F(LuaValues, is_loading_stays_true_for_a_cooldown_after_load)
+TEST_F(LuaValues, is_loading_stays_true_until_the_message_loop_ran_after_load)
 {
-    const juce::uint32 loadStartMs = juce::Time::getMillisecondCounter();
-    ASSERT_NE(loadLuaPanel("fixture_lua_values.panel"), nullptr);
+    allowAndRecordDeviceSends();
+    panel = loadPanel("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
     ASSERT_TRUE(runLua("_bootstrapAfter = panel:getBootstrapState() and 1 or 0\n"
                        "_loadingAfter = panel:isLoading() and 1 or 0"));
-    // bootstrapPanel() ended after loadStartMs, so this bounds the time spent in the cooldown.
-    const juce::uint32 msSinceLoadStart = juce::Time::getMillisecondCounter() - loadStartMs;
 
     EXPECT_EQ(luaNumber("_bootstrapAfter"), 0.0) << "getBootstrapState() once loading returned";
-    if (msSinceLoadStart < 400)
-        EXPECT_EQ(luaNumber("_loadingAfter"), 1.0) << "isLoading() still true in the cooldown";
-    else
-        std::cout << "note: isLoading() cooldown check skipped, probe ran " << msSinceLoadStart
-                  << " ms after load start" << std::endl;
+    EXPECT_EQ(luaNumber("_loadingAfter"), 1.0) << "isLoading() still true before the message loop ran";
 
-    pumpInputThreads(500);
+    pumpInputThreads(50);
     ASSERT_TRUE(runLua("_loadingLater = panel:isLoading() and 1 or 0"));
-    EXPECT_EQ(luaNumber("_loadingLater"), 0.0) << "isLoading() false once the cooldown passed";
+    EXPECT_EQ(luaNumber("_loadingLater"), 0.0) << "isLoading() false once the message loop ran";
 }
 
 // ----------------------------------------------------------------------------------------------
