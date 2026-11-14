@@ -88,6 +88,12 @@ void CtrlrPanelMIDIInputThread::handlePartialMIDIFromDevice (const uint8* messag
 
 void CtrlrPanelMIDIInputThread::handleMIDIFromDevice (const MidiMessage &message)
 {
+	if (message.getRawDataSize() > 65535) {
+		Logger::writeToLog("CtrlrPanelMIDIInputThread: " + String(message.getRawDataSize()) +
+						   "-byte message exceeds MidiBuffer event limit, dropped");
+		return;
+	}
+
 	const ScopedWriteLock sl (lock);
 
 	if (owner.getMidiOptionBool(panelMidiRealtimeIgnore) && message.getRawDataSize() <= 1)

@@ -1762,9 +1762,9 @@ void CtrlrPanel::sendMidi (CtrlrMidiMessage &m, double millisecondCounterToStart
 			nrpnLatchedNumber  = incomingNumber;
 			nrpnLatchedFormula = incomingFormula;
 		}
-		
-		auto& messages = m.getMidiMessageArray();
-		_DBG("NRPN latch: arraySize=" + String(messages.size())
+
+        auto &messages = m.getMidiMessageArray();
+        _DBG("NRPN latch: arraySize=" + String(messages.size())
 			 + " latched=" + String((int)nrpnHeaderLatched)
 			 + " number=" + String(incomingNumber));
 		
@@ -1793,11 +1793,28 @@ void CtrlrPanel::sendMidi (CtrlrMidiMessage &m, double millisecondCounterToStart
 		outputDevicePtr->sendMidiBuffer(filtered, sendTime);
 		queueMessagesForHostOutput(filtered);
 	}
-	else
-	{
-		outputDevicePtr->sendMidiBuffer(m.getMidiBuffer(), sendTime);
-		queueMessageForHostOutput(m);
-	}
+    else {
+        // Oversized messages can't go through a MidiBuffer, send them as plain MidiMessages
+        auto &arr = m.getMidiMessageArray();
+        bool hasOversized = false;
+        DBG("sendMidi: arraySize=" + String(arr.size()) +
+            (arr.size() ? " first=" + String(arr.getReference(0).m.getRawDataSize()) : ""));
+        for (int i = 0; i < arr.size(); i++)
+            if (arr.getReference(i).m.getRawDataSize() > 65535) {
+                hasOversized = true;
+                break;
+            }
+
+        if (hasOversized) {
+            for (int i = 0; i < arr.size(); i++)
+                outputDevicePtr->sendMidiMessage(arr.getReference(i).m, sendTime);
+            queueMessageForHostOutput(m); // oversized ones are dropped by the guard already added
+            return;
+        }
+
+        outputDevicePtr->sendMidiBuffer(m.getMidiBuffer(), sendTime);
+        queueMessageForHostOutput(m);
+    }
 }
 
 bool CtrlrPanel::isMidiOutPaused()

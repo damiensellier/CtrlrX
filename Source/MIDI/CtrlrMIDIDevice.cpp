@@ -123,7 +123,9 @@ void CtrlrMIDIDevice::handlePartialSysexMessage (MidiInput* /*source*/, const ui
 
 void CtrlrMIDIDevice::handleIncomingMidiMessage (MidiInput* /*source*/, const MidiMessage& message)
 {
-	_MIN(getProperty(Ids::name), message, -1);
+    DBG("handleIncomingMidiMessage: size=" + String(message.getRawDataSize()) +
+        " isSysEx=" + String((int)message.isSysEx()));
+    _MIN(getProperty(Ids::name), message, -1);
 
 #ifdef JUCE_LINUX
     uint8 *ptr = (uint8 *)message.getRawData();
@@ -155,26 +157,8 @@ void CtrlrMIDIDevice::handleIncomingMidiMessage (MidiInput* /*source*/, const Mi
 		deviceListeners.call (&CtrlrMIDIDevice::Listener::handleMIDIFromDevice, message);
 #endif
 	}
-	else
-	{
-#if 0 // UPDATED v5.6.36. Thanks to @dnaldoog. SEE : Slider not reacting on Midi channel different than 1 https://github.com/damiensellier/CtrlrX/issues/262
+    else {
         lastMessageWasSysex = false;
-
-		for (int i=0; i<deviceListeners.size(); i++)
-		{
-			const int ch = deviceListeners.getListeners() [i]->getListenerInputMidiChannel();
-
-			if (ch == message.getChannel() || ch == 0 || message.getChannel() == 0)
-			{
-				deviceListeners.getListeners() [i]->handleMIDIFromDevice (message);
-			}
-		}
-		/*
-		If you ever want to allow users to toggle any option in this file, you access the ValueTree with an extra property such as:
-		(bool)owner.getProperty(Ids::midiMessageChannelOverrideMapIncoming);
-		*/
-#endif
-		lastMessageWasSysex = false;
 		const bool isOverrideActive = true;
 		
 		for (int i = 0; i < deviceListeners.size(); i++)
@@ -187,7 +171,7 @@ void CtrlrMIDIDevice::handleIncomingMidiMessage (MidiInput* /*source*/, const Mi
 				listener->handleMIDIFromDevice(message);
 			}
 		}
-	}
+    }
 }
 
 bool CtrlrMIDIDevice::getType()
@@ -228,7 +212,14 @@ void CtrlrMIDIDevice::sendMidiMessage (const MidiMessage &message, double millis
 {
 	if (outJucePtr != nullptr)
 	{
-		{
+        if (message.getRawDataSize() > 65535) {
+            // Too big for a MidiBuffer event (16-bit size): send directly, bypassing buffer and timing
+            const ScopedLock sl(deviceLock);
+            outJucePtr->sendMessageNow(message);
+            _MOUT(getProperty(Ids::name).toString() + "[JUCE]", message, -1);
+            return;
+        }
+        {
 			const ScopedLock sl(deviceLock);
 
 			if (lastMessageSentTime == 0 || (lastMessageSentTime + millisecondCounterToStartAt) < Time::getMillisecondCounter())
