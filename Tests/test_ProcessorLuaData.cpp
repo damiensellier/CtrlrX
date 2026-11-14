@@ -302,11 +302,16 @@ TEST_F(LuaData, graphics_draw_fitted_text_takes_the_5_6_37_arguments)
 {
     ASSERT_NE(loadLuaPanel("fixture_lua_values.panel"), nullptr);
 
+    // On Windows JUCE 8 backs the Image with Direct2D: the drawing reaches the pixels only when the
+    // Graphics ends, so it is dropped and collected before getPixelAt.
     ASSERT_TRUE(runLua("local img = Image(Image.ARGB, 64, 32, true)\n"
-                       "local g = Graphics(img)\n"
-                       "g:setColour(Colour(0xffffffff))\n"
-                       "g:drawFittedText('XX', 0, 0, 64, 16, Justification(Justification.centred), 1, 1.0)\n"
-                       "g:drawFittedText('XX', Rectangle(0, 16, 64, 16), Justification(Justification.centred), 1, 1.0)\n"
+                       "do\n"
+                       "  local g = Graphics(img)\n"
+                       "  g:setColour(Colour(0xffffffff))\n"
+                       "  g:drawFittedText('XX', 0, 0, 64, 16, Justification(Justification.centred), 1, 1.0)\n"
+                       "  g:drawFittedText('XX', Rectangle(0, 16, 64, 16), Justification(Justification.centred), 1, 1.0)\n"
+                       "end\n"
+                       "collectgarbage('collect')\n"
                        "local top, bottom = 0, 0\n"
                        "for y = 0, 31 do for x = 0, 63 do\n"
                        "  if img:getPixelAt(x, y):getAlpha() > 0 then\n"
