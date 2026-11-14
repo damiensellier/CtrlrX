@@ -18,6 +18,10 @@ class CtrlrPanelMIDIInputThread : public Thread, public CtrlrMIDIDevice::Listene
 		void processMessage(MidiMessage &/*midiMessage*/) {}
 		void handlePartialMIDIFromDevice (const uint8* messageData, const int numBytesSoFar, const double timestamp);
 		bool openInputDevice (const String &inputDeviceName);
+        bool hasInputDevice() const
+        {
+            return inputDevicePtr != nullptr;
+        }
 		void panelEditModeChanged (const bool _panelEditMode);
 		CtrlrMidiInputComparator &getInputComparator();
 		void process();

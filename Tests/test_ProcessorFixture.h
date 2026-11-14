@@ -39,6 +39,9 @@ protected:
     ::testing::StrictMock<MockMidi> midi_mock;
 
     std::shared_ptr<CtrlrProcessor> processor;
+    // false: SetUp() does not wait for the MIDI device list, so a test sees the start-up order of
+    // the app (a panel can load before JUCE has listed the devices).
+    bool waitForMidiDevicesInSetUp = true;
     juce::AudioSampleBuffer buffer;
     juce::MidiBuffer midiMessages;
 
@@ -57,8 +60,7 @@ protected:
         // AsyncUpdater is dispatched on the message thread. CtrlrProcessor's constructor already
         // ran refreshDevices() against an empty cache, so pump the message loop until the mock
         // devices appear, then refresh CtrlrX's device list again.
-        if (midi_mock.hasSubsystemMock())
-        {
+        if (midi_mock.hasSubsystemMock() && waitForMidiDevicesInSetUp) {
             for (int i = 0; i < 40 && juce::MidiOutput::getAvailableDevices().isEmpty(); ++i)
                 juce::MessageManager::getInstance()->runDispatchLoopUntil(25);
 

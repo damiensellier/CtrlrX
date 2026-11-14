@@ -82,6 +82,7 @@ class CtrlrPanel:	public ValueTree::Listener,
 		bool containsCtrlrComponent(const CtrlrComponent *const componentToLookFor) const;
 
 		void valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChanged, const Identifier &property);
+        void openMissingMidiDevices();
 		void valueTreeChildrenChanged (ValueTree &/*treeWhoseChildHasChanged*/){}
 		void valueTreeParentChanged (ValueTree &/*treeWhoseParentHasChanged*/){}
 		void valueTreeChildAdded (ValueTree& /*parentTree*/, ValueTree& /*childWhichHasBeenAdded*/){}

@@ -51,6 +51,10 @@ class CtrlrMIDIDeviceManager
 		JUCE_LEAK_DETECTOR(CtrlrMIDIDeviceManager)
 
 	private:
+        void deviceListChanged();
+        void addNewDevices(OwnedArray<CtrlrMIDIDevice, CriticalSection> &devices,
+                           const Array<MidiDeviceInfo> &available, const CtrlrMIDIDeviceType type);
+
 		ListenerList <CtrlrMIDIDevice::Listener,
 							Array<CtrlrMIDIDevice::Listener*,CriticalSection>
 						> processingListeners;
@@ -60,6 +64,7 @@ class CtrlrMIDIDeviceManager
 		OwnedArray <CtrlrMIDIDevice,CriticalSection> outDevs;
 		ValueTree managerTree;
 		CtrlrManager &owner;
+        MidiDeviceListConnection deviceListConnection;
 };
 
 #endif

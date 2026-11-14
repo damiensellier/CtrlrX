@@ -16,6 +16,38 @@ CtrlrMIDIDeviceManager::CtrlrMIDIDeviceManager(CtrlrManager &_owner)
 	inDevs.clear();
 	outDevs.clear();
 	refreshDevices();
+
+    // Added v8.0.85. JUCE 8 lists MIDI devices asynchronously (on Linux the ALSA ports arrive with
+    // the first sequencer event), so the list above can be empty at start-up and the devices that a
+    // panel names never open. Follow JUCE's device list instead of a fixed delay.
+    deviceListConnection = MidiDeviceListConnection::make([this] { deviceListChanged(); });
+}
+
+// Adds the devices that are new and lets every panel open the devices it names. Device objects
+// already in the lists are kept: panels hold raw pointers to them.
+void CtrlrMIDIDeviceManager::deviceListChanged()
+{
+    addNewDevices(inDevs, MidiInput::getAvailableDevices(), inputDevice);
+    addNewDevices(outDevs, MidiOutput::getAvailableDevices(), outputDevice);
+
+    for (int i = 0; i < owner.getNumPanels(); i++) {
+        if (CtrlrPanel *panel = owner.getPanel(i))
+            panel->openMissingMidiDevices();
+    }
+}
+
+void CtrlrMIDIDeviceManager::addNewDevices(OwnedArray<CtrlrMIDIDevice, CriticalSection> &devices,
+                                           const Array<MidiDeviceInfo> &available, const CtrlrMIDIDeviceType type)
+{
+    for (const auto &info : available) {
+        bool known = false;
+
+        for (int i = 0; i < devices.size() && !known; i++)
+            known = devices[i]->getProperty(Ids::midiDevId).toString() == info.identifier;
+
+        if (!known)
+            devices.add(new CtrlrMIDIDevice(*this, devices.size(), info.name, info.identifier, type));
+    }
 }
 
 CtrlrMIDIDeviceManager::~CtrlrMIDIDeviceManager()
