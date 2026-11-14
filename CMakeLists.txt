@@ -234,10 +234,7 @@ target_compile_definitions(SharedCode INTERFACE
 )
 
 target_compile_options(SharedCode INTERFACE
-    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-fPIC>
-    # Not on Apple: universal builds also compile for arm64, where AppleClang 17 (Xcode 16.3+)
-    # rejects -msse2. x86_64 has SSE2 as its baseline anyway.
-    $<$<AND:$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>,$<NOT:$<PLATFORM_ID:Darwin>>>:-msse2>
+    $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-msse2 -fPIC>
 )
 
 if(UNIX)
