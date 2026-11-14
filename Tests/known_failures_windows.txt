@@ -26,3 +26,17 @@ MidiLua.device_input_invokes_lua_multiMidiReceived_once
 # buffers sent within one millisecond get the same start time (CtrlrMIDIDevice::sendMidiBuffer).
 # Desired: each burst stays contiguous. Passes at delay 2 (pinned by ..._with_global_delay).
 LuaValues.nrpn_bursts_stay_contiguous_at_zero_delay
+
+# Long SysEx (Tests/test_ProcessorMidiLongSysex.cpp): specification tests -- a single 128 KiB SysEx
+# should arrive intact on every MIDI path (a user's 70k dump crashed CtrlrX, ctrlr discussion #791).
+# Today no path gets past 65535 bytes: juce::MidiBuffer stores event sizes as uint16, so a longer
+# event corrupts the buffer walk and CtrlrX crashes or hangs (some of these hang until the ctest
+# TIMEOUT). The matching green cases pin the current limits. Remove each entry once it passes.
+LongSysex.device_to_lua_131072
+LongSysex.host_to_lua_131072
+LongSysex.lua_to_device_131072
+LongSysex.lua_to_host_131072
+LongSysex.thru_d2d_131072
+LongSysex.thru_d2h_131072
+LongSysex.thru_h2d_131072
+LongSysex.thru_h2h_131072
