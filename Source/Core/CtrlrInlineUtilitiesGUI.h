@@ -110,6 +110,7 @@ namespace gui {
     {
         const int ids[] = {juce::Label::backgroundWhenEditingColourId,
                            juce::Label::textWhenEditingColourId,
+                           juce::Label::outlineWhenEditingColourId,
                            juce::ScrollBar::backgroundColourId,
                            juce::ScrollBar::thumbColourId,
                            juce::ScrollBar::trackColourId,

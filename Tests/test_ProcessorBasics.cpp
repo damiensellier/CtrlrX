@@ -27,6 +27,8 @@ TEST_F(ProcessorInstance, lookandfeel_defaults_add_missing_colours_as_black_only
     EXPECT_TRUE(defaultLnf.isColourSpecified(juce::Label::backgroundWhenEditingColourId))
         << "the processor did not prepare the default LookAndFeel";
     EXPECT_TRUE(defaultLnf.isColourSpecified(juce::ScrollBar::trackColourId));
+    // The MIDI settings window reads it in its constructor; no JUCE LookAndFeel defines it.
+    EXPECT_TRUE(defaultLnf.isColourSpecified(juce::Label::outlineWhenEditingColourId));
 
     juce::LookAndFeel_V3 v3;
     ASSERT_FALSE(v3.isColourSpecified(juce::Label::textWhenEditingColourId));
