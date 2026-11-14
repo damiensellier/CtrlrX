@@ -128,6 +128,7 @@ void CtrlrMidiInputComparatorSingle::match (const MidiMessage &m) // Updated v5.
     _DBG("SINGLE_COMPARATOR_DBG: Entered match(MidiMessage) for: " + m.getDescription());
 
     messageContainer = m;
+	DBG("match: m=" + String(m.getRawDataSize()) + " container.getData=" + String((int) messageContainer.getData().getSize()));
     CtrlrMidiMessageType type = midiMessageToType(m);
     int channel = m.getChannel();
     int number = getMidiNumberFromMidiMessage(m);
@@ -185,7 +186,8 @@ void CtrlrMidiInputComparatorSingle::match (const MidiMessage &m) // Updated v5.
 
 void CtrlrMidiInputComparatorSingle::matchSysEx(const MidiMessage &m)
 {
-	BigInteger bi = memoryToBits(MemoryBlock(m.getRawData(), m.getRawDataSize()));
+    DBG("matchSysEx entered, size=" + String(m.getRawDataSize()));
+    // BigInteger bi = memoryToBits(MemoryBlock(m.getRawData(), m.getRawDataSize()));
 
 	CtrlrMultiMidiMapIterator it;
 

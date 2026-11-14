@@ -24,11 +24,12 @@
 
 ## Changelog
 
-#### Version 5.6.37 | 2026.11.05
+#### Version 5.6.37 | 2026.11.14
 
 * **ADDED** Panel probe and AI agent skill for testing panels. Thanks to [Sgorpi](https://github.com/sgorpi)
 * **UPDATED** CI/CD test files. Thanks to [Sgorpi](https://github.com/sgorpi)
 * **UPDATED** Linux GPG key to check the integrity of distributed binaries updated from ** FC9F02DE24F1BC96 ** to ** BDD8B991FDD59BDC **.
+* **UPDATED** support MIDI SYSEX messages longer than 64KB. Thanks to [John Goodland](https://github.com/dnaldoog) 
 
 
 #### Version 5.6.36 | 2026.10.21

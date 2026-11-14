@@ -28,6 +28,7 @@ class CtrlrPanelMIDIInputThread : public Thread, public CtrlrMIDIDevice::Listene
 
 	private:
 		MidiBuffer deviceInputBuffer, hostInputBuffer, thruToDeviceBuffer, junkBuffer;
+		Array<MidiMessage> oversizedInput;
 		Array <MemoryBlock, CriticalSection> devicePartialBuffer;
 		ReadWriteLock lock;
 		CtrlrPanel &owner;

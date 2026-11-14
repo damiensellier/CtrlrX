@@ -234,6 +234,7 @@ class CtrlrPanel:	public ValueTree::Listener,
 		void sync();
 		CtrlrComponent *getComponent(const String &modulatorName);
 		void panelReceivedMidi(const MidiBuffer &buffer, const CtrlrMIDIDeviceType source = inputDevice);
+		void panelReceivedMidi(const MidiMessage &m, const CtrlrMIDIDeviceType source);
 		void handleAsyncUpdate();
 		void sendSnapshotOnLoad();
 		bool isLoading() const;
@@ -322,7 +323,6 @@ class CtrlrPanel:	public ValueTree::Listener,
 		void performInternalComponentFunction(CtrlrComponent *sourceComponent);
 		void multiMidiReceived(CtrlrMidiMessage &multiMidiMessage);
 		String getInternalFunctionsProperty(CtrlrComponent *component);
-
 		static const String globalsToString(const Array<int,CriticalSection> &arrayOfGlobals);
 		static const Array<int,CriticalSection> globalsFromString(const String &globalsString);
 		static void wrapForLua (lua_State *L);
@@ -371,6 +371,8 @@ class CtrlrPanel:	public ValueTree::Listener,
 		OwnedArray <CtrlrModulator,CriticalSection> ctrlrModulators;
 		Array <ComponentReference> radioGrouppedComponent;
 		Array <int,CriticalSection> globalVariables;
+		Array<MidiMessage> oversizedReceived; // too big for MidiMessageCollector's MidiBuffer
+		CriticalSection oversizedReceivedLock;
 		WeakReference <CtrlrLuaMethod>
 			luaPanelMidiReceivedCbk,
 			luaPanelMidiMultiReceivedCbk,
