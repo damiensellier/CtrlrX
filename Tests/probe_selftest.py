@@ -851,8 +851,10 @@ def scenario_29_device_input(probe):
 
 def scenario_30_timers_and_dialogs(probe):
     # A panel timer's output lands on whichever step is pumping when it fires: wait for it.
+    # 200 ms, well after the first step's settle (30 ms quiet): with 50 ms a slow macOS runner
+    # sometimes still settled step 0 when the tick came.
     code, rep, raw = run_script(probe, MIDI, {"steps": [
-        {"action": "callLuaMethod", "method": "startTick", "args": [50]},
+        {"action": "callLuaMethod", "method": "startTick", "args": [200]},
         {"action": "wait", "ms": 500},
     ]})
     rep = require_report(rep, "scenario 30")
