@@ -422,7 +422,7 @@ bool CtrlrProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const  
 
 static bool fitsInMidiBuffer(const MidiMessage &m) {
 	// juce::MidiBuffer stores each event's size as a uint16, so larger messages get corrupted
-	if (m.getRawDataSize() > 65535) {
+	if (m.getRawDataSize() > kMaxMidiBufferEventBytes) {
 		Logger::writeToLog("CtrlrProcessor: dropping " + String(m.getRawDataSize()) +
 						   "-byte message for host output (exceeds MidiBuffer event limit)");
 		return false;

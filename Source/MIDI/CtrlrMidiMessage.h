@@ -10,6 +10,10 @@ static const uint8 MidiStopStatus		= 0xFC;
 static const uint8 MidiTickStatus		= 0xF9;
 static const uint8 MidiContinueStatus	= 0xFB;
 static const uint8 MidiSysexData[]		= {0xF0, 00, 0xF7 };
+// shared header (e.g. CtrlrMidiMessage.h or a small CtrlrMidiLimits.h)
+// MidiBuffer stores each event as [int32 time][uint16 size][data] and advances by a uint16
+// total (data + 6), so the largest event that survives is 65535 - 6 = 65529 bytes.
+static constexpr int kMaxMidiBufferEventBytes = 65529;
 
 class LMemoryBlock;
 

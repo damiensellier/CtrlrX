@@ -212,7 +212,7 @@ void CtrlrMIDIDevice::sendMidiMessage (const MidiMessage &message, double millis
 {
 	if (outJucePtr != nullptr)
 	{
-        if (message.getRawDataSize() > 65535) {
+        if (message.getRawDataSize() > kMaxMidiBufferEventBytes) {
             // Too big for a MidiBuffer event (16-bit size): send directly, bypassing buffer and timing
             const ScopedLock sl(deviceLock);
             outJucePtr->sendMessageNow(message);
