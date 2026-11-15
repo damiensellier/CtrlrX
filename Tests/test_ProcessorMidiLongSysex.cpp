@@ -333,7 +333,7 @@ class LongSysex : public LuaPanel
 };
 
 // ----------------------------------------------------------------------------------------------
-// Measured limits (5.6.37, JUCE 6.0.8; the same on Linux, macOS and Windows CI):
+// Measured limits before #350 (5.6.37, JUCE 6.0.8; the same on Linux, macOS and Windows CI):
 //
 //   path                                                last size OK   first broken
 //   device -> Lua, host -> Lua, Lua -> host,
@@ -351,10 +351,16 @@ class LongSysex : public LuaPanel
 //     that the side-effect-free loop in MidiBuffer::getNumEvents() ends (undefined behaviour), while
 //     MSVC spins. So the green size is 65529 on every platform.
 //
+// Since #350, messages over 65535 bytes bypass MidiBuffer on the device and Lua paths, so device ->
+// Lua, Lua -> device and thru D2D pass at 128 KiB. Host output over 65535 bytes is dropped on
+// purpose (logged), and host input arrives in the host's MidiBuffer, so the host-side 128 KiB cases
+// still fail. 65530..65535 bytes still go into a MidiBuffer and still hang or crash (Linux,
+// 2026-11-15): the _65530 cases pin that gap.
+//
 // Per path: a green case at the largest size that works, and a red case at 128 KiB: the acceptance
-// criterion for a fix (the reported dump was 70k). The red cases are specification tests,
-// allowlisted in Tests/known_failures_{linux,macos,windows}.txt; some of them hang until the ctest
-// TIMEOUT instead of crashing.
+// criterion for a fix (the reported dump was 70k). The red cases are allowlisted in
+// Tests/known_failures_{linux,macos,windows}.txt; some of them hang until the ctest TIMEOUT instead
+// of crashing.
 // ----------------------------------------------------------------------------------------------
 
 #define LONG_SYSEX_CASE(path_name, path, size)                                                                         \
@@ -365,6 +371,7 @@ class LongSysex : public LuaPanel
 
 LONG_SYSEX_CASE(device_to_lua, LsxPath::DeviceToLua, 65529)
 LONG_SYSEX_CASE(device_to_lua, LsxPath::DeviceToLua, 131072)
+LONG_SYSEX_CASE(device_to_lua, LsxPath::DeviceToLua, 65530)
 LONG_SYSEX_CASE(host_to_lua, LsxPath::HostToLua, 65529)
 LONG_SYSEX_CASE(host_to_lua, LsxPath::HostToLua, 131072)
 LONG_SYSEX_CASE(lua_to_device, LsxPath::LuaToDevice, 65535)
@@ -373,6 +380,7 @@ LONG_SYSEX_CASE(lua_to_host, LsxPath::LuaToHost, 65529)
 LONG_SYSEX_CASE(lua_to_host, LsxPath::LuaToHost, 131072)
 LONG_SYSEX_CASE(thru_d2d, LsxPath::ThruD2D, 65529)
 LONG_SYSEX_CASE(thru_d2d, LsxPath::ThruD2D, 131072)
+LONG_SYSEX_CASE(thru_d2d, LsxPath::ThruD2D, 65530)
 LONG_SYSEX_CASE(thru_d2h, LsxPath::ThruD2H, 65529)
 LONG_SYSEX_CASE(thru_d2h, LsxPath::ThruD2H, 131072)
 LONG_SYSEX_CASE(thru_h2d, LsxPath::ThruH2D, 65529)
