@@ -36,3 +36,9 @@ LongSysex.lua_to_host_131072
 LongSysex.thru_d2h_131072
 LongSysex.thru_h2d_131072
 LongSysex.thru_h2h_131072
+# JUCE 8 only (macOS): thru D2D at 128 KiB arrives broken (passes on 5.6.37 + #350). JUCE 8's
+# MidiOutput::sendMessageNow() sends SysEx as one UMP packet per call. #350 sends the big message
+# directly on the panel's input thread, while the batch's short messages (here the sentinel) go
+# through sendBlockOfMessages() and JUCE's MidiOutput thread at the same time, so their packets can
+# land inside the big message's stream. Fix planned: one ordered send path per device.
+LongSysex.thru_d2d_131072
