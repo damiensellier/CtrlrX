@@ -171,10 +171,29 @@ namespace
         // GUARD 2: as of JUCE 8.0.12 convert() takes a BytesOnGroup, View, Packets or an iterator
         // pair -- the MidiMessage overload JUCE 6 has was removed. Either way the callback receives
         // a View per converted packet, so only the input differs.
+        // Updated v5.6.37. A long sysex does not fit one list (~6 bytes per sysex7 packet), and
+        // MIDIEventListAdd returns nullptr when the list is full. Like CoreMIDI does for real input,
+        // hand the full list to the blocks and continue in a fresh one; JUCE reassembles the sysex
+        // across lists. Was: a single list, so input longer than the storage was cut off.
+        const auto flushList = [&]
+        {
+            for (auto block : blocks)
+                if (block != nullptr)
+                    block (list, nullptr);
+            packet = MIDIEventListInit (list, kMIDIProtocol_1_0);
+        };
+
         const auto emitPacket = [&] (const ump::View& view)
         {
-            packet = MIDIEventListAdd (list, sizeof (storage), packet, /*timeStamp*/ 0,
-                                       view.size(), view.data());
+            auto* added = MIDIEventListAdd (list, sizeof (storage), packet, /*timeStamp*/ 0,
+                                            view.size(), view.data());
+            if (added == nullptr)
+            {
+                flushList();
+                added = MIDIEventListAdd (list, sizeof (storage), packet, /*timeStamp*/ 0,
+                                          view.size(), view.data());
+            }
+            packet = added;
         };
 
 #if JUCE_MAJOR_VERSION >= 8
@@ -187,9 +206,8 @@ namespace
         converter.convert (msg, emitPacket);
 #endif
 
-        for (auto block : blocks)
-            if (block != nullptr)
-                block (list, nullptr);
+        if (list->numPackets > 0)
+            flushList();
     }
 
     void dispatchInjectedInput()

@@ -79,6 +79,10 @@ class MockMidi {
         // callers (and the mock) must hold inputMutex while touching it.
         std::deque<juce::MidiMessage> waitingMidiInput;
         std::mutex inputMutex;
+        // Added v5.6.37. Bytes of waitingMidiInput.front() a subsystem mock has already handed out,
+        // for mocks that deliver a long message in pieces like the real driver (ALSA). Guarded by
+        // inputMutex; per instance, so every test starts from 0.
+        size_t frontInputBytesDelivered = 0;
     protected:
         static MockMidi* latestInstance;
         static bool hasSubsystemMockRegistered;
