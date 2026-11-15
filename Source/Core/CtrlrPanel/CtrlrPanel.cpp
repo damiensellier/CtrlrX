@@ -1350,7 +1350,7 @@ CtrlrPanelWindowManager &CtrlrPanel::getWindowManager()
 void CtrlrPanel::panelReceivedMidi(const MidiMessage &m, const CtrlrMIDIDeviceType /*source*/)
 {
     // _DBG("panelReceivedMidi(MidiMessage) size=" + String(m.getRawDataSize()));
-    if (m.getRawDataSize() > 65535) {
+    if (m.getRawDataSize() > kMaxMidiBufferEventBytes) {
         const ScopedLock sl(oversizedReceivedLock);
         oversizedReceived.add(m);
     }
@@ -1822,7 +1822,7 @@ void CtrlrPanel::sendMidi (CtrlrMidiMessage &m, double millisecondCounterToStart
         // DBG("sendMidi: arraySize=" + String(arr.size()) +
         // (arr.size() ? " first=" + String(arr.getReference(0).m.getRawDataSize()) : ""));
         for (int i = 0; i < arr.size(); i++)
-            if (arr.getReference(i).m.getRawDataSize() > 65535) {
+            if (arr.getReference(i).m.getRawDataSize() > kMaxMidiBufferEventBytes) {
                 hasOversized = true;
                 break;
             }

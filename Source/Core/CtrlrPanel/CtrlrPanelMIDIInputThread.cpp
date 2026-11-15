@@ -114,7 +114,7 @@ void CtrlrPanelMIDIInputThread::handleMIDIFromDevice (const MidiMessage &message
 	if (owner.getMidiOptionBool(panelMidiRealtimeIgnore) && message.getRawDataSize() <= 1)
 		return;
 
-	if (message.getRawDataSize() > 65535) {
+	if (message.getRawDataSize() > kMaxMidiBufferEventBytes) {
 		oversizedInput.add(message); // whole message, no 16-bit limit
 		notify();
 		return;
