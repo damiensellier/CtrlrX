@@ -351,11 +351,14 @@ class LongSysex : public LuaPanel
 //     that the side-effect-free loop in MidiBuffer::getNumEvents() ends (undefined behaviour), while
 //     MSVC spins. So the green size is 65529 on every platform.
 //
-// Since #350, messages over 65535 bytes bypass MidiBuffer on the device and Lua paths, so device ->
-// Lua, Lua -> device and thru D2D pass at 128 KiB. Host output over 65535 bytes is dropped on
-// purpose (logged), and host input arrives in the host's MidiBuffer, so the host-side 128 KiB cases
-// still fail. 65530..65535 bytes still go into a MidiBuffer and still hang or crash (Linux,
-// 2026-11-15): the _65530 cases pin that gap.
+// Since #350 + #352, messages over 65529 bytes bypass MidiBuffer on the device and Lua paths, so
+// device -> Lua, Lua -> device and thru D2D pass at 65530 and at 128 KiB; the _65530 cases pin the
+// start of the bypass. Host output over 65529 bytes is dropped on purpose (logged), and host input
+// arrives in the host's MidiBuffer, so the host-side 128 KiB cases still fail.
+// macOS: thru D2D at 65530 and 128 KiB sometimes arrives broken. The bypass sends the big message on
+// the panel's input thread while JUCE's MidiOutput thread sends the batch's short ones (here the
+// sentinel), and on macOS 11+ a SysEx takes many CoreMIDI calls, so the packets can mix. Allowlisted
+// on macOS until the device output has one ordered send path.
 //
 // Per path: a green case at the largest size that works, and a red case at 128 KiB: the acceptance
 // criterion for a fix (the reported dump was 70k). The red cases are allowlisted in
