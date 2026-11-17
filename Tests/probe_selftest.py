@@ -867,16 +867,18 @@ def scenario_30_timers_and_dialogs(probe):
     # A timer callback that raises: CtrlrX disables it and says so only in a modal dialog, which the
     # probe dismisses. It used to vanish -- errorCount 0, and the timer silently dead. The callback
     # stops its timer before raising, so waitFor on that is a condition, not a guessed duration.
+    # The tick can fire while step 0 still settles (slow macOS runner), so the error and the dialog
+    # are looked for on any step: this half checks that they are reported, not where.
     code, rep, raw = run_script(probe, MIDI, {"steps": [
         {"action": "callLuaMethod", "method": "startBadTick", "args": [50]},
         {"action": "waitFor", "lua": "return not timer:isTimerRunning(8)", "timeoutMs": 3000},
     ]})
     rep = require_report(rep, "scenario 30")
     require(code == 1, f"scenario 30 a raising timer callback must fail the run, got exit {code}")
-    errs = rep["steps"][1]["errors"]
+    errs = [e for s in rep["steps"] for e in s["errors"]]
     require(len(errs) == 1 and errs[0]["type"] == "lua" and "tick boom" in errs[0]["message"],
             f"scenario 30 the timer error should be a 'lua' error with its message: {errs}")
-    dlg = rep["steps"][1]["dialogs"]
+    dlg = [d for s in rep["steps"] for d in s["dialogs"]]
     require(len(dlg) == 1 and dlg[0]["kind"] == "alert" and dlg[0]["title"].startswith("Timer callback error"),
             f"scenario 30 the dismissed dialog should be listed: {dlg}")
 
