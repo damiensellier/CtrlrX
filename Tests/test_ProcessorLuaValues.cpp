@@ -491,11 +491,11 @@ TEST_F(LuaValues, nrpn_bursts_stay_contiguous_with_global_delay)
 }
 
 /**
- * Desired behaviour, a known failure (Tests/known_failures_*.txt): the same bursts stay
- * contiguous at the default panelMidiGlobalDelay = 0. Today every buffer sent within the same
- * millisecond gets the same start time (CtrlrMIDIDevice::sendMidiBuffer), so bursts queued
- * together interleave CC by CC (99 99 98 98 6 6 38 38) and both data values land on the last
- * selected parameter.
+ * The same bursts stay contiguous at the default panelMidiGlobalDelay = 0. Every buffer sent within
+ * the same millisecond used to get the same start time (CtrlrMIDIDevice::sendMidiBuffer), so bursts
+ * queued together interleaved CC by CC (99 99 98 98 6 6 38 38) and both data values landed on the
+ * last selected parameter. Fixed by the ordered device output: a buffer never starts before the
+ * last event already queued.
  */
 TEST_F(LuaValues, nrpn_bursts_stay_contiguous_at_zero_delay)
 {

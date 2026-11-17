@@ -22,11 +22,6 @@ MidiLua.device_input_invokes_lua_multiMidiReceived_once
 # invisible to ci_check_test_results.py and cannot be allowlisted here; recorded only for awareness.
 # It does not reproduce deterministically.
 
-# NRPN/Multi bursts from different modulators interleave CC by CC at panelMidiGlobalDelay 0:
-# buffers sent within one millisecond get the same start time (CtrlrMIDIDevice::sendMidiBuffer).
-# Desired: each burst stays contiguous. Passes at delay 2 (pinned by ..._with_global_delay).
-LuaValues.nrpn_bursts_stay_contiguous_at_zero_delay
-
 # Long SysEx (Tests/test_ProcessorMidiLongSysex.cpp), state after #350 + #352 (messages over 65529
 # bytes bypass juce::MidiBuffer, which stores event sizes, and size + 6, as uint16; a user's 70k
 # dump crashed CtrlrX, ctrlr discussion #791).
@@ -37,12 +32,3 @@ LongSysex.lua_to_host_131072
 LongSysex.thru_d2h_131072
 LongSysex.thru_h2d_131072
 LongSysex.thru_h2h_131072
-# JUCE 8 only (Windows): thru D2D sometimes arrives broken (fork run 44025374385: one 64011-byte
-# message, wrong from byte 0). JUCE 8's Win32 OutputDevice::send() runs every UMP packet through one
-# ToBytestreamConverter per device, without a lock. #350 sends the big message directly on the
-# panel's input thread, while the batch's short messages (here the sentinel) go through
-# sendBlockOfMessages() and JUCE's MidiOutput thread at the same time, so the two sends corrupt the
-# converter. JUCE 6 sends one midiOutLongMsg per message (5.6.37: only the order can flip). Fix
-# planned: one ordered send path per device.
-LongSysex.thru_d2d_65530
-LongSysex.thru_d2d_131072
