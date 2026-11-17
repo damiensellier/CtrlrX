@@ -76,7 +76,11 @@ class CtrlrMIDIDevice : public ValueTree::Listener, public MidiInputCallback
 		int deviceIndex;
         bool lastMessageWasSysex;
 		double lastMessageSentTime;
+		double lastQueuedTime = 0; // time of the last event handed to JUCE's MidiOutput queue
 		MidiBuffer throwBuffer;
+
+	private:
+		double nextStartTime (double millisecondCounterToStartAt);
 		ListenerList	<CtrlrMIDIDevice::Listener,
 							Array<CtrlrMIDIDevice::Listener*,CriticalSection>
 						> deviceListeners;

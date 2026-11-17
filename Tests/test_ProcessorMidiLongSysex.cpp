@@ -355,10 +355,9 @@ class LongSysex : public LuaPanel
 // device -> Lua, Lua -> device and thru D2D pass at 65530 and at 128 KiB; the _65530 cases pin the
 // start of the bypass. Host output over 65529 bytes is dropped on purpose (logged), and host input
 // arrives in the host's MidiBuffer, so the host-side 128 KiB cases still fail.
-// macOS: thru D2D at 65530 and 128 KiB sometimes arrives broken. The bypass sends the big message on
-// the panel's input thread while JUCE's MidiOutput thread sends the batch's short ones (here the
-// sentinel), and on macOS 11+ a SysEx takes many CoreMIDI calls, so the packets can mix. Allowlisted
-// on macOS until the device output has one ordered send path.
+// The bypass first sent the big message at once on the sending thread, while JUCE's MidiOutput
+// thread sent the short ones; on macOS thru D2D then arrived broken. Since the ordered-send fix every
+// message goes through JUCE's queue, in order: see LongSysexOrder below.
 //
 // Per path: a green case at the largest size that works, and a red case at 128 KiB: the acceptance
 // criterion for a fix (the reported dump was 70k). The red cases are allowlisted in
@@ -395,7 +394,10 @@ LONG_SYSEX_CASE(thru_h2h, LsxPath::ThruH2H, 131072)
 // Device output order with a long SysEx.
 //
 // A device has one MIDI output, so messages must leave it one at a time and in the order they
-// were sent. #350 sent messages over 65529 bytes with MidiOutput::sendMessageNow() on the sending
+// were sent. The two cases with a global delay and thru D2D "long then marker" failed every time
+// before 5.6.37 queued long messages with MidiOutput::sendMessageAt(); the other cases pin the order
+// without a delay.
+// #350 sent messages over 65529 bytes with MidiOutput::sendMessageNow() on the sending
 // thread, while every other message goes through JUCE's MidiOutput thread (sendBlockOfMessages):
 //  - the long message skipped panelMidiGlobalDelay and overtook short messages sent before it;
 //  - thru D2D handled a batch's short messages before its long ones, whatever the input order;
@@ -530,7 +532,18 @@ TEST_F(LongSysexOrder, thru_d2d_marker_then_long_with_global_delay)
     runPair(LsxPath::ThruD2D, First::Marker, 100);
 }
 
-// Without a delay: the input order holds when both messages land in one input batch.
+// Without a delay: the input order holds when both messages land in one input batch, and when
+// both are queued in the same millisecond.
+TEST_F(LongSysexOrder, lua_to_device_marker_then_long)
+{
+    runPair(LsxPath::LuaToDevice, First::Marker, 0);
+}
+
+TEST_F(LongSysexOrder, thru_d2d_marker_then_long)
+{
+    runPair(LsxPath::ThruD2D, First::Marker, 0);
+}
+
 TEST_F(LongSysexOrder, thru_d2d_long_then_marker)
 {
     runPair(LsxPath::ThruD2D, First::Long, 0);

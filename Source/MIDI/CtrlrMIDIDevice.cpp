@@ -189,20 +189,31 @@ const String CtrlrMIDIDevice::getName()
 	return (getProperty(Ids::name));
 }
 
+// Added v5.6.37 one ordered queue per device: a block or message never starts before the last event
+// already queued, so the device sends in call order (JUCE keeps call order for equal times).
+double CtrlrMIDIDevice::nextStartTime (const double millisecondCounterToStartAt)
+{
+	if (lastMessageSentTime == 0 || (lastMessageSentTime + millisecondCounterToStartAt) < Time::getMillisecondCounter())
+	{
+		lastMessageSentTime = Time::getMillisecondCounter();
+	}
+
+	const double startAt = jmax (lastMessageSentTime + millisecondCounterToStartAt, lastQueuedTime);
+	lastMessageSentTime = lastMessageSentTime + millisecondCounterToStartAt;
+	return startAt;
+}
+
 void CtrlrMIDIDevice::sendMidiBuffer (const MidiBuffer &buffer, double millisecondCounterToStartAt)
 {
 	if (outJucePtr != nullptr)
 	{
 		{
 			const ScopedLock sl(deviceLock);
-			if (lastMessageSentTime == 0 || (lastMessageSentTime + millisecondCounterToStartAt) < Time::getMillisecondCounter())
-			{
-				lastMessageSentTime = Time::getMillisecondCounter();
-			}
+			const double startAt = nextStartTime (millisecondCounterToStartAt);
 
-			outJucePtr->sendBlockOfMessages (buffer, lastMessageSentTime + millisecondCounterToStartAt, SAMPLERATE);
+			outJucePtr->sendBlockOfMessages (buffer, startAt, SAMPLERATE);
 
-			lastMessageSentTime = lastMessageSentTime + millisecondCounterToStartAt;
+			lastQueuedTime = jmax (lastQueuedTime, startAt + buffer.getLastEventTime() * 1000.0 / SAMPLERATE);
 		}
 		_MOUT(getProperty(Ids::name).toString() + "[JUCE]", buffer, -1);
 	}
@@ -212,26 +223,24 @@ void CtrlrMIDIDevice::sendMidiMessage (const MidiMessage &message, double millis
 {
 	if (outJucePtr != nullptr)
 	{
-        if (message.getRawDataSize() > kMaxMidiBufferEventBytes) {
-            // Too big for a MidiBuffer event (16-bit size): send directly, bypassing buffer and timing
-            const ScopedLock sl(deviceLock);
-            outJucePtr->sendMessageNow(message);
-            _MOUT(getProperty(Ids::name).toString() + "[JUCE]", message, -1);
-            return;
-        }
         {
 			const ScopedLock sl(deviceLock);
+			const double startAt = nextStartTime (millisecondCounterToStartAt);
 
-			if (lastMessageSentTime == 0 || (lastMessageSentTime + millisecondCounterToStartAt) < Time::getMillisecondCounter())
+			if (message.getRawDataSize() > kMaxMidiBufferEventBytes)
 			{
-				lastMessageSentTime = Time::getMillisecondCounter();
+				// Too big for a MidiBuffer event (16-bit size): queue it on its own, same time base and order
+				// Updated v5.6.37 was sendMessageNow() on the calling thread, which raced JUCE's MidiOutput thread (patches/juce6_midioutput_send_message_at.patch)
+				outJucePtr->sendMessageAt (message, startAt);
+				lastQueuedTime = jmax (lastQueuedTime, startAt);
 			}
-
-			throwBuffer.clear();
-			throwBuffer.addEvent (message, 1);
-			outJucePtr->sendBlockOfMessages (throwBuffer, lastMessageSentTime + millisecondCounterToStartAt, SAMPLERATE);
-
-			lastMessageSentTime = lastMessageSentTime + millisecondCounterToStartAt;
+			else
+			{
+				throwBuffer.clear();
+				throwBuffer.addEvent (message, 1);
+				outJucePtr->sendBlockOfMessages (throwBuffer, startAt, SAMPLERATE);
+				lastQueuedTime = jmax (lastQueuedTime, startAt + 1000.0 / SAMPLERATE);
+			}
 		}
 
 		_MOUT(getProperty(Ids::name).toString() + "[JUCE]", message, -1);

@@ -27,8 +27,19 @@ class CtrlrPanelMIDIInputThread : public Thread, public CtrlrMIDIDevice::Listene
 		JUCE_LEAK_DETECTOR(CtrlrPanelMIDIInputThread)
 
 	private:
+		// A message too large for a MidiBuffer, and the number of deviceInputBuffer events before it
+		struct OversizedInput
+		{
+			MidiMessage message;
+			int position;
+		};
+
+		void processDeviceInput (MidiBuffer &messages);
+		void processOversized (const MidiMessage &m);
+
 		MidiBuffer deviceInputBuffer, hostInputBuffer, thruToDeviceBuffer, junkBuffer;
-		Array<MidiMessage> oversizedInput;
+		MidiBuffer batchBuffer, segmentBuffer;
+		Array<OversizedInput> oversizedInput;
 		Array <MemoryBlock, CriticalSection> devicePartialBuffer;
 		ReadWriteLock lock;
 		CtrlrPanel &owner;
