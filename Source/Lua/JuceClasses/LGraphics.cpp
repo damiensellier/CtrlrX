@@ -152,7 +152,7 @@ void LColour::wrapForLua (lua_State *L)
                 def("fromRGB", &Colour::fromRGB),
                 def("fromRGBA", &Colour::fromRGBA),
                 def("fromFloatRGBA", &Colour::fromFloatRGBA),
-                def("fromHSV", &Colour::fromHSV),
+                // def("fromHSV", &Colour::fromHSV),
                 def("contrasting", (Colour (*)(Colour, Colour) noexcept) &Colour::contrasting),
                 def("greyLevel", (Colour (*)(float)) &Colour::greyLevel),
                 def("fromString", &Colour::fromString)
@@ -281,9 +281,7 @@ void LFont::wrapForLua (lua_State *L)
 
 	module(L)
     [
-		class_<LFont>("LFont")
-		,
-		class_<Font,bases<LFont> >("Font")
+		class_<Font>("Font")
 			.def(constructor<float,int>())
 			.def(constructor<const String &, float, int>())
 			.def(constructor<const String &, const String &, float>())
@@ -323,8 +321,8 @@ void LFont::wrapForLua (lua_State *L)
 			.def("setSizeAndStyle", (void (Font::*)(float, const String &, float, float))&Font::setSizeAndStyle)
 			.def("getStringWidth", &Font::getStringWidth)
 			.def("getStringWidthFloat", &Font::getStringWidthFloat)
-			.def("getGlyphPositions", &Font::getGlyphPositions)
-			.def("getTypeface", &Font::getTypeface)
+            // .def("getGlyphPositions", &Font::getGlyphPositions)
+            // .def("getTypeface", &Font::getTypeface)
 			.def("toString", &Font::toString)
 			.scope
 			[
@@ -335,10 +333,10 @@ void LFont::wrapForLua (lua_State *L)
 				def("getDefaultTypefaceForFont", &Font::getDefaultTypefaceForFont),
 				def("findAllTypefaceNames", &Font::findAllTypefaceNames),
 				def("findAllTypefaceStyles", &Font::findAllTypefaceStyles),
-				def("getFallbackFontName", &Font::getFallbackFontName),
-				def("setFallbackFontName", &Font::setFallbackFontName),
-				def("getFallbackFontStyle", &Font::getFallbackFontStyle),
-				def("setFallbackFontStyle", &Font::setFallbackFontStyle),
+				// def("getFallbackFontName", &Font::getFallbackFontName),
+				// def("setFallbackFontName", &Font::setFallbackFontName),
+				// def("getFallbackFontStyle", &Font::getFallbackFontStyle),
+				// def("setFallbackFontStyle", &Font::setFallbackFontStyle),
 				def("fromString", &Font::fromString)
 			]
 			.enum_("FontStyleFlags")
@@ -407,8 +405,24 @@ void LGraphics::wrapForLua (lua_State *L)
 			.def("drawText", (void (Graphics::*)(const String &, const Rectangle<int>, Justification , bool) const)&Graphics::drawText)
 			.def("drawText", (void (Graphics::*)(const String &, const Rectangle<float>, Justification, bool) const)&Graphics::drawText)
 
-			.def("drawFittedText", (void (Graphics::*)(const String &, int, int, int, int, Justification , int, float) const)&Graphics::drawFittedText)
-			.def("drawFittedText", (void (Graphics::*)(const String &, Rectangle<int>, Justification , int, float) const)&Graphics::drawFittedText)
+			// .def("drawFittedText", (void (Graphics::*)(const String &, int, int, int, int, Justification , int, float) const)&Graphics::drawFittedText)
+			// .def("drawFittedText", (void (Graphics::*)(const String &, Rectangle<int>, Justification , int, float) const)&Graphics::drawFittedText)
+        
+            .def("drawFittedText", (void (Graphics::*)(const String &, int, int, int, int, Justification, int, float, GlyphArrangementOptions) const)&Graphics::drawFittedText)
+            .def("drawFittedText", (void (Graphics::*)(const String &, Rectangle<int>, Justification, int, float, GlyphArrangementOptions) const)&Graphics::drawFittedText)
+            // Added v8.0.85. JUCE 8 added a GlyphArrangementOptions argument and luabind ignores C++
+            // default arguments, so keep the 5.6.37 Lua forms (8 and 5 arguments) as lambdas.
+            // From John Goodland's v8.31 (b1048e469, 42f952f92).
+            .def("drawFittedText", +[](const Graphics *g, const String &text, int x, int y, int w, int h, Justification j,
+                                       int maxLines, float minScale) {
+                if (g != nullptr)
+                    g->drawFittedText(text, x, y, w, h, j, maxLines, minScale);
+            })
+            .def("drawFittedText", +[](const Graphics *g, const String &text, const Rectangle<int> &area, Justification j,
+                                       int maxLines, float minScale) {
+                if (g != nullptr)
+                    g->drawFittedText(text, area, j, maxLines, minScale);
+            })
 
 			.def("fillAll", (void (Graphics::*)() const)&Graphics::fillAll)
 			.def("fillAll", (void (Graphics::*)(const Colour) const)&Graphics::fillAll)
@@ -982,15 +996,15 @@ void LTypeface::wrapForLua (lua_State *L)
 		class_<Typeface>("Typeface")
             .def("getName", &Typeface::getName)
             .def("getStyle", &Typeface::getStyle)
-            .def("isSuitableForFont", &Typeface::isSuitableForFont)
-            .def("getAscent", &Typeface::getAscent)
-            .def("getDescent", &Typeface::getDescent)
-            .def("getHeightToPointsFactor", &Typeface::getHeightToPointsFactor)
+            // .def("isSuitableForFont", &Typeface::isSuitableForFont)
+            // .def("getAscent", &Typeface::getAscent)
+            // .def("getDescent", &Typeface::getDescent)
+            // .def("getHeightToPointsFactor", &Typeface::getHeightToPointsFactor)
             .def("getStringWidth", &Typeface::getStringWidth)
             .def("getGlyphPositions", &Typeface::getGlyphPositions)
             .def("getOutlineForGlyph", &Typeface::getOutlineForGlyph)
             .def("getEdgeTableForGlyph", &Typeface::getEdgeTableForGlyph)
-            .def("isHinted", &Typeface::isHinted)
+            // .def("isHinted", &Typeface::isHinted)
             .def("applyVerticalHintingTransform",  &Typeface::applyVerticalHintingTransform)
             .scope
             [

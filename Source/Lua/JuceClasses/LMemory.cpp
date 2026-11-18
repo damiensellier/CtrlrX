@@ -53,8 +53,8 @@ void LBigInteger::wrapForLua (lua_State *L)
 				.def("toInteger", &BigInteger::toInteger)
 				.def("clear", &BigInteger::clear)
 				.def("clearBit", &BigInteger::clearBit)
-				.def("setBit", (void (BigInteger::*)(int))&BigInteger::setBit)
-				.def("setBit", (void (BigInteger::*)(int,bool))&BigInteger::setBit)
+				.def("setBit", (BigInteger& (BigInteger::*)(int))&BigInteger::setBit)
+				.def("setBit", (BigInteger& (BigInteger::*)(int,bool))&BigInteger::setBit)
 				.def("setRange", &BigInteger::setRange)
 				.def("insertBit", &BigInteger::insertBit)
 				.def("getBitRange", &BigInteger::getBitRange)
@@ -542,7 +542,7 @@ void LThread::startThread()
 
 void LThread::startThread(int priority)
 {
-	Thread::startThread(priority);
+	Thread::startThread(static_cast<Thread::Priority>(juce::jlimit(-2, 2, priority)));
 }
 
 bool LThread::isThreadRunning()
@@ -567,7 +567,7 @@ bool LThread::waitForThreadToExit(int timeOutMilliseconds) const
 
 bool LThread::setPriority(int priority)
 {
-	return (Thread::setPriority(priority));
+	return (Thread::setPriority(static_cast<Thread::Priority>(juce::jlimit(-2, 2, priority))));
 }
 
 void LThread::setAffinityMask(int affMask)

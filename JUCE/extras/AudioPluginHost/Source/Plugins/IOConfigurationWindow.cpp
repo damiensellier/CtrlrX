@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -31,7 +40,7 @@
 
 
 //==============================================================================
-struct NumberedBoxes  : public TableListBox,
+struct NumberedBoxes final : public TableListBox,
                         private TableListBoxModel,
                         private Button::Listener
 {
@@ -170,10 +179,9 @@ private:
 };
 
 //==============================================================================
-class IOConfigurationWindow::InputOutputConfig  : public Component,
-                                                  private ComboBox::Listener,
-                                                  private Button::Listener,
-                                                  private NumberedBoxes::Listener
+class IOConfigurationWindow::InputOutputConfig final : public Component,
+                                                       private Button::Listener,
+                                                       private NumberedBoxes::Listener
 {
 public:
     InputOutputConfig (IOConfigurationWindow& parent, bool direction)
@@ -187,7 +195,6 @@ public:
         layoutLabel.setFont (layoutLabel.getFont().withStyle (Font::bold));
         enabledToggle.setClickingTogglesState (true);
 
-        layouts.addListener (this);
         enabledToggle.addListener (this);
 
         addAndMakeVisible (layoutLabel);
@@ -262,26 +269,32 @@ private:
             {
                 name.setText (bus->getName(), NotificationType::dontSendNotification);
 
-                int i;
-                for (i = 1; i < AudioChannelSet::maxChannelsOfNamedLayout; ++i)
-                    if ((layouts.indexOfItemId(i) == -1) != bus->supportedLayoutWithChannels (i).isDisabled())
-                        break;
-
                 // supported layouts have changed
-                if (i < AudioChannelSet::maxChannelsOfNamedLayout)
+                layouts.clear (dontSendNotification);
+                auto* menu = layouts.getRootMenu();
+
+                auto itemId = 1;
+                auto selectedId = -1;
+
+                for (auto i = 1; i <= AudioChannelSet::maxChannelsOfNamedLayout; ++i)
                 {
-                    layouts.clear();
-
-                    for (i = 1; i < AudioChannelSet::maxChannelsOfNamedLayout; ++i)
+                    for (const auto& set : AudioChannelSet::channelSetsWithNumberOfChannels (i))
                     {
-                        auto set = bus->supportedLayoutWithChannels (i);
+                        if (bus->isLayoutSupported (set))
+                        {
+                            menu->addItem (PopupMenu::Item { set.getDescription() }
+                                               .setAction ([this, set] { applyBusLayout (set); })
+                                               .setID (itemId));
+                        }
 
-                        if (! set.isDisabled())
-                            layouts.addItem (set.getDescription(), i);
+                        if (bus->getCurrentLayout() == set)
+                            selectedId = itemId;
+
+                        ++itemId;
                     }
                 }
 
-                layouts.setSelectedId (bus->getLastEnabledLayout().size());
+                layouts.setSelectedId (selectedId);
 
                 const bool canBeDisabled = bus->isNumberOfChannelsSupported (0);
 
@@ -294,27 +307,18 @@ private:
     }
 
     //==============================================================================
-    void comboBoxChanged (ComboBox* combo) override
+    void applyBusLayout (const AudioChannelSet& set)
     {
-        if (combo == &layouts)
+        if (auto* p = owner.getAudioProcessor())
         {
-            if (auto* p = owner.getAudioProcessor())
+            if (auto* bus = p->getBus (isInput, currentBus))
             {
-                if (auto* bus = p->getBus (isInput, currentBus))
+                if (bus->setCurrentLayoutWithoutEnabling (set))
                 {
-                    auto selectedNumChannels = layouts.getSelectedId();
+                    if (auto* config = owner.getConfig (! isInput))
+                        config->updateBusLayout();
 
-                    if (selectedNumChannels != bus->getLastEnabledLayout().size())
-                    {
-                        if (isPositiveAndBelow (selectedNumChannels, AudioChannelSet::maxChannelsOfNamedLayout)
-                             && bus->setCurrentLayoutWithoutEnabling (bus->supportedLayoutWithChannels (selectedNumChannels)))
-                        {
-                            if (auto* config = owner.getConfig (! isInput))
-                                config->updateBusLayout();
-
-                            owner.update();
-                        }
-                    }
+                    owner.update();
                 }
             }
         }
@@ -529,7 +533,7 @@ MainHostWindow* IOConfigurationWindow::getMainWindow() const
     auto& desktop = Desktop::getInstance();
 
     for (int i = desktop.getNumComponents(); --i >= 0;)
-        if (auto* mainWindow = dynamic_cast<MainHostWindow*> (desktop.getComponent(i)))
+        if (auto* mainWindow = dynamic_cast<MainHostWindow*> (desktop.getComponent (i)))
             return mainWindow;
 
     return nullptr;

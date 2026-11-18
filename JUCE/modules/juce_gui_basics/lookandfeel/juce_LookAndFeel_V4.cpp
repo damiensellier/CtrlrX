@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -106,7 +115,7 @@ LookAndFeel_V4::ColourScheme LookAndFeel_V4::getLightColourScheme()
 }
 
 //==============================================================================
-class LookAndFeel_V4_DocumentWindowButton   : public Button
+class LookAndFeel_V4_DocumentWindowButton final : public Button
 {
 public:
     LookAndFeel_V4_DocumentWindowButton (const String& name, Colour c, const Path& normal, const Path& toggled)
@@ -199,8 +208,6 @@ void LookAndFeel_V4::positionDocumentWindowButtons (DocumentWindow&,
                                                     Button* closeButton,
                                                     bool positionTitleBarButtonsOnLeft)
 {
-    titleBarH = jmin (titleBarH, titleBarH - titleBarY);
-
     auto buttonW = static_cast<int> (titleBarH * 1.2);
 
     auto x = positionTitleBarButtonsOnLeft ? titleBarX
@@ -237,10 +244,10 @@ void LookAndFeel_V4::drawDocumentWindowTitleBar (DocumentWindow& window, Graphic
     g.setColour (getCurrentColourScheme().getUIColour (ColourScheme::widgetBackground));
     g.fillAll();
 
-    Font font ((float) h * 0.65f, Font::plain);
+    Font font (withDefaultMetrics (FontOptions { (float) h * 0.65f, Font::plain }));
     g.setFont (font);
 
-    auto textW = font.getStringWidth (window.getName());
+    auto textW = GlyphArrangement::getStringWidthInt (font, window.getName());
     auto iconW = 0;
     auto iconH = 0;
 
@@ -277,7 +284,7 @@ void LookAndFeel_V4::drawDocumentWindowTitleBar (DocumentWindow& window, Graphic
 //==============================================================================
 Font LookAndFeel_V4::getTextButtonFont (TextButton&, int buttonHeight)
 {
-    return { jmin (16.0f, (float) buttonHeight * 0.6f) };
+    return withDefaultMetrics (FontOptions { jmin (16.0f, (float) buttonHeight * 0.6f) });
 }
 
 void LookAndFeel_V4::drawButtonBackground (Graphics& g,
@@ -355,12 +362,10 @@ void LookAndFeel_V4::drawToggleButton (Graphics& g, ToggleButton& button,
 void LookAndFeel_V4::drawTickBox (Graphics& g, Component& component,
                                   float x, float y, float w, float h,
                                   const bool ticked,
-                                  const bool isEnabled,
-                                  const bool shouldDrawButtonAsHighlighted,
-                                  const bool shouldDrawButtonAsDown)
+                                  [[maybe_unused]] const bool isEnabled,
+                                  [[maybe_unused]] const bool shouldDrawButtonAsHighlighted,
+                                  [[maybe_unused]] const bool shouldDrawButtonAsDown)
 {
-    ignoreUnused (isEnabled, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
-
     Rectangle<float> tickBounds (x, y, w, h);
 
     g.setColour (component.findColour (ToggleButton::tickDisabledColourId));
@@ -379,15 +384,15 @@ void LookAndFeel_V4::changeToggleButtonWidthToFitText (ToggleButton& button)
     auto fontSize = jmin (15.0f, (float) button.getHeight() * 0.75f);
     auto tickWidth = fontSize * 1.1f;
 
-    Font font (fontSize);
+    Font font (withDefaultMetrics (FontOptions { fontSize }));
 
-    button.setSize (font.getStringWidth (button.getButtonText()) + roundToInt (tickWidth) + 14, button.getHeight());
+    button.setSize (GlyphArrangement::getStringWidthInt (font, button.getButtonText()) + roundToInt (tickWidth) + 14, button.getHeight());
 }
 
 //==============================================================================
 AlertWindow* LookAndFeel_V4::createAlertWindow (const String& title, const String& message,
                                                 const String& button1, const String& button2, const String& button3,
-                                                AlertWindow::AlertIconType iconType,
+                                                MessageBoxIconType iconType,
                                                 int numButtons, Component* associatedComponent)
 {
     auto boundsOffset = 50;
@@ -431,13 +436,13 @@ void LookAndFeel_V4::drawAlertBox (Graphics& g, AlertWindow& alert,
     Rectangle<int> iconRect (iconSize / -10, iconSize / -10,
                              iconSize, iconSize);
 
-    if (alert.getAlertType() != AlertWindow::NoIcon)
+    if (alert.getAlertType() != MessageBoxIconType::NoIcon)
     {
         Path icon;
         char character;
         uint32 colour;
 
-        if (alert.getAlertType() == AlertWindow::WarningIcon)
+        if (alert.getAlertType() == MessageBoxIconType::WarningIcon)
         {
             character = '!';
 
@@ -451,13 +456,13 @@ void LookAndFeel_V4::drawAlertBox (Graphics& g, AlertWindow& alert,
         else
         {
             colour = Colour (0xff00b0b9).withAlpha (0.4f).getARGB();
-            character = alert.getAlertType() == AlertWindow::InfoIcon ? 'i' : '?';
+            character = alert.getAlertType() == MessageBoxIconType::InfoIcon ? 'i' : '?';
 
             icon.addEllipse (iconRect.toFloat());
         }
 
         GlyphArrangement ga;
-        ga.addFittedText ({ (float) iconRect.getHeight() * 0.9f, Font::bold },
+        ga.addFittedText (withDefaultMetrics (FontOptions { (float) iconRect.getHeight() * 0.9f, Font::bold }),
                           String::charToString ((juce_wchar) (uint8) character),
                           static_cast<float> (iconRect.getX()), static_cast<float> (iconRect.getY()),
                           static_cast<float> (iconRect.getWidth()), static_cast<float> (iconRect.getHeight()),
@@ -480,23 +485,36 @@ void LookAndFeel_V4::drawAlertBox (Graphics& g, AlertWindow& alert,
 }
 
 int LookAndFeel_V4::getAlertWindowButtonHeight()    { return 40; }
-Font LookAndFeel_V4::getAlertWindowTitleFont()      { return { 18.0f, Font::bold }; }
-Font LookAndFeel_V4::getAlertWindowMessageFont()    { return { 16.0f }; }
-Font LookAndFeel_V4::getAlertWindowFont()           { return { 14.0f }; }
+Font LookAndFeel_V4::getAlertWindowTitleFont()      { return withDefaultMetrics (FontOptions { 18.0f, Font::bold }); }
+Font LookAndFeel_V4::getAlertWindowMessageFont()    { return withDefaultMetrics (FontOptions { 16.0f }); }
+Font LookAndFeel_V4::getAlertWindowFont()           { return withDefaultMetrics (FontOptions { 14.0f }); }
 
 //==============================================================================
 void LookAndFeel_V4::drawProgressBar (Graphics& g, ProgressBar& progressBar,
-                                      int width, int height, double progress, const String& textToShow)
+                                      int width, int height, double progress,
+                                      const String& textToShow)
 {
-    if (width == height)
-        drawCircularProgressBar (g, progressBar, textToShow);
-    else
-        drawLinearProgressBar (g, progressBar, width, height, progress, textToShow);
+    switch (progressBar.getResolvedStyle())
+    {
+        case ProgressBar::Style::linear:
+            drawLinearProgressBar (g, progressBar, width, height, progress, textToShow);
+            break;
+
+        case ProgressBar::Style::circular:
+            drawCircularProgressBar (g, progressBar, textToShow);
+            break;
+    }
 }
 
-void LookAndFeel_V4::drawLinearProgressBar (Graphics& g, ProgressBar& progressBar,
-                                            int width, int height,
-                                            double progress, const String& textToShow)
+ProgressBar::Style LookAndFeel_V4::getDefaultProgressBarStyle (const ProgressBar& progressBar)
+{
+    return progressBar.getWidth() == progressBar.getHeight() ? ProgressBar::Style::circular
+                                                             : ProgressBar::Style::linear;
+}
+
+void LookAndFeel_V4::drawLinearProgressBar (Graphics& g, const ProgressBar& progressBar,
+                                            int width, int height, double progress,
+                                            const String& textToShow)
 {
     auto background = progressBar.findColour (ProgressBar::backgroundColourId);
     auto foreground = progressBar.findColour (ProgressBar::foregroundColourId);
@@ -518,7 +536,7 @@ void LookAndFeel_V4::drawLinearProgressBar (Graphics& g, ProgressBar& progressBa
     }
     else
     {
-        // spinning bar..
+        // spinning bar
         g.setColour (background);
 
         auto stripeWidth = height * 2;
@@ -532,7 +550,7 @@ void LookAndFeel_V4::drawLinearProgressBar (Graphics& g, ProgressBar& progressBa
                                 x, static_cast<float> (height),
                                 x - (float) stripeWidth * 0.5f, static_cast<float> (height));
 
-        Image im (Image::ARGB, width, height, true);
+        Image im (Image::ARGB, width, height, true, *g.getInternalContext().getPreferredImageTypeForTemporaryImages());
 
         {
             Graphics g2 (im);
@@ -553,18 +571,20 @@ void LookAndFeel_V4::drawLinearProgressBar (Graphics& g, ProgressBar& progressBa
     }
 }
 
-void LookAndFeel_V4::drawCircularProgressBar (Graphics& g, ProgressBar& progressBar, const String& progressText)
+void LookAndFeel_V4::drawCircularProgressBar (Graphics& g, const ProgressBar& progressBar,
+                                              const String& textToShow)
 {
-    auto background = progressBar.findColour (ProgressBar::backgroundColourId);
-    auto foreground = progressBar.findColour (ProgressBar::foregroundColourId);
+    const auto background = progressBar.findColour (ProgressBar::backgroundColourId);
+    const auto foreground = progressBar.findColour (ProgressBar::foregroundColourId);
 
-    auto barBounds = progressBar.getLocalBounds().reduced (2, 2).toFloat();
+    const auto barBounds = progressBar.getLocalBounds().reduced (2, 2).toFloat();
+    const auto size = jmin (barBounds.getWidth(), barBounds.getHeight());
 
-    auto rotationInDegrees  = static_cast<float> ((Time::getMillisecondCounter() / 10) % 360);
-    auto normalisedRotation = rotationInDegrees / 360.0f;
+    const auto rotationInDegrees  = static_cast<float> ((Time::getMillisecondCounter() / 10) % 360);
+    const auto normalisedRotation = rotationInDegrees / 360.0f;
 
-    auto rotationOffset = 22.5f;
-    auto maxRotation    = 315.0f;
+    constexpr auto rotationOffset = 22.5f;
+    constexpr auto maxRotation    = 315.0f;
 
     auto startInDegrees = rotationInDegrees;
     auto endInDegrees   = startInDegrees + rotationOffset;
@@ -585,8 +605,8 @@ void LookAndFeel_V4::drawCircularProgressBar (Graphics& g, ProgressBar& progress
     Path arcPath2;
     arcPath2.addCentredArc (barBounds.getCentreX(),
                             barBounds.getCentreY(),
-                            barBounds.getWidth() * 0.5f,
-                            barBounds.getHeight() * 0.5f, 0.0f,
+                            size * 0.5f,
+                            size * 0.5f, 0.0f,
                             0.0f,
                             MathConstants<float>::twoPi,
                             true);
@@ -596,8 +616,8 @@ void LookAndFeel_V4::drawCircularProgressBar (Graphics& g, ProgressBar& progress
     Path arcPath;
     arcPath.addCentredArc (barBounds.getCentreX(),
                            barBounds.getCentreY(),
-                           barBounds.getWidth() * 0.5f,
-                           barBounds.getHeight() * 0.5f,
+                           size * 0.5f,
+                           size * 0.5f,
                            0.0f,
                            degreesToRadians (startInDegrees),
                            degreesToRadians (endInDegrees),
@@ -606,11 +626,11 @@ void LookAndFeel_V4::drawCircularProgressBar (Graphics& g, ProgressBar& progress
     arcPath.applyTransform (AffineTransform::rotation (normalisedRotation * MathConstants<float>::pi * 2.25f, barBounds.getCentreX(), barBounds.getCentreY()));
     g.strokePath (arcPath, PathStrokeType (4.0f));
 
-    if (progressText.isNotEmpty())
+    if (textToShow.isNotEmpty())
     {
         g.setColour (progressBar.findColour (TextButton::textColourOffId));
-        g.setFont ({ 12.0f, Font::italic });
-        g.drawText (progressText, barBounds, Justification::centred, false);
+        g.setFont (progressBar.withDefaultMetrics (FontOptions { 12.0f, Font::italic }));
+        g.drawText (textToShow, barBounds, Justification::centred, false);
     }
 }
 
@@ -621,10 +641,8 @@ int LookAndFeel_V4::getDefaultScrollbarWidth()
 }
 
 void LookAndFeel_V4::drawScrollbar (Graphics& g, ScrollBar& scrollbar, int x, int y, int width, int height,
-                                    bool isScrollbarVertical, int thumbStartPosition, int thumbSize, bool isMouseOver, bool isMouseDown)
+                                    bool isScrollbarVertical, int thumbStartPosition, int thumbSize, bool isMouseOver, [[maybe_unused]] bool isMouseDown)
 {
-    ignoreUnused (isMouseDown);
-
     Rectangle<int> thumbBounds;
 
     if (isScrollbarVertical)
@@ -864,7 +882,7 @@ void LookAndFeel_V4::getIdealPopupMenuItemSize (const String& text, const bool i
             font.setHeight ((float) standardMenuItemHeight / 1.3f);
 
         idealHeight = standardMenuItemHeight > 0 ? standardMenuItemHeight : roundToInt (font.getHeight() * 1.3f);
-        idealWidth = font.getStringWidth (text) + idealHeight * 2;
+        idealWidth = GlyphArrangement::getStringWidthInt (font, text) + idealHeight * 2;
     }
 }
 
@@ -932,7 +950,7 @@ void LookAndFeel_V4::drawComboBox (Graphics& g, int width, int height, bool,
 
 Font LookAndFeel_V4::getComboBoxFont (ComboBox& box)
 {
-    return { jmin (16.0f, (float) box.getHeight() * 0.85f) };
+    return withDefaultMetrics (FontOptions { jmin (16.0f, (float) box.getHeight() * 0.85f) });
 }
 
 void LookAndFeel_V4::positionComboBoxText (ComboBox& box, Label& label)
@@ -962,6 +980,8 @@ void LookAndFeel_V4::drawLinearSlider (Graphics& g, int x, int y, int width, int
         g.setColour (slider.findColour (Slider::trackColourId));
         g.fillRect (slider.isHorizontal() ? Rectangle<float> (static_cast<float> (x), (float) y + 0.5f, sliderPos - (float) x, (float) height - 1.0f)
                                           : Rectangle<float> ((float) x + 0.5f, sliderPos, (float) width - 1.0f, (float) y + ((float) height - sliderPos)));
+
+        drawLinearSliderOutline (g, x, y, width, height, style, slider);
     }
     else
     {
@@ -1044,6 +1064,9 @@ void LookAndFeel_V4::drawLinearSlider (Graphics& g, int x, int y, int width, int
                              trackWidth * 2.0f, pointerColour, 3);
             }
         }
+
+        if (slider.isBar())
+            drawLinearSliderOutline (g, x, y, width, height, style, slider);
     }
 }
 
@@ -1139,8 +1162,8 @@ void LookAndFeel_V4::drawTooltip (Graphics& g, const String& text, int width, in
     g.setColour (findColour (TooltipWindow::outlineColourId));
     g.drawRoundedRectangle (bounds.toFloat().reduced (0.5f, 0.5f), cornerSize, 1.0f);
 
-    LookAndFeelHelpers::layoutTooltipText (text, findColour (TooltipWindow::textColourId))
-                       .draw (g, { static_cast<float> (width), static_cast<float> (height) });
+    detail::LookAndFeelHelpers::layoutTooltipText (getDefaultMetricsKind(), text, findColour (TooltipWindow::textColourId))
+        .draw (g, { static_cast<float> (width), static_cast<float> (height) });
 }
 
 //==============================================================================
@@ -1245,7 +1268,7 @@ void LookAndFeel_V4::drawPropertyPanelSectionHeader (Graphics& g, const String& 
 
     g.setColour (findColour (PropertyComponent::labelTextColourId));
 
-    g.setFont ({ (float) height * 0.7f, Font::bold });
+    g.setFont (withDefaultMetrics (FontOptions { (float) height * 0.7f, Font::bold }));
     g.drawText (name, textX, 0, width - textX - 4, height, Justification::centredLeft, true);
 }
 
@@ -1255,10 +1278,8 @@ void LookAndFeel_V4::drawPropertyComponentBackground (Graphics& g, int width, in
     g.fillRect  (0, 0, width, height - 1);
 }
 
-void LookAndFeel_V4::drawPropertyComponentLabel (Graphics& g, int width, int height, PropertyComponent& component)
+void LookAndFeel_V4::drawPropertyComponentLabel (Graphics& g, [[maybe_unused]] int width, int height, PropertyComponent& component)
 {
-    ignoreUnused (width);
-
     auto indent = getPropertyComponentIndent (component);
 
     g.setColour (component.findColour (PropertyComponent::labelTextColourId)
@@ -1290,7 +1311,9 @@ void LookAndFeel_V4::drawCallOutBoxBackground (CallOutBox& box, Graphics& g,
 {
     if (cachedImage.isNull())
     {
-        cachedImage = { Image::ARGB, box.getWidth(), box.getHeight(), true };
+        cachedImage = { Image::ARGB, box.getWidth(), box.getHeight(), true, *g.getInternalContext().getPreferredImageTypeForTemporaryImages() };
+        cachedImage.setBackupEnabled (false);
+
         Graphics g2 (cachedImage);
 
         DropShadow (Colours::black.withAlpha (0.7f), 8, { 0, 2 }).drawForPath (g2, path);
@@ -1419,6 +1442,7 @@ void LookAndFeel_V4::initialiseColours()
         Toolbar::buttonMouseDownBackgroundColourId, currentColourScheme.getUIColour (ColourScheme::UIColour::widgetBackground).contrasting (0.5f).getARGB(),
         Toolbar::labelTextColourId,                 currentColourScheme.getUIColour (ColourScheme::UIColour::defaultText).getARGB(),
         Toolbar::editingModeOutlineColourId,        currentColourScheme.getUIColour (ColourScheme::UIColour::outline).getARGB(),
+        Toolbar::customisationDialogBackgroundColourId, currentColourScheme.getUIColour (ColourScheme::UIColour::widgetBackground).getARGB(),
 
         DrawableButton::textColourId,               currentColourScheme.getUIColour (ColourScheme::UIColour::defaultText).getARGB(),
         DrawableButton::textColourOnId,             currentColourScheme.getUIColour (ColourScheme::UIColour::highlightedText).getARGB(),
@@ -1440,15 +1464,22 @@ void LookAndFeel_V4::initialiseColours()
         0x1000440, /*LassoComponent::lassoFillColourId*/        currentColourScheme.getUIColour (ColourScheme::UIColour::defaultFill).getARGB(),
         0x1000441, /*LassoComponent::lassoOutlineColourId*/     currentColourScheme.getUIColour (ColourScheme::UIColour::outline).getARGB(),
 
+        0x1004000, /*KeyboardComponentBase::upDownButtonBackgroundColourId*/  0xffd3d3d3,
+        0x1004001, /*KeyboardComponentBase::upDownButtonArrowColourId*/       0xff000000,
+
         0x1005000, /*MidiKeyboardComponent::whiteNoteColourId*/               0xffffffff,
         0x1005001, /*MidiKeyboardComponent::blackNoteColourId*/               0xff000000,
         0x1005002, /*MidiKeyboardComponent::keySeparatorLineColourId*/        0x66000000,
         0x1005003, /*MidiKeyboardComponent::mouseOverKeyOverlayColourId*/     0x80ffff00,
         0x1005004, /*MidiKeyboardComponent::keyDownOverlayColourId*/          0xffb6b600,
         0x1005005, /*MidiKeyboardComponent::textLabelColourId*/               0xff000000,
-        0x1005006, /*MidiKeyboardComponent::upDownButtonBackgroundColourId*/  0xffd3d3d3,
-        0x1005007, /*MidiKeyboardComponent::upDownButtonArrowColourId*/       0xff000000,
-        0x1005008, /*MidiKeyboardComponent::shadowColourId*/                  0x4c000000,
+        0x1005006, /*MidiKeyboardComponent::shadowColourId*/                  0x4c000000,
+
+        0x1006000, /*MPEKeyboardComponent::whiteNoteColourId*/                0xff1a1c27,
+        0x1006001, /*MPEKeyboardComponent::blackNoteColourId*/                0x99f1f1f1,
+        0x1006002, /*MPEKeyboardComponent::textLabelColourId*/                0xfff1f1f1,
+        0x1006003, /*MPEKeyboardComponent::noteCircleFillColourId*/           0x99ba00ff,
+        0x1006004, /*MPEKeyboardComponent::noteCircleOutlineColourId*/        0xfff1f1f1,
 
         0x1004500, /*CodeEditorComponent::backgroundColourId*/                currentColourScheme.getUIColour (ColourScheme::UIColour::widgetBackground).getARGB(),
         0x1004502, /*CodeEditorComponent::highlightColourId*/                 currentColourScheme.getUIColour (ColourScheme::UIColour::defaultFill).withAlpha (0.4f).getARGB(),

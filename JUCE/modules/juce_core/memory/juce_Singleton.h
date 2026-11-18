@@ -1,21 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
-   without fee is hereby granted provided that the above copyright notice and
-   this permission notice appear in all copies.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
+
+   Or:
+
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -47,53 +59,49 @@ struct SingletonHolder  : private MutexType // (inherited so we can use the empt
            If you're having trouble cleaning up your singletons, perhaps consider using the
            SharedResourcePointer class instead.
         */
-        jassert (instance == nullptr);
+        jassert (instance.load() == nullptr);
     }
 
     /** Returns the current instance, or creates a new instance if there isn't one. */
     Type* get()
     {
-        if (instance == nullptr)
+        if (auto* ptr = instance.load())
+            return ptr;
+
+        typename MutexType::ScopedLockType sl (*this);
+
+        if (auto* ptr = instance.load())
+            return ptr;
+
+        auto once = onlyCreateOncePerRun; // (local copy avoids VS compiler warning about this being constant)
+
+        if (once)
         {
-            typename MutexType::ScopedLockType sl (*this);
+            static bool createdOnceAlready = false;
 
-            if (instance == nullptr)
+            if (createdOnceAlready)
             {
-                auto once = onlyCreateOncePerRun; // (local copy avoids VS compiler warning about this being constant)
-
-                if (once)
-                {
-                    static bool createdOnceAlready = false;
-
-                    if (createdOnceAlready)
-                    {
-                        // This means that the doNotRecreateAfterDeletion flag was set
-                        // and you tried to create the singleton more than once.
-                        jassertfalse;
-                        return nullptr;
-                    }
-
-                    createdOnceAlready = true;
-                }
-
-                static bool alreadyInside = false;
-
-                if (alreadyInside)
-                {
-                    // This means that your object's constructor has done something which has
-                    // ended up causing a recursive loop of singleton creation..
-                    jassertfalse;
-                }
-                else
-                {
-                    alreadyInside = true;
-                    getWithoutChecking();
-                    alreadyInside = false;
-                }
+                // This means that the doNotRecreateAfterDeletion flag was set
+                // and you tried to create the singleton more than once.
+                jassertfalse;
+                return nullptr;
             }
+
+            createdOnceAlready = true;
         }
 
-        return instance;
+        static bool alreadyInside = false;
+
+        if (alreadyInside)
+        {
+            // This means that your object's constructor has done something which has
+            // ended up causing a recursive loop of singleton creation.
+            jassertfalse;
+            return nullptr;
+        }
+
+        const ScopedValueSetter<bool> scope (alreadyInside, true);
+        return getWithoutChecking();
     }
 
     /** Returns the current instance, or creates a new instance if there isn't one, but doesn't do
@@ -101,43 +109,50 @@ struct SingletonHolder  : private MutexType // (inherited so we can use the empt
     */
     Type* getWithoutChecking()
     {
-        if (instance == nullptr)
-        {
-            auto newObject = new Type(); // (create into a local so that instance is still null during construction)
-            instance = newObject;
-        }
+        if (auto* p = instance.load())
+            return p;
 
-        return instance;
+        auto* newObject = new Type(); // (create into a local so that instance is still null during construction)
+        instance.store (newObject);
+        return newObject;
     }
 
     /** Deletes and resets the current instance, if there is one. */
     void deleteInstance()
     {
         typename MutexType::ScopedLockType sl (*this);
-        auto old = instance;
-        instance = nullptr;
-        delete old;
+        delete instance.exchange (nullptr);
     }
 
     /** Called by the class's destructor to clear the pointer if it is currently set to the given object. */
     void clear (Type* expectedObject) noexcept
     {
-        if (instance == expectedObject)
-            instance = nullptr;
+        instance.compare_exchange_strong (expectedObject, nullptr);
     }
 
-    Type* instance = nullptr;
+    // This must be atomic, otherwise a late call to get() may attempt to read instance while it is
+    // being modified by the very first call to get().
+    std::atomic<Type*> instance { nullptr };
 };
 
+/** @cond */
+#define JUCE_PRIVATE_DECLARE_SINGLETON(Classname, mutex, doNotRecreate, inlineToken, getter) \
+    static inlineToken juce::SingletonHolder<Classname, mutex, doNotRecreate> singletonHolder; \
+    friend juce::SingletonHolder<Classname, mutex, doNotRecreate>; \
+    static Classname* JUCE_CALLTYPE getInstance()                           { return singletonHolder.getter(); } \
+    static Classname* JUCE_CALLTYPE getInstanceWithoutCreating() noexcept   { return singletonHolder.instance; } \
+    static void JUCE_CALLTYPE deleteInstance() noexcept                     { singletonHolder.deleteInstance(); } \
+    void clearSingletonInstance() noexcept                                  { singletonHolder.clear (this); }
+/** @endcond */
 
 //==============================================================================
 /**
     Macro to generate the appropriate methods and boilerplate for a singleton class.
 
-    To use this, add the line JUCE_DECLARE_SINGLETON(MyClass, doNotRecreateAfterDeletion)
+    To use this, add the line JUCE_DECLARE_SINGLETON (MyClass, doNotRecreateAfterDeletion)
     to the class's definition.
 
-    Then put a macro JUCE_IMPLEMENT_SINGLETON(MyClass) along with the class's
+    Then put a macro JUCE_IMPLEMENT_SINGLETON (MyClass) along with the class's
     implementation code.
 
     It's also a very good idea to also add the call clearSingletonInstance() in your class's
@@ -163,7 +178,7 @@ struct SingletonHolder  : private MutexType // (inherited so we can use the empt
             JUCE_DECLARE_SINGLETON (MySingleton, false)
         };
 
-        // ..and this goes in a suitable .cpp file:
+        // ...and this goes in a suitable .cpp file:
         JUCE_IMPLEMENT_SINGLETON (MySingleton)
 
 
@@ -172,7 +187,7 @@ struct SingletonHolder  : private MutexType // (inherited so we can use the empt
 
         ...
 
-        MySingleton::deleteInstance(); // safely deletes the singleton (if it's been created).
+        MySingleton::deleteInstance(); // safely deletes the singleton (if it's been created)
 
     @endcode
 
@@ -188,26 +203,27 @@ struct SingletonHolder  : private MutexType // (inherited so we can use the empt
     @see JUCE_IMPLEMENT_SINGLETON, JUCE_DECLARE_SINGLETON_SINGLETHREADED
 */
 #define JUCE_DECLARE_SINGLETON(Classname, doNotRecreateAfterDeletion) \
-\
-    static juce::SingletonHolder<Classname, juce::CriticalSection, doNotRecreateAfterDeletion> singletonHolder; \
-    friend decltype (singletonHolder); \
-\
-    static Classname* JUCE_CALLTYPE getInstance()                           { return singletonHolder.get(); } \
-    static Classname* JUCE_CALLTYPE getInstanceWithoutCreating() noexcept   { return singletonHolder.instance; } \
-    static void JUCE_CALLTYPE deleteInstance() noexcept                     { singletonHolder.deleteInstance(); } \
-    void clearSingletonInstance() noexcept                                  { singletonHolder.clear (this); }
+    JUCE_PRIVATE_DECLARE_SINGLETON (Classname, juce::CriticalSection, doNotRecreateAfterDeletion, , get)
 
+/**
+    The same as JUCE_DECLARE_SINGLETON, but does not require a matching
+    JUCE_IMPLEMENT_SINGLETON definition.
+*/
+#define JUCE_DECLARE_SINGLETON_INLINE(Classname, doNotRecreateAfterDeletion) \
+    JUCE_PRIVATE_DECLARE_SINGLETON (Classname, juce::CriticalSection, doNotRecreateAfterDeletion, inline, get)
 
 //==============================================================================
 /** This is a counterpart to the JUCE_DECLARE_SINGLETON macros.
 
     After adding the JUCE_DECLARE_SINGLETON to the class definition, this macro has
     to be used in the cpp file.
+
+    This macro is not required for singletons declared with the INLINE macros, specifically
+    JUCE_DECLARE_SINGLETON_INLINE, JUCE_DECLARE_SINGLETON_SINGLETHREADED_INLINE, and
+    JUCE_DECLARE_SINGLETON_SINGLETHREADED_MINIMAL_INLINE.
 */
 #define JUCE_IMPLEMENT_SINGLETON(Classname) \
-\
     decltype (Classname::singletonHolder) Classname::singletonHolder;
-
 
 //==============================================================================
 /**
@@ -230,15 +246,14 @@ struct SingletonHolder  : private MutexType // (inherited so we can use the empt
     @see JUCE_IMPLEMENT_SINGLETON, JUCE_DECLARE_SINGLETON, JUCE_DECLARE_SINGLETON_SINGLETHREADED_MINIMAL
 */
 #define JUCE_DECLARE_SINGLETON_SINGLETHREADED(Classname, doNotRecreateAfterDeletion) \
-\
-    static juce::SingletonHolder<Classname, juce::DummyCriticalSection, doNotRecreateAfterDeletion> singletonHolder; \
-    friend decltype (singletonHolder); \
-\
-    static Classname* JUCE_CALLTYPE getInstance()                           { return singletonHolder.get(); } \
-    static Classname* JUCE_CALLTYPE getInstanceWithoutCreating() noexcept   { return singletonHolder.instance; } \
-    static void JUCE_CALLTYPE deleteInstance() noexcept                     { singletonHolder.deleteInstance(); } \
-    void clearSingletonInstance() noexcept                                  { singletonHolder.clear (this); }
+    JUCE_PRIVATE_DECLARE_SINGLETON (Classname, juce::DummyCriticalSection, doNotRecreateAfterDeletion, , get)
 
+/**
+    The same as JUCE_DECLARE_SINGLETON_SINGLETHREADED, but does not require a matching
+    JUCE_IMPLEMENT_SINGLETON definition.
+*/
+#define JUCE_DECLARE_SINGLETON_SINGLETHREADED_INLINE(Classname, doNotRecreateAfterDeletion) \
+    JUCE_PRIVATE_DECLARE_SINGLETON (Classname, juce::DummyCriticalSection, doNotRecreateAfterDeletion, inline, get)
 
 //==============================================================================
 /**
@@ -256,25 +271,24 @@ struct SingletonHolder  : private MutexType // (inherited so we can use the empt
     @see JUCE_IMPLEMENT_SINGLETON, JUCE_DECLARE_SINGLETON
 */
 #define JUCE_DECLARE_SINGLETON_SINGLETHREADED_MINIMAL(Classname) \
-\
-    static juce::SingletonHolder<Classname, juce::DummyCriticalSection, false> singletonHolder; \
-    friend decltype (singletonHolder); \
-\
-    static Classname* JUCE_CALLTYPE getInstance()                           { return singletonHolder.getWithoutChecking(); } \
-    static Classname* JUCE_CALLTYPE getInstanceWithoutCreating() noexcept   { return singletonHolder.instance; } \
-    static void JUCE_CALLTYPE deleteInstance() noexcept                     { singletonHolder.deleteInstance(); } \
-    void clearSingletonInstance() noexcept                                  { singletonHolder.clear (this); }
+    JUCE_PRIVATE_DECLARE_SINGLETON (Classname, juce::DummyCriticalSection, false, , getWithoutChecking)
 
+/**
+    The same as JUCE_DECLARE_SINGLETON_SINGLETHREADED_MINIMAL, but does not require a matching
+    JUCE_IMPLEMENT_SINGLETON definition.
+*/
+#define JUCE_DECLARE_SINGLETON_SINGLETHREADED_MINIMAL_INLINE(Classname) \
+    JUCE_PRIVATE_DECLARE_SINGLETON (Classname, juce::DummyCriticalSection, false, inline, getWithoutChecking)
 
 //==============================================================================
-#ifndef DOXYGEN
- // These are ancient macros, and have now been updated with new names to match the JUCE style guide,
- // so please update your code to use the newer versions!
- #define juce_DeclareSingleton(Classname, doNotRecreate)                JUCE_DECLARE_SINGLETON(Classname, doNotRecreate)
- #define juce_DeclareSingleton_SingleThreaded(Classname, doNotRecreate) JUCE_DECLARE_SINGLETON_SINGLETHREADED(Classname, doNotRecreate)
- #define juce_DeclareSingleton_SingleThreaded_Minimal(Classname)        JUCE_DECLARE_SINGLETON_SINGLETHREADED_MINIMAL(Classname)
- #define juce_ImplementSingleton(Classname)                             JUCE_IMPLEMENT_SINGLETON(Classname)
- #define juce_ImplementSingleton_SingleThreaded(Classname)              JUCE_IMPLEMENT_SINGLETON(Classname)
-#endif
+/** @cond */
+// These are ancient macros, and have now been updated with new names to match the JUCE style guide,
+// so please update your code to use the newer versions!
+#define juce_DeclareSingleton(Classname, doNotRecreate)                JUCE_DECLARE_SINGLETON(Classname, doNotRecreate)
+#define juce_DeclareSingleton_SingleThreaded(Classname, doNotRecreate) JUCE_DECLARE_SINGLETON_SINGLETHREADED(Classname, doNotRecreate)
+#define juce_DeclareSingleton_SingleThreaded_Minimal(Classname)        JUCE_DECLARE_SINGLETON_SINGLETHREADED_MINIMAL(Classname)
+#define juce_ImplementSingleton(Classname)                             JUCE_IMPLEMENT_SINGLETON(Classname)
+#define juce_ImplementSingleton_SingleThreaded(Classname)              JUCE_IMPLEMENT_SINGLETON(Classname)
+/** @endcond */
 
 } // namespace juce

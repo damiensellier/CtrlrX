@@ -58,6 +58,13 @@ if(LINUX)
     pkg_check_modules(gtk3 REQUIRED gtk+-3.0) 
     pkg_check_modules(webkit REQUIRED webkit2gtk-4.1)
     pkg_check_modules(curl REQUIRED libcurl)
+    if(CTRLRX_USE_SYSTEM_JUCE)
+        pkg_check_modules(flac QUIET flac)
+        pkg_check_modules(vorbisfile QUIET vorbisfile)
+        pkg_check_modules(vorbisenc QUIET vorbisenc)
+        pkg_check_modules(vorbis QUIET vorbis)
+        pkg_check_modules(ogg QUIET ogg)
+    endif()
 
     include_directories(SYSTEM
         ${gtk3_INCLUDE_DIRS}
@@ -73,8 +80,10 @@ endif()
 # -----------------------------------------------------------------------
 if(CTRLRX_USE_SYSTEM_JUCE)
     find_package(JUCE CONFIG REQUIRED)
+    message(STATUS "Using system JUCE package")
 else()
     add_subdirectory(JUCE)
+    message(STATUS "Using vendored JUCE submodule")
 endif()
 
 # -----------------------------------------------------------------------
@@ -229,7 +238,8 @@ target_compile_definitions(SharedCode INTERFACE
     BOOST_BIND_GLOBAL_PLACEHOLDERS=1
     CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
     VERSION="${CURRENT_VERSION}"
-    $<$<PLATFORM_ID:Linux>:_GLIBCXX_USE_DEPRECATED=1>
+    # Block legacy libstdc++ compatibility types (e.g. std::auto_ptr).
+    $<$<PLATFORM_ID:Linux>:_GLIBCXX_USE_DEPRECATED=0>
     $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
 )
 
@@ -297,6 +307,27 @@ if(LINUX)
         ${zlib_LIBRARIES}
         ${curl_LIBRARIES}
     )
+
+    if(CTRLRX_USE_SYSTEM_JUCE)
+        if(flac_FOUND AND vorbisfile_FOUND AND vorbisenc_FOUND AND vorbis_FOUND AND ogg_FOUND)
+            message(STATUS "Using system FLAC/Vorbis/Ogg codec libs with system JUCE")
+            target_link_libraries(SharedCode
+                INTERFACE
+                ${flac_LIBRARIES}
+                ${vorbisfile_LIBRARIES}
+                ${vorbisenc_LIBRARIES}
+                ${vorbis_LIBRARIES}
+                ${ogg_LIBRARIES}
+            )
+        else()
+            message(WARNING "System JUCE selected, but FLAC/Vorbis/Ogg libs were not all found. Disabling OGG/FLAC support.")
+            target_compile_definitions(SharedCode
+                INTERFACE
+                JUCE_USE_FLAC=0
+                JUCE_USE_OGGVORBIS=0
+            )
+        endif()
+    endif()
 endif()
 
 # Final Plugin Target Linking

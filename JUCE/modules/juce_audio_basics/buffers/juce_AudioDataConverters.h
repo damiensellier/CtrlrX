@@ -1,21 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
-   without fee is hereby granted provided that the above copyright notice and
-   this permission notice appear in all copies.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
+
+   Or:
+
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -62,10 +74,11 @@ public:
     // These types can be used as the Constness template parameter for the AudioData::Pointer class.
 
     class NonConst; /**< Used as a template parameter for AudioData::Pointer. Indicates that the pointer can be used for non-const data. */
-    class Const;    /**< Used as a template parameter for AudioData::Pointer. Indicates that the samples can only be used for const data.. */
+    class Const;    /**< Used as a template parameter for AudioData::Pointer. Indicates that the samples can only be used for const data. */
 
-  #ifndef DOXYGEN
+
     //==============================================================================
+    /** @cond */
     class BigEndian
     {
     public:
@@ -279,7 +292,7 @@ public:
     public:
         inline NonInterleaved() = default;
         inline NonInterleaved (const NonInterleaved&) = default;
-        inline NonInterleaved (const int) noexcept {}
+        inline NonInterleaved (int) noexcept {}
         inline void copyFrom (const NonInterleaved&) noexcept {}
         template <class SampleFormatType> inline void advanceData (SampleFormatType& s) noexcept                    { s.advance(); }
         template <class SampleFormatType> inline void advanceDataBy (SampleFormatType& s, int numSamples) noexcept  { s.skip (numSamples); }
@@ -320,7 +333,7 @@ public:
         static void* toVoidPtr (VoidType* v) noexcept { return const_cast<void*> (v); }
         enum { isConst = 1 };
     };
-  #endif
+    /** @endcond */
 
     //==============================================================================
     /**
@@ -329,17 +342,17 @@ public:
         This object can be used to read and write from blocks of encoded audio samples. To create one, you specify
         the audio format as a series of template parameters, e.g.
         @code
-        // this creates a pointer for reading from a const array of 16-bit little-endian packed samples.
+        // this creates a pointer for reading from a const array of 16-bit little-endian packed samples
         AudioData::Pointer <AudioData::Int16,
                             AudioData::LittleEndian,
                             AudioData::NonInterleaved,
                             AudioData::Const> pointer (someRawAudioData);
 
-        // These methods read the sample that is being pointed to
+        // these methods read the sample that is being pointed to
         float firstSampleAsFloat = pointer.getAsFloat();
         int32 firstSampleAsInt = pointer.getAsInt32();
-        ++pointer; // moves the pointer to the next sample.
-        pointer += 3; // skips the next 3 samples.
+        ++pointer; // moves the pointer to the next sample
+        pointer += 3; // skips the next 3 samples
         @endcode
 
         The convertSamples() method lets you copy a range of samples from one format to another, automatically
@@ -436,6 +449,9 @@ public:
         /** Adds a number of samples to the pointer's position. */
         Pointer& operator+= (int samplesToJump) noexcept        { this->advanceDataBy (data, samplesToJump); return *this; }
 
+        /** Returns a new pointer with the specified offset from this pointer's position. */
+        Pointer operator+ (int samplesToJump) const             { return Pointer { *this } += samplesToJump; }
+
         /** Writes a stream of samples into this pointer from another pointer.
             This will copy the specified number of samples, converting between formats appropriately.
         */
@@ -472,7 +488,7 @@ public:
                     ++source;
                 }
             }
-            else // copy backwards if we're increasing the sample width..
+            else // copy backwards if we're increasing the sample width
             {
                 dest += numSamples;
                 source += numSamples;
@@ -639,11 +655,152 @@ public:
 
         const int sourceChannels, destChannels;
     };
+
+    //==============================================================================
+    /** A struct that contains a SampleFormat and Endianness to be used with the source and
+        destination types when calling the interleaveSamples() and deinterleaveSamples() helpers.
+
+        @see interleaveSamples, deinterleaveSamples
+    */
+    template <typename DataFormatIn, typename EndiannessIn>
+    struct Format
+    {
+        using DataFormat = DataFormatIn;
+        using Endianness = EndiannessIn;
+    };
+
+private:
+    template <bool IsInterleaved, bool IsConst, typename...>
+    struct ChannelDataSubtypes;
+
+    template <bool IsInterleaved, bool IsConst, typename DataFormat, typename Endianness>
+    struct ChannelDataSubtypes<IsInterleaved, IsConst, DataFormat, Endianness>
+    {
+        using ElementType = std::remove_pointer_t<decltype (DataFormat::data)>;
+        using ChannelType = std::conditional_t<IsConst, const ElementType*, ElementType*>;
+        using DataType = std::conditional_t<IsInterleaved, ChannelType, ChannelType const*>;
+        using PointerType = Pointer<DataFormat,
+                                    Endianness,
+                                    std::conditional_t<IsInterleaved, Interleaved, NonInterleaved>,
+                                    std::conditional_t<IsConst, Const, NonConst>>;
+    };
+
+    template <bool IsInterleaved, bool IsConst, typename DataFormat, typename Endianness>
+    struct ChannelDataSubtypes<IsInterleaved, IsConst, Format<DataFormat, Endianness>>
+    {
+        using Subtypes    = ChannelDataSubtypes<IsInterleaved, IsConst, DataFormat, Endianness>;
+        using DataType    = typename Subtypes::DataType;
+        using PointerType = typename Subtypes::PointerType;
+    };
+
+    template <bool IsInterleaved, bool IsConst, typename... Format>
+    struct ChannelData
+    {
+        using Subtypes    = ChannelDataSubtypes<IsInterleaved, IsConst, Format...>;
+        using DataType    = typename Subtypes::DataType;
+        using PointerType = typename Subtypes::PointerType;
+
+        DataType data;
+        int channels;
+    };
+
+public:
+    //==============================================================================
+    /** A sequence of interleaved samples used as the source for the deinterleaveSamples() method. */
+    template <typename... Format> using InterleavedSource     = ChannelData<true,  true,   Format...>;
+    /** A sequence of interleaved samples used as the destination for the interleaveSamples() method. */
+    template <typename... Format> using InterleavedDest       = ChannelData<true,  false,  Format...>;
+    /** A sequence of non-interleaved samples used as the source for the interleaveSamples() method. */
+    template <typename... Format> using NonInterleavedSource  = ChannelData<false, true,   Format...>;
+    /** A sequence of non-interleaved samples used as the destination for the deinterleaveSamples() method. */
+    template <typename... Format> using NonInterleavedDest    = ChannelData<false, false,  Format...>;
+
+    /** A helper function for converting a sequence of samples from a non-interleaved source
+        to an interleaved destination.
+
+        When calling this method you need to specify the source and destination data format and endianness
+        from the AudioData SampleFormat and Endianness types and provide the data and number of channels
+        for each. For example, to convert a floating-point stream of big endian samples to an interleaved,
+        native endian stream of 16-bit integer samples you would do the following:
+
+        @code
+        using SourceFormat = AudioData::Format<AudioData::Float32, AudioData::BigEndian>;
+        using DestFormat   = AudioData::Format<AudioData::Int16,   AudioData::NativeEndian>;
+
+        AudioData::interleaveSamples (AudioData::NonInterleavedSource<SourceFormat> { sourceData, numSourceChannels },
+                                      AudioData::InterleavedDest<DestFormat>        { destData,   numDestChannels },
+                                      numSamples);
+        @endcode
+    */
+    template <typename... SourceFormat, typename... DestFormat>
+    static void interleaveSamples (NonInterleavedSource<SourceFormat...> source,
+                                   InterleavedDest<DestFormat...> dest,
+                                   int numSamples)
+    {
+        using SourceType = typename decltype (source)::PointerType;
+        using DestType   = typename decltype (dest)  ::PointerType;
+
+        for (int i = 0; i < dest.channels; ++i)
+        {
+            const DestType destType (addBytesToPointer (dest.data, i * DestType::getBytesPerSample()), dest.channels);
+
+            if (i < source.channels)
+            {
+                if (*source.data != nullptr)
+                {
+                    destType.convertSamples (SourceType { *source.data }, numSamples);
+                    ++source.data;
+                }
+            }
+            else
+            {
+                destType.clearSamples (numSamples);
+            }
+        }
+    }
+
+    /** A helper function for converting a sequence of samples from an interleaved source
+        to a non-interleaved destination.
+
+        When calling this method you need to specify the source and destination data format and endianness
+        from the AudioData SampleFormat and Endianness types and provide the data and number of channels
+        for each. For example, to convert a floating-point stream of big endian samples to an non-interleaved,
+        native endian stream of 16-bit integer samples you would do the following:
+
+        @code
+        using SourceFormat = AudioData::Format<AudioData::Float32, AudioData::BigEndian>;
+        using DestFormat   = AudioData::Format<AudioData::Int16,   AudioData::NativeEndian>;
+
+        AudioData::deinterleaveSamples (AudioData::InterleavedSource<SourceFormat> { sourceData, numSourceChannels },
+                                        AudioData::NonInterleavedDest<DestFormat>  { destData,   numDestChannels },
+                                        numSamples);
+        @endcode
+    */
+    template <typename... SourceFormat, typename... DestFormat>
+    static void deinterleaveSamples (InterleavedSource<SourceFormat...> source,
+                                     NonInterleavedDest<DestFormat...> dest,
+                                     int numSamples)
+    {
+        using SourceType = typename decltype (source)::PointerType;
+        using DestType   = typename decltype (dest)  ::PointerType;
+
+        for (int i = 0; i < dest.channels; ++i)
+        {
+            if (auto* targetChan = dest.data[i])
+            {
+                const DestType destType (targetChan);
+
+                if (i < source.channels)
+                    destType.convertSamples (SourceType (addBytesToPointer (source.data, i * SourceType::getBytesPerSample()), source.channels), numSamples);
+                else
+                    destType.clearSamples (numSamples);
+            }
+        }
+    }
 };
 
-
-
 //==============================================================================
+/** @cond */
 /**
     A set of routines to convert buffers of 32-bit floating point data to and from
     various integer formats.
@@ -653,7 +810,7 @@ public:
 
     @tags{Audio}
 */
-class JUCE_API  AudioDataConverters
+class [[deprecated]] JUCE_API  AudioDataConverters
 {
 public:
     //==============================================================================
@@ -710,7 +867,7 @@ public:
 
 private:
     AudioDataConverters();
-    JUCE_DECLARE_NON_COPYABLE (AudioDataConverters)
 };
+/** @endcond */
 
 } // namespace juce

@@ -1,18 +1,22 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework examples.
+   Copyright (c) Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
+   to use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
 
-   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES,
-   WHETHER EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR
-   PURPOSE, ARE DISCLAIMED.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+   REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+   AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+   INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+   LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+   OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+   PERFORMANCE OF THIS SOFTWARE.
 
   ==============================================================================
 */
@@ -27,13 +31,16 @@
  version:          1.0.0
  vendor:           JUCE
  website:          http://juce.com
- description:      Handles incoming and outcoming midi messages.
+ description:      Handles incoming and outcoming midi messages in
+                   MIDI 1.0 bytestream format. For an example of handling MIDI 2.0
+                   messages in Universal Midi Packet format, see the UMPDemo.
 
  dependencies:     juce_audio_basics, juce_audio_devices, juce_audio_formats,
                    juce_audio_processors, juce_audio_utils, juce_core,
                    juce_data_structures, juce_events, juce_graphics,
-                   juce_gui_basics, juce_gui_extra
- exporters:        xcode_mac, vs2019, linux_make, androidstudio, xcode_iphone
+                   juce_gui_basics, juce_gui_extra, juce_audio_processors_headless
+ exporters:        xcode_mac, vs2022, vs2026, linux_make, androidstudio,
+                   xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -48,26 +55,41 @@
 
 #pragma once
 
+// This demo shows how to use the MidiInput and MidiOutput types to send and receive
+// messages using the traditional bytestream format.
+// New programs should prefer to use the newer Universal Midi Packet format whenever
+// possible.
+// For an example showing how UMP messages can be sent and received, see the UMPDemo,
+// as well as the ump::Session, ump::Input, and ump::Output types.
 
 //==============================================================================
-struct MidiDeviceListEntry : ReferenceCountedObject
+struct MidiDeviceListEntry final : ReferenceCountedObject
 {
-    MidiDeviceListEntry (MidiDeviceInfo info) : deviceInfo (info) {}
+    explicit MidiDeviceListEntry (MidiDeviceInfo info) : deviceInfo (info) {}
 
     MidiDeviceInfo deviceInfo;
     std::unique_ptr<MidiInput> inDevice;
     std::unique_ptr<MidiOutput> outDevice;
 
     using Ptr = ReferenceCountedObjectPtr<MidiDeviceListEntry>;
+
+    void stopAndReset()
+    {
+        if (inDevice != nullptr)
+            inDevice->stop();
+
+        inDevice .reset();
+        outDevice.reset();
+    }
 };
 
 
 //==============================================================================
-class MidiDemo  : public Component,
-                  private Timer,
-                  private MidiKeyboardState::Listener,
-                  private MidiInputCallback,
-                  private AsyncUpdater
+class MidiDemo final : public Component,
+                       private MidiKeyboardState::Listener,
+                       private MidiInputCallback,
+                       private AsyncUpdater,
+                       private ump::EndpointsListener
 {
 public:
     //==============================================================================
@@ -113,12 +135,17 @@ public:
 
         setSize (732, 520);
 
-        startTimer (500);
+        updateDeviceLists();
+        updateVirtualPorts();
+
+        ump::Endpoints::getInstance()->setVirtualMidiBytestreamServiceActive (true);
+        ump::Endpoints::getInstance()->addListener (*this);
     }
 
     ~MidiDemo() override
     {
-        stopTimer();
+        ump::Endpoints::getInstance()->removeListener (*this);
+
         midiInputs .clear();
         midiOutputs.clear();
         keyboardState.removeListener (this);
@@ -128,12 +155,6 @@ public:
     }
 
     //==============================================================================
-    void timerCallback() override
-    {
-        updateDeviceList (true);
-        updateDeviceList (false);
-    }
-
     void handleNoteOn (MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity) override
     {
         MidiMessage m (MidiMessage::noteOn (midiChannel, midiNoteNumber, velocity));
@@ -211,17 +232,8 @@ public:
 
     void closeDevice (bool isInput, int index)
     {
-        if (isInput)
-        {
-            jassert (midiInputs[index]->inDevice.get() != nullptr);
-            midiInputs[index]->inDevice->stop();
-            midiInputs[index]->inDevice.reset();
-        }
-        else
-        {
-            jassert (midiOutputs[index]->outDevice.get() != nullptr);
-            midiOutputs[index]->outDevice.reset();
-        }
+        auto& list = isInput ? midiInputs : midiOutputs;
+        list[index]->stopAndReset();
     }
 
     int getNumMidiInputs() const noexcept
@@ -241,16 +253,17 @@ public:
 
 private:
     //==============================================================================
-    struct MidiDeviceListBox : public ListBox,
-                               private ListBoxModel
+    struct MidiDeviceListBox final : private ListBoxModel,
+                                     public ListBox
     {
         MidiDeviceListBox (const String& name,
                            MidiDemo& contentComponent,
                            bool isInputDeviceList)
-            : ListBox (name, this),
+            : ListBox (name),
               parent (contentComponent),
               isInput (isInputDeviceList)
         {
+            setModel (this);
             setOutlineThickness (1);
             setMultipleSelectionEnabled (true);
             setClickingTogglesRowSelection (true);
@@ -318,7 +331,7 @@ private:
         {
             SparseSet<int> selectedRows;
             for (auto i = 0; i < midiDevices.size(); ++i)
-                if (midiDevices[i]->inDevice.get() != nullptr || midiDevices[i]->outDevice.get() != nullptr)
+                if (midiDevices[i]->inDevice != nullptr || midiDevices[i]->outDevice != nullptr)
                     selectedRows.addRange (Range<int> (i, i + 1));
 
             lastSelectedItems = selectedRows;
@@ -363,8 +376,11 @@ private:
     void sendToOutputs (const MidiMessage& msg)
     {
         for (auto midiOutput : midiOutputs)
-            if (midiOutput->outDevice.get() != nullptr)
+            if (midiOutput->outDevice != nullptr)
                 midiOutput->outDevice->sendMessageNow (msg);
+
+        if (auto* o = virtualOut.get())
+            o->sendMessageNow (msg);
     }
 
     //==============================================================================
@@ -422,7 +438,6 @@ private:
 
         if (hasDeviceListChanged (availableDevices, isInputDeviceList))
         {
-
             ReferenceCountedArray<MidiDeviceListEntry>& midiDevices
                 = isInputDeviceList ? midiInputs : midiOutputs;
 
@@ -453,13 +468,47 @@ private:
     //==============================================================================
     void addLabelAndSetStyle (Label& label)
     {
-        label.setFont (Font (15.00f, Font::plain));
+        label.setFont (FontOptions (15.00f, Font::plain));
         label.setJustificationType (Justification::centredLeft);
         label.setEditable (false, false, false);
         label.setColour (TextEditor::textColourId, Colours::black);
         label.setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
         addAndMakeVisible (label);
+    }
+
+    void updateDeviceLists()
+    {
+        for (const auto isInput : { true, false })
+            updateDeviceList (isInput);
+    }
+
+    void endpointsChanged() override
+    {
+        updateDeviceLists();
+    }
+
+    void virtualMidiServiceActiveChanged() override
+    {
+        if (ump::Endpoints::getInstance()->isVirtualMidiBytestreamServiceActive())
+        {
+            if (virtualIn == nullptr || virtualOut == nullptr)
+                updateVirtualPorts();
+        }
+        else
+        {
+            virtualIn = nullptr;
+            virtualOut = nullptr;
+        }
+    }
+
+    void updateVirtualPorts()
+    {
+        virtualIn = MidiInput::createNewDevice ("MidiDemo Virtual In", this);
+        virtualOut = MidiOutput::createNewDevice ("MidiDemo Virtual Out");
+
+        if (virtualIn != nullptr)
+            virtualIn->start();
     }
 
     //==============================================================================
@@ -472,11 +521,14 @@ private:
     TextEditor midiMonitor  { "MIDI Monitor" };
     TextButton pairButton   { "MIDI Bluetooth devices..." };
 
-    std::unique_ptr<MidiDeviceListBox> midiInputSelector, midiOutputSelector;
     ReferenceCountedArray<MidiDeviceListEntry> midiInputs, midiOutputs;
+    std::unique_ptr<MidiDeviceListBox> midiInputSelector, midiOutputSelector;
 
     CriticalSection midiMonitorLock;
     Array<MidiMessage> incomingMessages;
+
+    std::unique_ptr<MidiInput> virtualIn;
+    std::unique_ptr<MidiOutput> virtualOut;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiDemo)

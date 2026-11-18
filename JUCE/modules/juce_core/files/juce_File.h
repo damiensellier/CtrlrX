@@ -1,35 +1,45 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
-   without fee is hereby granted provided that the above copyright notice and
-   this permission notice appear in all copies.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
+
+   Or:
+
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
 
-#if ! DOXYGEN && (JUCE_MAC || JUCE_IOS)
- #if __LP64__
-  using OSType = unsigned int;
- #else
-  using OSType = unsigned long;
- #endif
-#endif
-
 namespace juce
 {
+
+/** @cond */
+#if JUCE_MAC || JUCE_IOS
+ using OSType = unsigned int;
+#endif
+/** @endcond */
 
 //==============================================================================
 /**
@@ -45,7 +55,7 @@ namespace juce
 
     @tags{Core}
 */
-class JUCE_API  File 
+class JUCE_API  File final
 {
 public:
     //==============================================================================
@@ -158,10 +168,10 @@ public:
 
     /** Returns the last section of the pathname.
 
-        Returns just the  part of the path - e.g. if the whole path
+        Returns just the final part of the path - e.g. if the whole path
         is "/moose/fish/foo.txt" this will return "foo.txt".
 
-        For a directory, it returns the  part of the path - e.g. for the
+        For a directory, it returns the final part of the path - e.g. for the
         directory "/moose/fish" it'll return "fish".
 
         If the filename begins with a dot, it'll return the whole filename, e.g. for
@@ -346,7 +356,16 @@ public:
     */
     bool hasWriteAccess() const;
 
+    /** Checks whether a file can be read.
+
+        @returns    true if it's possible to read this file.
+    */
+    bool hasReadAccess() const;
+
     /** Changes the write-permission of a file or directory.
+
+        Note that on Windows, there is no notion of a directory itself being read-only or not, and
+        the function will always return true when called with the non-recursive option.
 
         @param shouldBeReadOnly     whether to add or remove write-permission
         @param applyRecursively     if the file is a directory and this is true, it will
@@ -381,21 +400,21 @@ public:
     //==============================================================================
     /** Returns the last modification time of this file.
 
-        @returns    the time, or an invalid time if the file doesn't exist.
+        @returns    the time, or the Unix Epoch if the file doesn't exist.
         @see setLastModificationTime, getLastAccessTime, getCreationTime
     */
     Time getLastModificationTime() const;
 
     /** Returns the last time this file was accessed.
 
-        @returns    the time, or an invalid time if the file doesn't exist.
+        @returns    the time, or the Unix Epoch if the file doesn't exist.
         @see setLastAccessTime, getLastModificationTime, getCreationTime
     */
     Time getLastAccessTime() const;
 
     /** Returns the time that this file was created.
 
-        @returns    the time, or an invalid time if the file doesn't exist.
+        @returns    the time, or the Unix Epoch if the file doesn't exist.
         @see getLastModificationTime, getLastAccessTime
     */
     Time getCreationTime() const;
@@ -508,15 +527,21 @@ public:
         Also note that on some OSes (e.g. Windows), moving files between different
         volumes may not be possible.
 
+        This function will often fail to move directories because of the ambiguities
+        about merging existing directories. Use copyDirectoryTo() and deleteRecursively()
+        in these situations.
+
         @returns    true if the operation succeeds
     */
     bool moveFileTo (const File& targetLocation) const;
 
     /** Copies a file.
 
-        Tries to copy a file to a different location.
-        If the target file already exists, this will attempt to delete it first, and
-        will fail if this can't be done.
+        Tries to copy a file to a different location. If the target file already exists,
+        this will attempt to delete it first, and will fail if this can't be done.
+
+        Note that the target file isn't the directory to put it in, it's the actual
+        filename that you want the new file to have.
 
         @returns    true if the operation succeeds
     */
@@ -560,6 +585,23 @@ public:
         ignoreHiddenFiles           = 4     /**< Add this flag to avoid returning any hidden files in the results. */
     };
 
+    enum class FollowSymlinks
+    {
+        /** Requests that a file system traversal should not follow any symbolic links. */
+        no,
+
+        /** Requests that a file system traversal may follow symbolic links, but should attempt to
+            skip any symbolic links to directories that may cause a cycle.
+        */
+        noCycles,
+
+        /** Requests that a file system traversal follow all symbolic links. Use with care, as this
+            may produce inconsistent results, or fail to terminate, if the filesystem contains cycles
+            due to symbolic links.
+        */
+        yes
+    };
+
     /** Searches this directory for files matching a wildcard pattern.
 
         Assuming that this file is a directory, this method will search it
@@ -572,13 +614,15 @@ public:
         @param searchRecursively        if true, all subdirectories will be recursed into to do
                                         an exhaustive search
         @param wildCardPattern          the filename pattern to search for, e.g. "*.txt"
+        @param followSymlinks           the method that should be used to handle symbolic links
         @returns                        the set of files that were found
 
         @see getNumberOfChildFiles, RangedDirectoryIterator
     */
     Array<File> findChildFiles (int whatToLookFor,
                                 bool searchRecursively,
-                                const String& wildCardPattern = "*") const;
+                                const String& wildCardPattern = "*",
+                                FollowSymlinks followSymlinks = FollowSymlinks::yes) const;
 
     /** Searches inside a directory for files matching a wildcard pattern.
         Note that there's a newer, better version of this method which returns the results
@@ -586,7 +630,8 @@ public:
         mainly for legacy code to use.
     */
     int findChildFiles (Array<File>& results, int whatToLookFor,
-                        bool searchRecursively, const String& wildCardPattern = "*") const;
+                        bool searchRecursively, const String& wildCardPattern = "*",
+                        FollowSymlinks followSymlinks = FollowSymlinks::yes) const;
 
     /** Searches inside a directory and counts how many files match a wildcard pattern.
 
@@ -711,7 +756,7 @@ public:
         the file first and then re-writing it, it creates a new temporary file,
         writes the data to that, and then moves the new file to replace the existing
         file. This means that if the power gets pulled out or something crashes,
-        you're a lot less likely to end up with a corrupted or unfinished file..
+        you're a lot less likely to end up with a corrupted or unfinished file.
 
         Returns true if the operation succeeds, or false if it fails.
 
@@ -746,7 +791,7 @@ public:
         the file first and then re-writing it, it creates a new temporary file,
         writes the text to that, and then moves the new file to replace the existing
         file. This means that if the power gets pulled out or something crashes,
-        you're a lot less likely to end up with an empty file..
+        you're a lot less likely to end up with an empty file.
 
         For an explanation of the parameters here, see the appendText() method.
 
@@ -862,7 +907,8 @@ public:
             On Windows, this might be "\Documents and Settings\username\Application Data".
             On the Mac, it might be "~/Library". If you're going to store your settings in here,
             always create your own sub-folder to put them in, to avoid making a mess.
-            On GNU/Linux it is "~/.config".
+            On GNU/Linux it is "~/.config" and you may need to create the directory before
+            using it.
         */
         userApplicationDataDirectory,
 
@@ -942,7 +988,10 @@ public:
 
             @see globalApplicationsDirectory
         */
-        globalApplicationsDirectoryX86
+        globalApplicationsDirectoryX86,
+
+        /** On a Windows machine returns the %LOCALAPPDATA% folder. */
+        windowsLocalAppData
        #endif
     };
 
@@ -1033,7 +1082,7 @@ public:
     bool isSymbolicLink() const;
 
     /** If this file is a link or alias, this returns the file that it points to.
-        If the file isn't actually link, it'll just return itself.
+        If the file isn't actually a link, it'll just return itself.
     */
     File getLinkedTarget() const;
 
@@ -1074,6 +1123,17 @@ public:
     void addToDock() const;
    #endif
 
+   #if JUCE_MAC || JUCE_IOS
+    /** Returns the path to the container shared by all apps with the provided app group ID.
+
+        You *must* pass one of the app group IDs listed in your app's entitlements file.
+
+        On failure, this function may return a non-existent file, so you should check
+        that the path exists and is writable before trying to use it.
+    */
+    static File getContainerForSecurityApplicationGroupIdentifier (const String& appGroup);
+   #endif
+
     //==============================================================================
     /** Comparator for files */
     struct NaturalFileComparator
@@ -1095,14 +1155,18 @@ public:
         bool foldersFirst;
     };
 
+   #if JUCE_ALLOW_STATIC_NULL_VARIABLES
+    /** @cond */
     /* These static objects are deprecated because it's too easy to accidentally use them indirectly
        during a static constructor, which leads to very obscure order-of-initialisation bugs.
        Use File::getSeparatorChar() and File::getSeparatorString(), and instead of File::nonexistent,
        just use File() or {}.
     */
-    JUCE_DEPRECATED_STATIC (static const juce_wchar separator;)
-    JUCE_DEPRECATED_STATIC (static const StringRef separatorString;)
-    JUCE_DEPRECATED_STATIC (static const File nonexistent;)
+    [[deprecated]] static const juce_wchar separator;
+    [[deprecated]] static const StringRef separatorString;
+    [[deprecated]] static const File nonexistent;
+    /** @endcond */
+   #endif
 
 private:
     //==============================================================================
@@ -1110,6 +1174,7 @@ private:
 
     static String parseAbsolutePath (const String&);
     String getPathUpToLastSlash() const;
+    bool isNonEmptyDirectory() const;
 
     Result createDirectoryInternal (const String&) const;
     bool copyInternal (const File&) const;

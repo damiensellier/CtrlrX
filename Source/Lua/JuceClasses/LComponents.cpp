@@ -315,7 +315,8 @@ void LComponent::wrapForLua (lua_State *L)
 			//.def("localAreaToGlobal", &Component::localAreaToGlobal)
 			.def("setTopLeftPosition", (void (Component::*)(int,int))&Component::setTopLeftPosition)
 			.def("setTopLeftPosition", (void (Component::*)(const Point<int>))&Component::setTopLeftPosition)
-			.def("setTopRightPosition", &Component::setTopRightPosition)
+			//.def("setTopRightPosition", &Component::setTopRightPosition)
+            .def("setTopRightPosition", (void (Component::*)(int, int))&Component::setTopRightPosition)
 			.def("setSize", &Component::setSize)
 			.def("setBounds", (void (Component::*)(int,int,int,int))&Component::setBounds)
 			.def("setBounds", (void (Component::*)(const Rectangle<int>))&Component::setBounds)
@@ -358,7 +359,7 @@ void LComponent::wrapForLua (lua_State *L)
 			.def("setInterceptsMouseClicks", &Component::setInterceptsMouseClicks)
 			.def("getInterceptsMouseClicks", &Component::getInterceptsMouseClicks)
 			.def("contains", (bool (Component::*)(const Point<int>))&Component::contains)
-			.def("reallyContains", &Component::reallyContains)
+            .def("reallyContains", (bool (Component::*)(Point<int>, bool)) &Component::reallyContains)
 			.def("getComponentAt", (Component *(Component::*)(int,int))&Component::getComponentAt)
 			.def("getComponentAt", (Component *(Component::*)(const Point<int>))&Component::getComponentAt)
 			.def("repaint", (void (Component::*)(void))&Component::repaint)
@@ -385,7 +386,6 @@ void LComponent::wrapForLua (lua_State *L)
 			.def("grabKeyboardFocus", &Component::grabKeyboardFocus)
 			.def("hasKeyboardFocus", &Component::hasKeyboardFocus)
 			.def("moveKeyboardFocusToSibling", &Component::moveKeyboardFocusToSibling)
-			.def("createFocusTraverser", &Component::createFocusTraverser)
 			.def("getExplicitFocusOrder", &Component::getExplicitFocusOrder)
 			.def("setExplicitFocusOrder", &Component::setExplicitFocusOrder)
 			.def("setFocusContainer", &Component::setFocusContainer)
@@ -1311,7 +1311,7 @@ int LookAndFeelBase::getDefaultMenuBarHeight()
 	TRY_CALL_RET_NOP(getDefaultMenuBarHeight, int, 0);
 }
 
-DropShadower* LookAndFeelBase::createDropShadowerForComponent(Component* component)
+std::unique_ptr<DropShadower> LookAndFeelBase::createDropShadowerForComponent(Component& component)
 {
 	using namespace luabind;
 
@@ -1321,12 +1321,12 @@ DropShadower* LookAndFeelBase::createDropShadowerForComponent(Component* compone
         {
             DropShadower *s = call_function<DropShadower*>(
                 methods["createDropShadowerForComponent"],
-                component
+                &component
             );
 
             if (s != nullptr)
             {
-                return (s);
+                return std::unique_ptr<DropShadower> (s);
             }
 
             return (LookAndFeel_V2::createDropShadowerForComponent(component));
@@ -1760,7 +1760,8 @@ void LTextEditor::wrapForLua (lua_State *L)
 			.def("setHighlightedRegion", &TextEditor::setHighlightedRegion)
 			.def("getHighlightedRegion", &TextEditor::getHighlightedRegion)
 			.def("getHighlightedText", &TextEditor::getHighlightedText)
-			.def("getTextIndexAt", &TextEditor::getTextIndexAt)
+				.def("getTextIndexAt", (int (TextEditor::*)(int, int) const) &TextEditor::getTextIndexAt)
+				.def("getTextIndexAt", (int (TextEditor::*)(Point<int>) const) &TextEditor::getTextIndexAt)
 			.def("getTotalNumChars", &TextEditor::getTotalNumChars)
 			.def("getTextWidth", &TextEditor::getTextWidth)
 			.def("setIndents", &TextEditor::setIndents)

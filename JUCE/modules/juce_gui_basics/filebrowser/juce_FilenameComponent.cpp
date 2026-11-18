@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -70,11 +79,11 @@ void FilenameComponent::resized()
     getLookAndFeel().layoutFilenameComponent (*this, &filenameBox, browseButton.get());
 }
 
-KeyboardFocusTraverser* FilenameComponent::createFocusTraverser()
+std::unique_ptr<ComponentTraverser> FilenameComponent::createKeyboardFocusTraverser()
 {
     // This prevents the sub-components from grabbing focus if the
     // FilenameComponent has been set to refuse focus.
-    return getWantsKeyboardFocus() ? Component::createFocusTraverser() : nullptr;
+    return getWantsKeyboardFocus() ? Component::createKeyboardFocusTraverser() : nullptr;
 }
 
 void FilenameComponent::setBrowseButtonText (const String& newBrowseButtonText)
@@ -114,22 +123,22 @@ File FilenameComponent::getLocationToBrowse()
 
 void FilenameComponent::showChooser()
 {
-   #if JUCE_MODAL_LOOPS_PERMITTED
-    FileChooser fc (isDir ? TRANS ("Choose a new directory")
-                          : TRANS ("Choose a new file"),
-                    getLocationToBrowse(),
-                    wildcard);
+    chooser = std::make_unique<FileChooser> (isDir ? TRANS ("Choose a new directory")
+                                                   : TRANS ("Choose a new file"),
+                                             getLocationToBrowse(),
+                                             wildcard);
 
-    if (isDir ? fc.browseForDirectory()
-              : (isSaving ? fc.browseForFileToSave (false)
-                          : fc.browseForFileToOpen()))
+    auto chooserFlags = isDir ? FileBrowserComponent::openMode | FileBrowserComponent::canSelectDirectories
+                              : FileBrowserComponent::canSelectFiles | (isSaving ? FileBrowserComponent::saveMode
+                                                                                 : FileBrowserComponent::openMode);
+
+    chooser->launchAsync (chooserFlags, [this] (const FileChooser&)
     {
-        setCurrentFile (fc.getResult(), true);
-    }
-   #else
-    ignoreUnused (isSaving);
-    jassertfalse; // needs rewriting to deal with non-modal environments
-   #endif
+        if (chooser->getResult() == File{})
+            return;
+
+        setCurrentFile (chooser->getResult(), true);
+    });
 }
 
 bool FilenameComponent::isInterestedInFileDrag (const StringArray&)

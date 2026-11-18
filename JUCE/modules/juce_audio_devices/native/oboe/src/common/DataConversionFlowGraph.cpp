@@ -20,17 +20,20 @@
 #include "DataConversionFlowGraph.h"
 #include "SourceFloatCaller.h"
 #include "SourceI16Caller.h"
+#include "SourceI24Caller.h"
+#include "SourceI32Caller.h"
 
-#include <flowgraph/ClipToRange.h>
 #include <flowgraph/MonoToMultiConverter.h>
 #include <flowgraph/MultiToMonoConverter.h>
 #include <flowgraph/RampLinear.h>
 #include <flowgraph/SinkFloat.h>
 #include <flowgraph/SinkI16.h>
 #include <flowgraph/SinkI24.h>
+#include <flowgraph/SinkI32.h>
 #include <flowgraph/SourceFloat.h>
 #include <flowgraph/SourceI16.h>
 #include <flowgraph/SourceI24.h>
+#include <flowgraph/SourceI32.h>
 #include <flowgraph/SampleRateConverter.h>
 
 using namespace oboe;
@@ -89,14 +92,14 @@ Result DataConversionFlowGraph::configure(AudioStream *sourceStream, AudioStream
     int32_t sinkSampleRate = sinkStream->getSampleRate();
     int32_t sinkFramesPerCallback = sinkStream->getFramesPerDataCallback();
 
-    LOGI("%s() flowgraph converts channels: %d to %d, format: %d to %d"
-         ", rate: %d to %d, cbsize: %d to %d, qual = %d",
+    LOGI("%s() flowgraph converts channels: %d to %d, format: %s to %s"
+            ", rate: %d to %d, cbsize: %d to %d, qual = %s",
             __func__,
             sourceChannelCount, sinkChannelCount,
-            sourceFormat, sinkFormat,
+            oboe::convertToText(sourceFormat), oboe::convertToText(sinkFormat),
             sourceSampleRate, sinkSampleRate,
             sourceFramesPerCallback, sinkFramesPerCallback,
-            sourceStream->getSampleRateConversionQuality());
+            oboe::convertToText(sourceStream->getSampleRateConversionQuality()));
 
     // Source
     // IF OUTPUT and using a callback then call back to the app using a SourceCaller.
@@ -116,8 +119,16 @@ Result DataConversionFlowGraph::configure(AudioStream *sourceStream, AudioStream
                 mSourceCaller = std::make_unique<SourceI16Caller>(sourceChannelCount,
                                                                   actualSourceFramesPerCallback);
                 break;
+            case AudioFormat::I24:
+                mSourceCaller = std::make_unique<SourceI24Caller>(sourceChannelCount,
+                                                                  actualSourceFramesPerCallback);
+                break;
+            case AudioFormat::I32:
+                mSourceCaller = std::make_unique<SourceI32Caller>(sourceChannelCount,
+                                                                  actualSourceFramesPerCallback);
+                break;
             default:
-                LOGE("%s() Unsupported source caller format = %d", __func__, sourceFormat);
+                LOGE("%s() Unsupported source caller format = %d", __func__, static_cast<int>(sourceFormat));
                 return Result::ErrorIllegalArgument;
         }
         mSourceCaller->setStream(sourceStream);
@@ -132,8 +143,14 @@ Result DataConversionFlowGraph::configure(AudioStream *sourceStream, AudioStream
             case AudioFormat::I16:
                 mSource = std::make_unique<SourceI16>(sourceChannelCount);
                 break;
+            case AudioFormat::I24:
+                mSource = std::make_unique<SourceI24>(sourceChannelCount);
+                break;
+            case AudioFormat::I32:
+                mSource = std::make_unique<SourceI32>(sourceChannelCount);
+                break;
             default:
-                LOGE("%s() Unsupported source format = %d", __func__, sourceFormat);
+                LOGE("%s() Unsupported source format = %d", __func__, static_cast<int>(sourceFormat));
                 return Result::ErrorIllegalArgument;
         }
         if (isInput) {
@@ -202,8 +219,14 @@ Result DataConversionFlowGraph::configure(AudioStream *sourceStream, AudioStream
         case AudioFormat::I16:
             mSink = std::make_unique<SinkI16>(sinkChannelCount);
             break;
+        case AudioFormat::I24:
+            mSink = std::make_unique<SinkI24>(sinkChannelCount);
+            break;
+        case AudioFormat::I32:
+            mSink = std::make_unique<SinkI32>(sinkChannelCount);
+            break;
         default:
-            LOGE("%s() Unsupported sink format = %d", __func__, sinkFormat);
+            LOGE("%s() Unsupported sink format = %d", __func__, static_cast<int>(sinkFormat));
             return Result::ErrorIllegalArgument;;
     }
     lastOutput->connect(&mSink->input);

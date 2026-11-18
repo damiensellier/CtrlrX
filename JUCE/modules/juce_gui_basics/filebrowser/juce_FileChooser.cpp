@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -27,7 +36,8 @@ namespace juce
 {
 
 //==============================================================================
-class FileChooser::NonNative    : public FileChooser::Pimpl
+class FileChooser::NonNative final : public std::enable_shared_from_this<NonNative>,
+                                     public FileChooser::Pimpl
 {
 public:
     NonNative (FileChooser& fileChooser, int flags, FilePreviewComponent* preview)
@@ -50,7 +60,15 @@ public:
     void launch() override
     {
         dialogBox.centreWithDefaultSize (nullptr);
-        dialogBox.enterModalState (true, ModalCallbackFunction::create ([this] (int r) { modalStateFinished (r); }), true);
+
+        const std::weak_ptr<NonNative> ref (shared_from_this());
+        auto* callback = ModalCallbackFunction::create ([ref] (int r)
+        {
+            if (auto locked = ref.lock())
+                locked->modalStateFinished (r);
+        });
+
+        dialogBox.enterModalState (true, callback, true);
     }
 
     void runModally() override
@@ -156,7 +174,7 @@ bool FileChooser::browseForDirectory()
 
 bool FileChooser::showDialog (const int flags, FilePreviewComponent* const previewComp)
 {
-    FocusRestorer focusRestorer;
+    detail::FocusRestorer focusRestorer;
 
     pimpl = createPimpl (flags, previewComp);
     pimpl->runModally();
@@ -183,12 +201,11 @@ void FileChooser::launchAsync (int flags, std::function<void (const FileChooser&
     pimpl->launch();
 }
 
-
 std::shared_ptr<FileChooser::Pimpl> FileChooser::createPimpl (int flags, FilePreviewComponent* previewComp)
 {
     results.clear();
 
-    // the preview component needs to be the right size before you pass it in here..
+    // the preview component needs to be the right size before you pass it in here
     jassert (previewComp == nullptr || (previewComp->getWidth() > 10
                                          && previewComp->getHeight() > 10));
 
@@ -251,16 +268,22 @@ URL FileChooser::getURLResult() const
 
 void FileChooser::finished (const Array<URL>& asyncResults)
 {
-     std::function<void (const FileChooser&)> callback;
-     std::swap (callback, asyncCallback);
+    const auto callback = std::exchange (asyncCallback, nullptr);
 
-     results = asyncResults;
+    results = asyncResults;
 
-     pimpl.reset();
+    pimpl.reset();
 
-     if (callback)
-         callback (*this);
+    if (callback)
+        callback (*this);
 }
+
+#if ! JUCE_ANDROID
+void FileChooser::registerCustomMimeTypeForFileExtension ([[maybe_unused]] const String& mimeType,
+                                                          [[maybe_unused]] const String& fileExtension)
+{
+}
+#endif
 
 //==============================================================================
 FilePreviewComponent::FilePreviewComponent() {}

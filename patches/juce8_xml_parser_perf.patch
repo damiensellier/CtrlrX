@@ -1,0 +1,81 @@
+# JUCE 8.0.12 -- make XML attribute parsing linear instead of O(n^2)
+#
+# Applies to: JUCE/modules/juce_core/xml/juce_XmlDocument.cpp
+# Documentation only: the change is already in the vendored JUCE tree, and CMake
+# does not apply this file. It equals
+#   git diff <pristine JUCE 8.0.12> HEAD -- JUCE/modules/juce_core/xml/juce_XmlDocument.cpp
+# Check from the repo root:  git apply -R --check patches/juce8_xml_parser_perf.patch
+#
+# XmlDocument::readQuotedString() built each attribute value with repeated
+# String::appendCharPointer() calls. Each call is O(n) -- it locates the end of
+# the accumulated text by scanning for the terminator, and upstream reallocates
+# the buffer to the exact size -- so a value assembled from k chunks cost O(n^2).
+# Panels that keep large payloads in attributes (base64 images, entity-escaped
+# Lua of several MB) therefore spend most of their parse time here: measured
+# 30.7 s for a 26.9 MB of attributes on a 29 MB panel.
+#
+# The patch accumulates into a MemoryOutputStream and converts once, which
+# measured 0.19 s for the same document (~160x on this function).
+#
+# The code is the 5.6.37 fix (#341, Francois Rossi), carried to JUCE 8.0.12.
+# It writes the input bytes directly, which assumes JUCE_STRING_UTF_TYPE == 8
+# (JUCE's default; CtrlrX does not change it). This header text comes from
+# John Goodland's patches/juce_xml_parser_perf.patch for the same fix.
+#
+diff --git a/JUCE/modules/juce_core/xml/juce_XmlDocument.cpp b/JUCE/modules/juce_core/xml/juce_XmlDocument.cpp
+index 4d40e0b7c..c4ea132fc 100644
+--- a/JUCE/modules/juce_core/xml/juce_XmlDocument.cpp
++++ b/JUCE/modules/juce_core/xml/juce_XmlDocument.cpp
+@@ -353,6 +353,7 @@ void XmlDocument::skipNextWhiteSpace()
+ void XmlDocument::readQuotedString (String& result)
+ {
+     auto quote = readNextChar();
++    MemoryOutputStream accumulated;
+ 
+     while (! outOfData)
+     {
+@@ -365,26 +366,31 @@ void XmlDocument::readQuotedString (String& result)
+ 
+         if (c == '&')
+         {
+-            readEntity (result);
++            String entityText;
++            readEntity (entityText);
++            if (entityText.isNotEmpty())
++                accumulated.write (entityText.toRawUTF8(), (size_t) entityText.getNumBytesAsUTF8());
+         }
+         else
+         {
+             auto start = input;
+-
+             for (;;)
+             {
+                 auto character = *input;
+ 
+                 if (character == quote)
+                 {
+-                    result.appendCharPointer (start, input);
++                    if (input.getAddress() != start.getAddress())
++                        accumulated.write (start.getAddress(), (size_t) (input.getAddress() - start.getAddress()));
+                     ++input;
++                    result = accumulated.toString();
+                     return;
+                 }
+ 
+                 if (character == '&')
+                 {
+-                    result.appendCharPointer (start, input);
++                    if (input.getAddress() != start.getAddress())
++                        accumulated.write (start.getAddress(), (size_t) (input.getAddress() - start.getAddress()));
+                     break;
+                 }
+ 
+@@ -399,6 +405,8 @@ void XmlDocument::readQuotedString (String& result)
+             }
+         }
+     }
++
++    result = accumulated.toString();
+ }
+ 
+ XmlElement* XmlDocument::readNextElement (const bool alsoParseSubElements)

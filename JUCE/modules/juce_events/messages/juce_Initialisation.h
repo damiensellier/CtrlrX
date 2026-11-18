@@ -1,21 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
-   without fee is hereby granted provided that the above copyright notice and
-   this permission notice appear in all copies.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
+
+   Or:
+
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -66,7 +78,7 @@ JUCE_API void JUCE_CALLTYPE  shutdownJuce_GUI();
 
     @tags{Events}
 */
-class JUCE_API  ScopedJuceInitialiser_GUI  
+class JUCE_API  ScopedJuceInitialiser_GUI  final
 {
 public:
     /** The constructor simply calls initialiseJuce_GUI(). */
@@ -74,6 +86,9 @@ public:
 
     /** The destructor simply calls shutdownJuce_GUI(). */
     ~ScopedJuceInitialiser_GUI();
+
+    JUCE_DECLARE_NON_COPYABLE (ScopedJuceInitialiser_GUI)
+    JUCE_DECLARE_NON_MOVEABLE (ScopedJuceInitialiser_GUI)
 };
 
 
@@ -84,11 +99,14 @@ public:
 
     See the JUCEApplication and JUCEApplicationBase class documentation for more details.
 */
-#ifdef DOXYGEN
+#if DOXYGEN
  #define START_JUCE_APPLICATION(AppClass)
 #else
  #if JUCE_WINDOWS && ! defined (_CONSOLE)
-  #define JUCE_MAIN_FUNCTION       int __stdcall WinMain (struct HINSTANCE__*, struct HINSTANCE__*, char*, int)
+  #define JUCE_MAIN_FUNCTION                                                        \
+      JUCE_BEGIN_IGNORE_WARNINGS_MSVC (28251)                                       \
+      int __stdcall WinMain (struct HINSTANCE__*, struct HINSTANCE__*, char*, int)  \
+      JUCE_END_IGNORE_WARNINGS_MSVC
   #define JUCE_MAIN_FUNCTION_ARGS
  #else
   #define JUCE_MAIN_FUNCTION       int main (int argc, char* argv[])
@@ -98,15 +116,19 @@ public:
  #if JUCE_IOS
 
   #define JUCE_CREATE_APPLICATION_DEFINE(AppClass) \
+    JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wmissing-prototypes") \
     juce::JUCEApplicationBase* juce_CreateApplication() { return new AppClass(); } \
-    void* juce_GetIOSCustomDelegateClass()              { return nullptr; }
+    void* juce_GetIOSCustomDelegateClass()              { return nullptr; } \
+    JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
   #define JUCE_CREATE_APPLICATION_DEFINE_CUSTOM_DELEGATE(AppClass, DelegateClass) \
+    JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wmissing-prototypes") \
     juce::JUCEApplicationBase* juce_CreateApplication() { return new AppClass(); } \
-    void* juce_GetIOSCustomDelegateClass()              { return [DelegateClass class]; }
+    void* juce_GetIOSCustomDelegateClass()              { return [DelegateClass class]; } \
+    JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
   #define JUCE_MAIN_FUNCTION_DEFINITION \
-    extern "C" JUCE_MAIN_FUNCTION \
+    JUCE_MAIN_FUNCTION \
     { \
        juce::JUCEApplicationBase::createInstance = &juce_CreateApplication; \
        juce::JUCEApplicationBase::iOSCustomDelegate = juce_GetIOSCustomDelegateClass(); \
@@ -127,7 +149,7 @@ public:
     juce::JUCEApplicationBase* juce_CreateApplication() { return new AppClass(); }
 
   #define JUCE_MAIN_FUNCTION_DEFINITION \
-    extern "C" JUCE_MAIN_FUNCTION \
+    JUCE_MAIN_FUNCTION \
     { \
        juce::JUCEApplicationBase::createInstance = &juce_CreateApplication; \
        return juce::JUCEApplicationBase::main (JUCE_MAIN_FUNCTION_ARGS); \
@@ -150,8 +172,10 @@ public:
  #else
 
   #define START_JUCE_APPLICATION(AppClass) \
+     JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wmissing-prototypes") \
      JUCE_CREATE_APPLICATION_DEFINE(AppClass) \
-     JUCE_MAIN_FUNCTION_DEFINITION
+     JUCE_MAIN_FUNCTION_DEFINITION \
+     JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 
   #if JUCE_IOS
     /**

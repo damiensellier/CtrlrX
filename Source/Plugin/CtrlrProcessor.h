@@ -170,7 +170,33 @@ class CtrlrProcessor : public AudioProcessor, public ChangeBroadcaster
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrProcessor);
 };
 
+/** One host parameter slot. JUCE 8 removed AudioProcessor::setParameterNotifyingHost(), so the
+    host can only be told about a value change through a registered AudioProcessorParameter.
+    Each slot answers like JUCE's LegacyAudioParameter did, so the host sees the same parameter
+    IDs, names and value texts as before. It calls only CtrlrProcessor's own overrides: the
+    AudioProcessor defaults of the other per-index methods ask getParameters()[index], i.e. this
+    slot again. */
+class CtrlrParameter : public HostedAudioProcessorParameter
+{
+    public:
+        CtrlrParameter(CtrlrProcessor &owner, int index);
 
+        float getValue() const override;
+        void setValue(float newValue) override;
+        float getDefaultValue() const override;
+        String getName(int maximumStringLength) const override;
+        String getLabel() const override;
+        String getCurrentValueAsText() const override;
+        String getText(float normalisedValue, int maximumStringLength) const override;
+        float getValueForText(const String &text) const override;
+        String getParameterID() const override;
+
+    private:
+        CtrlrProcessor &owner;
+        const int index;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrParameter);
+};
 
 class PluginLoggerVst3 { // Added v5.6.32
 public:

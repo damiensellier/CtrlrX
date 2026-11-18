@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -28,14 +37,14 @@
 #include "../../Utility/Helpers/jucer_TranslationHelpers.h"
 
 //==============================================================================
-class TranslationToolComponent  : public Component
+class TranslationToolComponent final : public Component
 {
 public:
     TranslationToolComponent()
         : editorOriginal (documentOriginal, nullptr),
-          editorPre (documentPre, nullptr),
-          editorPost (documentPost, nullptr),
-          editorResult (documentResult, nullptr)
+          editorPre      (documentPre,      nullptr),
+          editorPost     (documentPost,     nullptr),
+          editorResult   (documentResult,   nullptr)
     {
         instructionsLabel.setText (
             "This utility converts translation files to/from a format that can be passed to automatic translation tools."
@@ -114,17 +123,7 @@ public:
     }
 
 private:
-    CodeDocument documentOriginal, documentPre, documentPost, documentResult;
-    CodeEditorComponent editorOriginal, editorPre, editorPost, editorResult;
-
-    Label label1, label2, label3, label4;
-    Label instructionsLabel;
-
-    TextButton generateButton         { TRANS("Generate") };
-    TextButton scanProjectButton      { "Scan project for TRANS macros" };
-    TextButton scanFolderButton       { "Scan folder for TRANS macros" };
-    TextButton loadTranslationButton  { "Load existing translation file..."};
-
+    //==============================================================================
     void generate()
     {
         StringArray preStrings  (TranslationHelpers::breakApart (documentPre.getAllContent()));
@@ -132,10 +131,11 @@ private:
 
         if (postStrings.size() != preStrings.size())
         {
-            AlertWindow::showMessageBoxAsync (AlertWindow::WarningIcon,
-                                              TRANS("Error"),
-                                              TRANS("The pre- and post-translation text doesn't match!\n\n"
-                                                    "Perhaps it got mangled by the translator?"));
+            auto options = MessageBoxOptions::makeOptionsOk (MessageBoxIconType::WarningIcon,
+                                                             TRANS ("Error"),
+                                                             TRANS ("The pre- and post-translation text doesn't match!\n\n"
+                                                                    "Perhaps it got mangled by the translator?"));
+            messageBox = AlertWindow::showScopedAsync (options, nullptr);
             return;
         }
 
@@ -146,36 +146,49 @@ private:
     void scanProject()
     {
         if (Project* project = ProjucerApplication::getApp().mainWindowList.getFrontmostProject())
+        {
             setPreTranslationText (TranslationHelpers::getPreTranslationText (*project));
+        }
         else
-            AlertWindow::showMessageBoxAsync (AlertWindow::WarningIcon, "Translation Tool",
-                                              "This will only work when you have a project open!");
+        {
+            auto options = MessageBoxOptions::makeOptionsOk (MessageBoxIconType::WarningIcon,
+                                                             "Translation Tool",
+                                                             "This will only work when you have a project open!");
+            messageBox = AlertWindow::showScopedAsync (options, nullptr);
+        }
     }
 
     void scanFolder()
     {
-        FileChooser fc ("Choose the root folder to search for the TRANS macros",
-                        File(), "*");
+        chooser = std::make_unique<FileChooser> ("Choose the root folder to search for the TRANS macros",
+                                                 File(), "*");
+        auto chooserFlags = FileBrowserComponent::openMode | FileBrowserComponent::canSelectDirectories;
 
-        if (fc.browseForDirectory())
+        chooser->launchAsync (chooserFlags, [this] (const FileChooser& fc)
         {
+            if (fc.getResult() == File{})
+                return;
+
             StringArray strings;
             TranslationHelpers::scanFolderForTranslations (strings, fc.getResult());
-            setPreTranslationText (TranslationHelpers::mungeStrings(strings));
-        }
+            setPreTranslationText (TranslationHelpers::mungeStrings (strings));
+        });
     }
 
     void loadFile()
     {
-        FileChooser fc ("Choose a translation file to load",
-                        File(), "*");
+        chooser = std::make_unique<FileChooser> ("Choose a translation file to load", File(), "*");
+        auto chooserFlags = FileBrowserComponent::openMode | FileBrowserComponent::canSelectFiles;
 
-        if (fc.browseForFileToOpen())
+        chooser->launchAsync (chooserFlags, [this] (const FileChooser& fc)
         {
+            if (fc.getResult() == File{})
+                return;
+
             const LocalisedStrings loadedStrings (fc.getResult(), false);
             documentOriginal.replaceAllContent (fc.getResult().loadFileAsString().trim());
             setPreTranslationText (TranslationHelpers::getPreTranslationText (loadedStrings));
-        }
+        });
     }
 
     void setPreTranslationText (const String& text)
@@ -184,4 +197,19 @@ private:
         editorPre.grabKeyboardFocus();
         editorPre.selectAll();
     }
+
+    //==============================================================================
+    CodeDocument documentOriginal, documentPre, documentPost, documentResult;
+    CodeEditorComponent editorOriginal, editorPre, editorPost, editorResult;
+
+    Label label1, label2, label3, label4;
+    Label instructionsLabel;
+
+    TextButton generateButton        { TRANS ("Generate") },
+               scanProjectButton     { "Scan project for TRANS macros" },
+               scanFolderButton      { "Scan folder for TRANS macros" },
+               loadTranslationButton { "Load existing translation file..."};
+
+    std::unique_ptr<FileChooser> chooser;
+    ScopedMessageBox messageBox;
 };

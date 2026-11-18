@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -37,14 +46,14 @@ namespace juce
 
     @tags{Graphics}
 */
-class JUCE_API  TextLayout  
+class JUCE_API  TextLayout  final
 {
 private:
     template <typename Iterator>
     class DereferencingIterator
     {
     public:
-        using value_type = typename std::remove_reference<decltype(**std::declval<Iterator>())>::type;
+        using value_type = std::remove_reference_t<decltype (**std::declval<Iterator>())>;
         using difference_type = typename std::iterator_traits<Iterator>::difference_type;
         using pointer = value_type*;
         using reference = value_type&;
@@ -85,7 +94,7 @@ private:
         DereferencingIterator  operator++ (int) const { DereferencingIterator copy (*this); ++(*this); return copy; }
         DereferencingIterator  operator-- (int) const { DereferencingIterator copy (*this); --(*this); return copy; }
 
-        reference operator* () const { return **iterator; }
+        reference operator*()  const { return **iterator; }
         pointer   operator->() const { return  *iterator; }
 
     private:
@@ -145,9 +154,6 @@ public:
     {
     public:
         Glyph (int glyphCode, Point<float> anchor, float width) noexcept;
-        Glyph (const Glyph&) noexcept;
-        Glyph& operator= (const Glyph&) noexcept;
-        ~Glyph() noexcept;
 
         /** The code number of this glyph. */
         int glyphCode;
@@ -168,21 +174,18 @@ public:
     class JUCE_API  Run
     {
     public:
-        Run() noexcept;
-        Run (const Run&);
+        Run() = default;
         Run (Range<int> stringRange, int numGlyphsToPreallocate);
-        ~Run() noexcept;
 
         /** Returns the X position range which contains all the glyphs in this run. */
         Range<float> getRunBoundsX() const noexcept;
 
-        Font font;              /**< The run's font. */
-        Colour colour;          /**< The run's colour. */
-        Array<Glyph> glyphs;    /**< The glyphs in this run. */
-        Range<int> stringRange; /**< The character range that this run represents in the
-                                     original string that was used to create it. */
+        Font font { FontOptions{} };    /**< The run's font. */
+        Colour colour { 0xff000000 };   /**< The run's colour. */
+        Array<Glyph> glyphs;            /**< The glyphs in this run. */
+        Range<int> stringRange;         /**< The character range that this run represents in the
+                                             original string that was used to create it. */
     private:
-        Run& operator= (const Run&);
         JUCE_LEAK_DETECTOR (Run)
     };
 
@@ -191,11 +194,17 @@ public:
     class JUCE_API  Line
     {
     public:
-        Line() noexcept;
-        Line (const Line&);
+        Line() = default;
         Line (Range<int> stringRange, Point<float> lineOrigin,
               float ascent, float descent, float leading, int numRunsToPreallocate);
-        ~Line() noexcept;
+
+        Line (const Line&);
+        Line& operator= (const Line&);
+
+        Line (Line&&) noexcept = default;
+        Line& operator= (Line&&) noexcept = default;
+
+        ~Line() noexcept = default;
 
         /** Returns the X position range which contains all the glyphs in this line. */
         Range<float> getLineBoundsX() const noexcept;
@@ -206,14 +215,15 @@ public:
         /** Returns the smallest rectangle which contains all the glyphs in this line. */
         Rectangle<float> getLineBounds() const noexcept;
 
+        void swap (Line& other) noexcept;
+
         OwnedArray<Run> runs;           /**< The glyph-runs in this line. */
         Range<int> stringRange;         /**< The character range that this line represents in the
                                              original string that was used to create it. */
         Point<float> lineOrigin;        /**< The line's baseline origin. */
-        float ascent, descent, leading;
+        float ascent = 0.0f, descent = 0.0f, leading = 0.0f;
 
     private:
-        Line& operator= (const Line&);
         JUCE_LEAK_DETECTOR (Line)
     };
 
@@ -255,13 +265,58 @@ public:
     */
     void recalculateSize();
 
+    /** This convenience function adds an AttributedString to a TextLayout
+        and returns the bounding box of the text after shaping.
+
+        The returned bounding box is positioned with its origin at the left end of the text's
+        baseline.
+    */
+    static Rectangle<float> getStringBounds (const AttributedString& string)
+    {
+        TextLayout layout;
+        layout.createLayout (string, std::numeric_limits<float>::max());
+
+        if (layout.getNumLines() == 0)
+            return {};
+
+        return layout.getLine (0).getLineBounds();
+    }
+
+    /** This convenience function adds text to a TextLayout using the specified font
+        and returns the bounding box of the text after shaping.
+
+        The returned bounding box is positioned with its origin at the left end of the text's
+        baseline.
+    */
+    static Rectangle<float> getStringBounds (const Font& font, StringRef text)
+    {
+        AttributedString string;
+        string.append (text, font);
+        return getStringBounds (string);
+    }
+
+    /** This convenience function adds an AttributedString to a TextLayout
+        and returns the bounding box of the text after shaping.
+    */
+    static float getStringWidth (const AttributedString& string)
+    {
+        return getStringBounds (string).getWidth();
+    }
+
+    /** This convenience function adds text to a TextLayout using the specified font
+        and returns the width of the bounding box of the text after shaping.
+    */
+    static float getStringWidth (const Font& font, StringRef text)
+    {
+        return getStringBounds (font, text).getWidth();
+    }
+
 private:
     OwnedArray<Line> lines;
     float width, height;
     Justification justification;
 
     void createStandardLayout (const AttributedString&);
-    bool createNativeLayout (const AttributedString&);
 
     JUCE_LEAK_DETECTOR (TextLayout)
 };

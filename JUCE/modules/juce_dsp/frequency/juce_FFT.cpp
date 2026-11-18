@@ -1,31 +1,38 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
 
-namespace juce
-{
-namespace dsp
+namespace juce::dsp
 {
 
 struct FFT::Instance
@@ -79,7 +86,7 @@ struct FFT::EngineImpl  : public FFT::Engine
 
 //==============================================================================
 //==============================================================================
-struct FFTFallback  : public FFT::Instance
+struct FFTFallback final : public FFT::Instance
 {
     // this should have the least priority of all engines
     static constexpr int priority = -1;
@@ -105,7 +112,7 @@ struct FFTFallback  : public FFT::Instance
             return;
         }
 
-        const SpinLock::ScopedLockType sl(processLock);
+        const SpinLock::ScopedLockType sl (processLock);
 
         jassert (configForward != nullptr);
 
@@ -135,7 +142,9 @@ struct FFTFallback  : public FFT::Instance
 
         if (scratchSize < maxFFTScratchSpaceToAlloca)
         {
+            JUCE_BEGIN_IGNORE_WARNINGS_MSVC (6255)
             performRealOnlyForwardTransform (static_cast<Complex<float>*> (alloca (scratchSize)), d);
+            JUCE_END_IGNORE_WARNINGS_MSVC
         }
         else
         {
@@ -153,7 +162,9 @@ struct FFTFallback  : public FFT::Instance
 
         if (scratchSize < maxFFTScratchSpaceToAlloca)
         {
+            JUCE_BEGIN_IGNORE_WARNINGS_MSVC (6255)
             performRealOnlyInverseTransform (static_cast<Complex<float>*> (alloca (scratchSize)), d);
+            JUCE_END_IGNORE_WARNINGS_MSVC
         }
         else
         {
@@ -228,7 +239,7 @@ struct FFTFallback  : public FFT::Instance
                 for (int i = fftSize / 2; i < fftSize; ++i)
                 {
                     auto index = fftSize / 2 - (i - fftSize / 2);
-                    twiddleTable[i] = conj(twiddleTable[index]);
+                    twiddleTable[i] = conj (twiddleTable[index]);
                 }
             }
 
@@ -315,13 +326,17 @@ struct FFTFallback  : public FFT::Instance
                 default:  jassertfalse; break;
             }
 
+            JUCE_BEGIN_IGNORE_WARNINGS_MSVC (6255)
             auto* scratch = static_cast<Complex<float>*> (alloca ((size_t) factor.radix * sizeof (Complex<float>)));
+            JUCE_END_IGNORE_WARNINGS_MSVC
 
             for (int i = 0; i < factor.length; ++i)
             {
                 for (int k = i, q1 = 0; q1 < factor.radix; ++q1)
                 {
+                    JUCE_BEGIN_IGNORE_WARNINGS_MSVC (6386)
                     scratch[q1] = data[k];
+                    JUCE_END_IGNORE_WARNINGS_MSVC
                     k += factor.length;
                 }
 
@@ -337,7 +352,9 @@ struct FFTFallback  : public FFT::Instance
                         if (twiddleIndex >= fftSize)
                             twiddleIndex -= fftSize;
 
+                        JUCE_BEGIN_IGNORE_WARNINGS_MSVC (6385)
                         data[k] += scratch[q] * twiddleTable[twiddleIndex];
+                        JUCE_END_IGNORE_WARNINGS_MSVC
                     }
 
                     k += factor.length;
@@ -424,7 +441,7 @@ FFT::EngineImpl<FFTFallback> fftFallback;
 //==============================================================================
 //==============================================================================
 #if (JUCE_MAC || JUCE_IOS) && JUCE_USE_VDSP_FRAMEWORK
-struct AppleFFT  : public FFT::Instance
+struct AppleFFT final : public FFT::Instance
 {
     static constexpr int priority = 5;
 
@@ -723,7 +740,7 @@ FFT::EngineImpl<FFTWImpl> fftwEngine;
 //==============================================================================
 //==============================================================================
 #if JUCE_DSP_USE_INTEL_MKL
-struct IntelFFT  : public FFT::Instance
+struct IntelFFT final : public FFT::Instance
 {
     static constexpr int priority = 8;
 
@@ -762,7 +779,7 @@ struct IntelFFT  : public FFT::Instance
         : order (orderToUse), c2c (c2cToUse), c2r (cr2ToUse)
     {}
 
-    ~IntelFFT()
+    ~IntelFFT() override
     {
         DftiFreeDescriptor (&c2c);
         DftiFreeDescriptor (&c2r);
@@ -809,7 +826,7 @@ FFT::EngineImpl<IntelFFT> fftwEngine;
 // setting at 'Project' > 'Properties' > 'Configuration Properties' > 'Intel
 // Performance Libraries' > 'Use Intel(R) IPP'
 #if _IPP_SEQUENTIAL_STATIC || _IPP_SEQUENTIAL_DYNAMIC || _IPP_PARALLEL_STATIC || _IPP_PARALLEL_DYNAMIC
-class IntelPerformancePrimitivesFFT : public FFT::Instance
+class IntelPerformancePrimitivesFFT final : public FFT::Instance
 {
 public:
     static constexpr auto priority = 9;
@@ -894,9 +911,6 @@ private:
             if (Traits::init (&specPtr, order, flag, hint, specBuf.get(), initBuf.get()) != ippStsNoErr)
                 return {};
 
-            if (reinterpret_cast<const Ipp8u*> (specPtr) != specBuf.get())
-                return {};
-
             return { std::move (specBuf), IppPtr (ippsMalloc_8u (workSize)), specPtr };
         }
 
@@ -962,10 +976,10 @@ void FFT::perform (const Complex<float>* input, Complex<float>* output, bool inv
         engine->perform (input, output, inverse);
 }
 
-void FFT::performRealOnlyForwardTransform (float* inputOutputData, bool ignoreNeagtiveFreqs) const noexcept
+void FFT::performRealOnlyForwardTransform (float* inputOutputData, bool ignoreNegativeFreqs) const noexcept
 {
     if (engine != nullptr)
-        engine->performRealOnlyForwardTransform (inputOutputData, ignoreNeagtiveFreqs);
+        engine->performRealOnlyForwardTransform (inputOutputData, ignoreNegativeFreqs);
 }
 
 void FFT::performRealOnlyInverseTransform (float* inputOutputData) const noexcept
@@ -974,19 +988,20 @@ void FFT::performRealOnlyInverseTransform (float* inputOutputData) const noexcep
         engine->performRealOnlyInverseTransform (inputOutputData);
 }
 
-void FFT::performFrequencyOnlyForwardTransform (float* inputOutputData) const noexcept
+void FFT::performFrequencyOnlyForwardTransform (float* inputOutputData, bool ignoreNegativeFreqs) const noexcept
 {
     if (size == 1)
         return;
 
-    performRealOnlyForwardTransform (inputOutputData);
+    performRealOnlyForwardTransform (inputOutputData, ignoreNegativeFreqs);
     auto* out = reinterpret_cast<Complex<float>*> (inputOutputData);
 
-    for (int i = 0; i < size; ++i)
+    const auto limit = ignoreNegativeFreqs ? (size / 2) + 1 : size;
+
+    for (int i = 0; i < limit; ++i)
         inputOutputData[i] = std::abs (out[i]);
 
-    zeromem (&inputOutputData[size], static_cast<size_t> (size) * sizeof (float));
+    zeromem (inputOutputData + limit, static_cast<size_t> (size * 2 - limit) * sizeof (float));
 }
 
-} // namespace dsp
-} // namespace juce
+} // namespace juce::dsp

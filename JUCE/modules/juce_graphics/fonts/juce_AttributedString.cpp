@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -52,6 +61,24 @@ namespace
                 break;
             }
         }
+    }
+
+    inline bool areInvariantsMaintained (const String& text, const Array<AttributedString::Attribute>& atts)
+    {
+        if (atts.isEmpty())
+            return true;
+
+        if (atts.getFirst().range.getStart() != 0)
+            return false;
+
+        if (atts.getLast().range.getEnd() != text.length())
+            return false;
+
+        for (auto it = std::next (atts.begin()); it != atts.end(); ++it)
+            if (it->range.getStart() != std::prev (it)->range.getEnd())
+                return false;
+
+        return true;
     }
 
     Range<int> splitAttributeRanges (Array<AttributedString::Attribute>& atts, Range<int> newRange)
@@ -90,7 +117,7 @@ namespace
     {
         if (atts.size() == 0)
         {
-            atts.add ({ Range<int> (0, length), f != nullptr ? *f : Font(), c != nullptr ? *c : Colour (0xff000000) });
+            atts.add ({ Range<int> (0, length), f != nullptr ? *f : FontOptions{}, c != nullptr ? *c : Colour (0xff000000) });
         }
         else
         {
@@ -151,30 +178,35 @@ void AttributedString::setText (const String& newText)
         truncate (attributes, newLength);
 
     text = newText;
+    jassert (areInvariantsMaintained (text, attributes));
 }
 
 void AttributedString::append (const String& textToAppend)
 {
     text += textToAppend;
     appendRange (attributes, textToAppend.length(), nullptr, nullptr);
+    jassert (areInvariantsMaintained (text, attributes));
 }
 
 void AttributedString::append (const String& textToAppend, const Font& font)
 {
     text += textToAppend;
     appendRange (attributes, textToAppend.length(), &font, nullptr);
+    jassert (areInvariantsMaintained (text, attributes));
 }
 
 void AttributedString::append (const String& textToAppend, Colour colour)
 {
     text += textToAppend;
     appendRange (attributes, textToAppend.length(), nullptr, &colour);
+    jassert (areInvariantsMaintained (text, attributes));
 }
 
 void AttributedString::append (const String& textToAppend, const Font& font, Colour colour)
 {
     text += textToAppend;
     appendRange (attributes, textToAppend.length(), &font, &colour);
+    jassert (areInvariantsMaintained (text, attributes));
 }
 
 void AttributedString::append (const AttributedString& other)
@@ -188,6 +220,7 @@ void AttributedString::append (const AttributedString& other)
         attributes.getReference (i).range += originalLength;
 
     mergeAdjacentRanges (attributes);
+    jassert (areInvariantsMaintained (text, attributes));
 }
 
 void AttributedString::clear()
@@ -219,21 +252,25 @@ void AttributedString::setLineSpacing (const float newLineSpacing) noexcept
 void AttributedString::setColour (Range<int> range, Colour colour)
 {
     applyFontAndColour (attributes, range, nullptr, &colour);
+    jassert (areInvariantsMaintained (text, attributes));
 }
 
 void AttributedString::setFont (Range<int> range, const Font& font)
 {
     applyFontAndColour (attributes, range, &font, nullptr);
+    jassert (areInvariantsMaintained (text, attributes));
 }
 
 void AttributedString::setColour (Colour colour)
 {
     setColour ({ 0, getLength (attributes) }, colour);
+    jassert (areInvariantsMaintained (text, attributes));
 }
 
 void AttributedString::setFont (const Font& font)
 {
     setFont ({ 0, getLength (attributes) }, font);
+    jassert (areInvariantsMaintained (text, attributes));
 }
 
 void AttributedString::draw (Graphics& g, const Rectangle<float>& area) const
@@ -242,12 +279,9 @@ void AttributedString::draw (Graphics& g, const Rectangle<float>& area) const
     {
         jassert (text.length() == getLength (attributes));
 
-        if (! g.getInternalContext().drawTextLayout (*this, area))
-        {
-            TextLayout layout;
-            layout.createLayout (*this, area.getWidth());
-            layout.draw (g, area);
-        }
+        TextLayout layout;
+        layout.createLayout (*this, area.getWidth());
+        layout.draw (g, area);
     }
 }
 

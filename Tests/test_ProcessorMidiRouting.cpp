@@ -165,6 +165,43 @@ TEST_F(MidiRouting, device_input_matching_cc_updates_modulator) {
 }
 
 /**
+ * Start-up order of the app: the panel loads before JUCE 8 has listed the MIDI devices (on Linux
+ * the ALSA ports arrive with the first sequencer event). The devices the panel names must open
+ * once the device list arrives. 5.6.37 (JUCE 6) listed the devices synchronously. Ledger L8.34.1.
+ */
+class MidiDeviceStartup : public ProcessorInstance
+{
+    public:
+        MidiDeviceStartup()
+        {
+            waitForMidiDevicesInSetUp = false;
+        }
+};
+
+TEST_F(MidiDeviceStartup, panel_devices_open_when_the_device_list_arrives_after_load)
+{
+    if (!midi_mock.hasSubsystemMock())
+        GTEST_SKIP() << "no MIDI subsystem mock on this platform";
+
+    allowAndRecordDeviceSends();
+    int openOutputCalls = 0;
+    EXPECT_CALL(midi_mock, openOutput(_, _)).Times(AnyNumber()).WillRepeatedly(Invoke([&openOutputCalls](int, int) {
+        openOutputCalls++;
+    }));
+
+    CtrlrPanel *panel = loadPanel("fixture_device_input_cc.panel");
+    ASSERT_NE(panel, nullptr);
+
+    for (int i = 0; i < 40 && juce::MidiOutput::getAvailableDevices().isEmpty(); ++i)
+        juce::MessageManager::getInstance()->runDispatchLoopUntil(25);
+    ASSERT_FALSE(juce::MidiOutput::getAvailableDevices().isEmpty()) << "the mock devices never appeared";
+    pumpInputThreads(200);
+
+    EXPECT_GT(openInputCalls, 0) << "the panel's input device was not opened";
+    EXPECT_GT(openOutputCalls, 0) << "the panel's output device was not opened";
+}
+
+/**
  * Pause-out gating: with panelMidiPauseOut set, a parameter change produces NO device send.
  * Deterministic, no timing involved. Characterization.
  */

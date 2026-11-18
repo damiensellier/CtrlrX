@@ -78,6 +78,12 @@ CtrlrProcessor::CtrlrProcessor() :
 
 	numExportedParameters = computeExportedParameterCount();
 	_INF ("CtrlrProcessor: advertising " + String (numExportedParameters) + " VST parameters");
+
+    // Added v8.0.85. JUCE 8: one CtrlrParameter per advertised index, so that
+    // getParameters().size() == getNumParameters(). Only then do the plugin wrappers use these
+    // objects, and setValueNotifyingHost() on them reaches the host (#229).
+    for (int i = 0; i < numExportedParameters; ++i)
+        addParameter(new CtrlrParameter(*this, i));
 }
 
 int CtrlrProcessor::computeExportedParameterCount() const
@@ -719,4 +725,50 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     _DBG("createPluginFilter");
     return new CtrlrProcessor();
+}
+
+//==============================================================================
+// CtrlrParameter: the values a LegacyAudioParameter gave for CtrlrProcessor. Steps, discrete,
+// automatable, category etc. keep the AudioProcessorParameter defaults, which are the same.
+
+CtrlrParameter::CtrlrParameter(CtrlrProcessor &o, int i) : HostedAudioProcessorParameter(1), owner(o), index(i) {}
+
+float CtrlrParameter::getValue() const
+{
+    return owner.getParameter(index);
+}
+void CtrlrParameter::setValue(float newValue)
+{
+    owner.setParameter(index, newValue);
+}
+float CtrlrParameter::getDefaultValue() const
+{
+    return 0.0f;
+}
+String CtrlrParameter::getName(int maximumStringLength) const
+{
+    return owner.getParameterName(index).substring(0, maximumStringLength);
+}
+String CtrlrParameter::getLabel() const
+{
+    return {};
+}
+String CtrlrParameter::getCurrentValueAsText() const
+{
+    return owner.getParameterText(index);
+}
+String CtrlrParameter::getParameterID() const
+{
+    return owner.getParameterID(index);
+}
+
+// The wrappers call these two only for non-legacy parameters. CtrlrX can only describe the current
+// value, which is what the VST3 wrapper showed for legacy parameters; text input takes a 0..1 number.
+String CtrlrParameter::getText(float, int) const
+{
+    return owner.getParameterText(index);
+}
+float CtrlrParameter::getValueForText(const String &text) const
+{
+    return jlimit(0.0f, 1.0f, text.getFloatValue());
 }

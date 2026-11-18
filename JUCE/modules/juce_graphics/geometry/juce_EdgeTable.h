@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -63,15 +72,6 @@ public:
     /** Creates an edge table containing a rectangle list. */
     explicit EdgeTable (const RectangleList<float>& rectanglesToAdd);
 
-    /** Creates a copy of another edge table. */
-    EdgeTable (const EdgeTable&);
-
-    /** Copies from another edge table. */
-    EdgeTable& operator= (const EdgeTable&);
-
-    /** Destructor. */
-    ~EdgeTable();
-
     //==============================================================================
     void clipToRectangle (Rectangle<int> r);
     void excludeRectangle (Rectangle<int> r);
@@ -111,7 +111,7 @@ public:
     template <class EdgeTableIterationCallback>
     void iterate (EdgeTableIterationCallback& iterationCallback) const noexcept
     {
-        const int* lineStart = table;
+        const int* lineStart = table.data();
 
         for (int y = 0; y < bounds.getHeight(); ++y)
         {
@@ -122,7 +122,7 @@ public:
             if (--numPoints > 0)
             {
                 int x = *++line;
-                jassert ((x >> 8) >= bounds.getX() && (x >> 8) < bounds.getRight());
+                jassert ((x / scale) >= bounds.getX() && (x / scale) < bounds.getRight());
                 int levelAccumulator = 0;
 
                 iterationCallback.setEdgeTableYPos (bounds.getY() + y);
@@ -130,15 +130,15 @@ public:
                 while (--numPoints >= 0)
                 {
                     const int level = *++line;
-                    jassert (isPositiveAndBelow (level, 256));
+                    jassert (isPositiveAndBelow (level, scale));
                     const int endX = *++line;
                     jassert (endX >= x);
-                    const int endOfRun = (endX >> 8);
+                    const int endOfRun = (endX / scale);
 
-                    if (endOfRun == (x >> 8))
+                    if (endOfRun == (x / scale))
                     {
                         // small segment within the same pixel, so just save it for the next
-                        // time round..
+                        // time round
                         levelAccumulator += (endX - x) * level;
                     }
                     else
@@ -146,51 +146,55 @@ public:
                         // plot the fist pixel of this segment, including any accumulated
                         // levels from smaller segments that haven't been drawn yet
                         levelAccumulator += (0x100 - (x & 0xff)) * level;
-                        levelAccumulator >>= 8;
-                        x >>= 8;
+                        levelAccumulator /= scale;
+                        x /= scale;
 
                         if (levelAccumulator > 0)
                         {
                             if (levelAccumulator >= 255)
                                 iterationCallback.handleEdgeTablePixelFull (x);
                             else
-                                iterationCallback.handleEdgeTablePixel (x, levelAccumulator);
+                                iterationCallback.handleEdgeTablePixel (x, static_cast<uint8_t> (levelAccumulator));
                         }
 
-                        // if there's a run of similar pixels, do it all in one go..
+                        // if there's a run of similar pixels, do it all in one go
                         if (level > 0)
                         {
                             jassert (endOfRun <= bounds.getRight());
                             const int numPix = endOfRun - ++x;
 
                             if (numPix > 0)
-                                iterationCallback.handleEdgeTableLine (x, numPix, level);
+                                iterationCallback.handleEdgeTableLine (x, numPix, static_cast<uint8_t> (level));
                         }
 
-                        // save the bit at the end to be drawn next time round the loop.
+                        // save the bit at the end to be drawn next time round the loop
                         levelAccumulator = (endX & 0xff) * level;
                     }
 
                     x = endX;
                 }
 
-                levelAccumulator >>= 8;
+                levelAccumulator /= scale;
 
                 if (levelAccumulator > 0)
                 {
-                    x >>= 8;
+                    x /= scale;
                     jassert (x >= bounds.getX() && x < bounds.getRight());
 
                     if (levelAccumulator >= 255)
                         iterationCallback.handleEdgeTablePixelFull (x);
                     else
-                        iterationCallback.handleEdgeTablePixel (x, levelAccumulator);
+                        iterationCallback.handleEdgeTablePixel (x, static_cast<uint8_t> (levelAccumulator));
                 }
             }
         }
     }
 
 private:
+    //==============================================================================
+    static constexpr auto defaultEdgesPerLine = 32;
+    static constexpr auto scale = 256;
+
     //==============================================================================
     // table line format: number of points; point0 x, point0 levelDelta, point1 x, point1 levelDelta, etc
     struct LineItem
@@ -200,7 +204,7 @@ private:
         bool operator< (const LineItem& other) const noexcept   { return x < other.x; }
     };
 
-    HeapBlock<int> table;
+    CopyableHeapBlock<int> table;
     Rectangle<int> bounds;
     int maxEdgesPerLine, lineStrideElements;
     bool needToCheckEmptiness = true;
@@ -214,7 +218,6 @@ private:
     void intersectWithEdgeTableLine (int y, const int* otherLine);
     void clipEdgeTableLineToRange (int* line, int x1, int x2) noexcept;
     void sanitiseLevels (bool useNonZeroWinding) noexcept;
-    static void copyEdgeTableData (int* dest, int destLineStride, const int* src, int srcLineStride, int numLines) noexcept;
 
     JUCE_LEAK_DETECTOR (EdgeTable)
 };

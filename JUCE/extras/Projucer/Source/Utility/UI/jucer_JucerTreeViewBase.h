@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -29,12 +38,12 @@ class ProjectContentComponent;
 class Project;
 
 //==============================================================================
-class JucerTreeViewBase   : public TreeViewItem,
-                            public TooltipClient
+class JucerTreeViewBase : public TreeViewItem,
+                          public TooltipClient
 {
 public:
     JucerTreeViewBase();
-    ~JucerTreeViewBase() override;
+    ~JucerTreeViewBase() override = default;
 
     int getItemWidth() const override                   { return -1; }
     int getItemHeight() const override                  { return 25; }
@@ -44,8 +53,9 @@ public:
     void itemClicked (const MouseEvent& e) override;
     void itemSelectionChanged (bool isNowSelected) override;
     void itemDoubleClicked (const MouseEvent&) override;
-    Component* createItemComponent() override;
-    String getTooltip() override    { return {}; }
+    std::unique_ptr<Component> createItemComponent() override;
+    String getTooltip() override            { return {}; }
+    String getAccessibilityName() override  { return getDisplayName(); }
 
     void cancelDelayedSelectionTimer();
 
@@ -67,23 +77,24 @@ public:
     virtual File getDraggableFile() const                         { return {}; }
 
     void refreshSubItems();
-    virtual void deleteItem();
-    virtual void deleteAllSelectedItems();
-    virtual void showDocument();
-    virtual void showMultiSelectionPopupMenu();
-    virtual void showRenameBox();
+    void showRenameBox();
 
-    void launchPopupMenu (PopupMenu&); // runs asynchronously, and produces a callback to handlePopupMenuResult().
-    virtual void showPopupMenu();
-    virtual void showAddMenu();
-    virtual void handlePopupMenuResult (int resultCode);
-    virtual void setSearchFilter (const String&) {}
+    virtual void deleteItem()                              {}
+    virtual void deleteAllSelectedItems()                  {}
+    virtual void showDocument()                            {}
+    virtual void showMultiSelectionPopupMenu (Point<int>)  {}
+    virtual void showPopupMenu (Point<int>)                {}
+    virtual void showAddMenu (Point<int>)                  {}
+    virtual void handlePopupMenuResult (int)               {}
+    virtual void setSearchFilter (const String&)           {}
+
+    void launchPopupMenu (PopupMenu&, Point<int>); // runs asynchronously, and produces a callback to handlePopupMenuResult().
 
     //==============================================================================
     // To handle situations where an item gets deleted before openness is
     // restored for it, this OpennessRestorer keeps only a pointer to the
     // topmost tree item.
-    struct WholeTreeOpennessRestorer   : public OpennessRestorer
+    struct WholeTreeOpennessRestorer final : public OpennessRestorer
     {
         WholeTreeOpennessRestorer (TreeViewItem& item)  : OpennessRestorer (getTopLevelItem (item))
         {}
@@ -98,7 +109,7 @@ public:
         }
     };
 
-    int textX;
+    int textX = 0;
 
 protected:
     ProjectContentComponent* getProjectContentComponent() const;
@@ -106,7 +117,6 @@ protected:
 
 private:
     class ItemSelectionTimer;
-    friend class ItemSelectionTimer;
     std::unique_ptr<Timer> delayedSelectionTimer;
 
     void invokeShowDocument();
@@ -115,7 +125,7 @@ private:
 };
 
 //==============================================================================
-class TreePanelBase   : public Component
+class TreePanelBase : public Component
 {
 public:
     TreePanelBase (const Project* p, const String& treeviewID)
@@ -137,7 +147,7 @@ public:
         tree.setRootItem (nullptr);
     }
 
-    void setRoot (JucerTreeViewBase*);
+    void setRoot (std::unique_ptr<JucerTreeViewBase>);
     void saveOpenness();
 
     virtual void deleteSelectedItems()
@@ -187,7 +197,7 @@ public:
             tree.clearSelectedItems();
 
             if (e.mods.isRightButtonDown())
-                rootItem->showPopupMenu();
+                rootItem->showPopupMenu (e.getMouseDownScreenPosition());
         }
     }
 
@@ -200,24 +210,28 @@ private:
 };
 
 //==============================================================================
-class TreeItemComponent   : public Component
+class TreeItemComponent final : public Component
 {
 public:
-    TreeItemComponent (JucerTreeViewBase& i)  : item (i)
+    TreeItemComponent (JucerTreeViewBase& i)  : item (&i)
     {
+        setAccessible (false);
         setInterceptsMouseClicks (false, true);
-        item.textX = iconWidth;
+        item->textX = iconWidth;
     }
 
     void paint (Graphics& g) override
     {
+        if (item == nullptr)
+            return;
+
         auto bounds = getLocalBounds().toFloat();
         auto iconBounds = bounds.removeFromLeft ((float) iconWidth).reduced (7, 5);
 
         bounds.removeFromRight ((float) buttons.size() * bounds.getHeight());
 
-        item.paintIcon    (g, iconBounds);
-        item.paintContent (g, bounds.toNearestInt());
+        item->paintIcon    (g, iconBounds);
+        item->paintContent (g, bounds.toNearestInt());
     }
 
     void resized() override
@@ -225,7 +239,7 @@ public:
         auto r = getLocalBounds();
 
         for (int i = buttons.size(); --i >= 0;)
-            buttons.getUnchecked(i)->setBounds (r.removeFromRight (r.getHeight()));
+            buttons.getUnchecked (i)->setBounds (r.removeFromRight (r.getHeight()));
     }
 
     void addRightHandButton (Component* button)
@@ -234,7 +248,7 @@ public:
         addAndMakeVisible (button);
     }
 
-    JucerTreeViewBase& item;
+    WeakReference<JucerTreeViewBase> item;
     OwnedArray<Component> buttons;
 
     const int iconWidth = 25;

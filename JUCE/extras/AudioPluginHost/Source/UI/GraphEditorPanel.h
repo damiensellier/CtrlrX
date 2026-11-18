@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -33,15 +42,16 @@ class MainHostWindow;
 /**
     A panel that displays and edits a PluginGraph.
 */
-class GraphEditorPanel   : public Component,
-                           public ChangeListener,
-                           private Timer
+class GraphEditorPanel final : public Component,
+                               public ChangeListener,
+                               private Timer
 {
 public:
+    //==============================================================================
     GraphEditorPanel (PluginGraph& graph);
     ~GraphEditorPanel() override;
 
-    void createNewPlugin (const PluginDescription&, Point<int> position);
+    void createNewPlugin (const PluginDescriptionAndPreference&, Point<int> position);
 
     void paint (Graphics&) override;
     void resized() override;
@@ -97,10 +107,10 @@ private:
 
     It also manages the graph itself, and plays it.
 */
-class GraphDocumentComponent  : public Component,
-                                public DragAndDropTarget,
-                                public DragAndDropContainer,
-                                private ChangeListener
+class GraphDocumentComponent final : public Component,
+                                     public DragAndDropTarget,
+                                     public DragAndDropContainer,
+                                     private ChangeListener
 {
 public:
     GraphDocumentComponent (AudioPluginFormatManager& formatManager,
@@ -110,7 +120,7 @@ public:
     ~GraphDocumentComponent() override;
 
     //==============================================================================
-    void createNewPlugin (const PluginDescription&, Point<int> position);
+    void createNewPlugin (const PluginDescriptionAndPreference&, Point<int> position);
     void setDoublePrecision (bool doublePrecision);
     bool closeAnyOpenPluginWindows();
 
@@ -118,7 +128,6 @@ public:
     std::unique_ptr<PluginGraph> graph;
 
     void resized() override;
-    void unfocusKeyboardComponent();
     void releaseGraph();
 
     //==============================================================================

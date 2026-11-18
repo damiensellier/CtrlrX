@@ -17,7 +17,7 @@ JUCE convention for naming modules is lower-case with underscores, e.g.
     juce_events
     juce_graphics
 
-But any name that is a valid C++ identifer is OK.
+But any name that is a valid C++ identifier is OK.
 
 Inside the root of this folder, there must be a set of public header and source files which
 the user's' project will include. The module may have as many other internal source files as
@@ -65,28 +65,28 @@ adding these files to their projects.
 The names of these source files must begin with the name of the module, but they can have
 a number or other suffix if there is more than one.
 
-In order to specify that a source file should only be compiled on a specific platform,
-then the filename can be suffixed with one of the following strings:
+In order to specify that a source file should only be compiled for a specific platform,
+then the filename can be suffixed with one of the following (case insensitive) strings:
 
-    _OSX
-    _Windows
-    _Linux
-    _Android
-    _iOS
+    _mac or _osx    <- compiled for macOS and OSX platforms only
+    _windows        <- compiled for Windows platforms only
+    _linux          <- compiled for Linux and FreeBSD platforms only
+    _andoid         <- compiled for Android platforms only
+    _ios            <- compiled for iOS platforms only
 
 e.g.
 
-    juce_mymodule/juce_mymodule_1.cpp         <- compiled on all platforms
-    juce_mymodule/juce_mymodule_2.cpp         <- compiled on all platforms
-    juce_mymodule/juce_mymodule_OSX.cpp       <- compiled only on OSX
-    juce_mymodule/juce_mymodule_Windows.cpp   <- compiled only on Windows
+    juce_mymodule/juce_mymodule_1.cpp         <- compiled for all platforms
+    juce_mymodule/juce_mymodule_2.cpp         <- compiled for all platforms
+    juce_mymodule/juce_mymodule_mac.cpp       <- compiled for macOS and OSX platforms only
+    juce_mymodule/juce_mymodule_windows.cpp   <- compiled for Windows platforms only
 
 Often this isn't necessary, as in most cases you can easily add checks inside the files
 to do different things depending on the platform, but this may be handy just to avoid
 clutter in user projects where files aren't needed.
 
 To simplify the use of obj-C++ there's also a special-case rule: If the folder contains
-both a .mm and a .cpp file whose names are otherwise identical, then on OSX/iOS the .mm
+both a .mm and a .cpp file whose names are otherwise identical, then on macOS/iOS the .mm
 will be used and the cpp ignored. (And vice-versa for other platforms, of course).
 
 
@@ -95,12 +95,14 @@ will be used and the cpp ignored. (And vice-versa for other platforms, of course
 Precompiled libraries can be included in a module by placing them in a libs/ subdirectory.
 The following directories are automatically added to the library search paths, and libraries
 placed in these directories can be linked with projects via the OSXLibs, iOSLibs,
-windowsLibs, linuxLibs and mingwLibs keywords in the module declaration (see the following
-section).
+windowsLibs, and linuxLibs keywords in the module declaration (see the following section).
 
 - OS X
-  - libs/MacOSX/{arch}, where {arch} is the architecture you are targeting in Xcode ("x86_64" or
-    "i386", for example).
+  - libs/MacOSX - to support multiple architectures, you may place libraries built as universal
+    binaries at this location. For backwards compatibility, the Projucer will also include the
+    directories libs/MacOSX/{arch}, where {arch} is the architecture you are targeting in Xcode
+    ("x86_64" or "i386", for example). When building with CMake, only libraries built as universal
+    binaries are supported and the arch subfolders are ignored.
 
 - Visual Studio
   - libs/VisualStudio{year}/{arch}/{run-time}, where {year} is the four digit year of the Visual Studio
@@ -112,12 +114,12 @@ section).
   - libs/Linux/{arch}, where {arch} is the architecture you are targeting with the compiler. Some
     common examples of {arch} are "x86_64", "i386" and "armv6".
 
-- MinGW
-  - libs/MinGW/{arch}, where {arch} can take the same values as Linux.
-
 - iOS
-  - libs/iOS/{arch}, where {arch} is the architecture you are targeting in Xcode ("arm64" or
-    "x86_64", for example).
+  - libs/iOS - to support multiple architectures, you may place libraries built as universal
+    binaries at this location. For backwards compatibility, the Projucer will also include the
+    directories libs/iOS/{arch}, where {arch} is the architecture you are targeting in Xcode
+    ("arm64" or "x86_64", for example). When building with CMake, only libraries built as universal
+    binaries are supported and the arch subfolders are ignored.
 
 - Android
   - libs/Android/{arch}, where {arch} is the architecture provided by the Android Studio variable
@@ -179,11 +181,18 @@ Possible values:
     parent folder, which need to be added to a project's header search path
 
 - OSXFrameworks
-  - (Optional) A list (space or comma-separated) of OSX frameworks that are needed
+  - (Optional) A list (space or comma-separated) of OSX frameworks that are needed by this module
+
+- WeakOSXFrameworks
+  - (Optional) A list (space or comma-separated) of weak linked OSX frameworks that are needed
     by this module
 
 - iOSFrameworks
-  - (Optional) Like OSXFrameworks, but for iOS targets
+  - (Optional) A list (space or comma-separated) of iOS frameworks that are needed by this module
+
+- WeakiOSFrameworks
+  - (Optional) A list (space or comma-separated) of weak linked iOS frameworks that are needed
+    by this module
 
 - linuxPackages
   - (Optional) A list (space or comma-separated) pkg-config packages that should be used to pass
@@ -192,10 +201,6 @@ Possible values:
 - linuxLibs
   - (Optional) A list (space or comma-separated) of static or dynamic libs that should be linked in a
     linux build (these are passed to the linker via the -l flag)
-
-- mingwLibs
-  - (Optional) A list (space or comma-separated) of static libs that should be linked in a
-    win32 mingw build (these are passed to the linker via the -l flag)
 
 - OSXLibs
   - (Optional) A list (space or comma-separated) of static or dynamic libs that should be linked in an
@@ -219,13 +224,12 @@ Here's an example block:
      name:             JUCE audio and MIDI I/O device classes
      description:      Classes to play and record from audio and MIDI I/O devices
      website:          http://www.juce.com/juce
-     license:          GPL/Commercial
+     license:          AGPLv3/Commercial
 
      dependencies:     juce_audio_basics, juce_audio_formats, juce_events
      OSXFrameworks:    CoreAudio CoreMIDI DiscRecording
      iOSFrameworks:    CoreAudio CoreMIDI AudioToolbox AVFoundation
      linuxLibs:        asound
-     mingwLibs:        winmm
 
     END_JUCE_MODULE_DECLARATION
 

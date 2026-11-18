@@ -1,24 +1,22 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework examples.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
-   licensing.
+   The code included in this file is provided under the terms of the ISC license
+   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+   to use, copy, modify, and/or distribute this software for any purpose with or
+   without fee is hereby granted provided that the above copyright notice and
+   this permission notice appear in all copies.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
-
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
-
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
-
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+   REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+   AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+   INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+   LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+   OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+   PERFORMANCE OF THIS SOFTWARE.
 
   ==============================================================================
 */
@@ -27,7 +25,7 @@
 
 
 //==============================================================================
-class IntroScreen   : public Component
+class IntroScreen final : public Component
 {
 public:
     IntroScreen()
@@ -44,6 +42,9 @@ public:
                               dontSendNotification);
 
         linkButton.setColour (HyperlinkButton::textColourId, Colours::lightblue);
+
+        setTitle ("Home");
+        setFocusContainerType (FocusContainerType::focusContainer);
     }
 
     void paint (Graphics& g) override
@@ -67,11 +68,12 @@ private:
     HyperlinkButton linkButton { "www.juce.com", { "http://www.juce.com" } };
 
     //==============================================================================
-    struct LogoDrawComponent  : public Component,
-                                private Timer
+    struct LogoDrawComponent final : public Component,
+                                     private Timer
     {
         LogoDrawComponent()
         {
+            setTitle ("JUCE Logo");
             startTimerHz (30); // repaint at 30 fps
         }
 
@@ -80,7 +82,7 @@ private:
             Path wavePath;
 
             auto waveStep = 10.0f;
-            auto waveY = (float) getHeight() * 0.44f;
+            auto waveY = (float) getHeight() * 0.5f;
             int i = 0;
 
             for (auto x = waveStep * 0.5f; x < (float) getWidth(); x += waveStep)
@@ -108,6 +110,11 @@ private:
         {
             repaint();
             elapsed += 0.02f;
+        }
+
+        std::unique_ptr<AccessibilityHandler> createAccessibilityHandler() override
+        {
+            return std::make_unique<AccessibilityHandler> (*this, AccessibilityRole::image);
         }
 
         Path logoPath  { getJUCELogoPath() };

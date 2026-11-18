@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -28,23 +37,35 @@ namespace juce
 
 static juce_wchar getDefaultPasswordChar() noexcept
 {
-   #if JUCE_LINUX
+   #if JUCE_LINUX || JUCE_BSD
     return 0x2022;
    #else
     return 0x25cf;
    #endif
 }
 
+static int showAlertWindowUnmanaged (const MessageBoxOptions& opts, ModalComponentManager::Callback* cb)
+{
+    return detail::ConcreteScopedMessageBoxImpl::showUnmanaged (detail::AlertWindowHelpers::create (opts), cb);
+}
+
 //==============================================================================
 AlertWindow::AlertWindow (const String& title,
                           const String& message,
-                          AlertIconType iconType,
+                          MessageBoxIconType iconType,
                           Component* comp)
    : TopLevelWindow (title, true),
      alertIconType (iconType),
-     associatedComponent (comp)
+     associatedComponent (comp),
+     desktopScale (comp != nullptr ? Component::getApproximateScaleFactorForComponent (comp) : 1.0f)
 {
-    setAlwaysOnTop (juce_areThereAnyAlwaysOnTopWindows());
+    setAlwaysOnTop (WindowUtils::areThereAnyAlwaysOnTopWindows());
+
+    accessibleMessageLabel.setColour (Label::textColourId,       Colours::transparentBlack);
+    accessibleMessageLabel.setColour (Label::backgroundColourId, Colours::transparentBlack);
+    accessibleMessageLabel.setColour (Label::outlineColourId,    Colours::transparentBlack);
+    accessibleMessageLabel.setInterceptsMouseClicks (false, false);
+    addAndMakeVisible (accessibleMessageLabel);
 
     if (message.isEmpty())
         text = " "; // to force an update if the message is empty
@@ -64,8 +85,7 @@ AlertWindow::~AlertWindow()
 
     // Give away focus before removing the editors, so that any TextEditor
     // with focus has a chance to dismiss native keyboard if shown.
-    if (hasKeyboardFocus (true))
-        Component::unfocusAllComponents();
+    giveAwayKeyboardFocus();
 
     removeAllChildren();
 }
@@ -84,6 +104,11 @@ void AlertWindow::setMessage (const String& message)
     if (text != newMessage)
     {
         text = newMessage;
+
+        auto accessibleText = getName() + ". " + text;
+        accessibleMessageLabel.setText (accessibleText, NotificationType::dontSendNotification);
+        setDescription (accessibleText);
+
         updateLayout (true);
         repaint();
     }
@@ -106,6 +131,7 @@ void AlertWindow::addButton (const String& name,
     buttons.add (b);
 
     b->setWantsKeyboardFocus (true);
+    b->setExplicitFocusOrder (1);
     b->setMouseClickGrabsKeyboardFocus (false);
     b->setCommandToTrigger (nullptr, returnValue, false);
     b->addShortcut (shortcutKey1);
@@ -133,16 +159,24 @@ int AlertWindow::getNumButtons() const
     return buttons.size();
 }
 
+Button* AlertWindow::getButton (int index) const
+{
+    return buttons[index];
+}
+
+Button* AlertWindow::getButton (const String& buttonName) const
+{
+    for (auto* button : buttons)
+        if (buttonName == button->getName())
+            return button;
+
+    return nullptr;
+}
+
 void AlertWindow::triggerButtonClick (const String& buttonName)
 {
-    for (auto* b : buttons)
-    {
-        if (buttonName == b->getName())
-        {
-            b->triggerClick();
-            break;
-        }
-    }
+    if (auto* button = getButton (buttonName))
+        button->triggerClick();
 }
 
 void AlertWindow::setEscapeKeyCancels (bool shouldEscapeKeyCancel)
@@ -218,7 +252,7 @@ ComboBox* AlertWindow::getComboBoxComponent (const String& nameOfList) const
 }
 
 //==============================================================================
-class AlertTextComp  : public TextEditor
+class AlertTextComp final : public TextEditor
 {
 public:
     AlertTextComp (AlertWindow& owner, const String& message, const Font& font)
@@ -239,7 +273,7 @@ public:
         setFont (font);
         setText (message, false);
 
-        bestWidth = 2 * (int) std::sqrt (font.getHeight() * (float) font.getStringWidth (message));
+        bestWidth = 2 * (int) std::sqrt (font.getHeight() * GlyphArrangement::getStringWidth (font, message));
     }
 
     void updateLayout (const int width)
@@ -269,9 +303,9 @@ void AlertWindow::addTextBlock (const String& textBlock)
 }
 
 //==============================================================================
-void AlertWindow::addProgressBarComponent (double& progressValue)
+void AlertWindow::addProgressBarComponent (double& progressValue, std::optional<ProgressBar::Style> style)
 {
-    auto* pb = new ProgressBar (progressValue);
+    auto* pb = new ProgressBar (progressValue, style);
     progressBars.add (pb);
     allComps.add (pb);
     addAndMakeVisible (pb);
@@ -319,7 +353,7 @@ void AlertWindow::paint (Graphics& g)
 
     for (int i = textBoxes.size(); --i >= 0;)
     {
-        auto* te = textBoxes.getUnchecked(i);
+        auto* te = textBoxes.getUnchecked (i);
 
         g.drawFittedText (textboxNames[i],
                           te->getX(), te->getY() - 14,
@@ -329,7 +363,7 @@ void AlertWindow::paint (Graphics& g)
 
     for (int i = comboBoxNames.size(); --i >= 0;)
     {
-        auto* cb = comboBoxes.getUnchecked(i);
+        auto* cb = comboBoxes.getUnchecked (i);
 
         g.drawFittedText (comboBoxNames[i],
                           cb->getX(), cb->getY() - 14,
@@ -352,8 +386,8 @@ void AlertWindow::updateLayout (const bool onlyIncreaseSize)
     auto& lf = getLookAndFeel();
     auto messageFont (lf.getAlertWindowMessageFont());
 
-    auto wid = jmax (messageFont.getStringWidth (text),
-                     messageFont.getStringWidth (getName()));
+    auto wid = jmax (GlyphArrangement::getStringWidth (messageFont, text),
+                     GlyphArrangement::getStringWidth (messageFont, getName()));
 
     auto sw = (int) std::sqrt (messageFont.getHeight() * (float) wid);
     auto w = jmin (300 + sw * 2, (int) ((float) getParentWidth() * 0.7f));
@@ -435,6 +469,7 @@ void AlertWindow::updateLayout (const bool onlyIncreaseSize)
         setBounds (getBounds().withSizeKeepingCentre (w, h));
 
     textArea.setBounds (edgeGap, edgeGap, w - (edgeGap * 2), h - edgeGap);
+    accessibleMessageLabel.setBounds (textArea);
 
     const int spacer = 16;
     int totalWidth = -spacer;
@@ -530,7 +565,7 @@ bool AlertWindow::keyPressed (const KeyPress& key)
 
     if (key.isKeyCode (KeyPress::returnKey) && buttons.size() == 1)
     {
-        buttons.getUnchecked(0)->triggerClick();
+        buttons.getUnchecked (0)->triggerClick();
         return true;
     }
 
@@ -552,146 +587,29 @@ int AlertWindow::getDesktopWindowStyleFlags() const
 }
 
 //==============================================================================
-class AlertWindowInfo
-{
-public:
-    AlertWindowInfo (const String& t, const String& m, Component* component,
-                     AlertWindow::AlertIconType icon, int numButts,
-                     ModalComponentManager::Callback* cb, bool runModally)
-        : title (t), message (m), iconType (icon), numButtons (numButts),
-          associatedComponent (component), callback (cb), modal (runModally)
-    {
-    }
-
-    String title, message, button1, button2, button3;
-
-    int invoke() const
-    {
-        MessageManager::getInstance()->callFunctionOnMessageThread (showCallback, (void*) this);
-        return returnValue;
-    }
-
-private:
-    AlertWindow::AlertIconType iconType;
-    int numButtons, returnValue = 0;
-    WeakReference<Component> associatedComponent;
-    ModalComponentManager::Callback* callback;
-    bool modal;
-
-    void show()
-    {
-        auto& lf = associatedComponent != nullptr ? associatedComponent->getLookAndFeel()
-                                                  : LookAndFeel::getDefaultLookAndFeel();
-
-        std::unique_ptr<Component> alertBox (lf.createAlertWindow (title, message, button1, button2, button3,
-                                                                   iconType, numButtons, associatedComponent));
-
-        jassert (alertBox != nullptr); // you have to return one of these!
-
-        alertBox->setAlwaysOnTop (juce_areThereAnyAlwaysOnTopWindows());
-
-       #if JUCE_MODAL_LOOPS_PERMITTED
-        if (modal)
-        {
-            returnValue = alertBox->runModalLoop();
-        }
-        else
-       #endif
-        {
-            ignoreUnused (modal);
-
-            alertBox->enterModalState (true, callback, true);
-            alertBox.release();
-        }
-    }
-
-    static void* showCallback (void* userData)
-    {
-        static_cast<AlertWindowInfo*> (userData)->show();
-        return nullptr;
-    }
-};
-
 #if JUCE_MODAL_LOOPS_PERMITTED
-void AlertWindow::showMessageBox (AlertIconType iconType,
+void AlertWindow::showMessageBox (MessageBoxIconType iconType,
                                   const String& title,
                                   const String& message,
                                   const String& buttonText,
                                   Component* associatedComponent)
 {
-    if (LookAndFeel::getDefaultLookAndFeel().isUsingNativeAlertWindows())
-    {
-        NativeMessageBox::showMessageBox (iconType, title, message, associatedComponent);
-    }
-    else
-    {
-        AlertWindowInfo info (title, message, associatedComponent, iconType, 1, nullptr, true);
-        info.button1 = buttonText.isEmpty() ? TRANS("OK") : buttonText;
-
-        info.invoke();
-    }
+    show (MessageBoxOptions()
+            .withIconType (iconType)
+            .withTitle (title)
+            .withMessage (message)
+            .withButton (buttonText.isEmpty() ? TRANS ("OK") : buttonText)
+            .withAssociatedComponent (associatedComponent));
 }
-#endif
 
-void AlertWindow::showMessageBoxAsync (AlertIconType iconType,
-                                       const String& title,
-                                       const String& message,
-                                       const String& buttonText,
-                                       Component* associatedComponent,
-                                       ModalComponentManager::Callback* callback)
+int AlertWindow::show (const MessageBoxOptions& options)
 {
     if (LookAndFeel::getDefaultLookAndFeel().isUsingNativeAlertWindows())
-    {
-        NativeMessageBox::showMessageBoxAsync (iconType, title, message, associatedComponent, callback);
-    }
-    else
-    {
-        AlertWindowInfo info (title, message, associatedComponent, iconType, 1, callback, false);
-        info.button1 = buttonText.isEmpty() ? TRANS("OK") : buttonText;
+        return NativeMessageBox::show (options);
 
-        info.invoke();
-    }
+    return showAlertWindowUnmanaged (options, nullptr);
 }
 
-bool AlertWindow::showOkCancelBox (AlertIconType iconType,
-                                   const String& title,
-                                   const String& message,
-                                   const String& button1Text,
-                                   const String& button2Text,
-                                   Component* associatedComponent,
-                                   ModalComponentManager::Callback* callback)
-{
-    if (LookAndFeel::getDefaultLookAndFeel().isUsingNativeAlertWindows())
-        return NativeMessageBox::showOkCancelBox (iconType, title, message, associatedComponent, callback);
-
-    AlertWindowInfo info (title, message, associatedComponent, iconType, 2, callback, callback == nullptr);
-    info.button1 = button1Text.isEmpty() ? TRANS("OK")     : button1Text;
-    info.button2 = button2Text.isEmpty() ? TRANS("Cancel") : button2Text;
-
-    return info.invoke() != 0;
-}
-
-int AlertWindow::showYesNoCancelBox (AlertIconType iconType,
-                                     const String& title,
-                                     const String& message,
-                                     const String& button1Text,
-                                     const String& button2Text,
-                                     const String& button3Text,
-                                     Component* associatedComponent,
-                                     ModalComponentManager::Callback* callback)
-{
-    if (LookAndFeel::getDefaultLookAndFeel().isUsingNativeAlertWindows())
-        return NativeMessageBox::showYesNoCancelBox (iconType, title, message, associatedComponent, callback);
-
-    AlertWindowInfo info (title, message, associatedComponent, iconType, 3, callback, callback == nullptr);
-    info.button1 = button1Text.isEmpty() ? TRANS("Yes")     : button1Text;
-    info.button2 = button2Text.isEmpty() ? TRANS("No")      : button2Text;
-    info.button3 = button3Text.isEmpty() ? TRANS("Cancel")  : button3Text;
-
-    return info.invoke();
-}
-
-#if JUCE_MODAL_LOOPS_PERMITTED
 bool AlertWindow::showNativeDialogBox (const String& title,
                                        const String& bodyText,
                                        bool isOkCancel)
@@ -703,5 +621,92 @@ bool AlertWindow::showNativeDialogBox (const String& title,
     return true;
 }
 #endif
+
+void AlertWindow::showAsync (const MessageBoxOptions& options, ModalComponentManager::Callback* callback)
+{
+    if (LookAndFeel::getDefaultLookAndFeel().isUsingNativeAlertWindows())
+        NativeMessageBox::showAsync (options, callback);
+    else
+        showAlertWindowUnmanaged (options, callback);
+}
+
+void AlertWindow::showAsync (const MessageBoxOptions& options, std::function<void (int)> callback)
+{
+    showAsync (options, ModalCallbackFunction::create (callback));
+}
+
+void AlertWindow::showMessageBoxAsync (MessageBoxIconType iconType,
+                                       const String& title,
+                                       const String& message,
+                                       const String& buttonText,
+                                       Component* associatedComponent,
+                                       ModalComponentManager::Callback* callback)
+{
+    auto options = MessageBoxOptions::makeOptionsOk (iconType,
+                                                     title,
+                                                     message,
+                                                     buttonText,
+                                                     associatedComponent);
+    showAsync (options, callback);
+}
+
+static int showMaybeAsync (const MessageBoxOptions& options,
+                           ModalComponentManager::Callback* callbackIn)
+{
+    if (LookAndFeel::getDefaultLookAndFeel().isUsingNativeAlertWindows())
+        return showNativeBoxUnmanaged (options, callbackIn, ResultCodeMappingMode::alertWindow);
+
+    return showAlertWindowUnmanaged (options, callbackIn);
+}
+
+bool AlertWindow::showOkCancelBox (MessageBoxIconType iconType,
+                                   const String& title,
+                                   const String& message,
+                                   const String& button1Text,
+                                   const String& button2Text,
+                                   Component* associatedComponent,
+                                   ModalComponentManager::Callback* callback)
+{
+    auto options = MessageBoxOptions::makeOptionsOkCancel (iconType,
+                                                           title,
+                                                           message,
+                                                           button1Text,
+                                                           button2Text,
+                                                           associatedComponent);
+    return showMaybeAsync (options, callback) == 1;
+}
+
+int AlertWindow::showYesNoCancelBox (MessageBoxIconType iconType,
+                                     const String& title,
+                                     const String& message,
+                                     const String& button1Text,
+                                     const String& button2Text,
+                                     const String& button3Text,
+                                     Component* associatedComponent,
+                                     ModalComponentManager::Callback* callback)
+{
+    auto options = MessageBoxOptions::makeOptionsYesNoCancel (iconType,
+                                                              title,
+                                                              message,
+                                                              button1Text,
+                                                              button2Text,
+                                                              button3Text,
+                                                              associatedComponent);
+    return showMaybeAsync (options, callback);
+}
+
+ScopedMessageBox AlertWindow::showScopedAsync (const MessageBoxOptions& options, std::function<void (int)> callback)
+{
+    if (LookAndFeel::getDefaultLookAndFeel().isUsingNativeAlertWindows())
+        return NativeMessageBox::showScopedAsync (options, std::move (callback));
+
+    return detail::ConcreteScopedMessageBoxImpl::show (detail::AlertWindowHelpers::create (options), std::move (callback));
+}
+
+//==============================================================================
+std::unique_ptr<AccessibilityHandler> AlertWindow::createAccessibilityHandler()
+{
+    return std::make_unique<AccessibilityHandler> (*this, AccessibilityRole::dialogWindow);
+}
 
 } // namespace juce

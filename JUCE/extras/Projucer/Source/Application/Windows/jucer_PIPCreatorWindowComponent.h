@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -57,8 +66,8 @@ static String getWidthLimitedStringFromVarArray (const var& varArray) noexcept
 }
 
 //==============================================================================
-class PIPCreatorWindowComponent    : public Component,
-                                     private ValueTree::Listener
+class PIPCreatorWindowComponent final : public Component,
+                                        private ValueTree::Listener
 {
 public:
     PIPCreatorWindowComponent()
@@ -73,13 +82,20 @@ public:
         addAndMakeVisible (createButton);
         createButton.onClick = [this]
         {
-            FileChooser fc ("Save PIP File",
-                            File::getSpecialLocation (File::SpecialLocationType::userDesktopDirectory)
-                                 .getChildFile (nameValue.get().toString() + ".h"));
+            chooser = std::make_unique<FileChooser> ("Save PIP File",
+                                                     File::getSpecialLocation (File::SpecialLocationType::userDesktopDirectory)
+                                                          .getChildFile (nameValue.get().toString() + ".h"));
+            auto browserFlags = FileBrowserComponent::saveMode
+                              | FileBrowserComponent::canSelectFiles
+                              | FileBrowserComponent::warnAboutOverwriting;
 
-            fc.browseForFileToSave (true);
+            chooser->launchAsync (browserFlags, [this] (const FileChooser& fc)
+            {
+                const auto result = fc.getResult();
 
-            createPIPFile (fc.getResult());
+                if (result != File{})
+                    createPIPFile (result);
+            });
         };
 
         pipTree.addListener (this);
@@ -102,11 +118,11 @@ public:
 
 private:
     //==============================================================================
-    struct PIPCreatorLookAndFeel    : public ProjucerLookAndFeel
+    struct PIPCreatorLookAndFeel final : public ProjucerLookAndFeel
     {
         PIPCreatorLookAndFeel()    {}
 
-        Rectangle<int> getPropertyComponentContentPosition (PropertyComponent& component)
+        Rectangle<int> getPropertyComponentContentPosition (PropertyComponent& component) override
         {
             auto textW = jmin (200, component.getWidth() / 3);
             return { textW, 0, component.getWidth() - textW, component.getHeight() - 1 };
@@ -313,25 +329,27 @@ private:
 
     //==============================================================================
     ValueTree pipTree  { "PIPSettings" };
-    ValueWithDefault nameValue          { pipTree, Ids::name,          nullptr, "MyComponentPIP" },
-                     versionValue       { pipTree, Ids::version,       nullptr },
-                     vendorValue        { pipTree, Ids::vendor,        nullptr },
-                     websiteValue       { pipTree, Ids::website,       nullptr },
-                     descriptionValue   { pipTree, Ids::description,   nullptr },
-                     dependenciesValue  { pipTree, Ids::dependencies_, nullptr, getModulesRequiredForComponent(), "," },
-                     exportersValue     { pipTree, Ids::exporters,     nullptr, StringArray (ProjectExporter::getCurrentPlatformExporterTypeInfo().identifier.toString()), "," },
-                     moduleFlagsValue   { pipTree, Ids::moduleFlags,   nullptr, "JUCE_STRICT_REFCOUNTEDPOINTER=1" },
-                     definesValue       { pipTree, Ids::defines,       nullptr },
-                     typeValue          { pipTree, Ids::type,          nullptr, "Component" },
-                     mainClassValue     { pipTree, Ids::mainClass,     nullptr, "MyComponent" },
-                     useLocalCopyValue  { pipTree, Ids::useLocalCopy,  nullptr, false };
+    ValueTreePropertyWithDefault nameValue          { pipTree, Ids::name,          nullptr, "MyComponentPIP" },
+                                 versionValue       { pipTree, Ids::version,       nullptr },
+                                 vendorValue        { pipTree, Ids::vendor,        nullptr },
+                                 websiteValue       { pipTree, Ids::website,       nullptr },
+                                 descriptionValue   { pipTree, Ids::description,   nullptr },
+                                 dependenciesValue  { pipTree, Ids::dependencies_, nullptr, getModulesRequiredForComponent(), "," },
+                                 exportersValue     { pipTree, Ids::exporters,     nullptr, StringArray { ProjectExporter::getBestPlatformExporterIdentifier() }, "," },
+                                 moduleFlagsValue   { pipTree, Ids::moduleFlags,   nullptr, "JUCE_STRICT_REFCOUNTEDPOINTER=1" },
+                                 definesValue       { pipTree, Ids::defines,       nullptr },
+                                 typeValue          { pipTree, Ids::type,          nullptr, "Component" },
+                                 mainClassValue     { pipTree, Ids::mainClass,     nullptr, "MyComponent" },
+                                 useLocalCopyValue  { pipTree, Ids::useLocalCopy,  nullptr, false };
 
     std::unique_ptr<PIPCreatorLookAndFeel> lf;
 
     Viewport propertyViewport;
-    PropertyGroupComponent propertyGroup  { "PIP Creator", { getIcons().juceLogo, Colours::transparentBlack } };
+    PropertyGroupComponent propertyGroup  { "PIP Creator", {} };
 
     TextButton createButton  { "Create PIP" };
+
+    std::unique_ptr<FileChooser> chooser;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PIPCreatorWindowComponent)

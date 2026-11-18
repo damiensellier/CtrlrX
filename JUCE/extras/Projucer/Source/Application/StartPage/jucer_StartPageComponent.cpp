@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -32,8 +41,14 @@
 #include "jucer_ContentComponents.h"
 
 //==============================================================================
-struct ContentComponent  : public Component
+struct ContentComponent final : public Component
 {
+    ContentComponent()
+    {
+        setTitle ("Content");
+        setFocusContainerType (FocusContainerType::focusContainer);
+    }
+
     void resized() override
     {
         if (content != nullptr)
@@ -88,7 +103,8 @@ static std::unique_ptr<Component> createExampleProjectsTab (ContentComponent& co
         content.setContent (std::make_unique<ExampleComponent> (findExampleFile (category, index), cb));
     };
 
-    return std::make_unique<StartPageTreeHolder> (exampleCategories,
+    return std::make_unique<StartPageTreeHolder> ("Examples",
+                                                  exampleCategories,
                                                   examples,
                                                   std::move (selectedCallback),
                                                   StartPageTreeHolder::Open::no);
@@ -144,7 +160,8 @@ static std::unique_ptr<Component> createProjectTemplatesTab (ContentComponent& c
         content.setContent (std::make_unique<TemplateComponent> (templates[(size_t) index], std::move (cb)));
     };
 
-    auto holder = std::make_unique<StartPageTreeHolder> (categories,
+    auto holder = std::make_unique<StartPageTreeHolder> ("Templates",
+                                                         categories,
                                                          templateNames,
                                                          std::move (selectedCallback),
                                                          StartPageTreeHolder::Open::yes);
@@ -156,7 +173,7 @@ static std::unique_ptr<Component> createProjectTemplatesTab (ContentComponent& c
 }
 
 //==============================================================================
-struct ProjectTemplatesAndExamples  : public TabbedComponent
+struct ProjectTemplatesAndExamples final : public TabbedComponent
 {
     ProjectTemplatesAndExamples (ContentComponent& c,
                                  std::function<void (std::unique_ptr<Project>&&)>&& newProjectCb,
@@ -165,7 +182,14 @@ struct ProjectTemplatesAndExamples  : public TabbedComponent
           content (c),
           exampleSelectedCallback (std::move (exampleCb))
     {
-        addTab ("New Project", Colours::transparentBlack, createProjectTemplatesTab (content, std::move (newProjectCb)).release(), true);
+        setTitle ("Templates and Examples");
+        setFocusContainerType (FocusContainerType::focusContainer);
+
+        addTab ("New Project",
+                Colours::transparentBlack,
+                createProjectTemplatesTab (content, std::move (newProjectCb)).release(),
+                true);
+
         refreshExamplesTab();
     }
 
@@ -177,8 +201,9 @@ struct ProjectTemplatesAndExamples  : public TabbedComponent
 
         auto exampleTabs = createExampleProjectsTab (content, exampleSelectedCallback);
 
-        addTab ("Open Example", Colours::transparentBlack, exampleTabs == nullptr ? new SetJUCEPathComponent (*this)
-                                                                                  : exampleTabs.release(),
+        addTab ("Open Example",
+                Colours::transparentBlack,
+                exampleTabs == nullptr ? new SetJUCEPathComponent (*this) : exampleTabs.release(),
                 true);
 
         if (wasOpen)
@@ -187,8 +212,8 @@ struct ProjectTemplatesAndExamples  : public TabbedComponent
 
 private:
     //==============================================================================
-    struct SetJUCEPathComponent    : public Component,
-                                     private ChangeListener
+    struct SetJUCEPathComponent final : public Component,
+                                        private ChangeListener
     {
         explicit SetJUCEPathComponent (ProjectTemplatesAndExamples& o)
             : owner (o)

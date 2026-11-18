@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -80,7 +89,7 @@ PropertiesFile& StoredSettings::getProjectProperties (const String& projectUID)
 
     for (auto i = propertyFiles.size(); --i >= 0;)
     {
-        auto* const props = propertyFiles.getUnchecked(i);
+        auto* const props = propertyFiles.getUnchecked (i);
         if (props->getFile().getFileNameWithoutExtension() == filename)
             return *props;
     }
@@ -127,7 +136,7 @@ void StoredSettings::flush()
     saveSwatchColours();
 
     for (auto i = propertyFiles.size(); --i >= 0;)
-        propertyFiles.getUnchecked(i)->saveIfNeeded();
+        propertyFiles.getUnchecked (i)->saveIfNeeded();
 }
 
 void StoredSettings::reload()
@@ -166,7 +175,7 @@ void StoredSettings::setLastProjects (const Array<File>& files)
 {
     StringArray s;
     for (int i = 0; i < files.size(); ++i)
-        s.add (files.getReference(i).getFullPathName());
+        s.add (files.getReference (i).getFullPathName());
 
     getGlobalProperties().setValue ("lastProjects", s.joinIntoString ("|"));
 }
@@ -233,7 +242,7 @@ void StoredSettings::saveSwatchColours()
     auto& props = getGlobalProperties();
 
     for (auto i = 0; i < swatchColours.size(); ++i)
-        props.setValue ("swatchColour" + String (i), swatchColours.getReference(i).toString());
+        props.setValue ("swatchColour" + String (i), swatchColours.getReference (i).toString());
 }
 
 StoredSettings::ColourSelectorWithSwatches::ColourSelectorWithSwatches() {}
@@ -279,13 +288,13 @@ static bool isGlobalPathValid (const File& relativeTo, const Identifier& key, co
     {
         fileToCheckFor = "pluginterfaces/vst2.x/aeffect.h";
     }
-    else if (key == Ids::rtasPath)
-    {
-        fileToCheckFor = "AlturaPorts/TDMPlugIns/PlugInLibrary/EffectClasses/CEffectProcessMIDI.cpp";
-    }
     else if (key == Ids::aaxPath)
     {
         fileToCheckFor = "Interfaces/AAX_Exports.cpp";
+    }
+    else if (key == Ids::araPath)
+    {
+        fileToCheckFor = "ARA_API/ARAInterface.h";
     }
     else if (key == Ids::androidSDKPath)
     {
@@ -303,16 +312,6 @@ static bool isGlobalPathValid (const File& relativeTo, const Identifier& key, co
     {
         fileToCheckFor = {};
     }
-    else if (key == Ids::clionExePath)
-    {
-       #if JUCE_MAC
-        fileToCheckFor = path.trim().endsWith (".app") ? "Contents/MacOS/clion" : "../clion";
-       #elif JUCE_WINDOWS
-        fileToCheckFor = "../clion64.exe";
-       #else
-        fileToCheckFor = "../clion.sh";
-       #endif
-    }
     else if (key == Ids::androidStudioExePath)
     {
        #if JUCE_MAC
@@ -323,7 +322,7 @@ static bool isGlobalPathValid (const File& relativeTo, const Identifier& key, co
     }
     else if (key == Ids::jucePath)
     {
-        fileToCheckFor = "ChangeList.txt";
+        fileToCheckFor = "CHANGE_LIST.md";
     }
     else
     {
@@ -357,66 +356,38 @@ bool StoredSettings::isJUCEPathIncorrect()
 static String getFallbackPathForOS (const Identifier& key, DependencyPathOS os)
 {
     if (key == Ids::jucePath)
-    {
         return (os == TargetOS::windows ? "C:\\JUCE" : "~/JUCE");
-    }
-    else if (key == Ids::defaultJuceModulePath)
-    {
+
+    if (key == Ids::defaultJuceModulePath)
         return (os == TargetOS::windows ? "C:\\JUCE\\modules" : "~/JUCE/modules");
-    }
-    else if (key == Ids::defaultUserModulePath)
-    {
+
+    if (key == Ids::defaultUserModulePath)
         return (os == TargetOS::windows ? "C:\\modules" : "~/modules");
-    }
-    else if (key == Ids::vstLegacyPath)
+
+    if (key == Ids::vstLegacyPath)
+        return {};
+
+    if (key == Ids::aaxPath)
+        return {}; // Empty means "use internal SDK"
+
+    if (key == Ids::araPath)
     {
+        if (os == TargetOS::windows)  return "C:\\SDKs\\ARA_SDK";
+        if (os == TargetOS::osx)      return "~/SDKs/ARA_SDK";
         return {};
     }
-    else if (key == Ids::rtasPath)
+
+    if (key == Ids::androidSDKPath)
     {
-        if      (os == TargetOS::windows)  return "C:\\SDKs\\PT_90_SDK";
-        else if (os == TargetOS::osx)      return "~/SDKs/PT_90_SDK";
-        else                               return {}; // no RTAS on this OS!
-    }
-    else if (key == Ids::aaxPath)
-    {
-        if      (os == TargetOS::windows)  return "C:\\SDKs\\AAX";
-        else if (os == TargetOS::osx)      return "~/SDKs/AAX";
-        else                               return {}; // no AAX on this OS!
-    }
-    else if (key == Ids::androidSDKPath)
-    {
-        if      (os == TargetOS::windows)  return "${user.home}\\AppData\\Local\\Android\\Sdk";
-        else if (os == TargetOS::osx)      return "${user.home}/Library/Android/sdk";
-        else if (os == TargetOS::linux)    return "${user.home}/Android/Sdk";
+        if (os == TargetOS::windows)  return "${user.home}\\AppData\\Local\\Android\\Sdk";
+        if (os == TargetOS::osx)      return "${user.home}/Library/Android/sdk";
+        if (os == TargetOS::linux)    return "${user.home}/Android/Sdk";
 
         jassertfalse;
         return {};
     }
-    else if (key == Ids::clionExePath)
-    {
-        if (os == TargetOS::windows)
-        {
-          #if JUCE_WINDOWS
-            auto regValue = WindowsRegistry::getValue ("HKEY_LOCAL_MACHINE\\SOFTWARE\\Classes\\Applications\\clion64.exe\\shell\\open\\command\\", {}, {});
-            auto openCmd = StringArray::fromTokens (regValue, true);
 
-            if (! openCmd.isEmpty())
-                return openCmd[0].unquoted();
-          #endif
-
-            return "C:\\Program Files\\JetBrains\\CLion YYYY.MM.DD\\bin\\clion64.exe";
-        }
-        else if (os == TargetOS::osx)
-        {
-            return "/Applications/CLion.app";
-        }
-        else
-        {
-            return "${user.home}/clion/bin/clion.sh";
-        }
-    }
-    else if (key == Ids::androidStudioExePath)
+    if (key == Ids::androidStudioExePath)
     {
         if (os == TargetOS::windows)
         {
@@ -429,14 +400,11 @@ static String getFallbackPathForOS (const Identifier& key, DependencyPathOS os)
 
             return "C:\\Program Files\\Android\\Android Studio\\bin\\studio64.exe";
         }
-        else if (os == TargetOS::osx)
-        {
+
+        if (os == TargetOS::osx)
             return "/Applications/Android Studio.app";
-        }
-        else
-        {
-            return {}; // no Android Studio on this OS!
-        }
+
+        return {}; // no Android Studio on this OS!
     }
 
     // unknown key!
@@ -454,10 +422,16 @@ static Identifier identifierForOS (DependencyPathOS os) noexcept
     return {};
 }
 
-ValueWithDefault StoredSettings::getStoredPath (const Identifier& key, DependencyPathOS os)
+ValueTreePropertyWithDefault StoredSettings::getStoredPath (const Identifier& key, DependencyPathOS os)
 {
     auto tree = (os == TargetOS::getThisOS() ? projectDefaults
                                              : fallbackPaths.getOrCreateChildWithName (identifierForOS (os), nullptr));
 
     return { tree, key, nullptr, getFallbackPathForOS (key, os) };
 }
+
+void StoredSettings::addProjectDefaultsListener (ValueTree::Listener& l)     { projectDefaults.addListener (&l); }
+void StoredSettings::removeProjectDefaultsListener (ValueTree::Listener& l)  { projectDefaults.removeListener (&l); }
+
+void StoredSettings::addFallbackPathsListener (ValueTree::Listener& l)       { fallbackPaths.addListener (&l); }
+void StoredSettings::removeFallbackPathsListener (ValueTree::Listener& l)    { fallbackPaths.removeListener (&l); }

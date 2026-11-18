@@ -220,8 +220,8 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
     owner.addChangeListener (this);
     midiMessageCollector.reset (SAMPLERATE);
 
-    midiInputThread.startThread(5);
-    midiControllerInputThread.startThread(5);
+    midiInputThread.startThread (juce::Thread::Priority::normal);
+    midiControllerInputThread.startThread (juce::Thread::Priority::normal);
 }
 
 CtrlrPanel::~CtrlrPanel()
@@ -891,6 +891,25 @@ void CtrlrPanel::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChange
     {
         // setting the menuBar component size with setSize() and resized() via owner.getEditor() does not work
     }
+}
+
+// Called by CtrlrMIDIDeviceManager when the MIDI device list changes. Opens each device the
+// panel names that is not open yet and is now listed, the same way as setting the property does.
+void CtrlrPanel::openMissingMidiDevices()
+{
+    CtrlrMIDIDeviceManager &devices = owner.getCtrlrMidiDeviceManager();
+
+    if (!midiInputThread.hasInputDevice() &&
+        devices.getDeviceByName(getProperty(Ids::panelMidiInputDevice).toString(), inputDevice) != nullptr)
+        valueTreePropertyChanged(panelTree, Ids::panelMidiInputDevice);
+
+    if (!midiControllerInputThread.hasInputDevice() &&
+        devices.getDeviceByName(getProperty(Ids::panelMidiControllerDevice).toString(), inputDevice) != nullptr)
+        valueTreePropertyChanged(panelTree, Ids::panelMidiControllerDevice);
+
+    if (outputDevicePtr == nullptr &&
+        devices.getDeviceByName(getProperty(Ids::panelMidiOutputDevice).toString(), outputDevice) != nullptr)
+        valueTreePropertyChanged(panelTree, Ids::panelMidiOutputDevice);
 }
 
 void CtrlrPanel::removeModulator (CtrlrModulator *modulatorToDelete)

@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -28,18 +37,16 @@
 #include "../../CodeEditor/jucer_OpenDocumentManager.h"
 #include "jucer_HeaderComponent.h"
 #include "jucer_ProjectMessagesComponent.h"
+#include "jucer_ContentViewComponent.h"
 
-class CompileEngineChildProcess;
-class ProjectTab;
-class LiveBuildTab;
+class Sidebar;
+struct WizardHolder;
 
 //==============================================================================
-class ProjectContentComponent  : public Component,
-                                 public ApplicationCommandTarget,
-                                 private ChangeListener,
-                                 private OpenDocumentManager::DocumentCloseListener,
-                                 private FocusChangeListener,
-                                 private Timer
+class ProjectContentComponent final : public Component,
+                                      public ApplicationCommandTarget,
+                                      private ChangeListener,
+                                      private OpenDocumentManager::DocumentCloseListener
 {
 public:
     //==============================================================================
@@ -49,7 +56,6 @@ public:
     Project* getProject() const noexcept    { return project; }
     void setProject (Project*);
 
-    void saveTreeViewState();
     void saveOpenDocumentList();
     void reloadLastOpenDocuments();
 
@@ -61,28 +67,25 @@ public:
     void hideDocument (OpenDocumentManager::Document*);
     OpenDocumentManager::Document* getCurrentDocument() const    { return currentDocument; }
     void closeDocument();
-    void saveDocument();
-    void saveAs();
+    void saveDocumentAsync();
+    void saveAsAsync();
 
     void hideEditor();
-    bool setEditorComponent (Component* editor, OpenDocumentManager::Document* doc);
-    Component* getEditorComponentContent() const;
-    Component* getEditorComponent() const    { return contentView.get(); }
-    Component& getSidebarComponent()         { return sidebarTabs; }
+    void setScrollableEditorComponent (std::unique_ptr<Component> component);
+    void setEditorDocument (std::unique_ptr<Component> component, OpenDocumentManager::Document* doc);
+    Component* getEditorComponent();
+
+    Component& getSidebarComponent();
 
     bool goToPreviousFile();
     bool goToNextFile();
     bool canGoToCounterpart() const;
     bool goToCounterpart();
 
-    bool saveProject();
+    void saveProjectAsync();
     void closeProject();
     void openInSelectedIDE (bool saveFirst);
     void showNewExporterMenu();
-
-    void showProjectTab()        { sidebarTabs.setCurrentTabIndex (0); }
-    void showBuildTab()          { sidebarTabs.setCurrentTabIndex (1); }
-    int getCurrentTabIndex()     { return sidebarTabs.getCurrentTabIndex(); }
 
     void showFilesPanel()        { showProjectPanel (0); }
     void showModulesPanel()      { showProjectPanel (1); }
@@ -92,22 +95,11 @@ public:
     void showCurrentExporterSettings();
     void showExporterSettings (const String& exporterName);
     void showModule (const String& moduleID);
-    void showLiveBuildSettings();
-    void showUserSettings();
 
     void deleteSelectedTreeItems();
 
     void refreshProjectTreeFileStatuses();
     void updateMissingFileStatuses();
-    void createProjectTabs();
-    void deleteProjectTabs();
-    void rebuildProjectUI();
-    void refreshTabsIfBuildStatusChanged();
-    void toggleWarnings();
-    void showNextError();
-    void showPreviousError();
-    void reinstantiateLivePreviewWindows();
-    void addNewGUIFile();
 
     void showBubbleMessage (Rectangle<int>, const String&);
 
@@ -117,21 +109,12 @@ public:
                                                      OwnedArray<Project::Item>& selectedNodes);
 
     //==============================================================================
-    void killChildProcess();
-    void cleanAll();
-    void handleMissingSystemHeaders();
-    bool isBuildTabEnabled() const;
-    void setBuildEnabled (bool enabled, bool displayError = false);
-    bool isBuildEnabled() const;
-    bool areWarningsEnabled() const;
-
-    //==============================================================================
     ApplicationCommandTarget* getNextCommandTarget() override;
     void getAllCommands (Array<CommandID>&) override;
     void getCommandInfo (CommandID, ApplicationCommandInfo&) override;
     bool perform (const InvocationInfo&) override;
 
-    bool isSaveCommand (const CommandID id);
+    bool isSaveCommand (CommandID);
 
     void paint (Graphics&) override;
     void resized() override;
@@ -141,54 +124,15 @@ public:
     ProjectMessagesComponent& getProjectMessagesComponent()  { return projectMessagesComponent; }
 
     static String getProjectTabName()    { return "Project"; }
-    static String getBuildTabName()      { return "Build"; }
 
 private:
-    //==============================================================================
-    struct LogoComponent  : public Component
-    {
-        LogoComponent();
-        void paint (Graphics& g) override;
-        static String getVersionInfo();
-
-        std::unique_ptr<Drawable> logo;
-    };
-
-    struct ContentViewport  : public Component
-    {
-        ContentViewport (Component* content);
-        void resized() override;
-
-        Viewport viewport;
-
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ContentViewport)
-    };
-
     //==============================================================================
     bool documentAboutToClose (OpenDocumentManager::Document*) override;
     void changeListenerCallback (ChangeBroadcaster*) override;
     void showTranslationTool();
 
-    void globalFocusChanged (Component*) override;
-    void timerCallback() override;
-
-    void liveBuildEnablementChanged (bool isEnabled);
-
-    bool isContinuousRebuildEnabled();
-    void setContinuousRebuildEnabled (bool b);
-
-    void rebuildNow();
-    void handleCrash (const String& message);
-    void updateWarningState();
-    void launchApp();
-    void killApp();
-
-    ReferenceCountedObjectPtr<CompileEngineChildProcess> getChildProcess();
-
     //==============================================================================
-    void showProjectPanel (const int index);
-    ProjectTab* getProjectTab();
-    LiveBuildTab* getLiveBuildTab();
+    void showProjectPanel (int index);
     bool canSelectedProjectBeLaunch();
 
     //==============================================================================
@@ -196,21 +140,21 @@ private:
     OpenDocumentManager::Document* currentDocument = nullptr;
     RecentDocumentList recentDocumentList;
 
-    LogoComponent logoComponent;
     HeaderComponent headerComponent { this };
+    std::unique_ptr<Sidebar> sidebar;
     ProjectMessagesComponent projectMessagesComponent;
-    Label fileNameLabel;
-    TabbedComponent sidebarTabs  { TabbedButtonBar::TabsAtTop };
+    ContentViewComponent contentViewComponent;
+
     std::unique_ptr<ResizableEdgeComponent> resizerBar;
     ComponentBoundsConstrainer sidebarSizeConstrainer;
-    std::unique_ptr<Component> translationTool, contentView;
+    std::unique_ptr<Component> translationTool;
     BubbleMessageComponent bubbleMessage;
 
-    ReferenceCountedObjectPtr<CompileEngineChildProcess> childProcess;
-    String lastCrashMessage;
-
-    bool isForeground = false, isLiveBuildEnabled = false;
+    bool isForeground = false;
     int lastViewedTab = 0;
+
+    std::unique_ptr<WizardHolder> wizardHolder;
+    ScopedMessageBox messageBox;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProjectContentComponent)

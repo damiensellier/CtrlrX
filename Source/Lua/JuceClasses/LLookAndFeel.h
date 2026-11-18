@@ -84,7 +84,7 @@ class LookAndFeelBase : public LookAndFeel_V4 // Was LookAndFeel_V2 before v5.6.
 		Button* createDocumentWindowButton (int buttonType);
 		void positionDocumentWindowButtons (DocumentWindow &documentWindow, int titleBarX, int titleBarY, int titleBarW, int titleBarH, Button* minimiseButton, Button* maximiseButton, Button* closeButton, bool positionTitleBarButtonsOnLeft);
 		int getDefaultMenuBarHeight ();
-		DropShadower* createDropShadowerForComponent (Component* component);
+		std::unique_ptr<DropShadower> createDropShadowerForComponent (Component& component) override;
 		void drawGroupComponentOutline (Graphics &g, int w, int h, const String &text, const Justification &justification, GroupComponent &groupComponent);
 		int getTabButtonSpaceAroundImage ();
 		int getTabButtonOverlap (int tabDepth);

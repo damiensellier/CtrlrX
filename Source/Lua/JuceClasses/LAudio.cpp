@@ -59,7 +59,7 @@ void LAudioFormat::wrapForLua (lua_State *L)
 		class_<AudioFormatReader>("AudioFormatReader")
 				.def("getFormatName", &AudioFormatReader::getFormatName)
 				.def("read", (bool (AudioFormatReader::*)(int *const *, int, int64, int, bool))&AudioFormatReader::read)
-				.def("read", (void (AudioFormatReader::*)(AudioSampleBuffer *, int, int, int64, bool, bool))&AudioFormatReader::read)
+				.def("read", (bool (AudioFormatReader::*)(AudioSampleBuffer *, int, int, int64, bool, bool))&AudioFormatReader::read)
 				.def("readMaxLevels", (void (AudioFormatReader::*)(int64, int64, float&, float&, float&, float&))&AudioFormatReader::readMaxLevels)
 				.def("searchForLevel", &AudioFormatReader::searchForLevel)
 				.def_readonly("sampleRate", &AudioFormatReader::sampleRate)
@@ -198,8 +198,8 @@ void LAudioThumbnail::wrapForLua (lua_State *L)
 		class_<AudioThumbnail>("AudioThumbnail")
 			.def(constructor<int, AudioFormatManager &, AudioThumbnailCache &>())
 			.def("clear", &AudioThumbnail::clear)
-			.def("setSource", &AudioThumbnail::setSource)
-			.def("setReader", &AudioThumbnail::setReader)
+			.def("setSource", (bool (AudioThumbnail::*)(InputSource *)) &AudioThumbnail::setSource)
+			.def("setReader", (void (AudioThumbnail::*)(AudioFormatReader *, int64)) &AudioThumbnail::setReader)
 			.def("reset", &AudioThumbnail::reset)
 			.def("addBlock", &AudioThumbnail::addBlock)
 			.def("loadFrom", &AudioThumbnail::loadFrom)
@@ -231,8 +231,8 @@ void LMidiBuffer::wrapForLua (lua_State *L)
             .def("clear", (void (MidiBuffer::*)(int, int)) &MidiBuffer::clear)
             .def("isEmpty", &MidiBuffer::isEmpty)
             .def("getNumEvents", &MidiBuffer::getNumEvents)
-            .def("addEvent", (void (MidiBuffer::*)(const MidiMessage &, int)) &MidiBuffer::addEvent)
-            .def("addEvents", (void (MidiBuffer::*)(const MidiBuffer &, int, int, int)) &MidiBuffer::addEvents)
+	            .def("addEvent", (bool (MidiBuffer::*)(const MidiMessage &, int)) &MidiBuffer::addEvent)
+	            .def("addEvents", (bool (MidiBuffer::*)(const MidiBuffer &, int, int, int)) &MidiBuffer::addEvents)
             .def("getFirstEventTime", &MidiBuffer::getFirstEventTime)
             .def("getLastEventTime", &MidiBuffer::getLastEventTime)
             .def("swapWith", &MidiBuffer::swapWith)
@@ -390,7 +390,7 @@ void LMidiMessage::wrapForLua (lua_State *L)
 					//def("midiMachineControlCommand", &MidiMessage::midiMachineControlCommand),
 					//def("midiMachineControlGoto", &MidiMessage::midiMachineControlGoto),
 					def("masterVolume", &MidiMessage::masterVolume),
-					def("createSysExMessage", &MidiMessage::createSysExMessage),
+					def("createSysExMessage", (MidiMessage (*)(const void *, int)) &MidiMessage::createSysExMessage),
 					def("readVariableLengthVal", &MidiMessage::readVariableLengthVal),
 					def("getMessageLengthFromFirstByte", &MidiMessage::getMessageLengthFromFirstByte),
 					def("getMidiNoteName", &MidiMessage::getMidiNoteName),

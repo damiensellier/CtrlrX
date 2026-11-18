@@ -41,7 +41,7 @@ namespace luabind { namespace detail
             int nurse_index = indices[A];
             int patient = indices[B];
 
-            object_rep* nurse = static_cast<object_rep*>(lua_touserdata(L, nurse_index));
+            object_rep* nurse = get_instance(L, nurse_index);
 
             // If the nurse isn't an object_rep, just make this a nop.
             if (nurse == 0)

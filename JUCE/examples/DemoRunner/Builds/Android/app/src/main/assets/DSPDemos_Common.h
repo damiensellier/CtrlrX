@@ -1,18 +1,22 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework examples.
+   Copyright (c) Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
+   to use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
 
-   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES,
-   WHETHER EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR
-   PURPOSE, ARE DISCLAIMED.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+   REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+   AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+   INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+   LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+   OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+   PERFORMANCE OF THIS SOFTWARE.
 
   ==============================================================================
 */
@@ -25,7 +29,7 @@ using namespace dsp;
 struct DSPDemoParameterBase    : public ChangeBroadcaster
 {
     DSPDemoParameterBase (const String& labelName) : name (labelName) {}
-    virtual ~DSPDemoParameterBase() {}
+    virtual ~DSPDemoParameterBase() = default;
 
     virtual Component* getComponent() = 0;
 
@@ -38,7 +42,7 @@ struct DSPDemoParameterBase    : public ChangeBroadcaster
 };
 
 //==============================================================================
-struct SliderParameter   : public DSPDemoParameterBase
+struct SliderParameter final : public DSPDemoParameterBase
 {
     SliderParameter (Range<double> range, double skew, double initialValue,
                      const String& labelName, const String& suffix = {})
@@ -66,7 +70,7 @@ private:
 };
 
 //==============================================================================
-struct ChoiceParameter    : public DSPDemoParameterBase
+struct ChoiceParameter final : public DSPDemoParameterBase
 {
     ChoiceParameter (const StringArray& options, int initialId, const String& labelName)
         : DSPDemoParameterBase (labelName)
@@ -89,11 +93,11 @@ private:
 };
 
 //==============================================================================
-class AudioThumbnailComponent    : public Component,
-                                   public FileDragAndDropTarget,
-                                   public ChangeBroadcaster,
-                                   private ChangeListener,
-                                   private Timer
+class AudioThumbnailComponent final : public Component,
+                                      public FileDragAndDropTarget,
+                                      public ChangeBroadcaster,
+                                      private ChangeListener,
+                                      private Timer
 {
 public:
     AudioThumbnailComponent (AudioDeviceManager& adm, AudioFormatManager& afm)
@@ -142,13 +146,13 @@ public:
         loadURL (u);
     }
 
-    URL getCurrentURL()    { return currentURL; }
+    URL getCurrentURL() const   { return currentURL; }
 
     void setTransportSource (AudioTransportSource* newSource)
     {
         transportSource = newSource;
 
-        struct ResetCallback  : public CallbackMessage
+        struct ResetCallback final : public CallbackMessage
         {
             ResetCallback (AudioThumbnailComponent& o) : owner (o) {}
             void messageCallback() override    { owner.reset(); }
@@ -189,21 +193,7 @@ private:
 
         currentURL = u;
 
-        InputSource* inputSource = nullptr;
-
-       #if ! JUCE_IOS
-        if (u.isLocalFile())
-        {
-            inputSource = new FileInputSource (u.getLocalFile());
-        }
-        else
-       #endif
-        {
-            if (inputSource == nullptr)
-                inputSource = new URLInputSource (u);
-        }
-
-        thumbnail.setSource (inputSource);
+        thumbnail.setSource (makeInputSource (u).release());
 
         if (notify)
             sendChangeMessage();
@@ -231,7 +221,7 @@ private:
 };
 
 //==============================================================================
-class DemoParametersComponent    : public Component
+class DemoParametersComponent final : public Component
 {
 public:
     DemoParametersComponent (const std::vector<DSPDemoParameterBase*>& demoParams)
@@ -284,9 +274,9 @@ private:
 
 //==============================================================================
 template <class DemoType>
-struct DSPDemo  : public AudioSource,
-                  public ProcessorWrapper<DemoType>,
-                  private ChangeListener
+struct DSPDemo final : public AudioSource,
+                       public ProcessorWrapper<DemoType>,
+                       private ChangeListener
 {
     DSPDemo (AudioSource& input)
         : inputSource (&input)
@@ -308,7 +298,11 @@ struct DSPDemo  : public AudioSource,
 
     void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override
     {
-        jassert (bufferToFill.buffer != nullptr);
+        if (bufferToFill.buffer == nullptr)
+        {
+            jassertfalse;
+            return;
+        }
 
         inputSource->getNextAudioBlock (bufferToFill);
 
@@ -337,10 +331,10 @@ struct DSPDemo  : public AudioSource,
 
 //==============================================================================
 template <class DemoType>
-class AudioFileReaderComponent  : public Component,
-                                  private TimeSliceThread,
-                                  private Value::Listener,
-                                  private ChangeListener
+class AudioFileReaderComponent final : public Component,
+                                       private TimeSliceThread,
+                                       private Value::Listener,
+                                       private ChangeListener
 {
 public:
     //==============================================================================
@@ -389,7 +383,7 @@ public:
 
         r.removeFromTop (20);
 
-        if (parametersComponent.get() != nullptr)
+        if (parametersComponent != nullptr)
             parametersComponent->setBounds (r.removeFromTop (parametersComponent->getHeightNeeded()).reduced (20, 0));
     }
 
@@ -403,33 +397,28 @@ public:
         transportSource.reset();
         readerSource.reset();
 
-        AudioFormatReader* newReader = nullptr;
+        auto source = makeInputSource (fileToPlay);
 
-       #if ! JUCE_IOS
-        if (fileToPlay.isLocalFile())
-        {
-            newReader = formatManager.createReaderFor (fileToPlay.getLocalFile());
-        }
-        else
-       #endif
-        {
-            if (newReader == nullptr)
-                newReader = formatManager.createReaderFor (fileToPlay.createInputStream (false));
-        }
+        if (source == nullptr)
+            return false;
 
-        reader.reset (newReader);
+        auto stream = rawToUniquePtr (source->createInputStream());
 
-        if (reader.get() != nullptr)
-        {
-            readerSource.reset (new AudioFormatReaderSource (reader.get(), false));
-            readerSource->setLooping (loopState.getValue());
+        if (stream == nullptr)
+            return false;
 
-            init();
+        reader = rawToUniquePtr (formatManager.createReaderFor (std::move (stream)));
 
-            return true;
-        }
+        if (reader == nullptr)
+            return false;
 
-        return false;
+        readerSource.reset (new AudioFormatReaderSource (reader.get(), false));
+        readerSource->setLooping (loopState.getValue());
+
+        init();
+        resized();
+
+        return true;
     }
 
     void togglePlay()
@@ -458,7 +447,7 @@ public:
             transportSource.reset (new AudioTransportSource());
             transportSource->addChangeListener (this);
 
-            if (readerSource.get() != nullptr)
+            if (readerSource != nullptr)
             {
                 if (auto* device = audioDeviceManager.getCurrentAudioDevice())
                 {
@@ -477,12 +466,20 @@ public:
 
         audioSourcePlayer.setSource (currentDemo.get());
 
-        initParameters();
+        auto& parameters = currentDemo->getParameters();
+
+        parametersComponent.reset();
+
+        if (! parameters.empty())
+        {
+            parametersComponent = std::make_unique<DemoParametersComponent> (parameters);
+            addAndMakeVisible (parametersComponent.get());
+        }
     }
 
     void play()
     {
-        if (readerSource.get() == nullptr)
+        if (readerSource == nullptr)
             return;
 
         if (transportSource->getCurrentPosition() >= transportSource->getLengthInSeconds()
@@ -495,32 +492,17 @@ public:
 
     void setLooping (bool shouldLoop)
     {
-        if (readerSource.get() != nullptr)
+        if (readerSource != nullptr)
             readerSource->setLooping (shouldLoop);
     }
 
     AudioThumbnailComponent& getThumbnailComponent()    { return header.thumbnailComp; }
 
-    void initParameters()
-    {
-        auto& parameters = currentDemo->getParameters();
-
-        parametersComponent.reset();
-
-        if (parameters.size() > 0)
-        {
-            parametersComponent.reset (new DemoParametersComponent (parameters));
-            addAndMakeVisible (parametersComponent.get());
-        }
-
-        resized();
-    }
-
 private:
     //==============================================================================
-    class AudioPlayerHeader     : public Component,
-                                  private ChangeListener,
-                                  private Value::Listener
+    class AudioPlayerHeader final : public Component,
+                                    private ChangeListener,
+                                    private Value::Listener
     {
     public:
         AudioPlayerHeader (AudioDeviceManager& adm,
@@ -590,14 +572,13 @@ private:
             if (fileChooser != nullptr)
                 return;
 
-            SafePointer<AudioPlayerHeader> safeThis (this);
-
             if (! RuntimePermissions::isGranted (RuntimePermissions::readExternalStorage))
             {
+                SafePointer<AudioPlayerHeader> safeThis (this);
                 RuntimePermissions::request (RuntimePermissions::readExternalStorage,
                                              [safeThis] (bool granted) mutable
                                              {
-                                                 if (granted)
+                                                 if (safeThis != nullptr && granted)
                                                      safeThis->openFile();
                                              });
                 return;
@@ -606,22 +587,27 @@ private:
             fileChooser.reset (new FileChooser ("Select an audio file...", File(), "*.wav;*.mp3;*.aif"));
 
             fileChooser->launchAsync (FileBrowserComponent::openMode | FileBrowserComponent::canSelectFiles,
-                                      [safeThis] (const FileChooser& fc) mutable
+                                      [this] (const FileChooser& fc) mutable
                                       {
-                                          if (safeThis == nullptr)
-                                              return;
-
                                           if (fc.getURLResults().size() > 0)
                                           {
-                                              auto u = fc.getURLResult();
+                                              const auto u = fc.getURLResult();
 
-                                              if (! safeThis->audioFileReader.loadURL (u))
-                                                  NativeMessageBox::showOkCancelBox (AlertWindow::WarningIcon, "Error loading file", "Unable to load audio file", nullptr, nullptr);
+                                              if (! audioFileReader.loadURL (u))
+                                              {
+                                                  auto options = MessageBoxOptions().withIconType (MessageBoxIconType::WarningIcon)
+                                                                                    .withTitle ("Error loading file")
+                                                                                    .withMessage ("Unable to load audio file")
+                                                                                    .withButton ("OK");
+                                                  messageBox = NativeMessageBox::showScopedAsync (options, nullptr);
+                                              }
                                               else
-                                                  safeThis->thumbnailComp.setCurrentURL (u);
+                                              {
+                                                  thumbnailComp.setCurrentURL (u);
+                                              }
                                           }
 
-                                          safeThis->fileChooser = nullptr;
+                                          fileChooser = nullptr;
                                       }, nullptr);
         }
 
@@ -645,12 +631,13 @@ private:
 
         AudioFileReaderComponent& audioFileReader;
         std::unique_ptr<FileChooser> fileChooser;
+        ScopedMessageBox messageBox;
     };
 
     //==============================================================================
     void valueChanged (Value& v) override
     {
-        if (readerSource.get() != nullptr)
+        if (readerSource != nullptr)
             readerSource->setLooping (v.getValue());
     }
 

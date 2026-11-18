@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -2409,6 +2418,7 @@ private:
         return numBits;
     }
 
+    JUCE_BEGIN_IGNORE_WARNINGS_MSVC (6385)
     int getLayer3ScaleFactors2 (int* scf, Layer3SideInfo::Info& granule, const bool iStereo) noexcept
     {
         static const uint8 scaleTable[3][6][4] =
@@ -2460,6 +2470,7 @@ private:
 
         return numBits;
     }
+    JUCE_END_IGNORE_WARNINGS_MSVC
 
     bool layer3DequantizeSample (float xr[32][18], int* scf, Layer3SideInfo::Info& granule, int sampleRate, int part2bits) noexcept
     {
@@ -2926,7 +2937,7 @@ private:
             sum += window[12] * b0[12];  sum += window[14] * b0[14];
             *out++ = sum;
             b0 -= 16; window -= 32;
-            window += bo1 << 1;
+            window += (ptrdiff_t) bo1 << 1;
         }
 
         for (int j = 15; j != 0; --j, b0 -= 16, window -= 32)
@@ -2952,7 +2963,7 @@ private:
 static const char* const mp3FormatName = "MP3 file";
 
 //==============================================================================
-class MP3Reader : public AudioFormatReader
+class MP3Reader final : public AudioFormatReader
 {
 public:
     MP3Reader (InputStream* const in)
@@ -2973,10 +2984,14 @@ public:
         }
     }
 
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
-        jassert (destSamples != nullptr);
+        if (destSamples == nullptr)
+        {
+            jassertfalse;
+            return false;
+        }
 
         if (currentPosition != startSampleInFile)
         {
@@ -3027,7 +3042,7 @@ public:
             }
 
             const int numToCopy = jmin (decodedEnd - decodedStart, numSamples);
-            float* const* const dst = reinterpret_cast<float**> (destSamples);
+            float* const* const dst = reinterpret_cast<float* const*> (destSamples);
             memcpy (dst[0] + startOffsetInDestBuffer, decoded0 + decodedStart, (size_t) numToCopy * sizeof (float));
 
             if (numDestChannels > 1 && dst[1] != nullptr)
@@ -3158,9 +3173,8 @@ AudioFormatReader* MP3AudioFormat::createReaderFor (InputStream* sourceStream, c
     return nullptr;
 }
 
-AudioFormatWriter* MP3AudioFormat::createWriterFor (OutputStream*, double /*sampleRateToUse*/,
-                                                    unsigned int /*numberOfChannels*/, int /*bitsPerSample*/,
-                                                    const StringPairArray& /*metadataValues*/, int /*qualityOptionIndex*/)
+std::unique_ptr<AudioFormatWriter> MP3AudioFormat::createWriterFor (std::unique_ptr<OutputStream>&,
+                                                                    const AudioFormatWriterOptions&)
 {
     jassertfalse; // not yet implemented!
     return nullptr;

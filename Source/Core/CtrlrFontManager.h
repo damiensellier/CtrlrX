@@ -41,11 +41,15 @@ class CtrlrFontManager
 		Font getDefaultSmallFont();
 		Font getDefaultNormalFont();
 
-		static Font getBuiltInFont(const char *fontData, const int fontDataSize);
+		// --- JUCE 8 UPDATES START HERE ---
+		// Changed int to size_t to match JUCE 8 BinaryData and Typeface API
+		static Font getBuiltInFont(const char *fontData, const size_t fontDataSize);
 		static Font getBuiltInFont(const String &fontResourceName);
-		static const Font getFont (const char *fontData, const int fontDataSize);
+		static const Font getFont (const char *fontData, const size_t fontDataSize);
+		// --- JUCE 8 UPDATES END HERE ---
+	
 		static const Font getBuiltInFont(const int fontIndex);
-		static bool isFontFile(const File &fontFile) { return (fontFile.hasFileExtension("jfont")); }
+		static bool isFontFile(const File &fontFile) { return (fontFile.hasFileExtension("jfont") || fontFile.hasFileExtension("ttf") || fontFile.hasFileExtension("otf")); }
 
 		JUCE_LEAK_DETECTOR(CtrlrFontManager);
 

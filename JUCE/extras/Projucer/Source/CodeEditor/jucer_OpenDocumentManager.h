@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -33,14 +42,12 @@ class OpenDocumentManager
 public:
     //==============================================================================
     OpenDocumentManager();
-    ~OpenDocumentManager();
 
     //==============================================================================
     class Document
     {
     public:
-        Document() {}
-        virtual ~Document() {}
+        virtual ~Document() = default;
 
         virtual bool loadedOk() const = 0;
         virtual bool isForFile (const File& file) const = 0;
@@ -51,12 +58,13 @@ public:
         virtual String getType() const = 0;
         virtual File getFile() const = 0;
         virtual bool needsSaving() const = 0;
-        virtual bool save() = 0;
-        virtual bool saveAs() = 0;
+        virtual bool saveSyncWithoutAsking() = 0;
+        virtual void saveAsync (std::function<void (bool)>) = 0;
+        virtual void saveAsAsync (std::function<void (bool)>) = 0;
         virtual bool hasFileBeenModifiedExternally() = 0;
         virtual void reloadFromFile() = 0;
-        virtual Component* createEditor() = 0;
-        virtual Component* createViewer() = 0;
+        virtual std::unique_ptr<Component> createEditor() = 0;
+        virtual std::unique_ptr<Component> createViewer() = 0;
         virtual void fileHasBeenRenamed (const File& newFile) = 0;
         virtual String getState() const = 0;
         virtual void restoreState (const String& state) = 0;
@@ -72,14 +80,20 @@ public:
 
     bool canOpenFile (const File& file);
     Document* openFile (Project* project, const File& file);
-    bool closeDocument (int index, SaveIfNeeded saveIfNeeded);
-    bool closeDocument (Document* document, SaveIfNeeded saveIfNeeded);
-    bool closeAll (SaveIfNeeded askUserToSave);
-    bool closeAllDocumentsUsingProject (Project& project, SaveIfNeeded saveIfNeeded);
-    void closeFile (const File& f, SaveIfNeeded saveIfNeeded);
+
+    void closeDocumentAsync (Document* document, SaveIfNeeded saveIfNeeded, std::function<void (bool)> callback);
+    bool closeDocumentWithoutSaving (Document* document);
+
+    void closeAllAsync (SaveIfNeeded askUserToSave, std::function<void (bool)> callback);
+    void closeAllDocumentsUsingProjectAsync (Project& project, SaveIfNeeded askUserToSave, std::function<void (bool)> callback);
+    void closeAllDocumentsUsingProjectWithoutSaving (Project& project);
+
+    void closeFileWithoutSaving (const File& f);
     bool anyFilesNeedSaving() const;
-    bool saveAll();
-    FileBasedDocument::SaveResult saveIfNeededAndUserAgrees (Document* doc);
+
+    void saveAllSyncWithoutAsking();
+    void saveIfNeededAndUserAgrees (Document* doc, std::function<void (FileBasedDocument::SaveResult)>);
+
     void reloadModifiedFiles();
     void fileHasBeenRenamed (const File& oldFile, const File& newFile);
 
@@ -101,8 +115,7 @@ public:
     class DocumentType
     {
     public:
-        DocumentType() {}
-        virtual ~DocumentType() {}
+        virtual ~DocumentType() = default;
 
         virtual bool canOpenFile (const File& file) = 0;
         virtual Document* openFile (Project* project, const File& file) = 0;
@@ -110,21 +123,29 @@ public:
 
     void registerType (DocumentType* type, int index = -1);
 
-
 private:
+    //==============================================================================
+    void closeLastDocumentUsingProjectRecursive (WeakReference<OpenDocumentManager>,
+                                                 Project*,
+                                                 SaveIfNeeded,
+                                                 std::function<void (bool)>);
+
+    //==============================================================================
     OwnedArray<DocumentType> types;
     OwnedArray<Document> documents;
     Array<DocumentCloseListener*> listeners;
+    ScopedMessageBox messageBox;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OpenDocumentManager)
+    JUCE_DECLARE_WEAK_REFERENCEABLE (OpenDocumentManager)
 };
 
 //==============================================================================
-class RecentDocumentList    : private OpenDocumentManager::DocumentCloseListener
+class RecentDocumentList final : private OpenDocumentManager::DocumentCloseListener
 {
 public:
     RecentDocumentList();
-    ~RecentDocumentList();
+    ~RecentDocumentList() override;
 
     void clear();
 
@@ -146,7 +167,7 @@ public:
     std::unique_ptr<XmlElement> createXML() const;
 
 private:
-    bool documentAboutToClose (OpenDocumentManager::Document*);
+    bool documentAboutToClose (OpenDocumentManager::Document*) override;
 
     Array<OpenDocumentManager::Document*> previousDocs, nextDocs;
 };

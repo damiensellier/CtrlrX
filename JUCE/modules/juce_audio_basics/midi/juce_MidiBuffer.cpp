@@ -1,21 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
-   without fee is hereby granted provided that the above copyright notice and
-   this permission notice appear in all copies.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
+
+   Or:
+
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -119,29 +131,37 @@ void MidiBuffer::clear (int startSample, int numSamples)
     data.removeRange ((int) (start - data.begin()), (int) (end - start));
 }
 
-void MidiBuffer::addEvent (const MidiMessage& m, int sampleNumber)
+bool MidiBuffer::addEvent (const MidiMessage& m, int sampleNumber)
 {
-    addEvent (m.getRawData(), m.getRawDataSize(), sampleNumber);
+    return addEvent (m.getRawData(), m.getRawDataSize(), sampleNumber);
 }
 
-void MidiBuffer::addEvent (const void* newData, int maxBytes, int sampleNumber)
+bool MidiBuffer::addEvent (const void* newData, int maxBytes, int sampleNumber)
 {
     auto numBytes = MidiBufferHelpers::findActualEventLength (static_cast<const uint8*> (newData), maxBytes);
 
-    if (numBytes > 0)
+    if (numBytes <= 0)
+        return true;
+
+    if (std::numeric_limits<uint16>::max() < numBytes)
     {
-        auto newItemSize = (size_t) numBytes + sizeof (int32) + sizeof (uint16);
-        auto offset = (int) (MidiBufferHelpers::findEventAfter (data.begin(), data.end(), sampleNumber) - data.begin());
-
-        data.insertMultiple (offset, 0, (int) newItemSize);
-
-        auto* d = data.begin() + offset;
-        writeUnaligned<int32>  (d, sampleNumber);
-        d += sizeof (int32);
-        writeUnaligned<uint16> (d, static_cast<uint16> (numBytes));
-        d += sizeof (uint16);
-        memcpy (d, newData, (size_t) numBytes);
+        // This method only supports messages smaller than (1 << 16) bytes
+        return false;
     }
+
+    auto newItemSize = (size_t) numBytes + sizeof (int32) + sizeof (uint16);
+    auto offset = (int) (MidiBufferHelpers::findEventAfter (data.begin(), data.end(), sampleNumber) - data.begin());
+
+    data.insertMultiple (offset, 0, (int) newItemSize);
+
+    auto* d = data.begin() + offset;
+    writeUnaligned<int32>  (d, sampleNumber);
+    d += sizeof (int32);
+    writeUnaligned<uint16> (d, static_cast<uint16> (numBytes));
+    d += sizeof (uint16);
+    memcpy (d, newData, (size_t) numBytes);
+
+    return true;
 }
 
 void MidiBuffer::addEvents (const MidiBuffer& otherBuffer,
@@ -201,12 +221,12 @@ MidiBufferIterator MidiBuffer::findNextSamplePosition (int samplePosition) const
 }
 
 //==============================================================================
+JUCE_BEGIN_IGNORE_DEPRECATION_WARNINGS
+
 MidiBuffer::Iterator::Iterator (const MidiBuffer& b) noexcept
     : buffer (b), iterator (b.data.begin())
 {
 }
-
-MidiBuffer::Iterator::~Iterator() noexcept {}
 
 void MidiBuffer::Iterator::setNextSamplePosition (int samplePosition) noexcept
 {
@@ -236,11 +256,13 @@ bool MidiBuffer::Iterator::getNextEvent (MidiMessage& result, int& samplePositio
     return true;
 }
 
+JUCE_END_IGNORE_DEPRECATION_WARNINGS
+
 //==============================================================================
 //==============================================================================
 #if JUCE_UNIT_TESTS
 
-struct MidiBufferTest  : public UnitTest
+struct MidiBufferTest final : public UnitTest
 {
     MidiBufferTest()
         : UnitTest ("MidiBuffer", UnitTestCategories::midi)

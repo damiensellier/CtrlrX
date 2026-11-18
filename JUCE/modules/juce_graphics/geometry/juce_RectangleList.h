@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -39,7 +48,7 @@ namespace juce
     @tags{Graphics}
 */
 template <typename ValueType>
-class RectangleList  
+class RectangleList  final
 {
 public:
     using RectangleType = Rectangle<ValueType>;
@@ -201,84 +210,25 @@ public:
         Any rectangles in the list which overlap this will be clipped and subdivided
         if necessary.
     */
-    void subtract (RectangleType rect)
+    void subtract (const RectangleType rect)
     {
-        if (auto numRects = rects.size())
+        if (rects.isEmpty())
+            return;
+
+        if constexpr (std::is_floating_point_v<ValueType>)
         {
-            auto x1 = rect.getX();
-            auto y1 = rect.getY();
-            auto x2 = x1 + rect.getWidth();
-            auto y2 = y1 + rect.getHeight();
+            Array<AABB> alternativeRepresentation;
+            alternativeRepresentation.resize (rects.size());
+            std::copy (rects.begin(), rects.end(), alternativeRepresentation.begin());
 
-            for (int i = numRects; --i >= 0;)
-            {
-                auto& r = rects.getReference (i);
+            subtract (alternativeRepresentation, rect);
 
-                auto rx1 = r.getX();
-                auto ry1 = r.getY();
-                auto rx2 = rx1 + r.getWidth();
-                auto ry2 = ry1 + r.getHeight();
-
-                if (! (x2 <= rx1 || x1 >= rx2 || y2 <= ry1 || y1 >= ry2))
-                {
-                    if (x1 > rx1 && x1 < rx2)
-                    {
-                        if (y1 <= ry1 && y2 >= ry2 && x2 >= rx2)
-                        {
-                            r.setWidth (x1 - rx1);
-                        }
-                        else
-                        {
-                            r.setX (x1);
-                            r.setWidth (rx2 - x1);
-
-                            rects.insert (++i, RectangleType (rx1, ry1, x1 - rx1,  ry2 - ry1));
-                            ++i;
-                        }
-                    }
-                    else if (x2 > rx1 && x2 < rx2)
-                    {
-                        r.setX (x2);
-                        r.setWidth (rx2 - x2);
-
-                        if (y1 > ry1 || y2 < ry2 || x1 > rx1)
-                        {
-                            rects.insert (++i, RectangleType (rx1, ry1, x2 - rx1,  ry2 - ry1));
-                            ++i;
-                        }
-                    }
-                    else if (y1 > ry1 && y1 < ry2)
-                    {
-                        if (x1 <= rx1 && x2 >= rx2 && y2 >= ry2)
-                        {
-                            r.setHeight (y1 - ry1);
-                        }
-                        else
-                        {
-                            r.setY (y1);
-                            r.setHeight (ry2 - y1);
-
-                            rects.insert (++i, RectangleType (rx1, ry1, rx2 - rx1, y1 - ry1));
-                            ++i;
-                        }
-                    }
-                    else if (y2 > ry1 && y2 < ry2)
-                    {
-                        r.setY (y2);
-                        r.setHeight (ry2 - y2);
-
-                        if (x1 > rx1 || x2 < rx2 || y1 > ry1)
-                        {
-                            rects.insert (++i, RectangleType (rx1, ry1, rx2 - rx1, y2 - ry1));
-                            ++i;
-                        }
-                    }
-                    else
-                    {
-                        rects.remove (i);
-                    }
-                }
-            }
+            rects.resize (alternativeRepresentation.size());
+            std::copy (alternativeRepresentation.begin(), alternativeRepresentation.end(), rects.begin());
+        }
+        else
+        {
+            subtract (rects, rect);
         }
     }
 
@@ -533,7 +483,7 @@ public:
                 auto jry2 = jry1 + r2.getHeight();
 
                 // if the vertical edges of any blocks are touching and their horizontals don't
-                // line up, split them horizontally..
+                // line up, split them horizontally
                 if (jrx1 == rx2 || jrx2 == rx1)
                 {
                     if (jry1 > ry1 && jry1 < ry2)
@@ -646,6 +596,130 @@ public:
     }
 
 private:
+    using PointType = Point<ValueType>;
+
+    struct AABB
+    {
+        AABB() = default;
+        AABB (const RectangleType& r) : tl (r.getTopLeft()), br (r.getBottomRight()) {}
+        AABB (PointType a, PointType b) : tl (a), br (b) {}
+        operator RectangleType() const { return RectangleType { tl, br }; }
+
+        bool completelyOutside (const AABB& other) const
+        {
+            return other.br.x <= tl.x || br.x <= other.tl.x || other.br.y <= tl.y || br.y <= other.tl.y;
+        }
+
+        PointType tl, br;
+    };
+
+    static PointType getTL (const AABB& aabb)
+    {
+        return aabb.tl;
+    }
+
+    static PointType getBR (const AABB& aabb)
+    {
+        return aabb.br;
+    }
+
+    static PointType getTL (const RectangleType& r)
+    {
+        return r.getTopLeft();
+    }
+
+    static PointType getBR (const RectangleType& r)
+    {
+        return r.getBottomRight();
+    }
+
+    template <typename Rect>
+    static void subtract (Array<Rect>& rectList, RectangleType rect)
+    {
+        jassert (! rectList.isEmpty());
+
+        const AABB rAABB { getTL (rect), getBR (rect) };
+
+        for (int i = rectList.size(); --i >= 0;)
+        {
+            auto& iRef = rectList.getReference (i);
+            const AABB iAABB { getTL (iRef), getBR (iRef) };
+
+            if (iAABB.completelyOutside (rAABB))
+                continue;
+
+            std::invoke ([&]
+            {
+                // For each rectangle in the list, we check for an overlap with the parameter rect
+                // and subdivide the list rectangles as necessary.
+                // The checks for each list rectangle happen in two stages, treating first the X
+                // then the Y axis as the 'major' axis. The terms 'major' and 'minor' are somewhat
+                // arbitrary. Essentially, in each pass, the rectangles in the list are only
+                // modified and/or subdivided on the major axis, without changing any minor axis
+                // coordinates. Subdividing an overlapping rect in this way may produce new rects
+                // that still overlap with the parameter rect. However, those will get cleaned up
+                // on the subsequent pass, where the major/minor axes are swapped.
+
+                struct Fields
+                {
+                    ValueType PointType::* major;
+                    ValueType PointType::* minor;
+                };
+
+                for (const auto& fields : { Fields { &PointType::x, &PointType::y },
+                                            Fields { &PointType::y, &PointType::x } })
+                {
+                    const auto replaceMajor = [&] (auto modified, const auto& replacement)
+                    {
+                        modified.*(fields.major) = replacement.*(fields.major);
+                        return modified;
+                    };
+
+                    const auto insert = [&] (const PointType& rAABBpt)
+                    {
+                        rectList.insert (++i, { iAABB.tl, replaceMajor (iAABB.br, rAABBpt) });
+                        ++i;
+                    };
+
+                    if (   iAABB.tl.*(fields.major) < rAABB.tl.*(fields.major)
+                        && rAABB.tl.*(fields.major) < iAABB.br.*(fields.major))
+                    {
+                        if (   rAABB.tl.*(fields.minor) <= iAABB.tl.*(fields.minor)
+                            && iAABB.br.*(fields.minor) <= rAABB.br.*(fields.minor)
+                            && iAABB.br.*(fields.major) <= rAABB.br.*(fields.major))
+                        {
+                            iRef = { iAABB.tl, replaceMajor (iAABB.br, rAABB.tl) };
+                        }
+                        else
+                        {
+                            iRef = { replaceMajor (iAABB.tl, rAABB.tl), iAABB.br };
+                            insert (rAABB.tl);
+                        }
+
+                        return;
+                    }
+
+                    if (   iAABB.tl.*(fields.major) < rAABB.br.*(fields.major)
+                        && rAABB.br.*(fields.major) < iAABB.br.*(fields.major))
+                    {
+                        iRef = { replaceMajor (iAABB.tl, rAABB.br), iAABB.br };
+
+                        if (   iAABB.tl.*(fields.minor) < rAABB.tl.*(fields.minor)
+                            || rAABB.br.*(fields.minor) < iAABB.br.*(fields.minor)
+                            || iAABB.tl.*(fields.major) < rAABB.tl.*(fields.major))
+                        {
+                            insert (rAABB.br);
+                        }
+
+                        return;
+                    }
+                }
+
+                rectList.remove (i);
+            });
+        }
+    }
+
     //==============================================================================
     Array<RectangleType> rects;
 };

@@ -4,6 +4,8 @@
 
 */
 
+#include <cstring>
+
 namespace BinaryData
 {
 
@@ -221,6 +223,46 @@ static const unsigned char temp_binary_data_4[] =
 "> Extracted from <http://www.rasterbar.com/products/luabind/docs.html>\n"
 "\n"
 "[1]: http://www.opensource.org/licenses/mit-license.php\n"
+"\n"
+"Build and test (current modernization)\n"
+"-------------------------------\n"
+"\n"
+"This latest update builds with CMake (3.16+) and requires a C++17 compiler.\n"
+"\n"
+"Version 0.93 notes:\n"
+"\n"
+"* Added a modern top-level CMake build for library, install exports, examples, and tests.\n"
+"* Set the build baseline to C++17.\n"
+"* Added `cpp_lua_roundtrip` example covering C++ <-> Lua calls in both directions.\n"
+"* Added Catch2-based roundtrip tests (`luabind_tests`) with CTest integration.\n"
+"* Added optional coverage instrumentation via `LUABIND_ENABLE_COVERAGE`.\n"
+"* Removed `std::auto_ptr` support\n"
+"\n"
+"Dependencies:\n"
+"\n"
+"* Lua development package (`find_package(Lua REQUIRED)`)\n"
+"* Catch2 headers when tests are enabled (`LUABIND_BUILD_TESTS=ON`)\n"
+"\n"
+"Quick start:\n"
+"\n"
+"```sh\n"
+"cmake -S . -B build -DCMAKE_BUILD_TYPE=Release\n"
+"cmake --build build -j\n"
+"ctest --test-dir build --output-on-failure\n"
+"```\n"
+"\n"
+"Useful CMake options:\n"
+"\n"
+"* `-DBUILD_SHARED_LIBS=ON|OFF`\n"
+"* `-DLUABIND_BUILD_TESTS=ON|OFF`\n"
+"* `-DLUABIND_BUILD_EXAMPLES=ON|OFF`\n"
+"* `-DLUABIND_ENABLE_COVERAGE=ON|OFF`\n"
+"\n"
+"Targets added by this branch:\n"
+"\n"
+"* `luabind` library target (`luabind::luabind`)\n"
+"* `cpp_lua_roundtrip` example executable\n"
+"* `luabind_tests` Catch2-based test executable\n"
 "\n"
 "\n"
 "This fork\n"
@@ -25446,7 +25488,7 @@ const char* getNamedResource (const char* resourceNameUTF8, int& numBytes)
         case 0x373d421a:  numBytes = 457; return getdeps_sh;
         case 0x002b6dac:  numBytes = 2054; return INSTALL_txt;
         case 0x5a320952:  numBytes = 1207; return LICENSE_txt;
-        case 0x64791dc8:  numBytes = 7469; return README_md;
+        case 0x64791dc8:  numBytes = 8641; return README_md;
         case 0xcb59a7d7:  numBytes = 597; return CtrlrRevision_template;
         case 0x97c5c86b:  numBytes = 97264; return FONT_60sekuntia_ttf;
         case 0x02bc5c21:  numBytes = 39104; return FONT_Computerfont_ttf;
@@ -25827,10 +25869,8 @@ const char* getNamedResourceOriginalFilename (const char* resourceNameUTF8);
 const char* getNamedResourceOriginalFilename (const char* resourceNameUTF8)
 {
     for (unsigned int i = 0; i < (sizeof (namedResourceList) / sizeof (namedResourceList[0])); ++i)
-    {
-        if (namedResourceList[i] == resourceNameUTF8)
+        if (strcmp (namedResourceList[i], resourceNameUTF8) == 0)
             return originalFilenames[i];
-    }
 
     return nullptr;
 }

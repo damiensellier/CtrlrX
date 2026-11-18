@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -27,6 +36,7 @@
 #include "../../ProjectSaving/jucer_ProjectExporter.h"
 #include "../../ProjectSaving/jucer_ProjectExport_Xcode.h"
 #include "../../ProjectSaving/jucer_ProjectExport_Android.h"
+#include "../../ProjectSaving/jucer_ProjectExport_MSVC.h"
 #include "jucer_PIPGenerator.h"
 
 //==============================================================================
@@ -62,18 +72,15 @@ static String ensureCorrectWhitespace (StringRef input)
 
 static bool isJUCEExample (const File& pipFile)
 {
-    int numLinesToTest = 10; // license should be at the top of the file so no need to
-                             // check all lines
+    const auto numLinesToTest = 10; // license should be at the top of the file so no need to check all lines
+    const auto lines = StringArray::fromLines (pipFile.loadFileAsString());
 
-    for (auto line : StringArray::fromLines (pipFile.loadFileAsString()))
-    {
-        if (line.contains ("This file is part of the JUCE examples."))
-            return true;
-
-        --numLinesToTest;
-    }
-
-    return false;
+    return std::any_of (lines.begin(),
+                        lines.begin() + (std::min (lines.size(), numLinesToTest)),
+                        [] (const auto& line)
+                        {
+                            return line.contains ("This file is part of the JUCE framework examples");
+                        });
 }
 
 static bool isValidExporterIdentifier (const Identifier& exporterIdentifier)
@@ -213,6 +220,11 @@ void PIPGenerator::createFiles (ValueTree& jucerTree)
     jucerTree.addChild (mainGroup, 0, nullptr);
 }
 
+String PIPGenerator::getDocumentControllerClass() const
+{
+    return metadata.getProperty (Ids::documentControllerClass, "").toString();
+}
+
 ValueTree PIPGenerator::createModulePathChild (const String& moduleID)
 {
     ValueTree modulePath (Ids::MODULEPATH);
@@ -241,6 +253,15 @@ ValueTree PIPGenerator::createExporterChild (const Identifier& exporterIdentifie
 
     exporter.setProperty (Ids::targetFolder, "Builds/" + ProjectExporter::getTypeInfoForExporter (exporterIdentifier).targetFolder, nullptr);
 
+    const Identifier vsExporters[] { MSVCProjectExporterVC2019::getValueTreeTypeName(),
+                                     MSVCProjectExporterVC2022::getValueTreeTypeName(),
+                                     MSVCProjectExporterVC2026::getValueTreeTypeName() };
+
+    if (isJUCEExample (pipFile) && std::find (std::begin (vsExporters), std::end (vsExporters), exporterIdentifier) != std::end (vsExporters))
+    {
+        exporter.setProperty (Ids::extraCompilerFlags, "/bigobj", nullptr);
+    }
+
     if (isJUCEExample (pipFile) && exporterRequiresExampleAssets (exporterIdentifier, metadata[Ids::name]))
     {
         auto examplesDir = getExamplesDirectory();
@@ -259,6 +280,9 @@ ValueTree PIPGenerator::createExporterChild (const Identifier& exporterIdentifie
             jassertfalse;
         }
     }
+
+    if (exporterIdentifier.toString() == AndroidProjectExporter::getValueTreeTypeName())
+        exporter.setProperty (Ids::androidBluetoothNeeded, true, nullptr);
 
     {
         ValueTree configs (Ids::CONFIGURATIONS);
@@ -357,8 +381,6 @@ Result PIPGenerator::setProjectSettings (ValueTree& jucerTree)
                                                                          : "\"File->Global Paths...\"")
                                  + " menu item.");
         }
-
-        jucerTree.setProperty (Ids::displaySplashScreen, true, nullptr);
     }
 
     setPropertyIfNotEmpty (Ids::defines, defines);
@@ -382,6 +404,9 @@ Result PIPGenerator::setProjectSettings (ValueTree& jucerTree)
 
         StringArray pluginFormatsToBuild (Ids::buildVST3.toString(), Ids::buildAU.toString(), Ids::buildStandalone.toString());
         pluginFormatsToBuild.addArray (getExtraPluginFormatsToBuild());
+
+        if (getDocumentControllerClass().isNotEmpty())
+            pluginFormatsToBuild.add (Ids::enableARA.toString());
 
         jucerTree.setProperty (Ids::pluginFormats, pluginFormatsToBuild.joinIntoString (","), nullptr);
 
@@ -421,6 +446,7 @@ void PIPGenerator::setModuleFlags (ValueTree& jucerTree)
 String PIPGenerator::getMainFileTextForType()
 {
     const auto type = metadata[Ids::type].toString();
+    const auto documentControllerClass = getDocumentControllerClass();
 
     const auto mainTemplate = [&]
     {
@@ -434,8 +460,17 @@ String PIPGenerator::getMainFileTextForType()
                    .replace ("${JUCE_PIP_MAIN_CLASS}", metadata[Ids::mainClass].toString());
 
         if (type == "AudioProcessor")
+        {
+            if (documentControllerClass.isNotEmpty())
+            {
+                return String (BinaryData::PIPAudioProcessorWithARA_cpp_in)
+                       .replace ("${JUCE_PIP_MAIN_CLASS}", metadata[Ids::mainClass].toString())
+                       .replace ("${JUCE_PIP_DOCUMENTCONTROLLER_CLASS}", documentControllerClass);
+            }
+
             return String (BinaryData::PIPAudioProcessor_cpp_in)
                    .replace ("${JUCE_PIP_MAIN_CLASS}", metadata[Ids::mainClass].toString());
+        }
 
         return String{};
     }();
@@ -473,7 +508,7 @@ Array<File> PIPGenerator::replaceRelativeIncludesAndGetFilesToMove()
             if (path.startsWith ("<") && path.endsWith (">"))
                 continue;
 
-            auto file = pipFile.getParentDirectory().getChildFile (path);
+            auto file = pipFile.getSiblingFile (path);
             files.add (file);
 
             line = line.replace (path, file.getFileName());

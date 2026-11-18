@@ -22,7 +22,7 @@
 #include "common/OboeDebug.h"
 #include "oboe/AudioStream.h"
 #include "oboe/AudioStreamCallback.h"
-#include "fifo/FifoBuffer.h"
+#include "oboe/FifoBuffer.h"
 
 namespace oboe {
 
@@ -49,7 +49,7 @@ public:
 
     int32_t getBufferCapacityInFrames() const override;
 
-    ResultWithValue<int32_t> getXRunCount() const override {
+    ResultWithValue<int32_t> getXRunCount() override {
         return ResultWithValue<int32_t>(mXRunCount);
     }
 

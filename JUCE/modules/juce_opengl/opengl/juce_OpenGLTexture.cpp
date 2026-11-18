@@ -1,39 +1,39 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
 
 namespace juce
 {
-
-static int getAllowedTextureSize (int x)
-{
-   #if JUCE_OPENGL_ALLOW_NON_POWER_OF_TWO_TEXTURES
-    return x;
-   #else
-    return nextPowerOfTwo (x);
-   #endif
-}
 
 OpenGLTexture::OpenGLTexture()
     : textureID (0), width (0), height (0), ownerContext (nullptr)
@@ -65,7 +65,7 @@ void OpenGLTexture::create (const int w, const int h, const void* pixels, GLenum
         glBindTexture (GL_TEXTURE_2D, textureID);
         glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-        auto glMagFilter = (ownerContext->texMagFilter == OpenGLContext::linear ? GL_LINEAR : GL_NEAREST);
+        auto glMagFilter = (GLint) (ownerContext->texMagFilter == OpenGLContext::linear ? GL_LINEAR : GL_NEAREST);
         glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, glMagFilter);
         glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -79,6 +79,13 @@ void OpenGLTexture::create (const int w, const int h, const void* pixels, GLenum
 
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     JUCE_CHECK_OPENGL_ERROR
+
+    const auto textureNpotSupported = ownerContext->isTextureNpotSupported();
+
+    const auto getAllowedTextureSize = [&] (int n)
+    {
+        return textureNpotSupported ? n : nextPowerOfTwo (n);
+    };
 
     width  = getAllowedTextureSize (w);
     height = getAllowedTextureSize (h);
@@ -105,20 +112,25 @@ void OpenGLTexture::create (const int w, const int h, const void* pixels, GLenum
 template <class PixelType>
 struct Flipper
 {
-    static void flip (HeapBlock<PixelARGB>& dataCopy, const uint8* srcData, const int lineStride,
-                      const int w, const int h)
+    static void flip (HeapBlock<PixelARGB>& dataCopy,
+                      const uint8* srcData,
+                      const int lineStride,
+                      const int pixelStride,
+                      const int w,
+                      const int h)
     {
         dataCopy.malloc (w * h);
 
         for (int y = 0; y < h; ++y)
         {
-            auto* src = (const PixelType*) srcData;
-            auto* dst = (PixelARGB*) (dataCopy + w * (h - 1 - y));
+            auto* srcLine = srcData + lineStride * y;
+            auto* dstLine = dataCopy.get() + w * (h - 1 - y);
 
             for (int x = 0; x < w; ++x)
-                dst[x].set (src[x]);
-
-            srcData += lineStride;
+            {
+                auto* srcPixel = srcLine + x * pixelStride;
+                dstLine[x].set (*unalignedPointerCast<const PixelType*> (srcPixel));
+            }
         }
     }
 };
@@ -133,9 +145,9 @@ void OpenGLTexture::loadImage (const Image& image)
 
     switch (srcData.pixelFormat)
     {
-        case Image::ARGB:           Flipper<PixelARGB> ::flip (dataCopy, srcData.data, srcData.lineStride, imageW, imageH); break;
-        case Image::RGB:            Flipper<PixelRGB>  ::flip (dataCopy, srcData.data, srcData.lineStride, imageW, imageH); break;
-        case Image::SingleChannel:  Flipper<PixelAlpha>::flip (dataCopy, srcData.data, srcData.lineStride, imageW, imageH); break;
+        case Image::ARGB:           Flipper<PixelARGB> ::flip (dataCopy, srcData.data, srcData.lineStride, srcData.pixelStride, imageW, imageH); break;
+        case Image::RGB:            Flipper<PixelRGB>  ::flip (dataCopy, srcData.data, srcData.lineStride, srcData.pixelStride, imageW, imageH); break;
+        case Image::SingleChannel:  Flipper<PixelAlpha>::flip (dataCopy, srcData.data, srcData.lineStride, srcData.pixelStride, imageW, imageH); break;
         case Image::UnknownFormat:
         default: break;
     }
@@ -156,7 +168,7 @@ void OpenGLTexture::loadAlpha (const uint8* pixels, int w, int h)
 void OpenGLTexture::loadARGBFlipped (const PixelARGB* pixels, int w, int h)
 {
     HeapBlock<PixelARGB> flippedCopy;
-    Flipper<PixelARGB>::flip (flippedCopy, (const uint8*) pixels, 4 * w, w, h);
+    Flipper<PixelARGB>::flip (flippedCopy, (const uint8*) pixels, 4 * w, 4, w, h);
 
     create (w, h, flippedCopy, JUCE_RGBA_FORMAT, true);
 }

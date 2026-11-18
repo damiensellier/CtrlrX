@@ -1,18 +1,22 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework examples.
+   Copyright (c) Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
+   to use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
 
-   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES,
-   WHETHER EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR
-   PURPOSE, ARE DISCLAIMED.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+   REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+   AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+   INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+   LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+   OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+   PERFORMANCE OF THIS SOFTWARE.
 
   ==============================================================================
 */
@@ -32,8 +36,9 @@
  dependencies:     juce_audio_basics, juce_audio_devices, juce_audio_formats,
                    juce_audio_processors, juce_audio_utils, juce_core,
                    juce_data_structures, juce_events, juce_graphics,
-                   juce_gui_basics, juce_gui_extra
- exporters:        xcode_mac, vs2019, linux_make, androidstudio, xcode_iphone
+                   juce_gui_basics, juce_gui_extra, juce_audio_processors_headless
+ exporters:        xcode_mac, vs2022, vs2026, linux_make, androidstudio,
+                   xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -55,7 +60,7 @@
 /** A simple class that acts as an AudioIODeviceCallback and writes the
     incoming audio data to a WAV file.
 */
-class AudioRecorder  : public AudioIODeviceCallback
+class AudioRecorder final : public AudioIODeviceCallback
 {
 public:
     AudioRecorder (AudioThumbnail& thumbnailToUpdate)
@@ -79,21 +84,25 @@ public:
             // Create an OutputStream to write to our destination file...
             file.deleteFile();
 
-            if (auto fileStream = std::unique_ptr<FileOutputStream> (file.createOutputStream()))
+            if (std::unique_ptr<OutputStream> fileStream { file.createOutputStream() })
             {
                 // Now create a WAV writer object that writes to our output stream...
                 WavAudioFormat wavFormat;
 
-                if (auto writer = wavFormat.createWriterFor (fileStream.get(), sampleRate, 1, 16, {}, 0))
+                using Opts = AudioFormatWriterOptions;
+
+                if (auto writer = wavFormat.createWriterFor (fileStream, Opts{}.withSampleRate (sampleRate)
+                                                                               .withNumChannels (1)
+                                                                               .withBitsPerSample (16)))
                 {
-                    fileStream.release(); // (passes responsibility for deleting the stream to the writer object that is now using it)
+                    auto* writerPtr = writer.get();
 
                     // Now we'll create one of these helper objects which will act as a FIFO buffer, and will
                     // write the data to disk on our background thread.
-                    threadedWriter.reset (new AudioFormatWriter::ThreadedWriter (writer, backgroundThread, 32768));
+                    threadedWriter.reset (new AudioFormatWriter::ThreadedWriter (writer.release(), backgroundThread, 32768));
 
                     // Reset our recording thumbnail
-                    thumbnail.reset (writer->getNumChannels(), writer->getSampleRate());
+                    thumbnail.reset (writerPtr->getNumChannels(), writerPtr->getSampleRate());
                     nextSampleNum = 0;
 
                     // And now, swap over our active writer pointer so that the audio callback will start using it..
@@ -134,10 +143,12 @@ public:
         sampleRate = 0;
     }
 
-    void audioDeviceIOCallback (const float** inputChannelData, int numInputChannels,
-                                float** outputChannelData, int numOutputChannels,
-                                int numSamples) override
+    void audioDeviceIOCallbackWithContext (const float* const* inputChannelData, int numInputChannels,
+                                           float* const* outputChannelData, int numOutputChannels,
+                                           int numSamples, const AudioIODeviceCallbackContext& context) override
     {
+        ignoreUnused (context);
+
         const ScopedLock sl (writerLock);
 
         if (activeWriter.load() != nullptr && numInputChannels >= thumbnail.getNumChannels())
@@ -168,8 +179,8 @@ private:
 };
 
 //==============================================================================
-class RecordingThumbnail  : public Component,
-                            private ChangeListener
+class RecordingThumbnail final : public Component,
+                                 private ChangeListener
 {
 public:
     RecordingThumbnail()
@@ -228,7 +239,7 @@ private:
 };
 
 //==============================================================================
-class AudioRecordingDemo  : public Component
+class AudioRecordingDemo final : public Component
 {
 public:
     AudioRecordingDemo()
@@ -237,7 +248,7 @@ public:
         addAndMakeVisible (liveAudioScroller);
 
         addAndMakeVisible (explanationLabel);
-        explanationLabel.setFont (Font (15.0f, Font::plain));
+        explanationLabel.setFont (FontOptions (15.0f, Font::plain));
         explanationLabel.setJustificationType (Justification::topLeft);
         explanationLabel.setEditable (false, false, false);
         explanationLabel.setColour (TextEditor::textColourId, Colours::black);
@@ -303,17 +314,14 @@ private:
 
     LiveScrollingAudioDisplay liveAudioScroller;
     RecordingThumbnail recordingThumbnail;
-    AudioRecorder recorder  { recordingThumbnail.getAudioThumbnail() };
+    AudioRecorder recorder { recordingThumbnail.getAudioThumbnail() };
 
-    Label explanationLabel  { {}, "This page demonstrates how to record a wave file from the live audio input..\n\n"
-                                 #if (JUCE_ANDROID || JUCE_IOS)
-                                  "After you are done with your recording you can share with other apps."
-                                 #else
-                                  "Pressing record will start recording a file in your \"Documents\" folder."
-                                 #endif
-                             };
+    Label explanationLabel { {},
+                             "This page demonstrates how to record a wave file from the live audio input.\n\n"
+                             "After you are done with your recording you can choose where to save it." };
     TextButton recordButton { "Record" };
     File lastRecording;
+    FileChooser chooser { "Output file...", File::getCurrentWorkingDirectory().getChildFile ("recording.wav"), "*.wav" };
 
     void startRecording()
     {
@@ -348,28 +356,18 @@ private:
     {
         recorder.stop();
 
-       #if JUCE_CONTENT_SHARING
-        SafePointer<AudioRecordingDemo> safeThis (this);
-        File fileToShare = lastRecording;
+        chooser.launchAsync (  FileBrowserComponent::saveMode
+                             | FileBrowserComponent::canSelectFiles
+                             | FileBrowserComponent::warnAboutOverwriting,
+                             [this] (const FileChooser& c)
+                             {
+                                 if (FileInputStream inputStream (lastRecording); inputStream.openedOk())
+                                    if (const auto outputStream = makeOutputStream (c.getURLResult()))
+                                        outputStream->writeFromInputStream (inputStream, -1);
 
-        ContentSharer::getInstance()->shareFiles (Array<URL> ({URL (fileToShare)}),
-                                                  [safeThis, fileToShare] (bool success, const String& error)
-                                                  {
-                                                      if (fileToShare.existsAsFile())
-                                                          fileToShare.deleteFile();
-
-                                                      if (! success && error.isNotEmpty())
-                                                      {
-                                                          NativeMessageBox::showMessageBoxAsync (AlertWindow::WarningIcon,
-                                                                                                 "Sharing Error",
-                                                                                                 error);
-                                                      }
-                                                  });
-       #endif
-
-        lastRecording = File();
-        recordButton.setButtonText ("Record");
-        recordingThumbnail.setDisplayFullThumbnail (true);
+                                 recordButton.setButtonText ("Record");
+                                 recordingThumbnail.setDisplayFullThumbnail (true);
+                             });
     }
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioRecordingDemo)

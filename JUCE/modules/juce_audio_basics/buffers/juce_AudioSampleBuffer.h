@@ -1,74 +1,39 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
-   without fee is hereby granted provided that the above copyright notice and
-   this permission notice appear in all copies.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
+
+   Or:
+
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
 
 namespace juce
 {
-
-#ifndef DOXYGEN
-/** The contents of this namespace are used to implement AudioBuffer and should
-    not be used elsewhere. Their interfaces (and existence) are liable to change!
-*/
-namespace detail
-{
-    /** On iOS/arm7 the alignment of `double` is greater than the alignment of
-        `std::max_align_t`, so we can't trust max_align_t. Instead, we query
-        lots of primitive types and use the maximum alignment of all of them.
-
-        We're putting this stuff outside AudioBuffer itself to avoid creating
-        unnecessary copies for each distinct template instantiation of
-        AudioBuffer.
-
-        MSVC 2015 doesn't like when we write getMaxAlignment as a loop which
-        accumulates the max alignment (declarations not allowed in constexpr
-        function body) so instead we use this recursive version which
-        instantiates a zillion templates.
-    */
-
-    template <typename> struct Type {};
-
-    constexpr size_t getMaxAlignment() noexcept { return 0; }
-
-    template <typename Head, typename... Tail>
-    constexpr size_t getMaxAlignment (Type<Head>, Type<Tail>... tail) noexcept
-    {
-        return jmax (alignof (Head), getMaxAlignment (tail...));
-    }
-
-    constexpr size_t maxAlignment = getMaxAlignment (Type<std::max_align_t>{},
-                                                     Type<void*>{},
-                                                     Type<float>{},
-                                                     Type<double>{},
-                                                     Type<long double>{},
-                                                     Type<short int>{},
-                                                     Type<int>{},
-                                                     Type<long int>{},
-                                                     Type<long long int>{},
-                                                     Type<bool>{},
-                                                     Type<char>{},
-                                                     Type<char16_t>{},
-                                                     Type<char32_t>{},
-                                                     Type<wchar_t>{});
-} // namespace detail
-#endif
 
 //==============================================================================
 /**
@@ -80,6 +45,8 @@ template <typename Type>
 class AudioBuffer
 {
 public:
+    JUCE_BEGIN_IGNORE_WARNINGS_MSVC (4661)
+
     //==============================================================================
     /** Creates an empty buffer with 0 channels and 0 length. */
     AudioBuffer() noexcept
@@ -192,6 +159,7 @@ public:
     }
 
     /** Copies another buffer onto this one.
+
         This buffer's size will be changed to that of the other buffer.
     */
     AudioBuffer& operator= (const AudioBuffer& other)
@@ -217,17 +185,18 @@ public:
     }
 
     /** Destructor.
+
         This will free any memory allocated by the buffer.
     */
     ~AudioBuffer() = default;
 
-    /** Move constructor */
+    /** Move constructor. */
     AudioBuffer (AudioBuffer&& other) noexcept
         : numChannels (other.numChannels),
           size (other.size),
           allocatedBytes (other.allocatedBytes),
           allocatedData (std::move (other.allocatedData)),
-          isClear (other.isClear.load())
+          isClear (other.isClear)
     {
         if (numChannels < (int) numElementsInArray (preallocatedChannelSpace))
         {
@@ -246,14 +215,14 @@ public:
         other.allocatedBytes = 0;
     }
 
-    /** Move assignment */
+    /** Move assignment. */
     AudioBuffer& operator= (AudioBuffer&& other) noexcept
     {
         numChannels = other.numChannels;
         size = other.size;
         allocatedBytes = other.allocatedBytes;
         allocatedData = std::move (other.allocatedData);
-        isClear = other.isClear.load();
+        isClear = other.isClear;
 
         if (numChannels < (int) numElementsInArray (preallocatedChannelSpace))
         {
@@ -275,18 +244,22 @@ public:
 
     //==============================================================================
     /** Returns the number of channels of audio data that this buffer contains.
+
         @see getNumSamples, getReadPointer, getWritePointer
     */
     int getNumChannels() const noexcept                             { return numChannels; }
 
     /** Returns the number of samples allocated in each of the buffer's channels.
+
         @see getNumChannels, getReadPointer, getWritePointer
     */
     int getNumSamples() const noexcept                              { return size; }
 
     /** Returns a pointer to an array of read-only samples in one of the buffer's channels.
+
         For speed, this doesn't check whether the channel number is out of range,
         so be careful when using it!
+
         If you need to write to the data, do NOT call this method and const_cast the
         result! Instead, you must call getWritePointer so that the buffer knows you're
         planning on modifying the data.
@@ -298,8 +271,10 @@ public:
     }
 
     /** Returns a pointer to an array of read-only samples in one of the buffer's channels.
+
         For speed, this doesn't check whether the channel number or index are out of range,
         so be careful when using it!
+
         If you need to write to the data, do NOT call this method and const_cast the
         result! Instead, you must call getWritePointer so that the buffer knows you're
         planning on modifying the data.
@@ -312,10 +287,20 @@ public:
     }
 
     /** Returns a writeable pointer to one of the buffer's channels.
+
         For speed, this doesn't check whether the channel number is out of range,
         so be careful when using it!
+
         Note that if you're not planning on writing to the data, you should always
         use getReadPointer instead.
+
+        This will mark the buffer as not cleared and the hasBeenCleared method will return
+        false after this call. If you retain this write pointer and write some data to
+        the buffer after calling its clear method, subsequent clear calls will do nothing.
+        To avoid this either call this method each time you need to write data, or use the
+        setNotClear method to force the internal cleared flag to false.
+
+        @see setNotClear
     */
     Type* getWritePointer (int channelNumber) noexcept
     {
@@ -325,10 +310,20 @@ public:
     }
 
     /** Returns a writeable pointer to one of the buffer's channels.
+
         For speed, this doesn't check whether the channel number or index are out of range,
         so be careful when using it!
+
         Note that if you're not planning on writing to the data, you should
         use getReadPointer instead.
+
+        This will mark the buffer as not cleared and the hasBeenCleared method will return
+        false after this call. If you retain this write pointer and write some data to
+        the buffer after calling its clear method, subsequent clear calls will do nothing.
+        To avoid this either call this method each time you need to write data, or use the
+        setNotClear method to force the internal cleared flag to false.
+
+        @see setNotClear
     */
     Type* getWritePointer (int channelNumber, int sampleIndex) noexcept
     {
@@ -343,37 +338,45 @@ public:
         Don't modify any of the pointers that are returned, and bear in mind that
         these will become invalid if the buffer is resized.
     */
-    const Type** getArrayOfReadPointers() const noexcept            { return const_cast<const Type**> (channels); }
+    const Type* const* getArrayOfReadPointers() const noexcept            { return channels; }
 
     /** Returns an array of pointers to the channels in the buffer.
 
         Don't modify any of the pointers that are returned, and bear in mind that
         these will become invalid if the buffer is resized.
+
+        This will mark the buffer as not cleared and the hasBeenCleared method will return
+        false after this call. If you retain this write pointer and write some data to
+        the buffer after calling its clear method, subsequent clear calls will do nothing.
+        To avoid this either call this method each time you need to write data, or use the
+        setNotClear method to force the internal cleared flag to false.
+
+        @see setNotClear
     */
-    Type** getArrayOfWritePointers() noexcept                       { isClear = false; return channels; }
+    Type* const* getArrayOfWritePointers() noexcept                       { isClear = false; return channels; }
 
     //==============================================================================
     /** Changes the buffer's size or number of channels.
 
         This can expand or contract the buffer's length, and add or remove channels.
 
-        If keepExistingContent is true, it will try to preserve as much of the
-        old data as it can in the new buffer.
-
-        If clearExtraSpace is true, then any extra channels or space that is
-        allocated will be also be cleared. If false, then this space is left
-        uninitialised.
-
-        If avoidReallocating is true, then changing the buffer's size won't reduce the
-        amount of memory that is currently allocated (but it will still increase it if
-        the new size is bigger than the amount it currently has). If this is false, then
-        a new allocation will be done so that the buffer uses takes up the minimum amount
-        of memory that it needs.
-
         Note that if keepExistingContent and avoidReallocating are both true, then it will
         only avoid reallocating if neither the channel count or length in samples increase.
 
         If the required memory can't be allocated, this will throw a std::bad_alloc exception.
+
+        @param newNumChannels       the new number of channels.
+        @param newNumSamples        the new number of samples.
+        @param keepExistingContent  if this is true, it will try to preserve as much of the
+                                    old data as it can in the new buffer.
+        @param clearExtraSpace      if this is true, then any extra channels or space that is
+                                    allocated will also be cleared. If false, then this space is left
+                                    uninitialised.
+        @param avoidReallocating    if this is true, then changing the buffer's size won't reduce the
+                                    amount of memory that is currently allocated (but it will still
+                                    increase it if the new size is bigger than the amount it currently has).
+                                    If this is false, then a new allocation will be done so that the buffer
+                                    uses the minimum amount of memory that it needs.
     */
     void setSize (int newNumChannels,
                   int newNumSamples,
@@ -464,6 +467,8 @@ public:
         will re-allocate memory internally and copy the existing data to this new area,
         so it will then stop directly addressing this memory.
 
+        The hasBeenCleared method will return false after this call.
+
         @param dataToReferTo    a pre-allocated array containing pointers to the data
                                 for each channel that should be used by this buffer. The
                                 buffer will only refer to this memory, it won't try to delete
@@ -474,7 +479,7 @@ public:
         @param newNumSamples    the number of samples to use - this must correspond to the
                                 size of the arrays passed in
     */
-    void setDataToReferTo (Type** dataToReferTo,
+    void setDataToReferTo (Type* const* dataToReferTo,
                            int newNumChannels,
                            int newStartSample,
                            int newNumSamples)
@@ -482,16 +487,33 @@ public:
         jassert (dataToReferTo != nullptr);
         jassert (newNumChannels >= 0 && newNumSamples >= 0);
 
-        if (allocatedBytes != 0)
-        {
-            allocatedBytes = 0;
-            allocatedData.free();
-        }
-
-        numChannels = newNumChannels;
         size = newNumSamples;
 
-        allocateChannels (dataToReferTo, newStartSample);
+        if (newNumChannels <= numChannels)
+        {
+            numChannels = newNumChannels;
+
+            std::transform (dataToReferTo, dataToReferTo + numChannels, channels, [&] (auto* src)
+            {
+                jassert (src != nullptr);
+                return src + newStartSample;
+            });
+
+            channels[numChannels] = nullptr;
+            isClear = false;
+        }
+        else
+        {
+            if (allocatedBytes != 0)
+            {
+                allocatedBytes = 0;
+                allocatedData.free();
+            }
+
+            numChannels = newNumChannels;
+            allocateChannels (dataToReferTo, newStartSample);
+        }
+
         jassert (! isClear);
     }
 
@@ -504,6 +526,8 @@ public:
         will re-allocate memory internally and copy the existing data to this new area,
         so it will then stop directly addressing this memory.
 
+        The hasBeenCleared method will return false after this call.
+
         @param dataToReferTo    a pre-allocated array containing pointers to the data
                                 for each channel that should be used by this buffer. The
                                 buffer will only refer to this memory, it won't try to delete
@@ -513,7 +537,7 @@ public:
         @param newNumSamples    the number of samples to use - this must correspond to the
                                 size of the arrays passed in
     */
-    void setDataToReferTo (Type** dataToReferTo,
+    void setDataToReferTo (Type* const* dataToReferTo,
                            int newNumChannels,
                            int newNumSamples)
     {
@@ -521,8 +545,12 @@ public:
     }
 
     /** Resizes this buffer to match the given one, and copies all of its content across.
+
         The source buffer can contain a different floating point type, so this can be used to
         convert between 32 and 64 bit float buffer types.
+
+        The hasBeenCleared method will return false after this call if the other buffer
+        contains data.
     */
     template <typename OtherType>
     void makeCopyOf (const AudioBuffer<OtherType>& other, bool avoidReallocating = false)
@@ -549,41 +577,62 @@ public:
     }
 
     //==============================================================================
-    /** Clears all the samples in all channels. */
+    /** Clears all the samples in all channels and marks the buffer as cleared.
+
+        This method will do nothing if the buffer has been marked as cleared (i.e. the
+        hasBeenCleared method returns true.)
+
+        @see hasBeenCleared, setNotClear
+    */
     void clear() noexcept
     {
-        if (! isClear)
-        {
-            for (int i = 0; i < numChannels; ++i)
-                FloatVectorOperations::clear (channels[i], size);
+        if (isClear)
+            return;
 
-            isClear = true;
+        for (int i = 0; i < numChannels; ++i)
+        {
+            JUCE_BEGIN_IGNORE_WARNINGS_MSVC (4661)
+            FloatVectorOperations::clear (channels[i], size);
+            JUCE_END_IGNORE_WARNINGS_MSVC
         }
+
+        isClear = true;
     }
 
     /** Clears a specified region of all the channels.
 
+        This will mark the buffer as cleared if the entire buffer contents are cleared.
+
         For speed, this doesn't check whether the channel and sample number
         are in-range, so be careful!
+
+        This method will do nothing if the buffer has been marked as cleared (i.e. the
+        hasBeenCleared method returns true.)
+
+        @see hasBeenCleared, setNotClear
     */
     void clear (int startSample, int numSamples) noexcept
     {
         jassert (startSample >= 0 && numSamples >= 0 && startSample + numSamples <= size);
 
-        if (! isClear)
-        {
-            if (startSample == 0 && numSamples == size)
-                isClear = true;
+        if (isClear)
+            return;
 
-            for (int i = 0; i < numChannels; ++i)
-                FloatVectorOperations::clear (channels[i] + startSample, numSamples);
-        }
+        for (int i = 0; i < numChannels; ++i)
+            FloatVectorOperations::clear (channels[i] + startSample, numSamples);
+
+        isClear = (startSample == 0 && numSamples == size);
     }
 
     /** Clears a specified region of just one channel.
 
         For speed, this doesn't check whether the channel and sample number
         are in-range, so be careful!
+
+        This method will do nothing if the buffer has been marked as cleared (i.e. the
+        hasBeenCleared method returns true.)
+
+        @see hasBeenCleared, setNotClear
     */
     void clear (int channel, int startSample, int numSamples) noexcept
     {
@@ -595,15 +644,26 @@ public:
     }
 
     /** Returns true if the buffer has been entirely cleared.
+
         Note that this does not actually measure the contents of the buffer - it simply
         returns a flag that is set when the buffer is cleared, and which is reset whenever
-        functions like getWritePointer() are invoked. That means the method does not take
-        any time, but it may return false negatives when in fact the buffer is still empty.
+        functions like getWritePointer are invoked. That means the method is quick, but it
+        may return false negatives when in fact the buffer is still empty.
     */
     bool hasBeenCleared() const noexcept                            { return isClear; }
 
+    /** Forces the internal cleared flag of the buffer to false.
+
+        This may be useful in the case where you are holding on to a write pointer and call
+        the clear method before writing some data. You can then use this method to mark the
+        buffer as containing data so that subsequent clear calls will succeed. However a
+        better solution is to call getWritePointer each time you need to write data.
+    */
+    void setNotClear() noexcept                                     { isClear = false; }
+
     //==============================================================================
     /** Returns a sample from the buffer.
+
         The channel and index are not checked - they are expected to be in-range. If not,
         an assertion will be thrown, but in a release build, you're into 'undefined behaviour'
         territory.
@@ -616,9 +676,12 @@ public:
     }
 
     /** Sets a sample in the buffer.
+
         The channel and index are not checked - they are expected to be in-range. If not,
         an assertion will be thrown, but in a release build, you're into 'undefined behaviour'
         territory.
+
+        The hasBeenCleared method will return false after this call.
     */
     void setSample (int destChannel, int destSample, Type newValue) noexcept
     {
@@ -629,9 +692,12 @@ public:
     }
 
     /** Adds a value to a sample in the buffer.
+
         The channel and index are not checked - they are expected to be in-range. If not,
         an assertion will be thrown, but in a release build, you're into 'undefined behaviour'
         territory.
+
+        The hasBeenCleared method will return false after this call.
     */
     void addSample (int destChannel, int destSample, Type valueToAdd) noexcept
     {
@@ -651,15 +717,11 @@ public:
         jassert (isPositiveAndBelow (channel, numChannels));
         jassert (startSample >= 0 && numSamples >= 0 && startSample + numSamples <= size);
 
-        if (gain != Type (1) && ! isClear)
-        {
-            auto* d = channels[channel] + startSample;
+        if (isClear)
+            return;
 
-            if (gain == Type())
-                FloatVectorOperations::clear (d, numSamples);
-            else
-                FloatVectorOperations::multiply (d, gain, numSamples);
-        }
+        auto* d = channels[channel] + startSample;
+        FloatVectorOperations::multiply (d, gain, numSamples);
     }
 
     /** Applies a gain multiple to a region of all the channels.
@@ -691,26 +753,19 @@ public:
     void applyGainRamp (int channel, int startSample, int numSamples,
                         Type startGain, Type endGain) noexcept
     {
-        if (! isClear)
+        jassert (isPositiveAndBelow (channel, numChannels));
+        jassert (startSample >= 0 && numSamples >= 0 && startSample + numSamples <= size);
+
+        if (isClear)
+            return;
+
+        const auto increment = (endGain - startGain) / (float) numSamples;
+        auto* d = channels[channel] + startSample;
+
+        while (--numSamples >= 0)
         {
-            if (startGain == endGain)
-            {
-                applyGain (channel, startSample, numSamples, startGain);
-            }
-            else
-            {
-                jassert (isPositiveAndBelow (channel, numChannels));
-                jassert (startSample >= 0 && numSamples >= 0 && startSample + numSamples <= size);
-
-                const auto increment = (endGain - startGain) / (float) numSamples;
-                auto* d = channels[channel] + startSample;
-
-                while (--numSamples >= 0)
-                {
-                    *d++ *= startGain;
-                    startGain += increment;
-                }
-            }
+            *d++ *= startGain;
+            startGain += increment;
         }
     }
 
@@ -732,6 +787,9 @@ public:
 
     /** Adds samples from another buffer to this one.
 
+        The hasBeenCleared method will return false after this call if samples have
+        been added.
+
         @param destChannel          the channel within this buffer to add the samples to
         @param destStartSample      the start sample within this buffer's channel
         @param source               the source buffer to add from
@@ -751,37 +809,40 @@ public:
                   int numSamples,
                   Type gainToApplyToSource = Type (1)) noexcept
     {
-        jassert (&source != this || sourceChannel != destChannel);
+        jassert (&source != this
+                 || sourceChannel != destChannel
+                 || sourceStartSample + numSamples <= destStartSample
+                 || destStartSample + numSamples <= sourceStartSample);
         jassert (isPositiveAndBelow (destChannel, numChannels));
         jassert (destStartSample >= 0 && numSamples >= 0 && destStartSample + numSamples <= size);
         jassert (isPositiveAndBelow (sourceChannel, source.numChannels));
         jassert (sourceStartSample >= 0 && sourceStartSample + numSamples <= source.size);
 
-        if (gainToApplyToSource != 0 && numSamples > 0 && ! source.isClear)
+        if (numSamples <= 0 || source.isClear)
+            return;
+
+        auto* d = channels[destChannel] + destStartSample;
+        auto* s = source.channels[sourceChannel] + sourceStartSample;
+
+        JUCE_BEGIN_IGNORE_WARNINGS_MSVC (4661)
+
+        if (isClear)
         {
-            auto* d = channels[destChannel] + destStartSample;
-            auto* s = source.channels[sourceChannel] + sourceStartSample;
-
-            if (isClear)
-            {
-                isClear = false;
-
-                if (gainToApplyToSource != Type (1))
-                    FloatVectorOperations::copyWithMultiply (d, s, gainToApplyToSource, numSamples);
-                else
-                    FloatVectorOperations::copy (d, s, numSamples);
-            }
-            else
-            {
-                if (gainToApplyToSource != Type (1))
-                    FloatVectorOperations::addWithMultiply (d, s, gainToApplyToSource, numSamples);
-                else
-                    FloatVectorOperations::add (d, s, numSamples);
-            }
+            isClear = false;
+            FloatVectorOperations::copyWithMultiply (d, s, gainToApplyToSource, numSamples);
         }
+        else
+        {
+            FloatVectorOperations::addWithMultiply (d, s, gainToApplyToSource, numSamples);
+        }
+
+        JUCE_END_IGNORE_WARNINGS_MSVC
     }
 
     /** Adds samples from an array of floats to one of the channels.
+
+        The hasBeenCleared method will return false after this call if samples have
+        been added.
 
         @param destChannel          the channel within this buffer to add the samples to
         @param destStartSample      the start sample within this buffer's channel
@@ -802,31 +863,27 @@ public:
         jassert (destStartSample >= 0 && numSamples >= 0 && destStartSample + numSamples <= size);
         jassert (source != nullptr);
 
-        if (gainToApplyToSource != 0 && numSamples > 0)
+        if (numSamples <= 0)
+            return;
+
+        auto* d = channels[destChannel] + destStartSample;
+
+        if (isClear)
         {
-            auto* d = channels[destChannel] + destStartSample;
-
-            if (isClear)
-            {
-                isClear = false;
-
-                if (gainToApplyToSource != Type (1))
-                    FloatVectorOperations::copyWithMultiply (d, source, gainToApplyToSource, numSamples);
-                else
-                    FloatVectorOperations::copy (d, source, numSamples);
-            }
-            else
-            {
-                if (gainToApplyToSource != Type (1))
-                    FloatVectorOperations::addWithMultiply (d, source, gainToApplyToSource, numSamples);
-                else
-                    FloatVectorOperations::add (d, source, numSamples);
-            }
+            isClear = false;
+            FloatVectorOperations::copyWithMultiply (d, source, gainToApplyToSource, numSamples);
+        }
+        else
+        {
+            FloatVectorOperations::addWithMultiply (d, source, gainToApplyToSource, numSamples);
         }
     }
 
 
     /** Adds samples from an array of floats, applying a gain ramp to them.
+
+        The hasBeenCleared method will return false after this call if samples have
+        been added.
 
         @param destChannel          the channel within this buffer to add the samples to
         @param destStartSample      the start sample within this buffer's channel
@@ -834,7 +891,11 @@ public:
         @param numSamples           the number of samples to process
         @param startGain            the gain to apply to the first sample (this is multiplied with
                                     the source samples before they are added to this buffer)
-        @param endGain              the gain to apply to the  sample. The gain is linearly
+        @param endGain              The gain that would apply to the sample after the final sample.
+                                    The gain that applies to the final sample is
+                                    (numSamples - 1) / numSamples * (endGain - startGain). This
+                                    ensures a continuous ramp when supplying the same value in
+                                    endGain and startGain in subsequent blocks. The gain is linearly
                                     interpolated between the first and last samples.
     */
     void addFromWithRamp (int destChannel,
@@ -844,30 +905,23 @@ public:
                           Type startGain,
                           Type endGain) noexcept
     {
-        if (startGain == endGain)
-        {
-            addFrom (destChannel, destStartSample, source, numSamples, startGain);
-        }
-        else
-        {
-            jassert (isPositiveAndBelow (destChannel, numChannels));
-            jassert (destStartSample >= 0 && numSamples >= 0 && destStartSample + numSamples <= size);
-            jassert (source != nullptr);
+        jassert (isPositiveAndBelow (destChannel, numChannels));
+        jassert (destStartSample >= 0 && numSamples >= 0 && destStartSample + numSamples <= size);
+        jassert (source != nullptr);
 
-            if (numSamples > 0)
-            {
-                isClear = false;
-                const auto increment = (endGain - startGain) / numSamples;
-                auto* d = channels[destChannel] + destStartSample;
+        if (numSamples <= 0)
+            return;
 
-                while (--numSamples >= 0)
-                {
-                    *d++ += startGain * *source++;
-                    startGain += increment;
-                }
-            }
+        isClear = false;
+        const auto increment = (endGain - startGain) / (Type) numSamples;
+        auto* d = channels[destChannel] + destStartSample;
+
+        while (--numSamples >= 0)
+        {
+            *d++ += startGain * *source++;
+            startGain += increment;
         }
-    }
+}
 
     /** Copies samples from another buffer to this one.
 
@@ -887,30 +941,36 @@ public:
                    int sourceStartSample,
                    int numSamples) noexcept
     {
-        jassert (&source != this || sourceChannel != destChannel);
+        jassert (&source != this
+                 || sourceChannel != destChannel
+                 || sourceStartSample + numSamples <= destStartSample
+                 || destStartSample + numSamples <= sourceStartSample);
         jassert (isPositiveAndBelow (destChannel, numChannels));
         jassert (destStartSample >= 0 && destStartSample + numSamples <= size);
         jassert (isPositiveAndBelow (sourceChannel, source.numChannels));
         jassert (sourceStartSample >= 0 && numSamples >= 0 && sourceStartSample + numSamples <= source.size);
 
-        if (numSamples > 0)
+        if (numSamples <= 0)
+            return;
+
+        if (source.isClear)
         {
-            if (source.isClear)
-            {
-                if (! isClear)
-                    FloatVectorOperations::clear (channels[destChannel] + destStartSample, numSamples);
-            }
-            else
-            {
-                isClear = false;
-                FloatVectorOperations::copy (channels[destChannel] + destStartSample,
-                                             source.channels[sourceChannel] + sourceStartSample,
-                                             numSamples);
-            }
+            if (! isClear)
+                FloatVectorOperations::clear (channels[destChannel] + destStartSample, numSamples);
+        }
+        else
+        {
+            isClear = false;
+            FloatVectorOperations::copy (channels[destChannel] + destStartSample,
+                                         source.channels[sourceChannel] + sourceStartSample,
+                                         numSamples);
         }
     }
 
     /** Copies samples from an array of floats into one of the channels.
+
+        The hasBeenCleared method will return false after this call if samples have
+        been copied.
 
         @param destChannel          the channel within this buffer to copy the samples to
         @param destStartSample      the start sample within this buffer's channel
@@ -928,14 +988,17 @@ public:
         jassert (destStartSample >= 0 && numSamples >= 0 && destStartSample + numSamples <= size);
         jassert (source != nullptr);
 
-        if (numSamples > 0)
-        {
-            isClear = false;
-            FloatVectorOperations::copy (channels[destChannel] + destStartSample, source, numSamples);
-        }
+        if (numSamples <= 0)
+            return;
+
+        isClear = false;
+        FloatVectorOperations::copy (channels[destChannel] + destStartSample, source, numSamples);
     }
 
     /** Copies samples from an array of floats into one of the channels, applying a gain to it.
+
+        The hasBeenCleared method will return false after this call if samples have
+        been copied.
 
         @param destChannel          the channel within this buffer to copy the samples to
         @param destStartSample      the start sample within this buffer's channel
@@ -955,32 +1018,18 @@ public:
         jassert (destStartSample >= 0 && numSamples >= 0 && destStartSample + numSamples <= size);
         jassert (source != nullptr);
 
-        if (numSamples > 0)
-        {
-            auto* d = channels[destChannel] + destStartSample;
+        if (numSamples <= 0)
+            return;
 
-            if (gain != Type (1))
-            {
-                if (gain == Type())
-                {
-                    if (! isClear)
-                        FloatVectorOperations::clear (d, numSamples);
-                }
-                else
-                {
-                    isClear = false;
-                    FloatVectorOperations::copyWithMultiply (d, source, gain, numSamples);
-                }
-            }
-            else
-            {
-                isClear = false;
-                FloatVectorOperations::copy (d, source, numSamples);
-            }
-        }
+        auto* d = channels[destChannel] + destStartSample;
+        isClear = false;
+        FloatVectorOperations::copyWithMultiply (d, source, gain, numSamples);
     }
 
     /** Copies samples from an array of floats into one of the channels, applying a gain ramp.
+
+        The hasBeenCleared method will return false after this call if samples have
+        been copied.
 
         @param destChannel          the channel within this buffer to copy the samples to
         @param destStartSample      the start sample within this buffer's channel
@@ -988,7 +1037,11 @@ public:
         @param numSamples           the number of samples to process
         @param startGain            the gain to apply to the first sample (this is multiplied with
                                     the source samples before they are copied to this buffer)
-        @param endGain              the gain to apply to the  sample. The gain is linearly
+        @param endGain              The gain that would apply to the sample after the final sample.
+                                    The gain that applies to the final sample is
+                                    (numSamples - 1) / numSamples * (endGain - startGain). This
+                                    ensures a continuous ramp when supplying the same value in
+                                    endGain and startGain in subsequent blocks. The gain is linearly
                                     interpolated between the first and last samples.
 
         @see addFrom
@@ -1000,28 +1053,21 @@ public:
                            Type startGain,
                            Type endGain) noexcept
     {
-        if (startGain == endGain)
-        {
-            copyFrom (destChannel, destStartSample, source, numSamples, startGain);
-        }
-        else
-        {
-            jassert (isPositiveAndBelow (destChannel, numChannels));
-            jassert (destStartSample >= 0 && numSamples >= 0 && destStartSample + numSamples <= size);
-            jassert (source != nullptr);
+        jassert (isPositiveAndBelow (destChannel, numChannels));
+        jassert (destStartSample >= 0 && numSamples >= 0 && destStartSample + numSamples <= size);
+        jassert (source != nullptr);
 
-            if (numSamples > 0)
-            {
-                isClear = false;
-                const auto increment = (endGain - startGain) / numSamples;
-                auto* d = channels[destChannel] + destStartSample;
+        if (numSamples <= 0)
+            return;
 
-                while (--numSamples >= 0)
-                {
-                    *d++ = startGain * *source++;
-                    startGain += increment;
-                }
-            }
+        isClear = false;
+        const auto increment = (endGain - startGain) / (Type) numSamples;
+        auto* d = channels[destChannel] + destStartSample;
+
+        while (--numSamples >= 0)
+        {
+            *d++ = startGain * *source++;
+            startGain += increment;
         }
     }
 
@@ -1051,8 +1097,7 @@ public:
         if (isClear)
             return Type (0);
 
-        auto r = findMinMax (channel, startSample, numSamples);
-
+        const auto r = findMinMax (channel, startSample, numSamples);
         return jmax (r.getStart(), -r.getStart(), r.getEnd(), -r.getEnd());
     }
 
@@ -1061,9 +1106,11 @@ public:
     {
         Type mag (0);
 
-        if (! isClear)
-            for (int i = 0; i < numChannels; ++i)
-                mag = jmax (mag, getMagnitude (i, startSample, numSamples));
+        if (isClear)
+            return mag;
+
+        for (int i = 0; i < numChannels; ++i)
+            mag = jmax (mag, getMagnitude (i, startSample, numSamples));
 
         return mag;
     }
@@ -1074,7 +1121,7 @@ public:
         jassert (isPositiveAndBelow (channel, numChannels));
         jassert (startSample >= 0 && numSamples >= 0 && startSample + numSamples <= size);
 
-        if (numSamples <= 0 || channel < 0 || channel >= numChannels || isClear)
+        if (numSamples <= 0 || isClear || ! isPositiveAndBelow (channel, numChannels))
             return Type (0);
 
         auto* data = channels[channel] + startSample;
@@ -1095,14 +1142,21 @@ public:
         jassert (isPositiveAndBelow (channel, numChannels));
         jassert (startSample >= 0 && numSamples >= 0 && startSample + numSamples <= size);
 
-        if (! isClear)
-            std::reverse (channels[channel] + startSample,
-                          channels[channel] + startSample + numSamples);
+        if (isClear)
+            return;
+
+        std::reverse (channels[channel] + startSample,
+                      channels[channel] + startSample + numSamples);
     }
 
     /** Reverses a part of the buffer. */
     void reverse (int startSample, int numSamples) const noexcept
     {
+        jassert (startSample >= 0 && numSamples >= 0 && startSample + numSamples <= size);
+
+        if (isClear)
+            return;
+
         for (int i = 0; i < numChannels; ++i)
             reverse (i, startSample, numSamples);
     }
@@ -1113,23 +1167,16 @@ public:
 
 private:
     //==============================================================================
-    int numChannels = 0, size = 0;
-    size_t allocatedBytes = 0;
-    Type** channels;
-    HeapBlock<char, true> allocatedData;
-    Type* preallocatedChannelSpace[32];
-    std::atomic<bool> isClear { false };
-
     void allocateData()
     {
-       #if ! JUCE_PROJUCER_LIVE_BUILD && (! JUCE_GCC || (__GNUC__ * 100 + __GNUC_MINOR__) >= 409)
-        static_assert (alignof (Type) <= detail::maxAlignment,
+       #if (! JUCE_GCC || (__GNUC__ * 100 + __GNUC_MINOR__) >= 409)
+        static_assert (alignof (Type) <= maxAlignment,
                        "AudioBuffer cannot hold types with alignment requirements larger than that guaranteed by malloc");
        #endif
         jassert (size >= 0);
 
         auto channelListSize = (size_t) (numChannels + 1) * sizeof (Type*);
-        auto requiredSampleAlignment = std::alignment_of<Type>::value;
+        auto requiredSampleAlignment = std::alignment_of_v<Type>;
         size_t alignmentOverflow = channelListSize % requiredSampleAlignment;
 
         if (alignmentOverflow != 0)
@@ -1137,6 +1184,15 @@ private:
 
         allocatedBytes = (size_t) numChannels * (size_t) size * sizeof (Type) + channelListSize + 32;
         allocatedData.malloc (allocatedBytes);
+
+        if (allocatedData.get() == nullptr)
+        {
+            // Allocation failure!
+            jassertfalse;
+            allocatedBytes = 0;
+            return;
+        }
+
         channels = unalignedPointerCast<Type**> (allocatedData.get());
         auto chan = unalignedPointerCast<Type*> (allocatedData + channelListSize);
 
@@ -1176,8 +1232,70 @@ private:
         isClear = false;
     }
 
+    /*  On iOS/arm7 the alignment of `double` is greater than the alignment of
+        `std::max_align_t`, so we can't trust max_align_t. Instead, we query
+        lots of primitive types and use the maximum alignment of all of them.
+    */
+    static constexpr size_t getMaxAlignment() noexcept
+    {
+        constexpr size_t alignments[] { alignof (std::max_align_t),
+                                        alignof (void*),
+                                        alignof (float),
+                                        alignof (double),
+                                        alignof (long double),
+                                        alignof (short int),
+                                        alignof (int),
+                                        alignof (long int),
+                                        alignof (long long int),
+                                        alignof (bool),
+                                        alignof (char),
+                                        alignof (char16_t),
+                                        alignof (char32_t),
+                                        alignof (wchar_t) };
+
+        size_t max = 0;
+
+        for (const auto elem : alignments)
+            max = jmax (max, elem);
+
+        return max;
+    }
+
+    int numChannels = 0, size = 0;
+    size_t allocatedBytes = 0;
+    Type** channels = nullptr;
+    HeapBlock<char, true> allocatedData;
+    Type* preallocatedChannelSpace[32];
+    bool isClear = false;
+    static constexpr size_t maxAlignment = getMaxAlignment();
+
     JUCE_LEAK_DETECTOR (AudioBuffer)
 };
+
+//==============================================================================
+template <typename Type>
+bool operator== (const AudioBuffer<Type>& a, const AudioBuffer<Type>& b)
+{
+    if (a.getNumChannels() != b.getNumChannels())
+        return false;
+
+    for (auto c = 0; c < a.getNumChannels(); ++c)
+    {
+        const auto begin = [c] (auto& x) { return x.getReadPointer (c); };
+        const auto end = [c] (auto& x) { return x.getReadPointer (c) + x.getNumSamples(); };
+
+        if (! std::equal (begin (a), end (a), begin (b), end (b)))
+            return false;
+    }
+
+    return true;
+}
+
+template <typename Type>
+bool operator!= (const AudioBuffer<Type>& a, const AudioBuffer<Type>& b)
+{
+    return ! (a == b);
+}
 
 //==============================================================================
 /**

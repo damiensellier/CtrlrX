@@ -1,8 +1,35 @@
-bin.v2
-bin
-doc/*.html
-doc/version.rst
-nppBackup/
-build/
-_build/
+# Build outputs
+/build/
+/build-*/
+/_build/
+/bin/
+/bin.v2/
+
+# CMake-generated files
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/compile_commands.json
+/CTestTestfile.cmake
+/install_manifest.txt
+/Testing/
+
+# Coverage/profiling artifacts
+*.gcov
+*.gcda
+*.gcno
+*.profraw
+*.profdata
+coverage/
+
+# Generated docs
+/doc/*.html
+/doc/version.rst
+
+# IDE/editor noise
 *.kdev4
+nppBackup/
+
+# Local assistant scratch files
+/.codex/
+/PROMPT.md

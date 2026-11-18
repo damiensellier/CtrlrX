@@ -280,6 +280,7 @@ void CtrlrEditor::setEditorLookAndFeel (const String &lookAndFeelDesc, const var
         
         // This makes sure any subsequently created JUCE components (like dialogs, other windows)
         // will default to *your* currentLookAndFeel instance.
+        gui::initLookAndFeelDefaults(*currentLookAndFeel);
         LookAndFeel::setDefaultLookAndFeel(currentLookAndFeel); 
     }
 }

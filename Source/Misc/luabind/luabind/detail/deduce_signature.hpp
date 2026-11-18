@@ -37,6 +37,37 @@ struct signature_aux<
 template <class F>
 struct signature_aux<const F>: signature_aux<F> {};
 
+// JUCE 7 marks many member functions noexcept; strip noexcept so boost::function_types can parse them.
+template <class R, class... Args>
+struct signature_aux<R (*) (Args...) noexcept>
+{
+    typedef R (*type) (Args...);
+};
+
+template <class R, class C, class... Args>
+struct signature_aux<R (C::*) (Args...) noexcept>
+{
+    typedef R (C::*type) (Args...);
+};
+
+template <class R, class C, class... Args>
+struct signature_aux<R (C::*) (Args...) const noexcept>
+{
+    typedef R (C::*type) (Args...) const;
+};
+
+template <class R, class C, class... Args>
+struct signature_aux<R (C::*) (Args...) volatile noexcept>
+{
+    typedef R (C::*type) (Args...) volatile;
+};
+
+template <class R, class C, class... Args>
+struct signature_aux<R (C::*) (Args...) const volatile noexcept>
+{
+    typedef R (C::*type) (Args...) const volatile;
+};
+
 template <typename F>
 struct is_function:
     fty::is_callable_builtin<typename signature_aux<F>::type>

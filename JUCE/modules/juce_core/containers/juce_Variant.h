@@ -1,21 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
-   without fee is hereby granted provided that the above copyright notice and
-   this permission notice appear in all copies.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
+
+   Or:
+
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -147,6 +159,17 @@ public:
     /** Returns true if this var has the same value as the one supplied.
         Note that this ignores the type, so a string var "123" and an integer var with the
         value 123 are considered to be equal.
+
+        Note that equality checking depends on the "wrapped" type of the object on which
+        equals() is called. That means the following code will convert the right-hand-side
+        argument to a string and compare the string values, because the object on the
+        left-hand-side was initialised from a string:
+        @code var ("123").equals (var (123)) @endcode
+        However, the following code will convert the right-hand-side argument to a double
+        and compare the values as doubles, because the object on the left-hand-side was
+        initialised from a double:
+        @code var (45.6).equals ("45.6000") @endcode
+
         @see equalsWithSameType
     */
     bool equals (const var& other) const noexcept;
@@ -271,15 +294,16 @@ public:
     */
     static var readFromStream (InputStream& input);
 
-    /* This was a static empty var object, but is now deprecated as it's too easy to accidentally
-       use it indirectly during a static constructor, leading to hard-to-find order-of-initialisation
-       problems.
-       @deprecated If you need a default-constructed var, just use var() or {}.
-       The only time you might miss having var::null available might be if you need to return an
-       empty var from a function by reference, but if you need to do that, it's easy enough to use
-       a function-local static var and return that, avoiding any order-of-initialisation issues.
-    */
-    JUCE_DEPRECATED_STATIC (static const var null;)
+    //==============================================================================
+   #if JUCE_ALLOW_STATIC_NULL_VARIABLES
+    /** @cond */
+    [[deprecated ("This was a static empty var object, but is now deprecated as it's too easy to accidentally "
+                 "use it indirectly during a static constructor leading to hard-to-find order-of-initialisation "
+                 "problems. Use var() or {} instead. For returning an empty var from a function by reference, "
+                 "use a function-local static var and return that.")]]
+    static const var null;
+    /** @endcond */
+   #endif
 
 private:
     //==============================================================================
@@ -330,26 +354,4 @@ JUCE_API bool operator== (const var&, const String&);
 JUCE_API bool operator!= (const var&, const String&);
 JUCE_API bool operator== (const var&, const char*);
 JUCE_API bool operator!= (const var&, const char*);
-
-//==============================================================================
-/** This template-overloaded class can be used to convert between var and custom types.
-
-    @tags{Core}
-*/
-template <typename Type>
-struct VariantConverter
-{
-    static Type fromVar (const var& v)             { return static_cast<Type> (v); }
-    static var toVar (const Type& t)               { return t; }
-};
-
-#ifndef DOXYGEN
-template <>
-struct VariantConverter<String>
-{
-    static String fromVar (const var& v)           { return v.toString(); }
-    static var toVar (const String& s)             { return s; }
-};
-#endif
-
 } // namespace juce

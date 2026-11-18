@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -27,14 +36,14 @@
 
 
 //==============================================================================
-class AboutWindowComponent    : public Component
+class AboutWindowComponent final : public Component
 {
 public:
     AboutWindowComponent()
     {
         addAndMakeVisible (titleLabel);
         titleLabel.setJustificationType (Justification::centred);
-        titleLabel.setFont (Font (35.0f, Font::FontStyleFlags::bold));
+        titleLabel.setFont (FontOptions (35.0f, Font::FontStyleFlags::bold));
 
         auto buildDate = Time::getCompilationDate();
         addAndMakeVisible (versionLabel);
@@ -64,8 +73,6 @@ public:
         juceLogoBounds.setWidth (juceLogoBounds.getWidth() + 100);
         juceLogoBounds.setHeight (juceLogoBounds.getHeight() + 100);
 
-        copyrightLabel.setBounds (leftSlice.removeFromBottom (20));
-
         auto titleHeight = 40;
 
         centreSlice.removeFromTop ((centreSlice.getHeight() / 2) - (titleHeight / 2));
@@ -76,7 +83,9 @@ public:
         versionLabel.setBounds (centreSlice.removeFromTop (40));
 
         centreSlice.removeFromTop (10);
-        aboutButton.setBounds (centreSlice.removeFromBottom (20));
+        aboutButton.setBounds (centreSlice.removeFromTop (20));
+
+        copyrightLabel.setBounds (getLocalBounds().removeFromBottom (50));
     }
 
     void paint (Graphics& g) override

@@ -16,6 +16,8 @@
 
 #include <sys/types.h>
 
+
+#include "aaudio/AAudioExtensions.h"
 #include "aaudio/AudioStreamAAudio.h"
 #include "FilterAudioStream.h"
 #include "OboeDebug.h"
@@ -87,8 +89,14 @@ bool AudioStreamBuilder::isCompatible(AudioStreamBase &other) {
 }
 
 Result AudioStreamBuilder::openStream(AudioStream **streamPP) {
+    LOGW("Passing AudioStream pointer deprecated, Use openStream(std::shared_ptr<oboe::AudioStream> &stream) instead.");
+    return openStreamInternal(streamPP);
+}
+
+Result AudioStreamBuilder::openStreamInternal(AudioStream **streamPP) {
     auto result = isValidConfig();
     if (result != Result::OK) {
+        LOGW("%s() invalid config. Error %s", __func__, oboe::convertToText(result));
         return result;
     }
 
@@ -109,8 +117,7 @@ Result AudioStreamBuilder::openStream(AudioStream **streamPP) {
     // Do we need to make a child stream and convert.
     if (conversionNeeded) {
         AudioStream *tempStream;
-
-        result = childBuilder.openStream(&tempStream);
+        result = childBuilder.openStreamInternal(&tempStream);
         if (result != Result::OK) {
             return result;
         }
@@ -137,7 +144,9 @@ Result AudioStreamBuilder::openStream(AudioStream **streamPP) {
 
             // Use childStream in a FilterAudioStream.
             LOGI("%s() create a FilterAudioStream for data conversion.", __func__);
-            FilterAudioStream *filterStream = new FilterAudioStream(parentBuilder, tempStream);
+            std::shared_ptr<AudioStream> childStream(tempStream);
+            FilterAudioStream *filterStream = new FilterAudioStream(parentBuilder, childStream);
+            childStream->setWeakThis(childStream);
             result = filterStream->configureFlowGraph();
             if (result !=  Result::OK) {
                 filterStream->close();
@@ -156,7 +165,20 @@ Result AudioStreamBuilder::openStream(AudioStream **streamPP) {
         }
     }
 
-    result = streamP->open(); // TODO review API
+    // If MMAP has a problem in this case then disable it temporarily.
+    bool wasMMapOriginallyEnabled = AAudioExtensions::getInstance().isMMapEnabled();
+    bool wasMMapTemporarilyDisabled = false;
+    if (wasMMapOriginallyEnabled) {
+        bool isMMapSafe = QuirksManager::getInstance().isMMapSafe(childBuilder);
+        if (!isMMapSafe) {
+            AAudioExtensions::getInstance().setMMapEnabled(false);
+            wasMMapTemporarilyDisabled = true;
+        }
+    }
+    result = streamP->open();
+    if (wasMMapTemporarilyDisabled) {
+        AAudioExtensions::getInstance().setMMapEnabled(wasMMapOriginallyEnabled); // restore original
+    }
     if (result == Result::OK) {
 
         int32_t  optimalBufferSize = -1;
@@ -187,25 +209,18 @@ Result AudioStreamBuilder::openStream(AudioStream **streamPP) {
 }
 
 Result AudioStreamBuilder::openManagedStream(oboe::ManagedStream &stream) {
+    LOGW("`openManagedStream` is deprecated. Use openStream(std::shared_ptr<oboe::AudioStream> &stream) instead.");
     stream.reset();
-    auto result = isValidConfig();
-    if (result != Result::OK) {
-        return result;
-    }
     AudioStream *streamptr;
-    result = openStream(&streamptr);
+    auto result = openStream(&streamptr);
     stream.reset(streamptr);
     return result;
 }
 
 Result AudioStreamBuilder::openStream(std::shared_ptr<AudioStream> &sharedStream) {
     sharedStream.reset();
-    auto result = isValidConfig();
-    if (result != Result::OK) {
-        return result;
-    }
     AudioStream *streamptr;
-    result = openStream(&streamptr);
+    auto result = openStreamInternal(&streamptr);
     if (result == Result::OK) {
         sharedStream.reset(streamptr);
         // Save a weak_ptr in the stream for use with callbacks.

@@ -1,18 +1,22 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE examples.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework examples.
+   Copyright (c) Raw Material Software Limited
 
    The code included in this file is provided under the terms of the ISC license
    http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
+   to use, copy, modify, and/or distribute this software for any purpose with or
    without fee is hereby granted provided that the above copyright notice and
    this permission notice appear in all copies.
 
-   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES,
-   WHETHER EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR
-   PURPOSE, ARE DISCLAIMED.
+   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+   REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+   AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+   INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+   LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+   OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+   PERFORMANCE OF THIS SOFTWARE.
 
   ==============================================================================
 */
@@ -31,7 +35,8 @@
 
  dependencies:     juce_box2d, juce_core, juce_data_structures, juce_events,
                    juce_graphics, juce_gui_basics
- exporters:        xcode_mac, vs2019, linux_make, androidstudio, xcode_iphone
+ exporters:        xcode_mac, vs2022, vs2026, linux_make, androidstudio,
+                   xcode_iphone
 
  moduleFlags:      JUCE_STRICT_REFCOUNTEDPOINTER=1
 
@@ -79,8 +84,8 @@ struct Settings
 
 struct Test
 {
-    Test()          {}
-    virtual ~Test() {}
+    Test()          = default;
+    virtual ~Test() = default;
 
     virtual void Keyboard (unsigned char /*key*/)   {}
     virtual void KeyboardUp (unsigned char /*key*/) {}
@@ -88,7 +93,7 @@ struct Test
     std::unique_ptr<b2World> m_world  { new b2World (b2Vec2 (0.0f, -10.0f)) };
 };
 
-JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wimplicit-int-float-conversion")
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wimplicit-int-float-conversion", "-Wsuggest-override")
 
 #include "../Assets/Box2DTests/AddPair.h"
 #include "../Assets/Box2DTests/ApplyForce.h"
@@ -101,8 +106,8 @@ JUCE_END_IGNORE_WARNINGS_GCC_LIKE
 /** This list box just displays a StringArray and broadcasts a change message when the
     selected row changes.
 */
-class Box2DTestList : public ListBoxModel,
-                      public ChangeBroadcaster
+class Box2DTestList final : public ListBoxModel,
+                            public ChangeBroadcaster
 {
 public:
     Box2DTestList (const StringArray& testList)
@@ -134,7 +139,7 @@ private:
 };
 
 //==============================================================================
-struct Box2DRenderComponent  : public Component
+struct Box2DRenderComponent final : public Component
 {
     Box2DRenderComponent()
     {
@@ -159,9 +164,9 @@ struct Box2DRenderComponent  : public Component
 };
 
 //==============================================================================
-class Box2DDemo : public Component,
-                  private Timer,
-                  private ChangeListener
+class Box2DDemo final : public Component,
+                        private Timer,
+                        private ChangeListener
 {
 public:
     enum Demos

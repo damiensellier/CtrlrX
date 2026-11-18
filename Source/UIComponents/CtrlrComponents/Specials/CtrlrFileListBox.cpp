@@ -93,7 +93,7 @@ CtrlrFileListBox::CtrlrFileListBox (CtrlrModulator &owner)
 
 	directoryContentsList = new DirectoryContentsList (0, timeSliceThread);
 	directoryContentsList->setDirectory (folder, true, true);
-	timeSliceThread.startThread (3);
+	timeSliceThread.startThread (juce::Thread::Priority::normal);
 
 	treeComponent = new CtrlrFileTreeComponent( *this, *directoryContentsList );
 	treeComponent->addListener (this);

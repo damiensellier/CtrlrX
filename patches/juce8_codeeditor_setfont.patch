@@ -1,0 +1,54 @@
+# JUCE 8.0.12 -- CodeEditorComponent::setFont(): never a zero char width or line height
+#
+# Applies to: JUCE/modules/juce_gui_extra/code_editor/juce_CodeEditorComponent.cpp
+# Documentation only: the change is already in the vendored JUCE tree, and CMake
+# does not apply this file. It equals
+#   git diff <pristine JUCE 8.0.12> HEAD -- JUCE/modules/juce_gui_extra/code_editor/juce_CodeEditorComponent.cpp
+# Check from the repo root:  git apply -R --check patches/juce8_codeeditor_setfont.patch
+#
+# setFont() takes charWidth and lineHeight from the font. A font of size 0 (a user
+# can set the Lua editor font size to 0) makes both 0, and the editor then divides
+# by them: CtrlrX crashes. The patch keeps both at 1 pixel or more.
+#
+# The code is the 5.6.37 fix (v5.6.34, Damien Sellier with John Goodland, CtrlrX
+# PR #140), carried to JUCE 8.0.12; JUCE 8 still has the same code.
+#
+diff --git a/JUCE/modules/juce_gui_extra/code_editor/juce_CodeEditorComponent.cpp b/JUCE/modules/juce_gui_extra/code_editor/juce_CodeEditorComponent.cpp
+index 9b99462e7..dd3c6b315 100644
+--- a/JUCE/modules/juce_gui_extra/code_editor/juce_CodeEditorComponent.cpp
++++ b/JUCE/modules/juce_gui_extra/code_editor/juce_CodeEditorComponent.cpp
+@@ -1693,15 +1693,31 @@ int CodeEditorComponent::columnToIndex (int lineNum, int column) const noexcept
+ }
+ 
+ //==============================================================================
+-void CodeEditorComponent::setFont (const Font& newFont)
++void CodeEditorComponent::setFont (const Font& newFont) // Updated v5.6.34.
+ {
+     font = newFont;
+ 
++    // Calculate charWidth and lineHeight
+     JUCE_BEGIN_IGNORE_DEPRECATION_WARNINGS
+-    charWidth = font.getStringWidthFloat ("0");
++    float calculatedCharWidth = font.getStringWidthFloat ("0");
+     JUCE_END_IGNORE_DEPRECATION_WARNINGS
++    int calculatedLineHeight = roundToInt (font.getHeight());
++
++    // --- CRITICAL FIXES BELOW ---
++
++    // Ensure charWidth is never zero or negative
++    if (calculatedCharWidth <= 0.0f)
++        charWidth = 1.0f; // Set a minimum reasonable value, e.g., 1 pixel
++    else
++        charWidth = calculatedCharWidth;
++
++    // Ensure lineHeight is never zero or negative
++    if (calculatedLineHeight <= 0)
++        lineHeight = 1; // Set a minimum reasonable value, e.g., 1 pixel
++    else
++        lineHeight = calculatedLineHeight;
++    // --- END CRITICAL FIXES ---
+ 
+-    lineHeight = roundToInt (font.getHeight());
+     resized();
+ }
+ 

@@ -119,3 +119,32 @@ TEST_F(ProcessorInstance, test_in_range_vst_index_still_reaches_host)
     EXPECT_TRUE(listener.sawIndex(1))
         << "an in-range parameter change was dropped; host automation would be dead";
 }
+
+// T4 -- JUCE 8 removed AudioProcessor::setParameterNotifyingHost(). The plugin wrappers use the
+// processor's registered parameters only if there are exactly getNumParameters() of them; without
+// that, T3 fails because a value change has no path to the host (#229). The registered slots must
+// also give the host the IDs, names and texts that the per-index methods give, as JUCE's legacy
+// parameters did, so host projects keep their automation.
+TEST_F(ProcessorInstance, test_registered_parameters_match_the_advertised_ones)
+{
+    allowAndRecordDeviceSends();
+
+    ASSERT_NE(loadPanel("fixture_vst_param_overflow.panel"), nullptr);
+
+    const auto &params = processor->getParameters();
+    ASSERT_EQ(params.size(), processor->getNumParameters());
+
+    for (int i = 0; i < params.size(); ++i) {
+        auto *hosted = dynamic_cast<juce::HostedAudioProcessorParameter *>(params[i]);
+        ASSERT_NE(hosted, nullptr) << "slot " << i << " has no parameter ID";
+
+        EXPECT_EQ(hosted->getParameterIndex(), i);
+        EXPECT_EQ(hosted->getParameterID(), processor->getParameterID(i)) << "slot " << i;
+        EXPECT_EQ(hosted->getName(1024), processor->getParameterName(i)) << "slot " << i;
+        EXPECT_EQ(hosted->getCurrentValueAsText(), processor->getParameterText(i)) << "slot " << i;
+    }
+
+    // The fixture's 'in-range' modulator sits at vstIndex 1.
+    EXPECT_EQ(params[1]->getName(1024), processor->getParameterName(1));
+    EXPECT_NE(processor->getParameterID(1), "undefined_ID_1") << "fixture modulator not found at index 1";
+}

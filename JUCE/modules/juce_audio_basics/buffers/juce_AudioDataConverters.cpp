@@ -1,27 +1,41 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
-   without fee is hereby granted provided that the above copyright notice and
-   this permission notice appear in all copies.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
+
+   Or:
+
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
 
 namespace juce
 {
+
+JUCE_BEGIN_IGNORE_DEPRECATION_WARNINGS
 
 void AudioDataConverters::convertFloatToInt16LE (const float* source, void* dest, int numSamples, int destBytesPerSample)
 {
@@ -431,40 +445,27 @@ void AudioDataConverters::convertFormatToFloat (DataFormat sourceFormat, const v
 //==============================================================================
 void AudioDataConverters::interleaveSamples (const float** source, float* dest, int numSamples, int numChannels)
 {
-    for (int chan = 0; chan < numChannels; ++chan)
-    {
-        auto i = chan;
-        auto src = source [chan];
+    using Format = AudioData::Format<AudioData::Float32, AudioData::NativeEndian>;
 
-        for (int j = 0; j < numSamples; ++j)
-        {
-            dest [i] = src [j];
-            i += numChannels;
-        }
-    }
+    AudioData::interleaveSamples (AudioData::NonInterleavedSource<Format> { source, numChannels },
+                                  AudioData::InterleavedDest<Format>      { dest,   numChannels },
+                                  numSamples);
 }
 
 void AudioDataConverters::deinterleaveSamples (const float* source, float** dest, int numSamples, int numChannels)
 {
-    for (int chan = 0; chan < numChannels; ++chan)
-    {
-        auto i = chan;
-        auto dst = dest [chan];
+    using Format = AudioData::Format<AudioData::Float32, AudioData::NativeEndian>;
 
-        for (int j = 0; j < numSamples; ++j)
-        {
-            dst [j] = source [i];
-            i += numChannels;
-        }
-    }
+    AudioData::deinterleaveSamples (AudioData::InterleavedSource<Format>  { source, numChannels },
+                                    AudioData::NonInterleavedDest<Format> { dest,   numChannels },
+                                    numSamples);
 }
-
 
 //==============================================================================
 //==============================================================================
 #if JUCE_UNIT_TESTS
 
-class AudioConversionTests  : public UnitTest
+class AudioConversionTests final : public UnitTest
 {
 public:
     AudioConversionTests()
@@ -480,6 +481,7 @@ public:
             test (unitTest, true, r);
         }
 
+        JUCE_BEGIN_IGNORE_WARNINGS_MSVC (6262)
         static void test (UnitTest& unitTest, bool inPlace, Random& r)
         {
             const int numSamples = 2048;
@@ -506,12 +508,12 @@ public:
                 unitTest.expect (! clippingFailed);
             }
 
-            // convert data from the source to dest format..
+            // convert data from the source to dest format...
             std::unique_ptr<AudioData::Converter> conv (new AudioData::ConverterInstance<AudioData::Pointer<F1, E1, AudioData::NonInterleaved, AudioData::Const>,
                                                                                          AudioData::Pointer<F2, E2, AudioData::NonInterleaved, AudioData::NonConst>>());
             conv->convertSamples (inPlace ? reversed : converted, original, numSamples);
 
-            // ..and back again..
+            // ...and back again
             conv.reset (new AudioData::ConverterInstance<AudioData::Pointer<F2, E2, AudioData::NonInterleaved, AudioData::Const>,
                                                          AudioData::Pointer<F1, E1, AudioData::NonInterleaved, AudioData::NonConst>>());
             if (! inPlace)
@@ -537,6 +539,7 @@ public:
                 unitTest.expect (biggestDiff <= errorMargin);
             }
         }
+        JUCE_END_IGNORE_WARNINGS_MSVC
     };
 
     template <class F1, class E1, class FormatType>
@@ -586,11 +589,57 @@ public:
         Test1 <AudioData::Int32>::test (*this, r);
         beginTest ("Round-trip conversion: Float32");
         Test1 <AudioData::Float32>::test (*this, r);
+
+        using Format = AudioData::Format<AudioData::Float32, AudioData::NativeEndian>;
+
+        beginTest ("Interleaving");
+        {
+            constexpr auto numChannels = 4;
+            constexpr auto numSamples = 512;
+
+            AudioBuffer<float> sourceBuffer { numChannels, numSamples },
+                               destBuffer   { 1, numChannels * numSamples };
+
+            for (int ch = 0; ch < numChannels; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    sourceBuffer.setSample (ch, i, r.nextFloat());
+
+            AudioData::interleaveSamples (AudioData::NonInterleavedSource<Format> { sourceBuffer.getArrayOfReadPointers(), numChannels },
+                                          AudioData::InterleavedDest<Format>      { destBuffer.getWritePointer (0),        numChannels },
+                                          numSamples);
+
+            for (int ch = 0; ch < numChannels; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    expectEquals (destBuffer.getSample (0, ch + (i * numChannels)), sourceBuffer.getSample (ch, i));
+        }
+
+        beginTest ("Deinterleaving");
+        {
+            constexpr auto numChannels = 4;
+            constexpr auto numSamples = 512;
+
+            AudioBuffer<float> sourceBuffer { 1, numChannels * numSamples },
+                               destBuffer   { numChannels, numSamples };
+
+            for (int ch = 0; ch < numChannels; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    sourceBuffer.setSample (0, ch + (i * numChannels), r.nextFloat());
+
+            AudioData::deinterleaveSamples (AudioData::InterleavedSource<Format>  { sourceBuffer.getReadPointer (0),      numChannels },
+                                            AudioData::NonInterleavedDest<Format> { destBuffer.getArrayOfWritePointers(), numChannels },
+                                            numSamples);
+
+            for (int ch = 0; ch < numChannels; ++ch)
+                for (int i = 0; i < numSamples; ++i)
+                    expectEquals (sourceBuffer.getSample (0, ch + (i * numChannels)), destBuffer.getSample (ch, i));
+        }
     }
 };
 
 static AudioConversionTests audioConversionUnitTests;
 
 #endif
+
+JUCE_END_IGNORE_DEPRECATION_WARNINGS
 
 } // namespace juce

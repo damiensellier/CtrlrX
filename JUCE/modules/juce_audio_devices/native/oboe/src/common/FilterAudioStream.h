@@ -38,9 +38,9 @@ public:
      *
      * @param builder containing all the stream's attributes
      */
-    FilterAudioStream(const AudioStreamBuilder &builder, AudioStream *childStream)
+    FilterAudioStream(const AudioStreamBuilder &builder, std::shared_ptr<AudioStream> childStream)
     : AudioStream(builder)
-    , mChildStream(childStream) {
+     , mChildStream(childStream) {
         // Intercept the callback if used.
         if (builder.isErrorCallbackSpecified()) {
             mErrorCallback = mChildStream->swapErrorCallback(this);
@@ -55,14 +55,16 @@ public:
         // Copy parameters that may not match builder.
         mBufferCapacityInFrames = mChildStream->getBufferCapacityInFrames();
         mPerformanceMode = mChildStream->getPerformanceMode();
+        mSharingMode = mChildStream->getSharingMode();
         mInputPreset = mChildStream->getInputPreset();
+        mFramesPerBurst = mChildStream->getFramesPerBurst();
+        mDeviceId = mChildStream->getDeviceId();
+        mHardwareSampleRate = mChildStream->getHardwareSampleRate();
+        mHardwareChannelCount = mChildStream->getHardwareChannelCount();
+        mHardwareFormat = mChildStream->getHardwareFormat();
     }
 
     virtual ~FilterAudioStream() = default;
-
-    AudioStream *getChildStream() const {
-        return mChildStream.get();
-    }
 
     Result configureFlowGraph();
 
@@ -113,7 +115,7 @@ public:
             int32_t numFrames,
             int64_t timeoutNanoseconds) override;
 
-    StreamState getState() const override {
+    StreamState getState() override {
         return mChildStream->getState();
     }
 
@@ -126,10 +128,6 @@ public:
 
     bool isXRunCountSupported() const override {
         return mChildStream->isXRunCountSupported();
-    }
-
-    int32_t getFramesPerBurst() override {
-        return mChildStream->getFramesPerBurst();
     }
 
     AudioApi getAudioApi() const override {
@@ -159,7 +157,7 @@ public:
         return mBufferSizeInFrames;
     }
 
-    ResultWithValue<int32_t> getXRunCount() const override {
+    ResultWithValue<int32_t> getXRunCount() override {
         return mChildStream->getXRunCount();
     }
 
@@ -184,20 +182,20 @@ public:
             void *audioData,
             int32_t numFrames) override;
 
-    bool onError(AudioStream * audioStream, Result error) override {
+    bool onError(AudioStream * /*audioStream*/, Result error) override {
         if (mErrorCallback != nullptr) {
             return mErrorCallback->onError(this, error);
         }
         return false;
     }
 
-    void onErrorBeforeClose(AudioStream *oboeStream, Result error) override {
+    void onErrorBeforeClose(AudioStream * /*oboeStream*/, Result error) override {
         if (mErrorCallback != nullptr) {
             mErrorCallback->onErrorBeforeClose(this, error);
         }
     }
 
-    void onErrorAfterClose(AudioStream *oboeStream, Result error) override {
+    void onErrorAfterClose(AudioStream * /*oboeStream*/, Result error) override {
         // Close this parent stream because the callback will only close the child.
         AudioStream::close();
         if (mErrorCallback != nullptr) {
@@ -214,7 +212,7 @@ public:
 
 private:
 
-    std::unique_ptr<AudioStream>             mChildStream; // this stream wraps the child stream
+    std::shared_ptr<AudioStream>             mChildStream; // this stream wraps the child stream
     std::unique_ptr<DataConversionFlowGraph> mFlowGraph; // for converting data
     std::unique_ptr<uint8_t[]>               mBlockingBuffer; // temp buffer for write()
     double                                   mRateScaler = 1.0; // ratio parent/child sample rates

@@ -1,21 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   The code included in this file is provided under the terms of the ISC license
-   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
-   To use, copy, modify, and/or distribute this software for any purpose with or
-   without fee is hereby granted provided that the above copyright notice and
-   this permission notice appear in all copies.
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
+
+   Or:
+
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -33,7 +45,7 @@ namespace juce
 
     @tags{Audio}
 */
-struct MidiMessageMetadata 
+struct MidiMessageMetadata
 {
     MidiMessageMetadata() noexcept = default;
 
@@ -47,6 +59,13 @@ struct MidiMessageMetadata
         Note that MidiMessage owns its data storage, whereas MidiMessageMetadata does not.
     */
     MidiMessage getMessage() const          { return MidiMessage (data, numBytes, samplePosition); }
+
+    Span<const std::byte> asSpan() const&
+    {
+        return { reinterpret_cast<const std::byte*> (data), (size_t) numBytes };
+    }
+
+    Span<const std::byte> asSpan() const&& = delete;
 
     /** Pointer to the first byte of a MIDI message. */
     const uint8* data = nullptr;
@@ -184,9 +203,11 @@ public:
         If an event is added whose sample position is the same as one or more events
         already in the buffer, the new event will be placed after the existing ones.
 
-        To retrieve events, use a MidiBufferIterator object
+        To retrieve events, use a MidiBufferIterator object.
+
+        Returns true on success, or false on failure.
     */
-    void addEvent (const MidiMessage& midiMessage, int sampleNumber);
+    bool addEvent (const MidiMessage& midiMessage, int sampleNumber);
 
     /** Adds an event to the buffer from raw midi data.
 
@@ -202,9 +223,11 @@ public:
         it'll actually only store 3 bytes. If the midi data is invalid, it might not
         add an event at all.
 
-        To retrieve events, use a MidiBufferIterator object
+        To retrieve events, use a MidiBufferIterator object.
+
+        Returns true on success, or false on failure.
     */
-    void addEvent (const void* rawMidiData,
+    bool addEvent (const void* rawMidiData,
                    int maxBytesOfMidiData,
                    int sampleNumber);
 
@@ -269,7 +292,9 @@ public:
     MidiBufferIterator findNextSamplePosition (int samplePosition) const noexcept;
 
     //==============================================================================
-    /**
+    /** @cond */
+    /** This class is now deprecated in favour of MidiBufferIterator.
+
         Used to iterate through the events in a MidiBuffer.
 
         Note that altering the buffer while an iterator is using it will produce
@@ -277,20 +302,12 @@ public:
 
         @see MidiBuffer
     */
-    class JUCE_API  Iterator
+    class [[deprecated]] JUCE_API  Iterator
     {
     public:
         //==============================================================================
-        /** Creates an Iterator for this MidiBuffer.
-            This class has been deprecated in favour of MidiBufferIterator.
-        */
-        JUCE_DEPRECATED (Iterator (const MidiBuffer&) noexcept);
-
-        /** Creates a copy of an iterator. */
-        Iterator (const Iterator&) = default;
-
-        /** Destructor. */
-        ~Iterator() noexcept;
+        /** Creates an Iterator for this MidiBuffer. */
+        Iterator (const MidiBuffer& b) noexcept;
 
         //==============================================================================
         /** Repositions the iterator so that the next event retrieved will be the first
@@ -332,6 +349,7 @@ public:
         const MidiBuffer& buffer;
         MidiBufferIterator iterator;
     };
+    /** @endcond */
 
     /** The raw data holding this buffer.
         Obviously access to this data is provided at your own risk. Its internal format could

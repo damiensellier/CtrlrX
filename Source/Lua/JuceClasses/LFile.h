@@ -3,38 +3,27 @@
 
 #include "LMemoryBlock.h"
 
-class LFile : public File
+class LFile
 {
 	public:
-		LFile(const String &_path) : File(_path) {}
-		LFile(const File &other) : File(other) {}
-		void findChildFiles (luabind::object const& table, int whatToLookFor, bool searchRecursively, const String wildcardPattern) const;
-		double getSize()
-		{
-			return ((double)File::getSize());
-		}
+		static void findChildFiles (const File& file, luabind::object const& table, int whatToLookFor, bool searchRecursively, const String wildcardPattern);
+		static double getSize (const File& file);
 
 		static File getSpecialLocation(const File::SpecialLocationType type)
 		{
 			return (File::getSpecialLocation(type));
 		}
 
-		bool replaceWithData (const LMemoryBlock &dataToWrite)
-		{
-			return (File::replaceWithData (dataToWrite.getData(), (size_t)dataToWrite.getSize()));
-		}
+		static bool replaceWithData (File& file, const LMemoryBlock &dataToWrite);
 
-        bool appendData (const LMemoryBlock &dataToAppend)
-        {
-            return (File::appendData (dataToAppend.getData(), (size_t)dataToAppend.getSize()));
-        }
+        static bool appendData (File& file, const LMemoryBlock &dataToAppend);
 
 		static const String descriptionOfSizeInBytes(const double fileSize)
 		{
 			return (File::descriptionOfSizeInBytes ((juce::int64)fileSize));
 		}
 
-		bool isValid();
+		static bool isValid(const File& file);
 		static void wrapForLua (lua_State *L);
 };
 

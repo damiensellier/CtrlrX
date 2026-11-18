@@ -1,4 +1,5 @@
 #include "test_ProcessorFixture.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 #include <chrono>
 #include <thread>
 
@@ -14,6 +15,48 @@ TEST_F(ProcessorInstance, midi_io_capabilities)
     EXPECT_TRUE(processor->acceptsMidi());
     EXPECT_TRUE(processor->producesMidi());
     EXPECT_FALSE(processor->isMidiEffect());
+}
+
+// JUCE 8's LookAndFeel::findColour() asserts on an undefined colour ID; 5.6.37's JUCE 6 returned
+// black silently. Components read Label "when editing" and ScrollBar track colours from the default
+// LookAndFeel in their constructors, before they have a parent. CtrlrX defines those IDs as black,
+// and must not change a colour the LookAndFeel already defines.
+TEST_F(ProcessorInstance, lookandfeel_defaults_add_missing_colours_as_black_only)
+{
+    const juce::LookAndFeel &defaultLnf = juce::LookAndFeel::getDefaultLookAndFeel();
+    EXPECT_TRUE(defaultLnf.isColourSpecified(juce::Label::backgroundWhenEditingColourId))
+        << "the processor did not prepare the default LookAndFeel";
+    EXPECT_TRUE(defaultLnf.isColourSpecified(juce::ScrollBar::trackColourId));
+    // The MIDI settings window reads it in its constructor; no JUCE LookAndFeel defines it.
+    EXPECT_TRUE(defaultLnf.isColourSpecified(juce::Label::outlineWhenEditingColourId));
+
+    juce::LookAndFeel_V3 v3;
+    ASSERT_FALSE(v3.isColourSpecified(juce::Label::textWhenEditingColourId));
+    gui::initLookAndFeelDefaults(v3);
+    EXPECT_EQ(v3.findColour(juce::Label::textWhenEditingColourId), juce::Colours::black);
+    EXPECT_EQ(v3.findColour(juce::ScrollBar::trackColourId), juce::Colours::black);
+
+    juce::LookAndFeel_V4 v4;
+    const juce::Colour thumb = v4.findColour(juce::ScrollBar::thumbColourId);
+    const juce::Colour editText = v4.findColour(juce::Label::textWhenEditingColourId);
+    ASSERT_NE(thumb, juce::Colours::black);
+    gui::initLookAndFeelDefaults(v4);
+    EXPECT_EQ(v4.findColour(juce::ScrollBar::thumbColourId), thumb);
+    EXPECT_EQ(v4.findColour(juce::Label::textWhenEditingColourId), editText);
+}
+
+// patches/juce8_codeeditor_setfont.patch (5.6.37: v5.6.34, #140): a font of size 0, e.g. a Lua
+// editor font size set to 0 by the user, must not give the code editor a zero char width or line
+// height; it divides by them.
+TEST_F(ProcessorInstance, code_editor_font_of_size_zero_keeps_a_non_zero_cell)
+{
+    juce::CodeDocument document;
+    juce::CodeEditorComponent editor(document, nullptr);
+
+    editor.setFont(juce::Font(juce::FontOptions(0.0f))); // without the patch: SIGFPE here
+
+    EXPECT_GT(editor.getCharWidth(), 0.0f);
+    EXPECT_GE(editor.getLineHeight(), 1);
 }
 
 void ProcessorInstance::expectNoMidiMessagesInBuffer(std::string message) {

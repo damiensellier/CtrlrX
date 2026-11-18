@@ -4,6 +4,8 @@
 
 #include <luabind/lua_include.hpp>
 
+#include <cstring>
+
 static char state_unreferenced_callback_tag = 0;
 LUABIND_API char luabind::detail::state_use_count_tag = 0;
 
@@ -27,7 +29,15 @@ void luabind::detail::shared_ptr_deleter::alter_use_count(
 void luabind::set_state_unreferenced_callback(
     lua_State* L, state_unreferenced_fun cb)
 {
-    lua_pushcfunction(L, reinterpret_cast<lua_CFunction>(cb));
+    if (cb)
+    {
+        void* storage = lua_newuserdata(L, sizeof(state_unreferenced_fun));
+        std::memcpy(storage, &cb, sizeof(cb));
+    }
+    else
+    {
+        lua_pushnil(L);
+    }
     lua_rawsetp(L, LUA_REGISTRYINDEX, &state_unreferenced_callback_tag);
 }
 
@@ -36,8 +46,12 @@ luabind::get_state_unreferenced_callback(
     lua_State* L)
 {
     lua_rawgetp(L, LUA_REGISTRYINDEX, &state_unreferenced_callback_tag);
-    state_unreferenced_fun cb = reinterpret_cast<state_unreferenced_fun>(
-        lua_tocfunction(L, -1));
+    state_unreferenced_fun cb = 0;
+    if (lua_isuserdata(L, -1))
+    {
+        void* storage = lua_touserdata(L, -1);
+        std::memcpy(&cb, storage, sizeof(cb));
+    }
     lua_pop(L, 1);
     return cb;
 }

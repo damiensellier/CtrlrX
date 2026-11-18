@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -57,22 +66,21 @@ namespace
 }
 
 //==============================================================================
-class NewCppFileWizard  : public NewFileWizard::Type
+class NewCppFileWizard final : public NewFileWizard::Type
 {
 public:
-    NewCppFileWizard() {}
-
     String getName() override  { return "CPP File"; }
 
     void createNewFile (Project&, Project::Item parent) override
     {
-        const File newFile (askUserToChooseNewFile ("SourceCode.cpp", "*.cpp", parent));
-
-        if (newFile != File())
-            create (parent, newFile, "jucer_NewCppFileTemplate_cpp");
+        askUserToChooseNewFile ("SourceCode.cpp", "*.cpp", parent, [this, parent] (File newFile)
+        {
+            if (newFile != File())
+                create (*this, parent, newFile, "jucer_NewCppFileTemplate_cpp");
+        });
     }
 
-    static bool create (Project::Item parent, const File& newFile, const char* templateName)
+    static bool create (NewFileWizard::Type& wizard, Project::Item parent, const File& newFile, const char* templateName)
     {
         if (fillInNewCppFileTemplate (newFile, parent, templateName))
         {
@@ -80,28 +88,27 @@ public:
             return true;
         }
 
-        showFailedToWriteMessage (newFile);
+        wizard.showFailedToWriteMessage (newFile);
         return false;
     }
 };
 
 //==============================================================================
-class NewHeaderFileWizard  : public NewFileWizard::Type
+class NewHeaderFileWizard final : public NewFileWizard::Type
 {
 public:
-    NewHeaderFileWizard() {}
-
     String getName() override  { return "Header File"; }
 
     void createNewFile (Project&, Project::Item parent) override
     {
-        const File newFile (askUserToChooseNewFile ("SourceCode.h", "*.h", parent));
-
-        if (newFile != File())
-            create (parent, newFile, "jucer_NewCppFileTemplate_h");
+        askUserToChooseNewFile ("SourceCode.h", "*.h", parent, [this, parent] (File newFile)
+        {
+            if (newFile != File())
+                create (*this, parent, newFile, "jucer_NewCppFileTemplate_h");
+        });
     }
 
-    static bool create (Project::Item parent, const File& newFile, const char* templateName)
+    static bool create (NewFileWizard::Type& wizard, Project::Item parent, const File& newFile, const char* templateName)
     {
         if (fillInNewCppFileTemplate (newFile, parent, templateName))
         {
@@ -109,7 +116,7 @@ public:
             return true;
         }
 
-        showFailedToWriteMessage (newFile);
+        wizard.showFailedToWriteMessage (newFile);
         return false;
     }
 };
@@ -118,19 +125,18 @@ public:
 class NewCppAndHeaderFileWizard  : public NewFileWizard::Type
 {
 public:
-    NewCppAndHeaderFileWizard() {}
-
     String getName() override  { return "CPP & Header File"; }
 
     void createNewFile (Project&, Project::Item parent) override
     {
-        const File newFile (askUserToChooseNewFile ("SourceCode.h", "*.h;*.cpp", parent));
-
-        if (newFile != File())
+        askUserToChooseNewFile ("SourceCode.h", "*.h;*.cpp", parent, [this, parent] (File newFile)
         {
-            if (NewCppFileWizard::create (parent, newFile.withFileExtension ("h"),   "jucer_NewCppFileTemplate_h"))
-                NewCppFileWizard::create (parent, newFile.withFileExtension ("cpp"), "jucer_NewCppFileTemplate_cpp");
-        }
+            if (newFile == File{})
+                return;
+
+            if (NewCppFileWizard::create (*this, parent, newFile.withFileExtension ("h"),   "jucer_NewCppFileTemplate_h"))
+                NewCppFileWizard::create (*this, parent, newFile.withFileExtension ("cpp"), "jucer_NewCppFileTemplate_cpp");
+        });
     }
 };
 
@@ -138,40 +144,14 @@ public:
 class NewComponentFileWizard  : public NewFileWizard::Type
 {
 public:
-    NewComponentFileWizard() {}
-
     String getName() override  { return "Component class (split between a CPP & header)"; }
 
     void createNewFile (Project&, Project::Item parent) override
     {
-        for (;;)
-        {
-            AlertWindow aw (TRANS ("Create new Component class"),
-                            TRANS ("Please enter the name for the new class"),
-                            AlertWindow::NoIcon, nullptr);
-
-            aw.addTextEditor (getClassNameFieldName(), String(), String(), false);
-            aw.addButton (TRANS ("Create Files"),  1, KeyPress (KeyPress::returnKey));
-            aw.addButton (TRANS ("Cancel"),        0, KeyPress (KeyPress::escapeKey));
-
-            if (aw.runModalLoop() == 0)
-                break;
-
-            const String className (aw.getTextEditorContents (getClassNameFieldName()).trim());
-
-            if (className == build_tools::makeValidIdentifier (className, false, true, false))
-            {
-                const File newFile (askUserToChooseNewFile (className + ".h", "*.h;*.cpp", parent));
-
-                if (newFile != File())
-                    createFiles (parent, className, newFile);
-
-                break;
-            }
-        }
+        createNewFileInternal (parent);
     }
 
-    static bool create (const String& className, Project::Item parent,
+    static bool create (NewFileWizard::Type& wizard, const String& className, Project::Item parent,
                         const File& newFile, const char* templateName)
     {
         auto content = fillInBasicTemplateFields (newFile, parent, templateName)
@@ -186,56 +166,109 @@ public:
             return true;
         }
 
-        showFailedToWriteMessage (newFile);
+        wizard.showFailedToWriteMessage (newFile);
         return false;
     }
 
 private:
     virtual void createFiles (Project::Item parent, const String& className, const File& newFile)
     {
-        if (create (className, parent, newFile.withFileExtension ("h"),   "jucer_NewComponentTemplate_h"))
-            create (className, parent, newFile.withFileExtension ("cpp"), "jucer_NewComponentTemplate_cpp");
+        if (create (*this, className, parent, newFile.withFileExtension ("h"),   "jucer_NewComponentTemplate_h"))
+            create (*this, className, parent, newFile.withFileExtension ("cpp"), "jucer_NewComponentTemplate_cpp");
     }
 
     static String getClassNameFieldName()  { return "Class Name"; }
+
+    void createNewFileInternal (Project::Item parent)
+    {
+        asyncAlertWindow = std::make_unique<AlertWindow> (TRANS ("Create new Component class"),
+                                                          TRANS ("Please enter the name for the new class"),
+                                                          MessageBoxIconType::NoIcon, nullptr);
+
+        asyncAlertWindow->addTextEditor (getClassNameFieldName(), String(), String(), false);
+        asyncAlertWindow->addButton (TRANS ("Create Files"),  1, KeyPress (KeyPress::returnKey));
+        asyncAlertWindow->addButton (TRANS ("Cancel"),        0, KeyPress (KeyPress::escapeKey));
+
+        auto resultCallback = [safeThis = WeakReference<NewComponentFileWizard> { this }, parent] (int result)
+        {
+            if (safeThis == nullptr)
+                return;
+
+            auto& aw = *(safeThis->asyncAlertWindow);
+
+            aw.exitModalState (result);
+            aw.setVisible (false);
+
+            if (result == 0)
+                return;
+
+            const String className (aw.getTextEditorContents (getClassNameFieldName()).trim());
+
+            if (className == build_tools::makeValidIdentifier (className, false, true, false))
+            {
+                safeThis->askUserToChooseNewFile (className + ".h", "*.h;*.cpp",
+                                                  parent,
+                                                  [safeThis, parent, className] (File newFile)
+                                                  {
+                                                      if (safeThis == nullptr)
+                                                          return;
+
+                                                      if (newFile != File())
+                                                          safeThis->createFiles (parent, className, newFile);
+                                                  });
+
+                return;
+            }
+
+            safeThis->createNewFileInternal (parent);
+        };
+
+        asyncAlertWindow->enterModalState (true, ModalCallbackFunction::create (std::move (resultCallback)), false);
+    }
+
+    std::unique_ptr<AlertWindow> asyncAlertWindow;
+
+    JUCE_DECLARE_WEAK_REFERENCEABLE (NewComponentFileWizard)
 };
 
 //==============================================================================
-class NewSingleFileComponentFileWizard  : public NewComponentFileWizard
+class NewSingleFileComponentFileWizard final : public NewComponentFileWizard
 {
 public:
-    NewSingleFileComponentFileWizard() {}
-
     String getName() override  { return "Component class (in a single source file)"; }
 
     void createFiles (Project::Item parent, const String& className, const File& newFile) override
     {
-        create (className, parent, newFile.withFileExtension ("h"), "jucer_NewInlineComponentTemplate_h");
+        create (*this, className, parent, newFile.withFileExtension ("h"), "jucer_NewInlineComponentTemplate_h");
     }
 };
-
 
 //==============================================================================
 void NewFileWizard::Type::showFailedToWriteMessage (const File& file)
 {
-    AlertWindow::showMessageBox (AlertWindow::WarningIcon,
-                                 "Failed to Create File!",
-                                 "Couldn't write to the file: " + file.getFullPathName());
+    auto options = MessageBoxOptions::makeOptionsOk (MessageBoxIconType::WarningIcon,
+                                                     "Failed to Create File!",
+                                                     "Couldn't write to the file: " + file.getFullPathName());
+    messageBox = AlertWindow::showScopedAsync (options, nullptr);
 }
 
-File NewFileWizard::Type::askUserToChooseNewFile (const String& suggestedFilename, const String& wildcard,
-                                                  const Project::Item& projectGroupToAddTo)
+void NewFileWizard::Type::askUserToChooseNewFile (const String& suggestedFilename, const String& wildcard,
+                                                  const Project::Item& projectGroupToAddTo,
+                                                  std::function<void (File)> callback)
 {
-    FileChooser fc ("Select File to Create",
-                    projectGroupToAddTo.determineGroupFolder()
-                                       .getChildFile (suggestedFilename)
-                                       .getNonexistentSibling(),
-                    wildcard);
+    chooser = std::make_unique<FileChooser> ("Select File to Create",
+                                             projectGroupToAddTo.determineGroupFolder()
+                                                                .getChildFile (suggestedFilename)
+                                                                .getNonexistentSibling(),
+                                             wildcard);
+    auto flags = FileBrowserComponent::saveMode
+               | FileBrowserComponent::canSelectFiles
+               | FileBrowserComponent::warnAboutOverwriting;
 
-    if (fc.browseForFileToSave (true))
-        return fc.getResult();
-
-    return {};
+    chooser->launchAsync (flags, [callback] (const FileChooser& fc)
+    {
+        callback (fc.getResult());
+    });
 }
 
 //==============================================================================
@@ -255,7 +288,7 @@ NewFileWizard::~NewFileWizard()
 void NewFileWizard::addWizardsToMenu (PopupMenu& m) const
 {
     for (int i = 0; i < wizards.size(); ++i)
-        m.addItem (menuBaseID + i, "Add New " + wizards.getUnchecked(i)->getName() + "...");
+        m.addItem (menuBaseID + i, "Add New " + wizards.getUnchecked (i)->getName() + "...");
 }
 
 bool NewFileWizard::runWizardFromMenu (int chosenMenuItemID, Project& project, const Project::Item& projectGroupToAddTo) const

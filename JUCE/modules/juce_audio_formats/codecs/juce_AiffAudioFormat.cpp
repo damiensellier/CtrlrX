@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -382,7 +391,7 @@ namespace AiffFileHelpers
 }
 
 //==============================================================================
-class AiffAudioFormatReader  : public AudioFormatReader
+class AiffAudioFormatReader final : public AudioFormatReader
 {
 public:
     AiffAudioFormatReader (InputStream* in)
@@ -573,7 +582,7 @@ public:
     }
 
     //==============================================================================
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
         clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
@@ -640,7 +649,7 @@ private:
 };
 
 //==============================================================================
-class AiffAudioFormatWriter  : public AudioFormatWriter
+class AiffAudioFormatWriter final : public AudioFormatWriter
 {
 public:
     AiffAudioFormatWriter (OutputStream* out, double rate,
@@ -698,9 +707,9 @@ public:
         if (bytesWritten + bytes >= (size_t) 0xfff00000
              || ! output->write (tempBlock.getData(), bytes))
         {
-            // failed to write to disk, so let's try writing the header.
+            // Failed to write to disk, so let's try writing the header.
             // If it's just run out of disk space, then if it does manage
-            // to write the header, we'll still have a useable file..
+            // to write the header, we'll still have a useable file.
             writeHeader();
             writeFailed = true;
             return false;
@@ -721,16 +730,15 @@ private:
     {
         using namespace AiffFileHelpers;
 
-        const bool couldSeekOk = output->setPosition (headerPosition);
-        ignoreUnused (couldSeekOk);
+        [[maybe_unused]] const bool couldSeekOk = output->setPosition (headerPosition);
 
         // if this fails, you've given it an output stream that can't seek! It needs
         // to be able to seek back to write the header
         jassert (couldSeekOk);
 
-        auto headerLen = (int) (54 + (markChunk.getSize() > 0 ? markChunk.getSize() + 8 : 0)
-                                   + (comtChunk.getSize() > 0 ? comtChunk.getSize() + 8 : 0)
-                                   + (instChunk.getSize() > 0 ? instChunk.getSize() + 8 : 0));
+        auto headerLen = (int) (54 + (markChunk.isEmpty() ? 0 : markChunk.getSize() + 8)
+                                   + (comtChunk.isEmpty() ? 0 : comtChunk.getSize() + 8)
+                                   + (instChunk.isEmpty() ? 0 : instChunk.getSize() + 8));
         auto audioBytes = (int) (lengthInSamples * ((bitsPerSample * numChannels) / 8));
         audioBytes += (audioBytes & 1);
 
@@ -786,21 +794,21 @@ private:
 
         output->write (sampleRateBytes, 10);
 
-        if (markChunk.getSize() > 0)
+        if (! markChunk.isEmpty())
         {
             output->writeInt (chunkName ("MARK"));
             output->writeIntBigEndian ((int) markChunk.getSize());
             *output << markChunk;
         }
 
-        if (comtChunk.getSize() > 0)
+        if (! comtChunk.isEmpty())
         {
             output->writeInt (chunkName ("COMT"));
             output->writeIntBigEndian ((int) comtChunk.getSize());
             *output << comtChunk;
         }
 
-        if (instChunk.getSize() > 0)
+        if (! instChunk.isEmpty())
         {
             output->writeInt (chunkName ("INST"));
             output->writeIntBigEndian ((int) instChunk.getSize());
@@ -819,7 +827,7 @@ private:
 };
 
 //==============================================================================
-class MemoryMappedAiffReader   : public MemoryMappedAudioFormatReader
+class MemoryMappedAiffReader final : public MemoryMappedAudioFormatReader
 {
 public:
     MemoryMappedAiffReader (const File& f, const AiffAudioFormatReader& reader)
@@ -829,15 +837,18 @@ public:
     {
     }
 
-    bool readSamples (int** destSamples, int numDestChannels, int startOffsetInDestBuffer,
+    bool readSamples (int* const* destSamples, int numDestChannels, int startOffsetInDestBuffer,
                       int64 startSampleInFile, int numSamples) override
     {
         clearSamplesBeyondAvailableLength (destSamples, numDestChannels, startOffsetInDestBuffer,
                                            startSampleInFile, numSamples, lengthInSamples);
 
+        if (numSamples <= 0)
+            return true;
+
         if (map == nullptr || ! mappedSection.contains (Range<int64> (startSampleInFile, startSampleInFile + numSamples)))
         {
-            jassertfalse; // you must make sure that the window contains all the samples you're going to attempt to read.
+            jassertfalse; // you must make sure that the window contains all the samples you're going to attempt to read
             return false;
         }
 
@@ -859,7 +870,7 @@ public:
 
         if (map == nullptr || ! mappedSection.contains (sample))
         {
-            jassertfalse; // you must make sure that the window contains all the samples you're going to attempt to read.
+            jassertfalse; // you must make sure that the window contains all the samples you're going to attempt to read
 
             zeromem (result, (size_t) num * sizeof (float));
             return;
@@ -902,7 +913,7 @@ public:
 
         if (map == nullptr || numSamples <= 0 || ! mappedSection.contains (Range<int64> (startSampleInFile, startSampleInFile + numSamples)))
         {
-            jassert (numSamples <= 0); // you must make sure that the window contains all the samples you're going to attempt to read.
+            jassert (numSamples <= 0); // you must make sure that the window contains all the samples you're going to attempt to read
 
             for (int i = 0; i < numChannelsToRead; ++i)
                 results[i] = Range<float>();
@@ -1006,18 +1017,20 @@ MemoryMappedAudioFormatReader* AiffAudioFormat::createMemoryMappedReader (FileIn
     return nullptr;
 }
 
-AudioFormatWriter* AiffAudioFormat::createWriterFor (OutputStream* out,
-                                                     double sampleRate,
-                                                     unsigned int numberOfChannels,
-                                                     int bitsPerSample,
-                                                     const StringPairArray& metadataValues,
-                                                     int /*qualityOptionIndex*/)
+std::unique_ptr<AudioFormatWriter> AiffAudioFormat::createWriterFor (std::unique_ptr<OutputStream>& streamToWriteTo,
+                                                                     const AudioFormatWriterOptions& options)
 {
-    if (out != nullptr && getPossibleBitDepths().contains (bitsPerSample))
-        return new AiffAudioFormatWriter (out, sampleRate, numberOfChannels,
-                                          (unsigned int) bitsPerSample, metadataValues);
+    if (streamToWriteTo == nullptr || ! getPossibleBitDepths().contains (options.getBitsPerSample()))
+        return nullptr;
 
-    return nullptr;
+    StringPairArray metadata;
+    metadata.addUnorderedMap (options.getMetadataValues());
+
+    return std::make_unique<AiffAudioFormatWriter> (std::exchange (streamToWriteTo, {}).release(),
+                                                    options.getSampleRate(),
+                                                    (unsigned int) options.getNumChannels(),
+                                                    (unsigned int) options.getBitsPerSample(),
+                                                    metadata);
 }
 
 } // namespace juce

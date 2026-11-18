@@ -1,24 +1,33 @@
 /*
   ==============================================================================
 
-   This file is part of the JUCE library.
-   Copyright (c) 2020 - Raw Material Software Limited
+   This file is part of the JUCE framework.
+   Copyright (c) Raw Material Software Limited
 
-   JUCE is an open source library subject to commercial or open-source
+   JUCE is an open source framework subject to commercial or open source
    licensing.
 
-   By using JUCE, you agree to the terms of both the JUCE 6 End-User License
-   Agreement and JUCE Privacy Policy (both effective as of the 16th June 2020).
+   By downloading, installing, or using the JUCE framework, or combining the
+   JUCE framework with any other source code, object code, content or any other
+   copyrightable work, you agree to the terms of the JUCE End User Licence
+   Agreement, and all incorporated terms including the JUCE Privacy Policy and
+   the JUCE Website Terms of Service, as applicable, which will bind you. If you
+   do not agree to the terms of these agreements, we will not license the JUCE
+   framework to you, and you must discontinue the installation or download
+   process and cease use of the JUCE framework.
 
-   End User License Agreement: www.juce.com/juce-6-licence
-   Privacy Policy: www.juce.com/juce-privacy-policy
+   JUCE End User Licence Agreement: https://juce.com/legal/juce-8-licence/
+   JUCE Privacy Policy: https://juce.com/juce-privacy-policy
+   JUCE Website Terms of Service: https://juce.com/juce-website-terms-of-service/
 
-   Or: You may also use this code under the terms of the GPL v3 (see
-   www.gnu.org/licenses).
+   Or:
 
-   JUCE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
-   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
-   DISCLAIMED.
+   You may also use this code under the terms of the AGPLv3:
+   https://www.gnu.org/licenses/agpl-3.0.en.html
+
+   THE JUCE FRAMEWORK IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL
+   WARRANTIES, WHETHER EXPRESSED OR IMPLIED, INCLUDING WARRANTY OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, ARE DISCLAIMED.
 
   ==============================================================================
 */
@@ -73,7 +82,7 @@ public:
 
     /** Creates a text property component with a default value.
 
-        @param valueToControl The ValueWithDefault that is controlled by the TextPropertyComponent.
+        @param valueToControl The ValueTreePropertyWithDefault that is controlled by the TextPropertyComponent.
         @param propertyName   The name of the property
         @param maxNumChars    If not zero, then this specifies the maximum allowable length of
                               the string. If zero, then the string will have no length limit.
@@ -82,13 +91,12 @@ public:
 
         @see TextEditor, setEditable
     */
-    TextPropertyComponent (ValueWithDefault& valueToControl,
+    TextPropertyComponent (const ValueTreePropertyWithDefault& valueToControl,
                            const String& propertyName,
                            int maxNumChars,
                            bool isMultiLine,
                            bool isEditable = true);
 
-    /** Destructor. */
     ~TextPropertyComponent() override;
 
     //==============================================================================
@@ -167,21 +175,18 @@ public:
     virtual void textWasEdited();
 
 private:
-    class RemapperValueSourceWithDefault;
-    class LabelComp;
-    friend class LabelComp;
-
     //==============================================================================
     void callListeners();
     void createEditor (int maxNumChars, bool isEditable);
 
     //==============================================================================
-    bool isMultiLine;
+    class LabelComp;
 
+    const bool isMultiLine;
+
+    ValueTreePropertyWithDefault value;
     std::unique_ptr<LabelComp> textEditor;
     ListenerList<Listener> listenerList;
-
-    WeakReference<ValueWithDefault> valueWithDefault;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TextPropertyComponent)

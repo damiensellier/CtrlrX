@@ -26,6 +26,46 @@ Luabind is released under the terms of the [MIT license][1].
 
 [1]: http://www.opensource.org/licenses/mit-license.php
 
+Build and test (current modernization)
+-------------------------------
+
+This latest update builds with CMake (3.16+) and requires a C++17 compiler.
+
+Version 0.93 notes:
+
+* Added a modern top-level CMake build for library, install exports, examples, and tests.
+* Set the build baseline to C++17.
+* Added `cpp_lua_roundtrip` example covering C++ <-> Lua calls in both directions.
+* Added Catch2-based roundtrip tests (`luabind_tests`) with CTest integration.
+* Added optional coverage instrumentation via `LUABIND_ENABLE_COVERAGE`.
+* Removed `std::auto_ptr` support
+
+Dependencies:
+
+* Lua development package (`find_package(Lua REQUIRED)`)
+* Catch2 headers when tests are enabled (`LUABIND_BUILD_TESTS=ON`)
+
+Quick start:
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+ctest --test-dir build --output-on-failure
+```
+
+Useful CMake options:
+
+* `-DBUILD_SHARED_LIBS=ON|OFF`
+* `-DLUABIND_BUILD_TESTS=ON|OFF`
+* `-DLUABIND_BUILD_EXAMPLES=ON|OFF`
+* `-DLUABIND_ENABLE_COVERAGE=ON|OFF`
+
+Targets added by this branch:
+
+* `luabind` library target (`luabind::luabind`)
+* `cpp_lua_roundtrip` example executable
+* `luabind_tests` Catch2-based test executable
+
 
 This fork
 ---------

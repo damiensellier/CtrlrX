@@ -25,8 +25,29 @@
 #  include <boost/preprocessor/repetition/enum_trailing_params.hpp>
 #  include <boost/type_traits/is_void.hpp>
 #  include <luabind/lua_include.hpp>
+#  include <type_traits>
+
+// --- C++17 NOEXCEPT FIX: GLOBAL SCOPE ---
+#if __cplusplus >= 201703L
+template <class T> struct ctrlr_strip_noexcept { using type = T; };
+template <class Ret, class Class, class... Args>
+struct ctrlr_strip_noexcept<Ret (Class::*)(Args...) noexcept> { using type = Ret (Class::*)(Args...); };
+template <class Ret, class Class, class... Args>
+struct ctrlr_strip_noexcept<Ret (Class::*)(Args...) const noexcept> { using type = Ret (Class::*)(Args...) const; };
+template <class Ret, class... Args>
+struct ctrlr_strip_noexcept<Ret (*)(Args...) noexcept> { using type = Ret (*)(Args...); };
+#endif
 
 namespace luabind { namespace detail {
+
+#if __cplusplus >= 201703L
+    // Helper to detect member functions including noexcept ones
+    template <typename T> struct is_mem_fn : std::is_member_function_pointer<T> {};
+    template <typename Ret, typename Class, typename... Args>
+    struct is_mem_fn<Ret (Class::*)(Args...) noexcept> : std::true_type {};
+    template <typename Ret, typename Class, typename... Args>
+    struct is_mem_fn<Ret (Class::*)(Args...) const noexcept> : std::true_type {};
+#endif
 
 struct invoke_context;
 
@@ -102,7 +123,12 @@ inline int invoke(
     return invoke0(
         L, self, ctx, f, Signature(), policies
       , boost::is_void<typename mpl::front<Signature>::type>()
+#if __cplusplus >= 201703L
+      // Convert our boolean value into an MPL type that invoke0 understands
+      , boost::mpl::bool_<is_mem_fn<F>::value>()
+#else
       , boost::is_member_function_pointer<F>()
+#endif
    );
 }
 
@@ -164,8 +190,8 @@ inline int sum_scores(int const* first, int const* last)
         BOOST_PP_CAT(p,n), BOOST_PP_CAT(a,n), lua_to_cpp>::type BOOST_PP_CAT(c,n); \
     int const BOOST_PP_CAT(index,n) = LUABIND_INVOKE_NEXT_INDEX(n);
 
-#  define LUABIND_INVOKE_COMPUTE_SCORE(n)                                   \
-    , BOOST_PP_CAT(c,n).match(                                              \
+#  define LUABIND_INVOKE_COMPUTE_SCORE(n)                                    \
+    , BOOST_PP_CAT(c,n).match(                                               \
         L, LUABIND_DECORATE_TYPE(BOOST_PP_CAT(a,n)), BOOST_PP_CAT(index,n))
 
 #  define LUABIND_INVOKE_ARG(z, n, base) \
@@ -294,12 +320,12 @@ invoke_normal
             L,
 # endif
 # ifdef LUABIND_INVOKE_MEMBER
-            (c0.apply(L, LUABIND_DECORATE_TYPE(a0), index0).*f)(
+            (c0.apply(L, LUABIND_DECORATE_TYPE(a0), index0).*(typename ::ctrlr_strip_noexcept<F>::type)f)(
                 BOOST_PP_ENUM(BOOST_PP_DEC(N), LUABIND_INVOKE_ARG, BOOST_PP_INC)
             )
 # else
 #  define LUABIND_INVOKE_IDENTITY(x) x
-            f(
+            ((typename ::ctrlr_strip_noexcept<F>::type)f)(
                 BOOST_PP_ENUM(N, LUABIND_INVOKE_ARG, LUABIND_INVOKE_IDENTITY)
             )
 #  undef LUABIND_INVOKE_IDENTITY
