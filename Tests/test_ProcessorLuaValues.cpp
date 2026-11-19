@@ -526,6 +526,30 @@ TEST_F(LuaValues, nrpn_bursts_all_arrive_with_a_long_global_delay)
     EXPECT_EQ(takeSendsAfterDelivery(1500), contiguousBursts(nrpnPairs));
 }
 
+/**
+ * Queuing the bursts doesn't wait for the device. The 16 sends of the chunk only queue their
+ * messages, so the chunk returns at once, although the last one leaves about 300 ms later. JUCE
+ * 8.0.12's MidiOutput thread held its queue lock while it waited for the next event and sent it,
+ * so each send waited for the one before it: the chunk (and the message thread) took about one
+ * global delay per send.
+ */
+TEST_F(LuaValues, nrpn_bursts_with_a_global_delay_dont_block_the_sender)
+{
+    if (!deviceObservable())
+        GTEST_SKIP() << "no MIDI subsystem mock on this platform; device sends cannot be observed";
+
+    loadValues();
+    ASSERT_TRUE(runLua("panel:setPropertyInt('panelMidiGlobalDelay', 20)"));
+
+    const auto start = std::chrono::steady_clock::now();
+    ASSERT_TRUE(runLua(setNrpnPairs(nrpnPairs)));
+    const auto chunkMs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+
+    EXPECT_LT(chunkMs, 150) << "the Lua chunk waited for the device output";
+    EXPECT_EQ(takeSendsAfterDelivery(1500), contiguousBursts(nrpnPairs));
+}
+
 // ----------------------------------------------------------------------------------------------
 // Lookups
 // ----------------------------------------------------------------------------------------------

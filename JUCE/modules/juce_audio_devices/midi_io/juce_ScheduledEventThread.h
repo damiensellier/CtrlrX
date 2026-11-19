@@ -126,10 +126,7 @@ private:
                 return;
 
             const auto now = Time::getMillisecondCounter();
-            const auto event = *pendingMessages.begin();
-            // CtrlrX: patches/juce8_scheduled_event_thread_keep_event.patch (JUCE 8.0.13 82859cc2b):
-            // the event is erased after it was sent, so one that waits below is not lost.
-            const auto timestamp = event.getTimeStamp();
+            const auto timestamp = pendingMessages.begin()->getTimeStamp();
 
             if (timestamp > now + 20)
             {
@@ -138,13 +135,19 @@ private:
                 continue;
             }
 
+            // CtrlrX: patches/juce8_scheduled_event_thread.patch
+            // Take the event out of the queue only now that it is due (an event further ahead
+            // stays queued, as in JUCE 8.0.13), and wait and send without the lock (as JUCE 6 did),
+            // so addEvent() never waits for the device.
+            const auto event = *pendingMessages.begin();
+            pendingMessages.erase (pendingMessages.begin());
+            lock.unlock();
+
             if (timestamp > now)
                 Time::waitForMillisecondCounter ((uint32) timestamp);
 
             if (timestamp > now - 200)
                 outputCallback (event);
-
-            pendingMessages.erase (pendingMessages.begin());   // CtrlrX: see above
         }
     }
 

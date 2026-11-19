@@ -21,7 +21,7 @@ has the defect. Rebase it if the file changed.
 | `juce8_codeeditor_setfont.patch` | `modules/juce_gui_extra/code_editor/juce_CodeEditorComponent.cpp` | `setFont()` with a font of size 0 gives a zero char width and line height, and the editor divides by them: crash when a user sets the Lua editor font size to 0. JUCE 8.0.12 has the same code. | CtrlrX v5.6.34 (#140), Damien Sellier and John Goodland. |
 | `juce8_alsa_sysex_input.patch` | `modules/juce_audio_devices/native/juce_Midi_linux.cpp` | A legacy (non-UMP) ALSA client gets a long SysEx as events of at most 256 bytes. JUCE 6 joined them; JUCE 8.0.12 converts each one as a whole message, so a SysEx over 256 bytes from a device arrives cut off. The patch joins them with JUCE's own `BytestreamSysexExtractor`. Hits alsa-lib < 1.2.10 or a kernel < 6.5, and the test mock. JUCE develop (2026-11) has the same code. | CtrlrX 8.0.85, long SysEx on JUCE 8, Hedde Bosman. |
 | `juce8_midioutput_send_message_at.patch` | `modules/juce_audio_devices/midi_io/juce_MidiDevices.h` | Adds `MidiOutput::sendMessageAt()`: queue one message of any size on the background thread. A `MidiBuffer` event holds at most 65529 bytes of data, so a longer SysEx was sent with `sendMessageNow()` on another thread: out of order, and on JUCE 8 broken by the other thread's packets on every OS. JUCE has no other way to queue it. | CtrlrX 5.6.37 `juce6_midioutput_send_message_at.patch` (long SysEx device output order), Hedde Bosman; carried to JUCE 8.0.12. |
-| `juce8_scheduled_event_thread_keep_event.patch` | `modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h` | `MidiOutput`'s background thread lost every event queued more than 20 ms ahead, so with `panelMidiGlobalDelay` over 20 ms (or a burst at a smaller delay) most device MIDI never left. **Fixed in JUCE 8.0.13** (`82859cc2b`): drop this patch at the upgrade. | JUCE's own fix, back-ported to 8.0.12 by CtrlrX 8.0.85. |
+| `juce8_scheduled_event_thread.patch` | `modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h` | `MidiOutput`'s background thread (1) lost every event queued more than 20 ms ahead, so with `panelMidiGlobalDelay` over 20 ms (or a burst at a smaller delay) most device MIDI never left, and (2) held its queue lock while it waited for and sent the next event, so every device send, also from the message thread, waited for the message before it (a burst froze the GUI). The patch keeps an event queued until it is due and waits and sends without the lock, as JUCE 6 did. | (1) is JUCE's own fix from 8.0.13 (`82859cc2b`); (2) JUCE fixed only in JUCE 9 (`953420db1`). CtrlrX 8.0.85, Hedde Bosman. |
 
 `juce8_xml_parser_perf.patch` replaces 5.6.37's `juce6_xml_parser_perf.patch`: the code change is
 the same, rebased on JUCE 8.0.12.
@@ -37,6 +37,7 @@ the same, rebased on JUCE 8.0.12.
 
 ## Notes for the next JUCE upgrade
 
-- `juce8_scheduled_event_thread_keep_event.patch` is JUCE's own fix from 8.0.13: drop it.
+- `juce8_scheduled_event_thread.patch`: 8.0.13+ has part (1) (event kept until due); part (2)
+  (wait and send without the lock) is still needed on 8.0.17. Rebase it to part (2) only.
 - JUCE 8.0.17 adds entity-expansion and nesting limits to `juce_XmlDocument.cpp`, but
   `readQuotedString()` is unchanged. The XML patch is still needed there and must be rebased.
