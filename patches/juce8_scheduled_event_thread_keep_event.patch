@@ -1,0 +1,43 @@
+# JUCE 8.0.12 -- ScheduledEventThread: don't lose an event that is more than 20 ms ahead
+#
+# Applies to: JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h
+# Documentation only: the change is already in the vendored JUCE tree, and CMake
+# does not apply this file. It equals
+#   git diff <pristine JUCE 8.0.12> HEAD -- JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h
+# Check from the repo root:  git apply -R --check patches/juce8_scheduled_event_thread_keep_event.patch
+#
+# MidiOutput's background thread takes the first queued event out of the queue,
+# and if it is due more than 20 ms later it waits and starts the loop again
+# without putting it back: every message queued with sendBlockOfMessages() more
+# than 20 ms ahead is lost. CtrlrX queues each buffer one panelMidiGlobalDelay
+# after the previous one, so with a global delay over 20 ms, or a burst of
+# messages at a smaller one, most of the MIDI to a device never left.
+#
+# The patch erases the event after it was sent, as JUCE did in 8.0.13
+# (juce-framework/JUCE 82859cc2b, "MidiOutput: Fix issue where scheduled midi
+# events could fail to be sent"). Drop it at the next JUCE upgrade.
+#
+diff --git a/JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h b/JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h
+index 824d2823f..b8cdfeef9 100644
+--- a/JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h
++++ b/JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h
+@@ -127,8 +127,8 @@ private:
+ 
+             const auto now = Time::getMillisecondCounter();
+             const auto event = *pendingMessages.begin();
+-            pendingMessages.erase (pendingMessages.begin());
+-
++            // CtrlrX: patches/juce8_scheduled_event_thread_keep_event.patch (JUCE 8.0.13 82859cc2b):
++            // the event is erased after it was sent, so one that waits below is not lost.
+             const auto timestamp = event.getTimeStamp();
+ 
+             if (timestamp > now + 20)
+@@ -143,6 +143,8 @@ private:
+ 
+             if (timestamp > now - 200)
+                 outputCallback (event);
++
++            pendingMessages.erase (pendingMessages.begin());   // CtrlrX: see above
+         }
+     }
+ 

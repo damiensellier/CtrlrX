@@ -127,8 +127,8 @@ private:
 
             const auto now = Time::getMillisecondCounter();
             const auto event = *pendingMessages.begin();
-            pendingMessages.erase (pendingMessages.begin());
-
+            // CtrlrX: patches/juce8_scheduled_event_thread_keep_event.patch (JUCE 8.0.13 82859cc2b):
+            // the event is erased after it was sent, so one that waits below is not lost.
             const auto timestamp = event.getTimeStamp();
 
             if (timestamp > now + 20)
@@ -143,6 +143,8 @@ private:
 
             if (timestamp > now - 200)
                 outputCallback (event);
+
+            pendingMessages.erase (pendingMessages.begin());   // CtrlrX: see above
         }
     }
 

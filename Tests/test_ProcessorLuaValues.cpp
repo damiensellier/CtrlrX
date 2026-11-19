@@ -508,6 +508,24 @@ TEST_F(LuaValues, nrpn_bursts_stay_contiguous_at_zero_delay)
     EXPECT_EQ(takeSendsAfterDelivery(400), contiguousBursts(nrpnPairs));
 }
 
+/**
+ * The same bursts all arrive, in order, with a global delay above 20 ms. Each buffer starts one
+ * delay after the previous one, so the last starts about half a second after the first. JUCE
+ * 8.0.12's MidiOutput thread dropped every event queued more than 20 ms ahead (fixed in JUCE 8.0.13),
+ * so with this delay nothing reached the device.
+ */
+TEST_F(LuaValues, nrpn_bursts_all_arrive_with_a_long_global_delay)
+{
+    if (!deviceObservable())
+        GTEST_SKIP() << "no MIDI subsystem mock on this platform; device sends cannot be observed";
+
+    loadValues();
+    ASSERT_TRUE(runLua("panel:setPropertyInt('panelMidiGlobalDelay', 30)"));
+    ASSERT_TRUE(runLua(setNrpnPairs(nrpnPairs)));
+
+    EXPECT_EQ(takeSendsAfterDelivery(1500), contiguousBursts(nrpnPairs));
+}
+
 // ----------------------------------------------------------------------------------------------
 // Lookups
 // ----------------------------------------------------------------------------------------------
