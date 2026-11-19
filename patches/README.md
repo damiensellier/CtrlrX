@@ -19,6 +19,7 @@ has the defect. Rebase it if the file changed.
 |---|---|---|---|
 | `juce8_xml_parser_perf.patch` | `modules/juce_core/xml/juce_XmlDocument.cpp` | `readQuotedString()` is O(n²) in the attribute length. Large panels (base64 images, MB of escaped Lua) load very slowly. JUCE 8.0.12 still has the same function. | CtrlrX #341 (5.6.37, `juce6_xml_parser_perf.patch`), Francois Rossi. Also in John Goodland's JUCE 8 fork as `juce_xml_parser_perf.patch`. |
 | `juce8_codeeditor_setfont.patch` | `modules/juce_gui_extra/code_editor/juce_CodeEditorComponent.cpp` | `setFont()` with a font of size 0 gives a zero char width and line height, and the editor divides by them: crash when a user sets the Lua editor font size to 0. JUCE 8.0.12 has the same code. | CtrlrX v5.6.34 (#140), Damien Sellier and John Goodland. |
+| `juce8_alsa_sysex_input.patch` | `modules/juce_audio_devices/native/juce_Midi_linux.cpp` | A legacy (non-UMP) ALSA client gets a long SysEx as events of at most 256 bytes. JUCE 6 joined them; JUCE 8.0.12 converts each one as a whole message, so a SysEx over 256 bytes from a device arrives cut off. The patch joins them with JUCE's own `BytestreamSysexExtractor`. Hits alsa-lib < 1.2.10 or a kernel < 6.5, and the test mock. JUCE develop (2026-11) has the same code. | CtrlrX 8.0.85, long SysEx on JUCE 8, Hedde Bosman. |
 
 `juce8_xml_parser_perf.patch` replaces 5.6.37's `juce6_xml_parser_perf.patch`: the code change is
 the same, rebased on JUCE 8.0.12.

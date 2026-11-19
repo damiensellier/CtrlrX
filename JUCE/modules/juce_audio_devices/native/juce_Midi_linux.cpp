@@ -997,13 +997,49 @@ struct AlsaMidiHelpers
             // Bytestream messages that we're sent don't have a built-in group.
             // We currently make a separate endpoint for each bytestream port, rather than combining
             // ports into endpoints, so we can stick with group 0 here.
-            converter.convert ({ 0, view.bytes }, getInputCallback (view.timestamp));
+
+            // CtrlrX: patches/juce8_alsa_sysex_input.patch
+            // A legacy (non-UMP) ALSA client gets a long SysEx as several sequencer events of at
+            // most 256 bytes each. Join the pieces before the conversion, as JUCE 6 did with
+            // MidiDataConcatenator. A SysEx cut short by a new F0 or another status byte is
+            // dropped; real-time bytes inside a SysEx are passed on at once.
+            sysexExtractor.push (view.bytes, [&] (SysexExtractorCallbackKind kind, Span<const std::byte> bytes)
+            {
+                switch (kind)
+                {
+                    case SysexExtractorCallbackKind::notSysex:
+                        converter.convert ({ 0, bytes }, getInputCallback (view.timestamp));
+                        return;
+
+                    case SysexExtractorCallbackKind::ongoingSysex:
+                    case SysexExtractorCallbackKind::lastSysex:
+                    {
+                        if (pendingSysex.empty())
+                            pendingSysexTime = view.timestamp;
+
+                        pendingSysex.insert (pendingSysex.end(), bytes.begin(), bytes.end());
+
+                        if (kind == SysexExtractorCallbackKind::ongoingSysex)
+                            return;
+
+                        if (! pendingSysex.empty() && pendingSysex.back() == std::byte { 0xf7 })
+                            converter.convert ({ 0, Span<const std::byte> (pendingSysex.data(), pendingSysex.size()) },
+                                               getInputCallback (pendingSysexTime));
+
+                        pendingSysex.clear();
+                        return;
+                    }
+                }
+            });
         }
 
         ump::DisconnectionListener& listener;
         std::shared_ptr<Port> port;
         ump::GenericUMPConverter converter;
         ump::Consumer& consumer;
+        BytestreamSysexExtractor sysexExtractor;   // CtrlrX: patches/juce8_alsa_sysex_input.patch
+        std::vector<std::byte> pendingSysex;
+        double pendingSysexTime = 0.0;
     };
 
     class OutputImplNative : public ump::Output::Impl::Native
