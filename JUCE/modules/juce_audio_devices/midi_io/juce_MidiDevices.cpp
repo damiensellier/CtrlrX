@@ -168,8 +168,10 @@ void MidiOutput::run()
                     break;
             }
 
-            if (eventTime > now - 200)
-                sendMessageNow (message->message);
+            // CtrlrX: patches/juce6_midioutput_send_message_at.patch
+            // Send a late message too, instead of dropping it when it is more than 200 ms late:
+            // a slow output (a driver busy with a long SysEx) lost the messages queued behind it.
+            sendMessageNow (message->message);
         }
         else
         {

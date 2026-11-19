@@ -1,4 +1,4 @@
-# JUCE 6.0.8 -- MidiOutput::sendMessageAt(): queue one message of any size
+# JUCE 6.0.8 -- MidiOutput::sendMessageAt(): queue one message of any size; send late messages too
 #
 # Applies to: JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.{h,cpp}
 # Documentation only: the change is already in the vendored JUCE tree, and CMake
@@ -18,11 +18,17 @@
 # The patch adds sendMessageAt(), which puts one MidiMessage into the same queue,
 # after the messages with the same or an earlier time. Purely additive.
 #
+# It also changes MidiOutput::run(): a message that is more than 200 ms late when its
+# turn comes is now sent instead of dropped. A slow output (a driver that blocks while
+# a long SysEx goes out at DIN speed, or a slow machine) used to lose every message
+# queued behind it without a trace (LuaValues.nrpn_bursts_all_arrive_from_a_slow_device_output:
+# 20 of 64 arrived). JUCE 9's rewritten output thread also always sends.
+#
 # JUCE 8 (ScheduledEventThread<MidiMessage>) can take the same function as a
 # one-liner over outputThread.addEvent().
 #
 diff --git a/JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.cpp b/JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.cpp
-index df6543769..52b1de1a1 100644
+index df6543769..92f545e2d 100644
 --- a/JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.cpp
 +++ b/JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.cpp
 @@ -73,6 +73,37 @@ void MidiOutput::sendBlockOfMessages (const MidiBuffer& buffer,
@@ -63,6 +69,19 @@ index df6543769..52b1de1a1 100644
  void MidiOutput::clearAllPendingMessages()
  {
      const ScopedLock sl (lock);
+@@ -137,8 +168,10 @@ void MidiOutput::run()
+                     break;
+             }
+ 
+-            if (eventTime > now - 200)
+-                sendMessageNow (message->message);
++            // CtrlrX: patches/juce6_midioutput_send_message_at.patch
++            // Send a late message too, instead of dropping it when it is more than 200 ms late:
++            // a slow output (a driver busy with a long SysEx) lost the messages queued behind it.
++            sendMessageNow (message->message);
+         }
+         else
+         {
 diff --git a/JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.h b/JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.h
 index de7a0ca79..aaa38d2a6 100644
 --- a/JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.h
