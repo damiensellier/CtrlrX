@@ -355,10 +355,9 @@ class LongSysex : public LuaPanel
 // device -> Lua, Lua -> device and thru D2D pass at 65530 and at 128 KiB; the _65530 cases pin the
 // start of the bypass. Host output over 65529 bytes is dropped on purpose (logged), and host input
 // arrives in the host's MidiBuffer, so the host-side 128 KiB cases still fail.
-// macOS: thru D2D at 65530 and 128 KiB sometimes arrives broken. The bypass sends the big message on
-// the panel's input thread while JUCE's MidiOutput thread sends the batch's short ones (here the
-// sentinel), and on macOS 11+ a SysEx takes many CoreMIDI calls, so the packets can mix. Allowlisted
-// on macOS until the device output has one ordered send path.
+// The bypass first sent the big message at once on the sending thread, while JUCE's MidiOutput
+// thread sent the short ones; on macOS thru D2D then arrived broken. Since the ordered-send fix every
+// message goes through JUCE's queue, in order: see LongSysexOrder below.
 //
 // Per path: a green case at the largest size that works, and a red case at 128 KiB: the acceptance
 // criterion for a fix (the reported dump was 70k). The red cases are allowlisted in
@@ -390,3 +389,186 @@ LONG_SYSEX_CASE(thru_h2d, LsxPath::ThruH2D, 65529)
 LONG_SYSEX_CASE(thru_h2d, LsxPath::ThruH2D, 131072)
 LONG_SYSEX_CASE(thru_h2h, LsxPath::ThruH2H, 65529)
 LONG_SYSEX_CASE(thru_h2h, LsxPath::ThruH2H, 131072)
+
+// ----------------------------------------------------------------------------------------------
+// Device output order with a long SysEx.
+//
+// A device has one MIDI output, so messages must leave it one at a time and in the order they
+// were sent. The two cases with a global delay and thru D2D "long then marker" failed every time
+// before 5.6.37 queued long messages with MidiOutput::sendMessageAt(); the other cases pin the order
+// without a delay.
+// #350 sent messages over 65529 bytes with MidiOutput::sendMessageNow() on the sending
+// thread, while every other message goes through JUCE's MidiOutput thread (sendBlockOfMessages):
+//  - the long message skipped panelMidiGlobalDelay and overtook short messages sent before it;
+//  - thru D2D handled a batch's short messages before its long ones, whatever the input order;
+//  - two threads sent to one port at once. On macOS 11+ JUCE sends a SysEx in many CoreMIDI calls,
+//    so a short message could land inside the long one, and the receiver dropped it (upstream
+//    run 43745732738: thru_d2d_131072 "exact copies=0").
+// The marker F0 7D 01 F7 is the short message; the sentinel still comes last.
+// ----------------------------------------------------------------------------------------------
+
+namespace {
+juce::MidiMessage marker()
+{
+    const juce::uint8 raw[] = {0xF0, 0x7D, 0x01, 0xF7};
+    return juce::MidiMessage(raw, (int)sizeof(raw));
+}
+} // namespace
+
+class LongSysexOrder : public LongSysex
+{
+    protected:
+        enum class First
+        {
+            Marker,
+            Long
+        };
+
+        /** Where each message landed in the device output. */
+        struct Order
+        {
+                bool sentinelArrived = false;
+                int markerAt = -1, longAt = -1, sentinelAt = -1; // index in the device output; -1 = absent
+                int markers = 0, longs = 0, sentinels = 0, others = 0;
+
+                std::string describe() const
+                {
+                    std::ostringstream s;
+                    s << (sentinelArrived ? "sentinel arrived" : "SENTINEL NEVER ARRIVED") << "; at index: marker="
+                      << markerAt << " long=" << longAt << " sentinel=" << sentinelAt << "; counts: marker=" << markers
+                      << " long=" << longs << " sentinel=" << sentinels << " other=" << others;
+                    return s.str();
+                }
+        };
+
+        /**
+         * Over `path` (LuaToDevice or ThruD2D), with panelMidiGlobalDelay = `delayMs`: send the marker
+         * and an `n`-byte SysEx in the order `first`, then the sentinel. Wait for the sentinel, then a
+         * while longer, so a message that comes late is told apart from one that is lost.
+         */
+        Order sendPair(LsxPath path, First first, int n, int delayMs)
+        {
+            isolatePath(path);
+            panel->setProperty(Ids::panelMidiGlobalDelay, delayMs, false);
+            pumpInputThreads(100);
+            {
+                std::lock_guard<std::mutex> l(sendsMutex);
+                deviceSends.clear();
+            }
+
+            const juce::MidiMessage big = longSysex(n);
+            if (path == LsxPath::ThruD2D) {
+                auto *mock = MockMidi::getInstance();
+                mock->injectMidiInput(first == First::Marker ? marker() : big);
+                mock->injectMidiInput(first == First::Marker ? big : marker());
+                mock->injectMidiInput(sentinel());
+            } else {
+                const juce::String sendMarker = "panel:sendMidiMessageNow(CtrlrMidiMessage(MemoryBlock({0xF0, 0x7D, 0x01, 0xF7}))) ";
+                const juce::String sendLong = "panel:sendMidiMessageNow(lsx_message(" + juce::String(n) + ")) ";
+                EXPECT_TRUE(runLua((first == First::Marker ? sendMarker + sendLong : sendLong + sendMarker) +
+                                   "panel:sendMidiMessageNow(lsx_sentinel())"));
+            }
+
+            Order o;
+            const auto start = std::chrono::steady_clock::now();
+            while (!(o.sentinelArrived = sentinelSeen(Sink::Device))) {
+                const auto waited = std::chrono::steady_clock::now() - start;
+                if (std::chrono::duration_cast<std::chrono::milliseconds>(waited).count() > kSentinelCeilingMs)
+                    break;
+                juce::MessageManager::getInstance()->runDispatchLoopUntil(23);
+            }
+            pumpInputThreads(3 * delayMs + 200);
+
+            const auto sends = sinkMessages(Sink::Device);
+            for (int i = 0; i < (int)sends.size(); i++) {
+                const auto &m = sends[(size_t)i];
+                if (m == marker()) {
+                    o.markerAt = i;
+                    o.markers++;
+                } else if (m == big) {
+                    o.longAt = i;
+                    o.longs++;
+                } else if (m == sentinel()) {
+                    o.sentinelAt = i;
+                    o.sentinels++;
+                } else {
+                    o.others++;
+                }
+            }
+            return o;
+        }
+
+        /** Each message exactly once, in the order sent. */
+        static bool inOrder(First first, const Order &o)
+        {
+            if (!o.sentinelArrived || o.markers != 1 || o.longs != 1 || o.sentinels != 1 || o.others != 0)
+                return false;
+            const bool pairInOrder = first == First::Marker ? o.markerAt < o.longAt : o.longAt < o.markerAt;
+            return pairInOrder && o.sentinelAt > o.markerAt && o.sentinelAt > o.longAt;
+        }
+
+        void runPair(LsxPath path, First first, int delayMs)
+        {
+            if (!midi_mock.hasSubsystemMock())
+                GTEST_SKIP() << "no MIDI subsystem mock on this platform";
+
+            ASSERT_NE(loadLuaPanel("fixture_long_sysex.panel"), nullptr);
+            ASSERT_FALSE(luaIsNil("lsx_send")) << "fixture Lua did not load";
+            const Order o = sendPair(path, first, 131072, delayMs);
+            EXPECT_TRUE(inOrder(first, o)) << pathName(path) << ", " << (first == First::Marker ? "marker first" : "long first")
+                                           << ", global delay " << delayMs << " ms: " << o.describe();
+        }
+};
+
+// With a global MIDI delay every message waits its turn, the long one too. Deterministic: before
+// the fix the long message left at once and the marker 100 ms later.
+TEST_F(LongSysexOrder, lua_to_device_marker_then_long_with_global_delay)
+{
+    runPair(LsxPath::LuaToDevice, First::Marker, 100);
+}
+
+TEST_F(LongSysexOrder, thru_d2d_marker_then_long_with_global_delay)
+{
+    runPair(LsxPath::ThruD2D, First::Marker, 100);
+}
+
+// Without a delay: the input order holds when both messages land in one input batch, and when
+// both are queued in the same millisecond.
+TEST_F(LongSysexOrder, lua_to_device_marker_then_long)
+{
+    runPair(LsxPath::LuaToDevice, First::Marker, 0);
+}
+
+TEST_F(LongSysexOrder, thru_d2d_marker_then_long)
+{
+    runPair(LsxPath::ThruD2D, First::Marker, 0);
+}
+
+TEST_F(LongSysexOrder, thru_d2d_long_then_marker)
+{
+    runPair(LsxPath::ThruD2D, First::Long, 0);
+}
+
+TEST_F(LongSysexOrder, lua_to_device_long_then_marker)
+{
+    runPair(LsxPath::LuaToDevice, First::Long, 0);
+}
+
+// The upstream macOS failure, repeated: thru D2D at 128 KiB (long, then the sentinel) 20 times in
+// one test. Reports how many transfers broke.
+TEST_F(LongSysex, thru_d2d_131072_repeated)
+{
+    if (!midi_mock.hasSubsystemMock())
+        GTEST_SKIP() << "no MIDI subsystem mock on this platform";
+
+    ASSERT_NE(loadLuaPanel("fixture_long_sysex.panel"), nullptr);
+    ASSERT_FALSE(luaIsNil("lsx_send")) << "fixture Lua did not load";
+    int broken = 0;
+    std::string first;
+    for (int i = 0; i < 20; i++) {
+        const LsxOutcome o = transfer(LsxPath::ThruD2D, 131072);
+        if (!arrivedIntact(LsxPath::ThruD2D, 131072, o) && broken++ == 0)
+            first = "transfer " + std::to_string(i) + ": " + o.describe();
+    }
+    EXPECT_EQ(broken, 0) << broken << " of 20 transfers broken; first: " << first;
+}

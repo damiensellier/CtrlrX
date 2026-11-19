@@ -73,6 +73,37 @@ void MidiOutput::sendBlockOfMessages (const MidiBuffer& buffer,
     notify();
 }
 
+// CtrlrX: patches/juce6_midioutput_send_message_at.patch
+void MidiOutput::sendMessageAt (const MidiMessage& message, double millisecondCounterToSendAt)
+{
+    // You've got to call startBackgroundThread() for this to actually work..
+    jassert (isThreadRunning());
+
+    auto* m = new PendingMessage (message.getRawData(), message.getRawDataSize(), millisecondCounterToSendAt);
+
+    {
+        const ScopedLock sl (lock);
+
+        if (firstMessage == nullptr || firstMessage->message.getTimeStamp() > millisecondCounterToSendAt)
+        {
+            m->next = firstMessage;
+            firstMessage = m;
+        }
+        else
+        {
+            auto* mm = firstMessage;
+
+            while (mm->next != nullptr && mm->next->message.getTimeStamp() <= millisecondCounterToSendAt)
+                mm = mm->next;
+
+            m->next = mm->next;
+            mm->next = m;
+        }
+    }
+
+    notify();
+}
+
 void MidiOutput::clearAllPendingMessages()
 {
     const ScopedLock sl (lock);
