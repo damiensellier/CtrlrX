@@ -550,6 +550,31 @@ TEST_F(LuaValues, nrpn_bursts_with_a_global_delay_dont_block_the_sender)
     EXPECT_EQ(takeSendsAfterDelivery(1500), contiguousBursts(nrpnPairs));
 }
 
+/**
+ * A device output slower than the panel loses nothing: with 10 ms per message, the 64 CCs of the
+ * bursts take about 640 ms to leave, so most of them leave long after their time. JUCE 8.0.12's
+ * MidiOutput thread dropped every message more than 200 ms late (JUCE 9 sends them); since sends no
+ * longer wait for the device, a burst is queued at once and its tail was lost.
+ */
+TEST_F(LuaValues, nrpn_bursts_all_arrive_from_a_slow_device_output)
+{
+    if (!deviceObservable())
+        GTEST_SKIP() << "no MIDI subsystem mock on this platform; device sends cannot be observed";
+
+    loadValues();
+    // Newer expectations win: record as before, but let every message take 10 ms in the "driver".
+    EXPECT_CALL(midi_mock, sendMidiEvent(::testing::_, ::testing::_, ::testing::_))
+        .Times(::testing::AnyNumber())
+        .WillRepeatedly(::testing::Invoke([this](int, int, juce::MidiMessage m) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::lock_guard<std::mutex> l(sendsMutex);
+            deviceSends.push_back(m);
+        }));
+    ASSERT_TRUE(runLua(setNrpnPairs(nrpnPairs)));
+
+    EXPECT_EQ(takeSendsAfterDelivery(2000), contiguousBursts(nrpnPairs));
+}
+
 // ----------------------------------------------------------------------------------------------
 // Lookups
 // ----------------------------------------------------------------------------------------------
