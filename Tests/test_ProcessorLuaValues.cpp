@@ -508,6 +508,31 @@ TEST_F(LuaValues, nrpn_bursts_stay_contiguous_at_zero_delay)
     EXPECT_EQ(takeSendsAfterDelivery(400), contiguousBursts(nrpnPairs));
 }
 
+/**
+ * A device output slower than the panel loses nothing: with 10 ms per message, the 64 CCs of the
+ * bursts take about 640 ms to leave, so most of them leave long after their time. JUCE's MidiOutput
+ * thread dropped every message more than 200 ms late, so only the first ~20 arrived. A real case: a
+ * driver that blocks while a long SysEx goes out at DIN speed, and the messages queued behind it.
+ */
+TEST_F(LuaValues, nrpn_bursts_all_arrive_from_a_slow_device_output)
+{
+    if (!deviceObservable())
+        GTEST_SKIP() << "no MIDI subsystem mock on this platform; device sends cannot be observed";
+
+    loadValues();
+    // Newer expectations win: record as before, but let every message take 10 ms in the "driver".
+    EXPECT_CALL(midi_mock, sendMidiEvent(::testing::_, ::testing::_, ::testing::_))
+        .Times(::testing::AnyNumber())
+        .WillRepeatedly(::testing::Invoke([this](int, int, juce::MidiMessage m) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::lock_guard<std::mutex> l(sendsMutex);
+            deviceSends.push_back(m);
+        }));
+    ASSERT_TRUE(runLua(setNrpnPairs(nrpnPairs)));
+
+    EXPECT_EQ(takeSendsAfterDelivery(2000), contiguousBursts(nrpnPairs));
+}
+
 // ----------------------------------------------------------------------------------------------
 // Lookups
 // ----------------------------------------------------------------------------------------------
