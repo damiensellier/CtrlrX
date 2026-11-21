@@ -1,0 +1,57 @@
+# JUCE 8.0.12 -- MidiOutput::sendMessageAt(): queue one message of any size
+#
+# Applies to: JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.h
+# Documentation only: the change is already in the vendored JUCE tree, and CMake
+# does not apply this file. It equals
+#   git diff <pristine JUCE 8.0.12> HEAD -- JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.h
+# Check from the repo root:  git apply -R --check patches/juce8_midioutput_send_message_at.patch
+#
+# MidiOutput's background thread sends timed messages in time order, one at a
+# time, but they can only be queued through a MidiBuffer (sendBlockOfMessages()),
+# whose events hold at most 65535 bytes (65529 with the 6-byte header). CtrlrX sent
+# a longer SysEx with sendMessageNow() on the calling thread instead (#350), which
+# raced the background thread on the same port: the order flipped and the global
+# MIDI delay was skipped. JUCE 8 sends a SysEx as many UMP packets, one
+# connection.send() each, through converters that are shared per port (CoreMIDI
+# packet lists, one ToBytestreamConverter per Windows device, one snd_midi_event
+# parser per ALSA port), so a short message from the other thread could break the
+# SysEx on every OS. JUCE develop (ad0d60b34) adds locks between MidiOutput objects
+# that share a port, but still says one MidiOutput must not be sent to from two
+# threads at once.
+#
+# The patch adds sendMessageAt(), which puts one MidiMessage into the background
+# thread's queue (ScheduledEventThread, a std::multiset ordered by time, so a
+# message goes after those with the same or an earlier time). Purely additive.
+#
+# The same function for JUCE 6.0.8 is 5.6.37's juce6_midioutput_send_message_at.patch.
+#
+diff --git a/JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.h b/JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.h
+index 3d48cd64a..1af5b4d71 100644
+--- a/JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.h
++++ b/JUCE/modules/juce_audio_devices/midi_io/juce_MidiDevices.h
+@@ -433,6 +433,25 @@ public:
+         }
+     }
+ 
++    /** Adds one message to the background thread's queue, to be sent at a given time.
++
++        Like sendBlockOfMessages(), but for a single message of any size: a MidiBuffer event
++        can't hold more than 65535 bytes. Messages with the same time are sent in the order
++        they were added, after those already queued.
++
++        This will only work if you've already started the thread with startBackgroundThread().
++
++        @param message                       the message to send
++        @param millisecondCounterToSendAt    the time to send it, in the time base of
++                                             Time::getMillisecondCounter()
++    */
++    void sendMessageAt (const MidiMessage& message, double millisecondCounterToSendAt) // CtrlrX: patches/juce8_midioutput_send_message_at.patch
++    {
++        auto msg = message;
++        msg.setTimeStamp (millisecondCounterToSendAt);
++        outputThread.addEvent (msg);
++    }
++
+     /** Gets rid of any midi messages that had been added by sendBlockOfMessages().
+     */
+     void clearAllPendingMessages()          { outputThread.clearAllPendingMessages(); }

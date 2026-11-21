@@ -491,11 +491,11 @@ TEST_F(LuaValues, nrpn_bursts_stay_contiguous_with_global_delay)
 }
 
 /**
- * Desired behaviour, a known failure (Tests/known_failures_*.txt): the same bursts stay
- * contiguous at the default panelMidiGlobalDelay = 0. Today every buffer sent within the same
- * millisecond gets the same start time (CtrlrMIDIDevice::sendMidiBuffer), so bursts queued
- * together interleave CC by CC (99 99 98 98 6 6 38 38) and both data values land on the last
- * selected parameter.
+ * The same bursts stay contiguous at the default panelMidiGlobalDelay = 0. Every buffer sent within
+ * the same millisecond used to get the same start time (CtrlrMIDIDevice::sendMidiBuffer), so bursts
+ * queued together interleaved CC by CC (99 99 98 98 6 6 38 38) and both data values landed on the
+ * last selected parameter. Fixed by the ordered device output: a buffer never starts before the
+ * last event already queued.
  */
 TEST_F(LuaValues, nrpn_bursts_stay_contiguous_at_zero_delay)
 {
@@ -506,6 +506,73 @@ TEST_F(LuaValues, nrpn_bursts_stay_contiguous_at_zero_delay)
     ASSERT_TRUE(runLua(setNrpnPairs(nrpnPairs)));
 
     EXPECT_EQ(takeSendsAfterDelivery(400), contiguousBursts(nrpnPairs));
+}
+
+/**
+ * The same bursts all arrive, in order, with a global delay above 20 ms. Each buffer starts one
+ * delay after the previous one, so the last starts about half a second after the first. JUCE
+ * 8.0.12's MidiOutput thread dropped every event queued more than 20 ms ahead (fixed in JUCE 8.0.13),
+ * so with this delay nothing reached the device.
+ */
+TEST_F(LuaValues, nrpn_bursts_all_arrive_with_a_long_global_delay)
+{
+    if (!deviceObservable())
+        GTEST_SKIP() << "no MIDI subsystem mock on this platform; device sends cannot be observed";
+
+    loadValues();
+    ASSERT_TRUE(runLua("panel:setPropertyInt('panelMidiGlobalDelay', 30)"));
+    ASSERT_TRUE(runLua(setNrpnPairs(nrpnPairs)));
+
+    EXPECT_EQ(takeSendsAfterDelivery(1500), contiguousBursts(nrpnPairs));
+}
+
+/**
+ * Queuing the bursts doesn't wait for the device. The 16 sends of the chunk only queue their
+ * messages, so the chunk returns at once, although the last one leaves about 300 ms later. JUCE
+ * 8.0.12's MidiOutput thread held its queue lock while it waited for the next event and sent it,
+ * so each send waited for the one before it: the chunk (and the message thread) took about one
+ * global delay per send.
+ */
+TEST_F(LuaValues, nrpn_bursts_with_a_global_delay_dont_block_the_sender)
+{
+    if (!deviceObservable())
+        GTEST_SKIP() << "no MIDI subsystem mock on this platform; device sends cannot be observed";
+
+    loadValues();
+    ASSERT_TRUE(runLua("panel:setPropertyInt('panelMidiGlobalDelay', 20)"));
+
+    const auto start = std::chrono::steady_clock::now();
+    ASSERT_TRUE(runLua(setNrpnPairs(nrpnPairs)));
+    const auto chunkMs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+
+    EXPECT_LT(chunkMs, 150) << "the Lua chunk waited for the device output";
+    EXPECT_EQ(takeSendsAfterDelivery(1500), contiguousBursts(nrpnPairs));
+}
+
+/**
+ * A device output slower than the panel loses nothing: with 10 ms per message, the 64 CCs of the
+ * bursts take about 640 ms to leave, so most of them leave long after their time. JUCE 8.0.12's
+ * MidiOutput thread dropped every message more than 200 ms late (JUCE 9 sends them); since sends no
+ * longer wait for the device, a burst is queued at once and its tail was lost.
+ */
+TEST_F(LuaValues, nrpn_bursts_all_arrive_from_a_slow_device_output)
+{
+    if (!deviceObservable())
+        GTEST_SKIP() << "no MIDI subsystem mock on this platform; device sends cannot be observed";
+
+    loadValues();
+    // Newer expectations win: record as before, but let every message take 10 ms in the "driver".
+    EXPECT_CALL(midi_mock, sendMidiEvent(::testing::_, ::testing::_, ::testing::_))
+        .Times(::testing::AnyNumber())
+        .WillRepeatedly(::testing::Invoke([this](int, int, juce::MidiMessage m) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::lock_guard<std::mutex> l(sendsMutex);
+            deviceSends.push_back(m);
+        }));
+    ASSERT_TRUE(runLua(setNrpnPairs(nrpnPairs)));
+
+    EXPECT_EQ(takeSendsAfterDelivery(2000), contiguousBursts(nrpnPairs));
 }
 
 // ----------------------------------------------------------------------------------------------

@@ -21,26 +21,13 @@ MidiLua.device_input_invokes_lua_multiMidiReceived_once
 # emits no JUnit XML, so it is invisible to ci_check_test_results.py and cannot be allowlisted here;
 # it is recorded only for awareness. It does not reproduce deterministically.
 
-# NRPN/Multi bursts from different modulators interleave CC by CC at panelMidiGlobalDelay 0:
-# buffers sent within one millisecond get the same start time (CtrlrMIDIDevice::sendMidiBuffer).
-# Desired: each burst stays contiguous. Passes at delay 2 (pinned by ..._with_global_delay).
-LuaValues.nrpn_bursts_stay_contiguous_at_zero_delay
-
 # Long SysEx (Tests/test_ProcessorMidiLongSysex.cpp), state after #350 + #352 (messages over 65529
 # bytes bypass juce::MidiBuffer, which stores event sizes, and size + 6, as uint16; a user's 70k
 # dump crashed CtrlrX, ctrlr discussion #791).
 # Limits by design, not expected to pass: host output over 65529 bytes is dropped (logged), and
-# host input arrives in the host's MidiBuffer, which can't carry it (JUCE 8 refuses the event).
+# host input arrives in the host's MidiBuffer, which can't carry it (JUCE 6 corrupts it: crash).
 LongSysex.host_to_lua_131072
 LongSysex.lua_to_host_131072
 LongSysex.thru_d2h_131072
 LongSysex.thru_h2d_131072
 LongSysex.thru_h2h_131072
-# macOS: thru D2D sometimes arrives broken (5.6.37 too, upstream run 43745732738). On macOS 11+
-# JUCE sends a SysEx in many CoreMIDI calls (JUCE 8: one UMP packet per call). #350 sends the big
-# message directly on the panel's input thread, while the batch's short messages (here the
-# sentinel) go through sendBlockOfMessages() and JUCE's MidiOutput thread at the same time, so
-# their packets can land inside the big message's stream. Fix planned: one ordered send path per
-# device.
-LongSysex.thru_d2d_65530
-LongSysex.thru_d2d_131072

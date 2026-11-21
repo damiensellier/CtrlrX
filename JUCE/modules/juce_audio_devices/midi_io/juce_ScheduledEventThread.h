@@ -126,10 +126,7 @@ private:
                 return;
 
             const auto now = Time::getMillisecondCounter();
-            const auto event = *pendingMessages.begin();
-            pendingMessages.erase (pendingMessages.begin());
-
-            const auto timestamp = event.getTimeStamp();
+            const auto timestamp = pendingMessages.begin()->getTimeStamp();
 
             if (timestamp > now + 20)
             {
@@ -138,11 +135,19 @@ private:
                 continue;
             }
 
+            // CtrlrX: patches/juce8_scheduled_event_thread.patch
+            // Take the event out of the queue only now that it is due (an event further ahead
+            // stays queued, as in JUCE 8.0.13), and wait and send without the lock (as JUCE 6 did),
+            // so addEvent() never waits for the device. A late event is still sent, as in JUCE 9:
+            // the old "drop if more than 200 ms late" lost the tail of a burst on a slow output.
+            const auto event = *pendingMessages.begin();
+            pendingMessages.erase (pendingMessages.begin());
+            lock.unlock();
+
             if (timestamp > now)
                 Time::waitForMillisecondCounter ((uint32) timestamp);
 
-            if (timestamp > now - 200)
-                outputCallback (event);
+            outputCallback (event);
         }
     }
 

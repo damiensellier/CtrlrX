@@ -433,6 +433,25 @@ public:
         }
     }
 
+    /** Adds one message to the background thread's queue, to be sent at a given time.
+
+        Like sendBlockOfMessages(), but for a single message of any size: a MidiBuffer event
+        can't hold more than 65535 bytes. Messages with the same time are sent in the order
+        they were added, after those already queued.
+
+        This will only work if you've already started the thread with startBackgroundThread().
+
+        @param message                       the message to send
+        @param millisecondCounterToSendAt    the time to send it, in the time base of
+                                             Time::getMillisecondCounter()
+    */
+    void sendMessageAt (const MidiMessage& message, double millisecondCounterToSendAt) // CtrlrX: patches/juce8_midioutput_send_message_at.patch
+    {
+        auto msg = message;
+        msg.setTimeStamp (millisecondCounterToSendAt);
+        outputThread.addEvent (msg);
+    }
+
     /** Gets rid of any midi messages that had been added by sendBlockOfMessages().
     */
     void clearAllPendingMessages()          { outputThread.clearAllPendingMessages(); }

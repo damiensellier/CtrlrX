@@ -33,11 +33,6 @@ MidiRouting.pause_in_blocks_host_echo
 MidiLua.device_input_invokes_lua_multiMidiReceived_once
 
 
-# NRPN/Multi bursts from different modulators interleave CC by CC at panelMidiGlobalDelay 0:
-# buffers sent within one millisecond get the same start time (CtrlrMIDIDevice::sendMidiBuffer).
-# Desired: each burst stays contiguous. Passes at delay 2 (pinned by ..._with_global_delay).
-LuaValues.nrpn_bursts_stay_contiguous_at_zero_delay
-
 # Long SysEx (Tests/test_ProcessorMidiLongSysex.cpp), state after #350 + #352 (messages over 65529
 # bytes bypass juce::MidiBuffer, which stores event sizes, and size + 6, as uint16; a user's 70k
 # dump crashed CtrlrX, ctrlr discussion #791).
@@ -48,16 +43,3 @@ LongSysex.lua_to_host_131072
 LongSysex.thru_d2h_131072
 LongSysex.thru_h2d_131072
 LongSysex.thru_h2h_131072
-# JUCE 8 only (Linux): ALSA hands a long SysEx from a device over in <= 256-byte pieces when JUCE's
-# sequencer client is a legacy one (always with the mock, which declines UMP; on real systems with
-# alsa-lib < 1.2.10 or a kernel < 6.5). JUCE 6 joined them; JUCE 8.0.12 converts each piece as a
-# whole message (InputImplNative::pushBytes, juce_Midi_linux.cpp), so only the first 256 bytes
-# arrive, with F7 in place of the last one. Fix planned in vendored JUCE (join the pieces before
-# the UMP conversion); remove these then. On UMP clients the kernel sends SysEx7 and it works.
-LongSysex.device_to_lua_65529
-LongSysex.device_to_lua_65530
-LongSysex.device_to_lua_131072
-LongSysex.thru_d2d_65529
-LongSysex.thru_d2d_65530
-LongSysex.thru_d2d_131072
-LongSysex.thru_d2h_65529

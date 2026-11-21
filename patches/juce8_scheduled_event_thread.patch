@@ -1,0 +1,74 @@
+# JUCE 8.0.12 -- ScheduledEventThread: keep events that are not due yet, wait and send without the lock, never drop late events
+#
+# Applies to: JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h
+# Documentation only: the change is already in the vendored JUCE tree, and CMake
+# does not apply this file. It equals
+#   git diff <pristine JUCE 8.0.12> HEAD -- JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h
+# Check from the repo root:  git apply -R --check patches/juce8_scheduled_event_thread.patch
+#
+# MidiOutput's background thread (ScheduledEventThread::run()) had two problems on
+# JUCE 8.0.12:
+#
+# 1. It took the first event out of the queue, and if it was due more than 20 ms
+#    later it waited and looped without putting it back: every message queued with
+#    sendBlockOfMessages() more than 20 ms ahead was lost. CtrlrX queues each buffer
+#    one panelMidiGlobalDelay after the previous one, so with a global delay over
+#    20 ms, or a burst at a smaller one, most MIDI to a device never left.
+#    JUCE fixed this in 8.0.13 (82859cc2b).
+#
+# 2. It held the queue mutex while it waited for a due event (up to 20 ms) and while
+#    it sent it, so addEvent() -- every CtrlrX device send, also from the message
+#    thread -- waited until the message before it had left. A burst at a 10 ms global
+#    delay froze the GUI for about 10 ms per message. JUCE 6 waited and sent outside
+#    the lock. JUCE fixed this only in JUCE 9 (953420db1, which rewrites the class);
+#    8.0.17 still has it.
+#
+# 3. It dropped every event that was more than 200 ms late when its turn came. With (2)
+#    fixed, a burst is queued at once, so on a slow output (a slow CI runner, valgrind,
+#    a slow driver) the tail of the burst was lost without a trace. JUCE 9's rewrite
+#    (953420db1) always sends, late or not.
+#
+# The patch takes the event out of the queue only once it is due within 20 ms, then
+# releases the lock before it waits and sends, and sends it even when it is late. An
+# event added meanwhile with an earlier time goes out after this one, as on JUCE 6.
+#
+# At the 8.0.17 upgrade: part 1 is already there; rebase parts 2 and 3.
+#
+diff --git a/JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h b/JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h
+index 824d2823f..5c4e09cb5 100644
+--- a/JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h
++++ b/JUCE/modules/juce_audio_devices/midi_io/juce_ScheduledEventThread.h
+@@ -126,10 +126,7 @@ private:
+                 return;
+ 
+             const auto now = Time::getMillisecondCounter();
+-            const auto event = *pendingMessages.begin();
+-            pendingMessages.erase (pendingMessages.begin());
+-
+-            const auto timestamp = event.getTimeStamp();
++            const auto timestamp = pendingMessages.begin()->getTimeStamp();
+ 
+             if (timestamp > now + 20)
+             {
+@@ -138,11 +135,19 @@ private:
+                 continue;
+             }
+ 
++            // CtrlrX: patches/juce8_scheduled_event_thread.patch
++            // Take the event out of the queue only now that it is due (an event further ahead
++            // stays queued, as in JUCE 8.0.13), and wait and send without the lock (as JUCE 6 did),
++            // so addEvent() never waits for the device. A late event is still sent, as in JUCE 9:
++            // the old "drop if more than 200 ms late" lost the tail of a burst on a slow output.
++            const auto event = *pendingMessages.begin();
++            pendingMessages.erase (pendingMessages.begin());
++            lock.unlock();
++
+             if (timestamp > now)
+                 Time::waitForMillisecondCounter ((uint32) timestamp);
+ 
+-            if (timestamp > now - 200)
+-                outputCallback (event);
++            outputCallback (event);
+         }
+     }
+ 

@@ -64,6 +64,7 @@ struct FakeSndSeqState {
 // SNDRV_SEQ_EVENT_SYSEX each time it fills, and at F7 (snd_midi_event_encode_byte). So a long SysEx from
 // hardware reaches JUCE as <= 256-byte events (the first starting with F0, the last ending with F7) that
 // JUCE's MidiDataConcatenator reassembles. Other messages arrive as one event each.
+// JUCE 8 joins them in InputImplNative::pushBytes (patches/juce8_alsa_sysex_input.patch).
 // MAX_MIDI_EVENT_BUF is kernel-internal (not in uapi or alsa-lib headers), hence the literal here.
 static constexpr size_t kSeqSysexChunkBytes = 256; // = MAX_MIDI_EVENT_BUF
 

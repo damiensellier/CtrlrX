@@ -167,7 +167,7 @@ TEST_F(MidiRouting, device_input_matching_cc_updates_modulator) {
 /**
  * Start-up order of the app: the panel loads before JUCE 8 has listed the MIDI devices (on Linux
  * the ALSA ports arrive with the first sequencer event). The devices the panel names must open
- * once the device list arrives. 5.6.37 (JUCE 6) listed the devices synchronously. Ledger L8.34.1.
+ * once the device list arrives. 5.6.37 (JUCE 6) listed the devices synchronously.
  */
 class MidiDeviceStartup : public ProcessorInstance
 {
