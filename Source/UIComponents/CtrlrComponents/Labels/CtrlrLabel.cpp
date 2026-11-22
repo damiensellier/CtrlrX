@@ -41,8 +41,9 @@ CtrlrLabel::CtrlrLabel (CtrlrModulator &owner)
     : CtrlrComponent(owner)
 	// , ctrlrLabel (0) // Updated v5.6.34. Thanks to @dnaldoog
 {
-    addAndMakeVisible (ctrlrLabel = new CtrlrLabelInternal (*this, "ctrlrLabel",
-                                               "label text"));
+    ctrlrLabel = std::make_unique<CtrlrLabelInternal> (*this, "ctrlrLabel",
+                                          "label text");
+    addAndMakeVisible (ctrlrLabel.get());
     ctrlrLabel->setFont (Font (15.0000f, Font::plain));
     ctrlrLabel->setJustificationType (Justification::centredLeft);
     ctrlrLabel->setEditable (false, false, false);

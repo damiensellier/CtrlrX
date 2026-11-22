@@ -32,7 +32,8 @@
 CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor &_owner)
     : owner(_owner)
 {
-    addAndMakeVisible (debuggerOutput = new TextEditor ("Debugger output"));
+    debuggerOutput = std::make_unique<TextEditor> ("Debugger output");
+    addAndMakeVisible (debuggerOutput.get());
     debuggerOutput->setMultiLine (true);
     debuggerOutput->setReturnKeyStartsNewLine (false);
     debuggerOutput->setReadOnly (true);
@@ -44,7 +45,8 @@ CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor
     debuggerOutput->setColour (TextEditor::shadowColourId, Colour (0x00000000));
     debuggerOutput->setText ("");
 
-    addAndMakeVisible (debuggerInput = new TextEditor ("Debugger input"));
+    debuggerInput = std::make_unique<TextEditor> ("Debugger input");
+    addAndMakeVisible (debuggerInput.get());
     debuggerInput->setMultiLine (false);
     debuggerInput->setReturnKeyStartsNewLine (false);
     debuggerInput->setReadOnly (false);
@@ -56,7 +58,8 @@ CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor
     debuggerInput->setColour (TextEditor::shadowColourId, Colour (0x00000000));
     debuggerInput->setText ("");
 
-    addAndMakeVisible (debugContinue = new ImageButton ("Continue"));
+    debugContinue = std::make_unique<ImageButton> ("Continue");
+    addAndMakeVisible (debugContinue.get());
 	debugContinue->setTooltip(TRANS("Run/Continue"));
     debugContinue->addListener (this);
 
@@ -64,7 +67,8 @@ CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor
                               Image(), 0.550f, Colour (0x00000000),
                               Image(), 0.850f, Colour (0x00000000),
                               Image(), 1.000f, Colour (0x00000000));
-    addAndMakeVisible (debugStepOver = new ImageButton ("Step Over"));
+    debugStepOver = std::make_unique<ImageButton> ("Step Over");
+    addAndMakeVisible (debugStepOver.get());
     debugStepOver->setTooltip (TRANS("Step Over"));
     debugStepOver->addListener (this);
 
@@ -72,7 +76,8 @@ CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor
                               Image(), 0.550f, Colour (0x00000000),
                               Image(), 0.850f, Colour (0x00000000),
                               Image(), 1.000f, Colour (0x00000000));
-    addAndMakeVisible (debugStepInto = new ImageButton ("Step Into"));
+    debugStepInto = std::make_unique<ImageButton> ("Step Into");
+    addAndMakeVisible (debugStepInto.get());
     debugStepInto->setTooltip (TRANS("Step Into"));
     debugStepInto->addListener (this);
 
@@ -80,11 +85,13 @@ CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor
                               Image(), 0.550f, Colour (0x00000000),
                               Image(), 0.850f, Colour (0x00000000),
                               Image(), 1.000f, Colour (0x00000000));
-    addAndMakeVisible (debuggerInfo = new ConcertinaPanel());
+    debuggerInfo = std::make_unique<ConcertinaPanel>();
+    addAndMakeVisible (debuggerInfo.get());
     debuggerInfo->setExplicitFocusOrder (50);
     debuggerInfo->setName ("Realtime information");
 
-    addAndMakeVisible (debugStepOut = new ImageButton ("Step Out"));
+    debugStepOut = std::make_unique<ImageButton> ("Step Out");
+    addAndMakeVisible (debugStepOut.get());
     debugStepOut->setTooltip (TRANS("Step Out"));
     debugStepOut->addListener (this);
 
@@ -92,7 +99,8 @@ CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor
                              Image(), 0.550f, Colour (0x00000000),
                              Image(), 0.850f, Colour (0x00000000),
                              Image(), 1.000f, Colour (0x00000000));
-    addAndMakeVisible (debugRestart = new ImageButton ("Restart"));
+    debugRestart = std::make_unique<ImageButton> ("Restart");
+    addAndMakeVisible (debugRestart.get());
 	debugRestart->setTooltip(TRANS("Stop debugging and resume"));
     debugRestart->addListener (this);
 
@@ -100,7 +108,8 @@ CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor
                              Image(), 0.550f, Colour (0x00000000),
                              Image(), 0.850f, Colour (0x00000000),
                              Image(), 1.000f, Colour (0x00000000));
-    addAndMakeVisible (debugStop = new ImageButton ("Stop"));
+    debugStop = std::make_unique<ImageButton> ("Stop");
+    addAndMakeVisible (debugStop.get());
 	debugStop->setTooltip(TRANS("Stop debugging and resume"));
     debugStop->addListener (this);
 
@@ -109,7 +118,8 @@ CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor
                           Image(), 0.850f, Colour (0x00000000),
                           Image(), 1.000f, Colour (0x00000000));
 
-    addAndMakeVisible (clearOutput = new ImageButton ("Clear"));
+    clearOutput = std::make_unique<ImageButton> ("Clear");
+    addAndMakeVisible (clearOutput.get());
     clearOutput->setTooltip (TRANS("Clear"));
     clearOutput->addListener (this);
 
@@ -121,7 +131,8 @@ CtrlrLuaMethodDebuggerPrompt::CtrlrLuaMethodDebuggerPrompt (CtrlrLuaMethodEditor
     //[UserPreSize]
     collectionState = Ended;
 
-    addAndMakeVisible (resizer	= new StretchableLayoutResizerBar (&layoutManager, 1, true));
+    resizer = std::make_unique<StretchableLayoutResizerBar> (&layoutManager, 1, true);
+    addAndMakeVisible (resizer.get());
 
     layoutManager.setItemLayout (0, -0.001, -1.0, -0.59);
     layoutManager.setItemLayout (1, 8, 8, 8);
@@ -229,7 +240,7 @@ void CtrlrLuaMethodDebuggerPrompt::resized()
     debugStop->setBounds (200, 0, 32, 32);
 	clearOutput->setBounds (240, 0, 32, 32);
     //[UserResized] Add your own custom resize handling here..
-    Component* comps[] = { debuggerOutput, resizer, debuggerInfo  };
+    Component* comps[] = { debuggerOutput.get(), resizer.get(), debuggerInfo.get()  };
 	layoutManager.layOutComponents (comps, 3, 0, 32, getWidth(), getHeight() - 50, false, true);
     //[/UserResized]
 }
@@ -239,7 +250,7 @@ void CtrlrLuaMethodDebuggerPrompt::buttonClicked (Button* buttonThatWasClicked)
     //[UserbuttonClicked_Pre]
     //[/UserbuttonClicked_Pre]
 
-    if (buttonThatWasClicked == debugContinue)
+    if (buttonThatWasClicked == debugContinue.get())
     {
         //[UserButtonCode_debugContinue] -- add your button handler code here..
 		debugStop->setImages(false, true, true,
@@ -267,24 +278,24 @@ void CtrlrLuaMethodDebuggerPrompt::buttonClicked (Button* buttonThatWasClicked)
         sendCommand ("run");
         //[/UserButtonCode_debugContinue]
     }
-    else if (buttonThatWasClicked == debugStepOver)
+    else if (buttonThatWasClicked == debugStepOver.get())
     {
         //[UserButtonCode_debugStepOver] -- add your button handler code here..
         sendCommand ("over");
         //[/UserButtonCode_debugStepOver]
     }
-    else if (buttonThatWasClicked == debugStepInto)
+    else if (buttonThatWasClicked == debugStepInto.get())
     {
         //[UserButtonCode_debugStepInto] -- add your button handler code here..
         sendCommand ("step");
         //[/UserButtonCode_debugStepInto]
     }
-    else if (buttonThatWasClicked == debugStepOut)
+    else if (buttonThatWasClicked == debugStepOut.get())
     {
         //[UserButtonCode_debugStepOut] -- add your button handler code here..
         sendCommand ("out");
         //[/UserButtonCode_debugStepOut]
-	} else if (buttonThatWasClicked == debugRestart) {
+	} else if (buttonThatWasClicked == debugRestart.get()) {
         //[UserButtonCode_debugRestart] -- add your button handler code here..
 		// Revert back to the default stop icon
 
@@ -308,7 +319,7 @@ void CtrlrLuaMethodDebuggerPrompt::buttonClicked (Button* buttonThatWasClicked)
 
         sendCommand ("exit");
         //[/UserButtonCode_debugRestart]
-	} else if (buttonThatWasClicked == debugStop) {
+	} else if (buttonThatWasClicked == debugStop.get()) {
         //[UserButtonCode_debugStop] -- add your button handler code here..
 		// Revert back to the default stop icon
 		debugStop->setImages(
@@ -332,7 +343,7 @@ void CtrlrLuaMethodDebuggerPrompt::buttonClicked (Button* buttonThatWasClicked)
 		sendCommand("exit");
         //[/UserButtonCode_debugStop]
     }
-	else if (buttonThatWasClicked == clearOutput)
+	else if (buttonThatWasClicked == clearOutput.get())
 	{
 		//[UserButtonCode_clearOutput] -- add your button handler code here..
 		debuggerOutput->setText("");
@@ -423,7 +434,7 @@ void CtrlrLuaMethodDebuggerPrompt::sendCommand (const String &command)
 
 void CtrlrLuaMethodDebuggerPrompt::textEditorReturnKeyPressed (TextEditor &editor)
 {
-    if (&editor == debuggerInput)
+    if (&editor == debuggerInput.get())
     {
         sendCommand (debuggerInput->getText());
         debuggerInput->clear();

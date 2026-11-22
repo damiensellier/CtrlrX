@@ -131,11 +131,11 @@ CtrlrComponent::~CtrlrComponent()
     
     if (shadowEffect)
     {
-        delete (shadowEffect.release());
+        shadowEffect.reset();
     }
     if (glowEffect)
     {
-        delete (glowEffect.release());
+        glowEffect.reset();
     }
     if (selectionBorder.get())
         delete selectionBorder.release();
@@ -611,7 +611,7 @@ void CtrlrComponent::setEffect()
     {
         if (shadowEffect == nullptr)
         {
-            shadowEffect = new DropShadowEffect();
+            shadowEffect = std::make_unique<DropShadowEffect>();
         }
 
         DropShadow ds;
@@ -620,14 +620,14 @@ void CtrlrComponent::setEffect()
         ds.radius = getProperty(Ids::componentEffectRadius);
 
         shadowEffect->setShadowProperties (ds);
-        setComponentEffect (shadowEffect);
+        setComponentEffect (shadowEffect.get());
     }
 
     if (getProperty(Ids::componentEffect) == "Glow")
     {
-        glowEffect = new GlowEffect();
+        glowEffect = std::make_unique<GlowEffect>();
         glowEffect->setGlowProperties (getProperty(Ids::componentEffectRadius), VAR2COLOUR(getProperty(Ids::componentEffectColour)));
-        setComponentEffect (glowEffect);
+        setComponentEffect (glowEffect.get());
     }
 }
 

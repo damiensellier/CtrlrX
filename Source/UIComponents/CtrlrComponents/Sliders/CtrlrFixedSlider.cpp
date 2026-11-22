@@ -11,7 +11,7 @@ CtrlrFixedSlider::CtrlrFixedSlider (CtrlrModulator &owner)
     lf(*this, componentTree), // For LookAndFeel_V2 CtrlrSliderLookAndFeel_V2 LEGACY
     ctrlrSlider (0)
 {
-    valueMap = new CtrlrValueMap();
+    valueMap = std::make_unique<CtrlrValueMap>();
     
     /** Tooltip properties */
     setColour (TooltipWindow::textColourId, findColour(Label::textColourId));

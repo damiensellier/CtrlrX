@@ -80,10 +80,10 @@ public:
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
-	ScopedPointer <DirectoryContentsList> directoryContentsList;
+	std::unique_ptr<DirectoryContentsList> directoryContentsList;
 	TimeSliceThread timeSliceThread;
 //	ScopedPointer <FileTreeComponent> treeComponent;
-	ScopedPointer <CtrlrFileTreeComponent> treeComponent;
+	std::unique_ptr<CtrlrFileTreeComponent> treeComponent;
 //	ScopedPointer <FileListComponent> fileListComponent;
 	CtrlrFileListBoxLF fileListBoxLookAndFeel;
 	WeakReference <CtrlrLuaMethod> fileClickedCbk,fileDoubleClickedCbk; //,itemDeleteKeyPressedCbk,itemReturnKeyPressedCbk;

@@ -38,52 +38,59 @@ CtrlrMIDISettingsDevices::CtrlrMIDISettingsDevices (CtrlrPanel &_owner)
     //[Constructor_pre] You can add your own custom stuff here..
     //[/Constructor_pre]
 
-    addAndMakeVisible (inputDevices = new ComboBox (String()));
+    inputDevices = std::make_unique<ComboBox> (String());
+    addAndMakeVisible (inputDevices.get());
     inputDevices->setEditableText (false);
     inputDevices->setJustificationType (Justification::centredLeft);
     inputDevices->setTextWhenNothingSelected (TRANS("No device selected"));
     inputDevices->setTextWhenNoChoicesAvailable (TRANS("No devices available"));
     inputDevices->addListener (this);
 
-    addAndMakeVisible (controllerDevices = new ComboBox (String()));
+    controllerDevices = std::make_unique<ComboBox> (String());
+    addAndMakeVisible (controllerDevices.get());
     controllerDevices->setEditableText (false);
     controllerDevices->setJustificationType (Justification::centredLeft);
     controllerDevices->setTextWhenNothingSelected (TRANS("No device selected"));
     controllerDevices->setTextWhenNoChoicesAvailable (TRANS("No devices available"));
     controllerDevices->addListener (this);
 
-    addAndMakeVisible (outputDevices = new ComboBox (String()));
+    outputDevices = std::make_unique<ComboBox> (String());
+    addAndMakeVisible (outputDevices.get());
     outputDevices->setEditableText (false);
     outputDevices->setJustificationType (Justification::centredLeft);
     outputDevices->setTextWhenNothingSelected (TRANS("No device selected"));
     outputDevices->setTextWhenNoChoicesAvailable (TRANS("No devices available"));
     outputDevices->addListener (this);
 
-    addAndMakeVisible (label = new Label ("new label",
-                                          TRANS("Input device")));
+    label = std::make_unique<Label> ("new label",
+                                     TRANS("Input device"));
+    addAndMakeVisible (label.get());
     label->setFont (Font (16.00f, Font::bold));
     label->setJustificationType (Justification::centredLeft);
     label->setEditable (false, false, false);
     label->setColour (TextEditor::textColourId, findColour(TextEditor::textColourId)); // Colours::black);
     label->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (label2 = new Label ("new label",
-                                           TRANS("Controller device")));
+    label2 = std::make_unique<Label> ("new label",
+                                      TRANS("Controller device"));
+    addAndMakeVisible (label2.get());
     label2->setFont (Font (16.00f, Font::bold));
     label2->setJustificationType (Justification::centredLeft);
     label2->setEditable (false, false, false);
     label2->setColour (TextEditor::textColourId, findColour(TextEditor::textColourId)); // Colours::black);
     label2->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (label3 = new Label ("new label",
-                                           TRANS("Output device")));
+    label3 = std::make_unique<Label> ("new label",
+                                      TRANS("Output device"));
+    addAndMakeVisible (label3.get());
     label3->setFont (Font (16.00f, Font::bold));
     label3->setJustificationType (Justification::centredLeft);
     label3->setEditable (false, false, false);
     label3->setColour (TextEditor::textColourId, findColour(TextEditor::textColourId)); // Colours::black);
     label3->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (oscProtocol = new ComboBox ("OSC Protocol"));
+    oscProtocol = std::make_unique<ComboBox> ("OSC Protocol");
+    addAndMakeVisible (oscProtocol.get());
     oscProtocol->setEditableText (false);
     oscProtocol->setJustificationType (Justification::centredLeft);
     oscProtocol->setTextWhenNothingSelected (TRANS("TCP"));
@@ -94,16 +101,18 @@ CtrlrMIDISettingsDevices::CtrlrMIDISettingsDevices (CtrlrPanel &_owner)
     oscProtocol->addItem (TRANS("TCP"), 4);
     oscProtocol->addListener (this);
 
-    addAndMakeVisible (label4 = new Label ("new label",
-                                           TRANS("OSC Server settings")));
+    label4 = std::make_unique<Label> ("new label",
+                                      TRANS("OSC Server settings"));
+    addAndMakeVisible (label4.get());
     label4->setFont (Font (16.00f, Font::bold));
     label4->setJustificationType (Justification::centredLeft);
     label4->setEditable (false, false, false);
     label4->setColour (TextEditor::textColourId, findColour(TextEditor::textColourId)); // Colours::black);
     label4->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (oscPort = new Label ("OSC Port",
-                                            TRANS("7770")));
+    oscPort = std::make_unique<Label> ("OSC Port",
+                                       TRANS("7770"));
+    addAndMakeVisible (oscPort.get());
     oscPort->setTooltip (TRANS("OSC Port"));
     oscPort->setFont (Font (24.00f, Font::plain));
     oscPort->setJustificationType (Justification::centred);
@@ -115,35 +124,40 @@ CtrlrMIDISettingsDevices::CtrlrMIDISettingsDevices (CtrlrPanel &_owner)
     oscPort->setColour (Label::outlineWhenEditingColourId, findColour(Label:: outlineWhenEditingColourId));
     oscPort->addListener (this);
 
-    addAndMakeVisible (label5 = new Label ("new label",
-                                           TRANS("Protocol")));
+    label5 = std::make_unique<Label> ("new label",
+                                      TRANS("Protocol"));
+    addAndMakeVisible (label5.get());
     label5->setFont (Font (14.00f, Font::plain));
     label5->setJustificationType (Justification::centredLeft);
     label5->setEditable (false, false, false);
     label5->setColour (TextEditor::textColourId, findColour(TextEditor::textColourId)); // Colours::black);
     label5->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (label6 = new Label ("new label",
-                                           TRANS("Port/Socket path")));
+    label6 = std::make_unique<Label> ("new label",
+                                      TRANS("Port/Socket path"));
+    addAndMakeVisible (label6.get());
     label6->setFont (Font (14.00f, Font::plain));
     label6->setJustificationType (Justification::centredLeft);
     label6->setEditable (false, false, false);
     label6->setColour (TextEditor::textColourId, findColour(TextEditor::textColourId)); // Colours::black);
     label6->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (oscEnabled = new ToggleButton ("OSC Enabled"));
+    oscEnabled = std::make_unique<ToggleButton> ("OSC Enabled");
+    addAndMakeVisible (oscEnabled.get());
     oscEnabled->setButtonText (String());
     oscEnabled->addListener (this);
 
-    addAndMakeVisible (label7 = new Label ("new label",
-                                           TRANS("Enable")));
+    label7 = std::make_unique<Label> ("new label",
+                                      TRANS("Enable"));
+    addAndMakeVisible (label7.get());
     label7->setFont (Font (14.00f, Font::plain));
     label7->setJustificationType (Justification::centredLeft);
     label7->setEditable (false, false, false);
     label7->setColour (TextEditor::textColourId, findColour(TextEditor::textColourId)); // Colours::black);
     label7->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (inputChannel = new ComboBox (String()));
+    inputChannel = std::make_unique<ComboBox> (String());
+    addAndMakeVisible (inputChannel.get());
     inputChannel->setEditableText (false);
     inputChannel->setJustificationType (Justification::centredLeft);
     inputChannel->setTextWhenNothingSelected (TRANS("All"));
@@ -167,7 +181,8 @@ CtrlrMIDISettingsDevices::CtrlrMIDISettingsDevices (CtrlrPanel &_owner)
     inputChannel->addItem (TRANS("16"), 17);
     inputChannel->addListener (this);
 
-    addAndMakeVisible (controllerChannel = new ComboBox (String()));
+    controllerChannel = std::make_unique<ComboBox> (String());
+    addAndMakeVisible (controllerChannel.get());
     controllerChannel->setEditableText (false);
     controllerChannel->setJustificationType (Justification::centredLeft);
     controllerChannel->setTextWhenNothingSelected (TRANS("All"));
@@ -191,7 +206,8 @@ CtrlrMIDISettingsDevices::CtrlrMIDISettingsDevices (CtrlrPanel &_owner)
     controllerChannel->addItem (TRANS("16"), 17);
     controllerChannel->addListener (this);
 
-    addAndMakeVisible (outputChannel = new ComboBox (String()));
+    outputChannel = std::make_unique<ComboBox> (String());
+    addAndMakeVisible (outputChannel.get());
     outputChannel->setEditableText (false);
     outputChannel->setJustificationType (Justification::centredLeft);
     outputChannel->setTextWhenNothingSelected (TRANS("1")); // Updated v5.5.34. Was "All". BUT There's no OMNI OUT
@@ -214,15 +230,17 @@ CtrlrMIDISettingsDevices::CtrlrMIDISettingsDevices (CtrlrPanel &_owner)
     outputChannel->addItem (TRANS("16"), 16);
     outputChannel->addListener (this);
 
-    addAndMakeVisible (label8 = new Label ("new label",
-                                           TRANS("Plugin")));
+    label8 = std::make_unique<Label> ("new label",
+                                      TRANS("Plugin"));
+    addAndMakeVisible (label8.get());
     label8->setFont (Font (16.00f, Font::bold));
     label8->setJustificationType (Justification::centredLeft);
     label8->setEditable (false, false, false);
     label8->setColour (TextEditor::textColourId, findColour(TextEditor::textColourId)); // Colours::black);
     label8->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (pluginOutputChannel = new ComboBox (String()));
+    pluginOutputChannel = std::make_unique<ComboBox> (String());
+    addAndMakeVisible (pluginOutputChannel.get());
     pluginOutputChannel->setEditableText (false);
     pluginOutputChannel->setJustificationType (Justification::centredLeft);
     pluginOutputChannel->setTextWhenNothingSelected (TRANS("1")); // Updated v5.5.34. Was "All". BUT There's no OMNI OUT
@@ -245,27 +263,32 @@ CtrlrMIDISettingsDevices::CtrlrMIDISettingsDevices (CtrlrPanel &_owner)
     pluginOutputChannel->addItem (TRANS("16"), 16);
     pluginOutputChannel->addListener (this);
 
-    addAndMakeVisible (pluginOutput = new ToggleButton ("new toggle button"));
+    pluginOutput = std::make_unique<ToggleButton> ("new toggle button");
+    addAndMakeVisible (pluginOutput.get());
     pluginOutput->setButtonText (TRANS("Enable output to plugin host"));
     pluginOutput->addListener (this);
 
-    addAndMakeVisible (label9 = new Label ("new label",
-                                           TRANS("MIDI Channel")));
+    label9 = std::make_unique<Label> ("new label",
+                                      TRANS("MIDI Channel"));
+    addAndMakeVisible (label9.get());
     label9->setFont (Font (16.00f, Font::bold));
     label9->setJustificationType (Justification::centredLeft);
     label9->setEditable (false, false, false);
     label9->setColour (TextEditor::textColourId, findColour(TextEditor::textColourId)); // Colours::black);
     label9->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (pluginInput = new ToggleButton ("new toggle button"));
+    pluginInput = std::make_unique<ToggleButton> ("new toggle button");
+    addAndMakeVisible (pluginInput.get());
     pluginInput->setButtonText (TRANS("Enable input from plugin host"));
     pluginInput->addListener (this);
 	
-    addAndMakeVisible (pluginInputToHostComp = new ToggleButton ("new toggle button"));
+    pluginInputToHostComp = std::make_unique<ToggleButton> ("new toggle button");
+    addAndMakeVisible (pluginInputToHostComp.get());
     pluginInputToHostComp->setButtonText (TRANS("Enable input from host to comparator"));
     pluginInputToHostComp->addListener (this);
 
-    addAndMakeVisible (pluginInputChannel = new ComboBox (String()));
+    pluginInputChannel = std::make_unique<ComboBox> (String());
+    addAndMakeVisible (pluginInputChannel.get());
     pluginInputChannel->setEditableText (false);
     pluginInputChannel->setJustificationType (Justification::centredLeft);
     pluginInputChannel->setTextWhenNothingSelected (TRANS("All"));
@@ -400,55 +423,55 @@ void CtrlrMIDISettingsDevices::comboBoxChanged (ComboBox* comboBoxThatHasChanged
     //[UsercomboBoxChanged_Pre]
     //[/UsercomboBoxChanged_Pre]
 
-    if (comboBoxThatHasChanged == inputDevices)
+    if (comboBoxThatHasChanged == inputDevices.get())
     {
         //[UserComboBoxCode_inputDevices] -- add your combo box handling code here..
         owner.setProperty(Ids::panelMidiInputDevice, inputDevices->getText());
         //[/UserComboBoxCode_inputDevices]
     }
-    else if (comboBoxThatHasChanged == controllerDevices)
+    else if (comboBoxThatHasChanged == controllerDevices.get())
     {
         //[UserComboBoxCode_controllerDevices] -- add your combo box handling code here..
         owner.setProperty(Ids::panelMidiControllerDevice, controllerDevices->getText());
         //[/UserComboBoxCode_controllerDevices]
     }
-    else if (comboBoxThatHasChanged == outputDevices)
+    else if (comboBoxThatHasChanged == outputDevices.get())
     {
         //[UserComboBoxCode_outputDevices] -- add your combo box handling code here..
         owner.setProperty(Ids::panelMidiOutputDevice, outputDevices->getText());
         //[/UserComboBoxCode_outputDevices]
     }
-    else if (comboBoxThatHasChanged == oscProtocol)
+    else if (comboBoxThatHasChanged == oscProtocol.get())
     {
         //[UserComboBoxCode_oscProtocol] -- add your combo box handling code here..
         owner.setProperty(Ids::panelOSCProtocol, oscProtocol->getSelectedItemIndex());
         //[/UserComboBoxCode_oscProtocol]
     }
-    else if (comboBoxThatHasChanged == inputChannel)
+    else if (comboBoxThatHasChanged == inputChannel.get())
     {
         //[UserComboBoxCode_inputChannel] -- add your combo box handling code here..
         owner.setProperty(Ids::panelMidiInputChannelDevice, inputChannel->getText());
         //[/UserComboBoxCode_inputChannel]
     }
-    else if (comboBoxThatHasChanged == controllerChannel)
+    else if (comboBoxThatHasChanged == controllerChannel.get())
     {
         //[UserComboBoxCode_controllerChannel] -- add your combo box handling code here..
         owner.setProperty(Ids::panelMidiControllerChannelDevice, controllerChannel->getText());
         //[/UserComboBoxCode_controllerChannel]
     }
-    else if (comboBoxThatHasChanged == outputChannel)
+    else if (comboBoxThatHasChanged == outputChannel.get())
     {
         //[UserComboBoxCode_outputChannel] -- add your combo box handling code here..
         owner.setProperty(Ids::panelMidiOutputChannelDevice, outputChannel->getText());
         //[/UserComboBoxCode_outputChannel]
     }
-    else if (comboBoxThatHasChanged == pluginOutputChannel)
+    else if (comboBoxThatHasChanged == pluginOutputChannel.get())
     {
         //[UserComboBoxCode_pluginOutputChannel] -- add your combo box handling code here..
         owner.setProperty(Ids::panelMidiOutputChannelHost, pluginOutputChannel->getText());
         //[/UserComboBoxCode_pluginOutputChannel]
     }
-    else if (comboBoxThatHasChanged == pluginInputChannel)
+    else if (comboBoxThatHasChanged == pluginInputChannel.get())
     {
         //[UserComboBoxCode_pluginInputChannel] -- add your combo box handling code here..
         owner.setProperty(Ids::panelMidiInputChannelHost, pluginInputChannel->getText());
@@ -464,7 +487,7 @@ void CtrlrMIDISettingsDevices::labelTextChanged (Label* labelThatHasChanged)
     //[UserlabelTextChanged_Pre]
     //[/UserlabelTextChanged_Pre]
 
-    if (labelThatHasChanged == oscPort)
+    if (labelThatHasChanged == oscPort.get())
     {
         //[UserLabelCode_oscPort] -- add your label text handling code here..
         owner.setProperty(Ids::panelOSCPort, oscPort->getText().getIntValue());
@@ -480,25 +503,25 @@ void CtrlrMIDISettingsDevices::buttonClicked (Button* buttonThatWasClicked)
     //[UserbuttonClicked_Pre]
     //[/UserbuttonClicked_Pre]
 
-    if (buttonThatWasClicked == oscEnabled)
+    if (buttonThatWasClicked == oscEnabled.get())
     {
         //[UserButtonCode_oscEnabled] -- add your button handler code here..
         owner.setProperty(Ids::panelOSCEnabled, oscEnabled->getToggleState());
         //[/UserButtonCode_oscEnabled]
     }
-    else if (buttonThatWasClicked == pluginOutput)
+    else if (buttonThatWasClicked == pluginOutput.get())
     {
         //[UserButtonCode_pluginOutput] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiOutputToHost, pluginOutput->getToggleState());
         //[/UserButtonCode_pluginOutput]
     }
-    else if (buttonThatWasClicked == pluginInput)
+    else if (buttonThatWasClicked == pluginInput.get())
     {
         //[UserButtonCode_pluginInput] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiInputFromHost, pluginInput->getToggleState());
         //[/UserButtonCode_pluginInput]
     }
-    else if (buttonThatWasClicked == pluginInputToHostComp) // Added v5.6.35
+    else if (buttonThatWasClicked == pluginInputToHostComp.get()) // Added v5.6.35
     {
         //[UserButtonCode_pluginInput] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiInputFromHostCompare, pluginInput->getToggleState());

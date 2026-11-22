@@ -76,7 +76,7 @@ private:
     CtrlrLuaMethodEditor &owner;
     StringArray commandQueue;
     StretchableLayoutManager layoutManager;
-	ScopedPointer <StretchableLayoutResizerBar> resizer;
+	std::unique_ptr<StretchableLayoutResizerBar> resizer;
 	CollectionState collectionState;
 	String collectedData;
 	CtrlrLuaMethodDebuggerStackTrace *stackTracePanel;
@@ -84,16 +84,16 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    ScopedPointer<TextEditor> debuggerOutput;
-    ScopedPointer<TextEditor> debuggerInput;
-    ScopedPointer<ImageButton> debugContinue;
-    ScopedPointer<ImageButton> debugStepOver;
-    ScopedPointer<ImageButton> debugStepInto;
-    ScopedPointer<ConcertinaPanel> debuggerInfo;
-    ScopedPointer<ImageButton> debugStepOut;
-    ScopedPointer<ImageButton> debugRestart;
-    ScopedPointer<ImageButton> debugStop;
-	ScopedPointer<ImageButton> clearOutput;
+    std::unique_ptr<TextEditor> debuggerOutput;
+    std::unique_ptr<TextEditor> debuggerInput;
+    std::unique_ptr<ImageButton> debugContinue;
+    std::unique_ptr<ImageButton> debugStepOver;
+    std::unique_ptr<ImageButton> debugStepInto;
+    std::unique_ptr<ConcertinaPanel> debuggerInfo;
+    std::unique_ptr<ImageButton> debugStepOut;
+    std::unique_ptr<ImageButton> debugRestart;
+    std::unique_ptr<ImageButton> debugStop;
+	std::unique_ptr<ImageButton> clearOutput;
 
 
     //==============================================================================

@@ -38,7 +38,7 @@ class CtrlrPanelNotifier : public Component
 private:
         juce::Colour background;
         // Corrected to use a ScopedPointer for proper memory management.
-        juce::ScopedPointer <juce::Label> text;
+        std::unique_ptr<juce::Label> text;
         CtrlrPanelEditor &owner;
 };
 
@@ -67,8 +67,8 @@ class CtrlrPanelEditor  :	public Component,
 		CtrlrPanelCanvas *getCanvas();
         CtrlrComponentSelection *getSelection();
 		void editModeChanged();
-		CtrlrPanelProperties *getPanelProperties() { return (ctrlrPanelProperties); }
-		CtrlrPanelViewport *getPanelViewport()															{ return (ctrlrPanelViewport); }
+		CtrlrPanelProperties *getPanelProperties() { return (ctrlrPanelProperties.get()); }
+		CtrlrPanelViewport *getPanelViewport()															{ return (ctrlrPanelViewport.get()); }
 		CtrlrComponent *getSelected(const Identifier &uiType);
 		void valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChanged, const Identifier &property);
 		void valueTreeChildrenChanged (ValueTree &treeWhoseChildHasChanged){}
@@ -84,7 +84,7 @@ class CtrlrPanelEditor  :	public Component,
 		ValueTree &getPanelEditorTree()																	{ return (panelEditorTree); }
 
 		void layoutItems();
-		CtrlrPanelProperties *getPropertiesPanel()														{ return (ctrlrPanelProperties); }
+		CtrlrPanelProperties *getPropertiesPanel()														{ return (ctrlrPanelProperties.get()); }
 		const bool getMode();
 		AffineTransform moveSelectionToPosition(const int newX, const int newY);
 		static void wrapForLua (lua_State *L);
@@ -127,11 +127,11 @@ class CtrlrPanelEditor  :	public Component,
         // CtrlrPanelViewport* ctrlrPanelViewport;
     
         // New way. Use ScopedPointers to handle the objects for improved deletion.
-        ScopedPointer <CtrlrComponentSelection> ctrlrComponentSelection;
-        ScopedPointer<CtrlrPanelProperties> ctrlrPanelProperties;
-        ScopedPointer<StretchableLayoutResizerBar> spacerComponent;
-        ScopedPointer<CtrlrPanelViewport> ctrlrPanelViewport;
-        ScopedPointer <CtrlrPanelNotifier> ctrlrPanelNotifier;  // Added back v5.6.31 for file management bottom notification bar
+        std::unique_ptr<CtrlrComponentSelection> ctrlrComponentSelection;
+        std::unique_ptr<CtrlrPanelProperties> ctrlrPanelProperties;
+        std::unique_ptr<StretchableLayoutResizerBar> spacerComponent;
+        std::unique_ptr<CtrlrPanelViewport> ctrlrPanelViewport;
+        std::unique_ptr<CtrlrPanelNotifier> ctrlrPanelNotifier;  // Added back v5.6.31 for file management bottom notification bar
     
 		ComponentAnimator componentAnimator;
 		CtrlrPanel &owner;

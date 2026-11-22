@@ -57,7 +57,7 @@ private:
     CtrlrSliderLookAndFeel_V2 lfV2;
     CtrlrSliderLookAndFeel_V3 lfV3;
     CtrlrSliderLookAndFeel_V4 lfV4;
-	ScopedPointer<CtrlrValueMap> valueMap;
+	std::unique_ptr<CtrlrValueMap> valueMap;
     //[/UserVariables]
 
     //==============================================================================

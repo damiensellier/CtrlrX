@@ -12,7 +12,7 @@ CtrlrListBox::CtrlrListBox (CtrlrModulator &owner)
     : CtrlrComponent(owner),
       listBox (0)
 {
-	valueMap = new CtrlrValueMap();
+	valueMap = std::make_unique<CtrlrValueMap>();
 	addAndMakeVisible (listBox = new ListBox ("List Box", this));
 	listBox->setModel( this );
 

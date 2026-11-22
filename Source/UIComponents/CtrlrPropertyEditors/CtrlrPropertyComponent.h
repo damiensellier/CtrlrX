@@ -140,7 +140,7 @@ class CtrlrChoicePropertyComponent  : public Component,
 		Value valueToControl;
 		Array <var> values;
 		StringArray choices;
-		ScopedPointer <ComboBox> combo;
+		std::unique_ptr<ComboBox> combo;
 		CtrlrPropertyComponent *owner;
 		bool numeric;
 };
@@ -436,7 +436,7 @@ class CtrlrModulatorListProperty :	public CtrlrPropertyChild,
 		CtrlrPanel *owner;
 		Value valueToControl;
 		StringArray choices;
-		ScopedPointer <ComboBox> combo;
+		std::unique_ptr<ComboBox> combo;
 		bool numeric;
 };
 
@@ -766,7 +766,7 @@ class CtrlrTextPropertyComponent : public Component, public CtrlrPropertyChild
 	private:
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrTextPropertyComponent);
 
-		ScopedPointer<Label> textEditor;
+		std::unique_ptr<Label> textEditor;
 		void createEditor (int maxNumChars, bool isMultiLine);
 		
         Value valueToControl;
@@ -784,7 +784,7 @@ class CtrlrTimestampProperty : public Component, public CtrlrPropertyChild
 
 	private:
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrTimestampProperty);
-		ScopedPointer<Label> textEditor;
+		std::unique_ptr<Label> textEditor;
 		Value valueToControl;
 };
 

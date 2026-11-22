@@ -54,8 +54,8 @@ public:
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
-	ScopedPointer<CtrlrValueMap> valueMap;
-	ScopedPointer<CtrlrImageSliderLF> lf;
+	std::unique_ptr<CtrlrValueMap> valueMap;
+	std::unique_ptr<CtrlrImageSliderLF> lf;
 	Image filmStripImage;
     //[/UserVariables]
 

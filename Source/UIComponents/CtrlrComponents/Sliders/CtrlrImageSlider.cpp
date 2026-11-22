@@ -8,7 +8,7 @@ CtrlrImageSlider::CtrlrImageSlider (CtrlrModulator &owner)
     : CtrlrComponent(owner),
       ctrlrSlider (0)
 {
-    lf = new CtrlrImageSliderLF(*this);
+    lf = std::make_unique<CtrlrImageSliderLF>(*this);
     
     /** Tooltip properties */
     setColour (TooltipWindow::textColourId, findColour(Label::textColourId));
@@ -24,7 +24,7 @@ CtrlrImageSlider::CtrlrImageSlider (CtrlrModulator &owner)
     ctrlrSlider->addListener (this);
 
     ctrlrSlider->setSliderStyle (Slider::RotaryVerticalDrag);
-    ctrlrSlider->setLookAndFeel (lf); // V5.6.28 and before was LookAndFeel_V2, updated to V4
+    ctrlrSlider->setLookAndFeel (lf.get()); // V5.6.28 and before was LookAndFeel_V2, updated to V4
 
     setProperty (Ids::uiSliderMin, 0);
     setProperty (Ids::uiSliderMax, 127);
@@ -215,7 +215,7 @@ void CtrlrImageSlider::valueTreePropertyChanged (ValueTree &treeWhosePropertyHas
         lf->setImage (filmStripImage, (int)getProperty(Ids::resourceImageWidth), (int)getProperty(Ids::resourceImageHeight));
         lf->setPaintMode ((RectanglePlacement)(int)getProperty(Ids::resourceImagePaintMode));
         ctrlrSlider->setLookAndFeel(0);
-        ctrlrSlider->setLookAndFeel(lf);
+        ctrlrSlider->setLookAndFeel(lf.get());
     }
     else if (property == Ids::uiSliderStyle)
     {

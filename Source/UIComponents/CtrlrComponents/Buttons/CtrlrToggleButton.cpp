@@ -10,7 +10,7 @@ CtrlrToggleButton::CtrlrToggleButton (CtrlrModulator &owner)
     : CtrlrComponent(owner),
       ctrlrButton (0)
 {
-	valueMap = new CtrlrValueMap();
+	valueMap = std::make_unique<CtrlrValueMap>();
     addAndMakeVisible (ctrlrButton = new ToggleButton ("ctrlrButton"));
     ctrlrButton->setButtonText ("Button");
     ctrlrButton->addListener (this);

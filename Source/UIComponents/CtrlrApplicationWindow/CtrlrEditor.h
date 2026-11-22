@@ -170,12 +170,12 @@ class CtrlrEditor  : public AudioProcessorEditor,
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CtrlrEditor)
 
 	private:
-		// Use a ScopedPointer to manage the menuBar object
-		juce::ScopedPointer<juce::MenuBarComponent> menuBar;
+		// Use a std::unique_ptr to manage the menuBar object
+		std::unique_ptr<juce::MenuBarComponent> menuBar;
 		// MenuBarComponent *menuBar; // Updated v5.6.34. ScopedPointed will handle its destruction properly
 		
-		// Use a ScopedPointer to manage the current LookAndFeel object
-		ScopedPointer<LookAndFeel> currentLookAndFeel; // Updated v5.6.34. ScopedPointed will handle its destruction properly
+		// Use a std::unique_ptr to manage the current LookAndFeel object
+		std::unique_ptr<LookAndFeel> currentLookAndFeel; // Updated v5.6.34. ScopedPointed will handle its destruction properly
     
 		bool menuHandlerCalled;
 		// TooltipWindow tooltipWindow;

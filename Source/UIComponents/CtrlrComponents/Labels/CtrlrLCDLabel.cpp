@@ -8,8 +8,9 @@ CtrlrLCDLabel::CtrlrLCDLabel (CtrlrModulator &owner)
     : CtrlrComponent(owner)
 	// , ctrlrLabel (0) // Updated v5.6.34. Thanks to @dnaldoog
 {
-    addAndMakeVisible (ctrlrLabel = new Label ("ctrlrLabel",
-                                               "LCD TEST"));
+    ctrlrLabel = std::make_unique<Label> ("ctrlrLabel",
+                                          "LCD TEST");
+    addAndMakeVisible (ctrlrLabel.get());
     ctrlrLabel->setFont (Font (16.0000f, Font::plain));
     ctrlrLabel->setJustificationType (Justification::centred);
     ctrlrLabel->setEditable (false, false, false);

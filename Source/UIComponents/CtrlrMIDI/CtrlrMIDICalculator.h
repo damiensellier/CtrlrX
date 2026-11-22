@@ -71,14 +71,14 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    ScopedPointer<TextEditor> hexDisplay;
-    ScopedPointer<Label> label;
-    ScopedPointer<Label> label2;
-    ScopedPointer<TextEditor> binDisplay;
-    ScopedPointer<Label> label3;
-    ScopedPointer<TextEditor> decDisplay;
-    ScopedPointer<ComboBox> hexFormat;
-    ScopedPointer<ToggleButton> bit16Switch;
+    std::unique_ptr<TextEditor> hexDisplay;
+    std::unique_ptr<Label> label;
+    std::unique_ptr<Label> label2;
+    std::unique_ptr<TextEditor> binDisplay;
+    std::unique_ptr<Label> label3;
+    std::unique_ptr<TextEditor> decDisplay;
+    std::unique_ptr<ComboBox> hexFormat;
+    std::unique_ptr<ToggleButton> bit16Switch;
 
 
     //==============================================================================

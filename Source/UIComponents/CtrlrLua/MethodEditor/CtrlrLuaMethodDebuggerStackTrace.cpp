@@ -33,7 +33,8 @@
 CtrlrLuaMethodDebuggerStackTrace::CtrlrLuaMethodDebuggerStackTrace (CtrlrLuaMethodEditor &_owner)
     : owner(_owner)
 {
-    addAndMakeVisible (stackTraceList = new TableListBox());
+    stackTraceList = std::make_unique<TableListBox>();
+    addAndMakeVisible (stackTraceList.get());
 
 
     //[UserPreSize]

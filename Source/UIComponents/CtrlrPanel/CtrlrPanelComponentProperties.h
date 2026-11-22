@@ -66,6 +66,6 @@ private:
 	StringArray emptyValueSet;
 	int selectedItems;
 	String currentFilter;
-    ScopedPointer<PropertyPanel> propertyPanel;
+    std::unique_ptr<PropertyPanel> propertyPanel;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrPanelComponentProperties)
 };

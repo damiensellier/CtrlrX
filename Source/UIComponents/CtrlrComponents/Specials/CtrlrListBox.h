@@ -62,7 +62,7 @@ public:
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
-	ScopedPointer<CtrlrValueMap> valueMap;
+	std::unique_ptr<CtrlrValueMap> valueMap;
 	WeakReference <CtrlrLuaMethod> itemClickedCbk,itemDoubleClickedCbk,itemDeleteKeyPressedCbk,itemReturnKeyPressedCbk;
     //[/UserVariables]
 

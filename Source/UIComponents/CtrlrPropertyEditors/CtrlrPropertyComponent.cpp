@@ -489,7 +489,8 @@ CtrlrChoicePropertyComponent::CtrlrChoicePropertyComponent (const Value &_valueT
       combo (nullptr),
 	  numeric(_numeric)
 {
-    addAndMakeVisible (combo = new ComboBox (""));
+    combo = std::make_unique<ComboBox> ("");
+    addAndMakeVisible (combo.get());
     combo->setEditableText (false);
     combo->setJustificationType (Justification::centredLeft);
     combo->setTextWhenNothingSelected ("");
@@ -1276,7 +1277,8 @@ void CtrlrLuaMethodProperty::refresh()
 CtrlrModulatorListProperty::CtrlrModulatorListProperty(const Value &_valueToControl, CtrlrPanel *_owner)
 	: owner(_owner), valueToControl(_valueToControl)
 {
-	addAndMakeVisible (combo = new ComboBox (""));
+	combo = std::make_unique<ComboBox> ("");
+	addAndMakeVisible (combo.get());
     combo->setEditableText (false);
     combo->setJustificationType (Justification::centredLeft);
     combo->setTextWhenNothingSelected (COMBO_ITEM_NONE);
@@ -1711,8 +1713,8 @@ void CtrlrMultiMidiPropertyComponent::loadAdditionalTemplates(const File &templa
 	XmlDocument staticTemplates(MemoryBlock (BinaryData::CtrlrMidiMultiTemplate_xml, BinaryData::CtrlrMidiMultiTemplate_xmlSize).toString());
 	XmlDocument dynamicTemplates(templateFile);
 
-	ScopedPointer <XmlElement> dynamicXml(dynamicTemplates.getDocumentElement().release());
-	ScopedPointer <XmlElement> staticXml(staticTemplates.getDocumentElement().release());
+	std::unique_ptr<XmlElement> dynamicXml(dynamicTemplates.getDocumentElement());
+	std::unique_ptr<XmlElement> staticXml(staticTemplates.getDocumentElement());
 
 	if (dynamicXml)
 	{
@@ -2454,7 +2456,8 @@ String CtrlrTextPropertyComponent::getText() const
 
 void CtrlrTextPropertyComponent::createEditor (const int maxNumChars, const bool isMultiLine)
 {
-    addAndMakeVisible (textEditor = new CtrlrTextPropLabel (*this, maxNumChars, isMultiLine, useImprovedLegibility)); // Updated v5.6.34. useImprovedLegibility arg added
+    textEditor = std::make_unique<CtrlrTextPropLabel> (*this, maxNumChars, isMultiLine, useImprovedLegibility); // Updated v5.6.34. useImprovedLegibility arg added
+    addAndMakeVisible (textEditor.get());
 
     if (isMultiLine)
     {
@@ -2484,7 +2487,8 @@ void CtrlrTextPropertyComponent::refresh()
 
 CtrlrTimestampProperty::CtrlrTimestampProperty (const Value& _valueToControl) : valueToControl(_valueToControl)
 {
-	addAndMakeVisible (textEditor = new Label ());
+	textEditor = std::make_unique<Label> ();
+	addAndMakeVisible (textEditor.get());
 	textEditor->setColour (Label::backgroundColourId, Colours::white.withAlpha(0.2f));
 }
 

@@ -1312,7 +1312,7 @@ void CtrlrPanelCanvas::exportComponent(CtrlrComponent *componentToExport)
 			File fileToSave = fileChooser.getResult().withFileExtension(".component");
 
 			owner.setProperty (Ids::lastBrowsedComponentDir, fileToSave.getParentDirectory().getFullPathName());
-			ScopedPointer <FileOutputStream> fileOutputStream(fileToSave.createOutputStream().release());
+			std::unique_ptr<FileOutputStream> fileOutputStream(fileToSave.createOutputStream());
 			if (fileOutputStream)
 			{
 				componentToExport->getOwner().getModulatorTree().writeToStream (*fileOutputStream);
@@ -1323,7 +1323,7 @@ void CtrlrPanelCanvas::exportComponent(CtrlrComponent *componentToExport)
 
 void CtrlrPanelCanvas::importComponent (const File &componentFile, int x, int y)
 {
-	ScopedPointer <FileInputStream> fileInputStream(componentFile.createInputStream().release());
+	std::unique_ptr<FileInputStream> fileInputStream(componentFile.createInputStream());
 	if (fileInputStream)
 	{
 		ValueTree cTree = ValueTree::readFromStream(*fileInputStream);
@@ -1677,7 +1677,7 @@ void CtrlrQuickXmlPreview::buttonClicked(Button *)
 {
 	CodeDocument doc;
 	CodeEditorComponent ed(doc, 0);
-	ScopedPointer <XmlElement> xml(treeToPreview.createXml().release());
+	std::unique_ptr<XmlElement> xml(treeToPreview.createXml());
 	doc.replaceAllContent(xml->createDocument(""));
 	ed.setSize (600, 600);
 	DialogWindow::showModalDialog ("XML Preview", &ed, this, Colours::white, true, true, true);

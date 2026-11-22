@@ -20,11 +20,11 @@ CtrlrEditor::CtrlrEditor (CtrlrProcessor *_ownerFilter, CtrlrManager &_owner)
 {
     // Initialize currentLookAndFeel to a default LookAndFeel_V4 Light.
     // This provides a starting point before properties are loaded.
-    currentLookAndFeel = new LookAndFeel_V4(juce::LookAndFeel_V4::getLightColourScheme());
-    setLookAndFeel(currentLookAndFeel); // Set the editor's LookAndFeel initially
+    currentLookAndFeel = std::make_unique<LookAndFeel_V4>(juce::LookAndFeel_V4::getLightColourScheme());
+    setLookAndFeel(currentLookAndFeel.get()); // Set the editor's LookAndFeel initially
 
-    menuBar = new MenuBarComponent(this); // Added v5.6.34
-    addAndMakeVisible(menuBar); // Added v5.6.34
+    menuBar = std::make_unique<MenuBarComponent>(this); // Added v5.6.34
+    addAndMakeVisible(menuBar.get()); // Added v5.6.34
 	
 	Rectangle<int> editorRect;
     // http://www.juce.com/forum/topic/applicationcommandmanager-menus-not-active-annoyance#new
@@ -34,7 +34,7 @@ CtrlrEditor::CtrlrEditor (CtrlrProcessor *_ownerFilter, CtrlrManager &_owner)
 
 	owner.getCommandManager().registerAllCommandsForTarget (this);
 	owner.getCommandManager().registerAllCommandsForTarget (JUCEApplication::getInstance());
-	ScopedPointer <XmlElement> xml(XmlDocument::parse(owner.getProperty(Ids::ctrlrKeyboardMapping)).release());
+	std::unique_ptr<XmlElement> xml(XmlDocument::parse(owner.getProperty(Ids::ctrlrKeyboardMapping)));
     
     if (xml)
     {
@@ -164,7 +164,7 @@ CtrlrEditor::CtrlrEditor (CtrlrProcessor *_ownerFilter, CtrlrManager &_owner)
     // Apply the determined LookAndFeel and ColourScheme
     setEditorLookAndFeel(lookAndFeelVersionToApply, colourSchemePropertyToApply);
 
-    menuBar->setLookAndFeel(currentLookAndFeel); // Ensure menuBar uses the current L&F
+    menuBar->setLookAndFeel(currentLookAndFeel.get()); // Ensure menuBar uses the current L&F
 
     lookAndFeelChanged(); // Added v5.6.31. Update LnF for all components
 
@@ -246,7 +246,7 @@ void CtrlrEditor::setEditorLookAndFeel (const String &lookAndFeelDesc, const var
     // 1. Create the new LookAndFeel object based on the description (V1, V2, V3, V4 default)
     // Pass an empty var for colourSchemeProperty to gui::createLookAndFeelFromDescription,
     // as it will only return the base L&F instance type.
-    ScopedPointer<LookAndFeel> newLookAndFeel = gui::createLookAndFeelFromDescription(lookAndFeelDesc, juce::var());
+    std::unique_ptr<LookAndFeel> newLookAndFeel (gui::createLookAndFeelFromDescription(lookAndFeelDesc, juce::var()));
 
     // If a valid LookAndFeel was created, update the current one
     if (newLookAndFeel != nullptr)
@@ -266,11 +266,11 @@ void CtrlrEditor::setEditorLookAndFeel (const String &lookAndFeelDesc, const var
         setLookAndFeel (nullptr);
         menuBar->setLookAndFeel(nullptr);
         
-        currentLookAndFeel = newLookAndFeel; // Transfers ownership from ScopedPointer
-        setLookAndFeel (currentLookAndFeel); // Set the editor's LookAndFeel, which propagates to children
+        currentLookAndFeel = std::move (newLookAndFeel); // Transfers ownership from std::unique_ptr
+        setLookAndFeel (currentLookAndFeel.get()); // Set the editor's LookAndFeel, which propagates to children
 
         // --- THESE ARE THE CRUCIAL LINES FOR THE MENUBAR UPDATE ---
-        menuBar->setLookAndFeel(currentLookAndFeel); // Ensure menuBar also gets the new L&F
+        menuBar->setLookAndFeel(currentLookAndFeel.get()); // Ensure menuBar also gets the new L&F
         menuBar->lookAndFeelChanged();               // Explicitly notify the menu bar that its L&F has changed
         menuBar->repaint();                          // Force a repaint of the menu bar's background
 
@@ -281,7 +281,7 @@ void CtrlrEditor::setEditorLookAndFeel (const String &lookAndFeelDesc, const var
         // This makes sure any subsequently created JUCE components (like dialogs, other windows)
         // will default to *your* currentLookAndFeel instance.
         gui::initLookAndFeelDefaults(*currentLookAndFeel);
-        LookAndFeel::setDefaultLookAndFeel(currentLookAndFeel); 
+        LookAndFeel::setDefaultLookAndFeel(currentLookAndFeel.get()); 
     }
 }
 
@@ -359,7 +359,7 @@ void CtrlrEditor::activeCtrlrChanged()
 
 MenuBarComponent *CtrlrEditor::getMenuBar()
 {
-	return (menuBar);
+	return (menuBar.get());
 }
 
 CtrlrPanel *CtrlrEditor::getActivePanel()

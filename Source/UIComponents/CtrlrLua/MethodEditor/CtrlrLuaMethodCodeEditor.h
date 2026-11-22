@@ -79,7 +79,7 @@ private:
     CtrlrLuaMethodEditor& owner;
 
     // Add the hidden toggle and shared value reference
-    ScopedPointer<ToggleButton> hiddenSearchTabsToggle;
+    std::unique_ptr<ToggleButton> hiddenSearchTabsToggle;
     juce::Value& sharedSearchTabsValue;
 	
     // Add the autocomplete typing feature
@@ -144,9 +144,9 @@ public:
 private:
     bool bSensitive;
     String lookUpString;
-    ScopedPointer<FindPanel> findPanel;
+    std::unique_ptr<FindPanel> findPanel;
     CtrlrLuaMethodCodeEditor& owner;
-    ScopedPointer<GoToPanel> goToPanel;
+    std::unique_ptr<GoToPanel> goToPanel;
     CtrlrLuaDebugger& getDebugger();
     // Remove this from here since it should be in the parent class
     // juce::Value sharedSearchTabsValue;

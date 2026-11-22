@@ -5,7 +5,8 @@
 CtrlrMIDICalculator::CtrlrMIDICalculator (CtrlrManager &_owner)
     : owner(_owner)
 {
-    addAndMakeVisible (hexDisplay = new TextEditor (""));
+    hexDisplay = std::make_unique<TextEditor> ("");
+    addAndMakeVisible (hexDisplay.get());
     hexDisplay->setMultiLine (false);
     hexDisplay->setReturnKeyStartsNewLine (false);
     hexDisplay->setReadOnly (false);
@@ -14,23 +15,26 @@ CtrlrMIDICalculator::CtrlrMIDICalculator (CtrlrManager &_owner)
     hexDisplay->setPopupMenuEnabled (true);
     hexDisplay->setText ("F0 00 01 40 A3 F7");
 
-    addAndMakeVisible (label = new Label ("new label",
-                                          "Hexadecimal"));
+    label = std::make_unique<Label> ("new label",
+                                     "Hexadecimal");
+    addAndMakeVisible (label.get());
     label->setFont (Font (24.00f, Font::plain));
     label->setJustificationType (Justification::centredLeft);
     label->setEditable (false, false, false);
     label->setColour (TextEditor::textColourId, Colours::black);
     label->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (label2 = new Label ("new label",
-                                           "Binary"));
+    label2 = std::make_unique<Label> ("new label",
+                                      "Binary");
+    addAndMakeVisible (label2.get());
     label2->setFont (Font (24.00f, Font::plain));
     label2->setJustificationType (Justification::centredLeft);
     label2->setEditable (false, false, false);
     label2->setColour (TextEditor::textColourId, Colours::black);
     label2->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (binDisplay = new TextEditor (""));
+    binDisplay = std::make_unique<TextEditor> ("");
+    addAndMakeVisible (binDisplay.get());
     binDisplay->setMultiLine (true);
     binDisplay->setReturnKeyStartsNewLine (false);
     binDisplay->setReadOnly (false);
@@ -39,15 +43,17 @@ CtrlrMIDICalculator::CtrlrMIDICalculator (CtrlrManager &_owner)
     binDisplay->setPopupMenuEnabled (true);
     binDisplay->setText ("01100000 01100000");
 
-    addAndMakeVisible (label3 = new Label ("new label",
-                                           "Decimal"));
+    label3 = std::make_unique<Label> ("new label",
+                                      "Decimal");
+    addAndMakeVisible (label3.get());
     label3->setFont (Font (24.00f, Font::plain));
     label3->setJustificationType (Justification::centredLeft);
     label3->setEditable (false, false, false);
     label3->setColour (TextEditor::textColourId, Colours::black);
     label3->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (decDisplay = new TextEditor (""));
+    decDisplay = std::make_unique<TextEditor> ("");
+    addAndMakeVisible (decDisplay.get());
     decDisplay->setMultiLine (false);
     decDisplay->setReturnKeyStartsNewLine (false);
     decDisplay->setReadOnly (false);
@@ -56,7 +62,8 @@ CtrlrMIDICalculator::CtrlrMIDICalculator (CtrlrManager &_owner)
     decDisplay->setPopupMenuEnabled (true);
     decDisplay->setText ("");
 
-    addAndMakeVisible (hexFormat = new ComboBox (""));
+    hexFormat = std::make_unique<ComboBox> ("");
+    addAndMakeVisible (hexFormat.get());
     hexFormat->setEditableText (false);
     hexFormat->setJustificationType (Justification::centredLeft);
     hexFormat->setTextWhenNothingSelected ("Plain text");
@@ -66,7 +73,8 @@ CtrlrMIDICalculator::CtrlrMIDICalculator (CtrlrManager &_owner)
     hexFormat->addItem ("HEX string format", 3);
     hexFormat->addListener (this);
 
-    addAndMakeVisible (bit16Switch = new ToggleButton (""));
+    bit16Switch = std::make_unique<ToggleButton> ("");
+    addAndMakeVisible (bit16Switch.get());
     bit16Switch->setButtonText ("16bit");
     bit16Switch->addListener (this);
 
@@ -119,7 +127,7 @@ void CtrlrMIDICalculator::resized()
 
 void CtrlrMIDICalculator::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
 {
-    if (comboBoxThatHasChanged == hexFormat)
+    if (comboBoxThatHasChanged == hexFormat.get())
     {
 		formatData (binDisplay->getText(), false, false, true);
     }
@@ -127,7 +135,7 @@ void CtrlrMIDICalculator::comboBoxChanged (ComboBox* comboBoxThatHasChanged)
 
 void CtrlrMIDICalculator::buttonClicked (Button* buttonThatWasClicked)
 {
-    if (buttonThatWasClicked == bit16Switch)
+    if (buttonThatWasClicked == bit16Switch.get())
     {
 		formatData (hexDisplay->getText(), true, false, false);
     }
@@ -135,17 +143,17 @@ void CtrlrMIDICalculator::buttonClicked (Button* buttonThatWasClicked)
 
 void CtrlrMIDICalculator::textEditorTextChanged (TextEditor &editor)
 {
-	if (&editor == decDisplay)
+	if (&editor == decDisplay.get())
 	{
 		formatData (editor.getText(), false, true, false);
 	}
 
-	if (&editor == binDisplay)
+	if (&editor == binDisplay.get())
 	{
 		formatData (editor.getText(), false, false, true);
 	}
 
-	if (&editor == hexDisplay)
+	if (&editor == hexDisplay.get())
 	{
 		formatData (editor.getText(), true, false, false);
 	}

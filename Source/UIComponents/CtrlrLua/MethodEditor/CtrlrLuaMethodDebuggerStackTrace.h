@@ -74,7 +74,7 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    ScopedPointer<TableListBox> stackTraceList;
+    std::unique_ptr<TableListBox> stackTraceList;
 
 
     //==============================================================================

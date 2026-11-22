@@ -35,61 +35,73 @@ CtrlrMIDISettingsRouting::CtrlrMIDISettingsRouting (CtrlrPanel &_owner)
     //[Constructor_pre] You can add your own custom stuff here..
     //[/Constructor_pre]
 
-    addAndMakeVisible (groupComponent = new GroupComponent ("new group",
-                                                            TRANS("THRU")));
+    groupComponent = std::make_unique<GroupComponent> ("new group",
+                                                       TRANS("THRU"));
+    addAndMakeVisible (groupComponent.get());
 
-    addAndMakeVisible (inDev2OutDev = new ToggleButton (""));
+    inDev2OutDev = std::make_unique<ToggleButton> ("");
+    addAndMakeVisible (inDev2OutDev.get());
     inDev2OutDev->setTooltip (TRANS("All messages that are received on the MIDI Input device will be copied to the selected output MIDI Device"));
     inDev2OutDev->setButtonText (TRANS("IN Device  -> OUT Device"));
     inDev2OutDev->addListener (this);
 
-    addAndMakeVisible (ctrlDev2OutDev = new ToggleButton (""));
+    ctrlDev2OutDev = std::make_unique<ToggleButton> ("");
+    addAndMakeVisible (ctrlDev2OutDev.get());
     ctrlDev2OutDev->setTooltip (TRANS("All messages that are received on the MIDI Controller device will be copied to the selected output MIDI Device"));
     ctrlDev2OutDev->setButtonText (TRANS("CTRL Device -> OUT Device"));
     ctrlDev2OutDev->addListener (this);
 
-    addAndMakeVisible (host2OutDev = new ToggleButton (""));
+    host2OutDev = std::make_unique<ToggleButton> ("");
+    addAndMakeVisible (host2OutDev.get());
     host2OutDev->setTooltip (TRANS("All messages received from the plugin HOST, will be copied to the MIDI Output device"));
     host2OutDev->setButtonText (TRANS("HOST -> OUT Device"));
     host2OutDev->addListener (this);
 
-    addAndMakeVisible (host2Host = new ToggleButton (""));
+    host2Host = std::make_unique<ToggleButton> ("");
+    addAndMakeVisible (host2Host.get());
     host2Host->setTooltip (TRANS("All messages received from the plugin HOST, will be copied back to the plugin HOST"));
     host2Host->setButtonText (TRANS("HOST -> HOST"));
     host2Host->addListener (this);
 
-    addAndMakeVisible (inDev2OutDevCh = new ToggleButton ("new toggle button"));
+    inDev2OutDevCh = std::make_unique<ToggleButton> ("new toggle button");
+    addAndMakeVisible (inDev2OutDevCh.get());
     inDev2OutDevCh->setButtonText ("");
     inDev2OutDevCh->addListener (this);
 
-    addAndMakeVisible (ctrlDev2OutDevCh = new ToggleButton ("new toggle button"));
+    ctrlDev2OutDevCh = std::make_unique<ToggleButton> ("new toggle button");
+    addAndMakeVisible (ctrlDev2OutDevCh.get());
     ctrlDev2OutDevCh->setButtonText ("");
     ctrlDev2OutDevCh->addListener (this);
 
-    addAndMakeVisible (host2OutDevCh = new ToggleButton ("new toggle button"));
+    host2OutDevCh = std::make_unique<ToggleButton> ("new toggle button");
+    addAndMakeVisible (host2OutDevCh.get());
     host2OutDevCh->setButtonText ("");
     host2OutDevCh->addListener (this);
 
-    addAndMakeVisible (host2HostCh = new ToggleButton ("new toggle button"));
+    host2HostCh = std::make_unique<ToggleButton> ("new toggle button");
+    addAndMakeVisible (host2HostCh.get());
     host2HostCh->setButtonText ("");
     host2HostCh->addListener (this);
 
-    addAndMakeVisible (label = new Label ("new label",
-                                          TRANS("Change\n"
-                                          "MIDI\n"
-                                          "Channel")));
+    label = std::make_unique<Label> ("new label",
+                                     TRANS("Change\n"
+                                     "MIDI\n"
+                                     "Channel"));
+    addAndMakeVisible (label.get());
     label->setFont (Font (12.00f, Font::plain));
     label->setJustificationType (Justification::centred);
     label->setEditable (false, false, false);
     label->setColour (Label::textColourId, findColour(Label::textColourId)); // Colours::black
     label->setColour (Label::backgroundColourId, Colour (0x00000000));
 
-    addAndMakeVisible (inDev2Host = new ToggleButton (""));
+    inDev2Host = std::make_unique<ToggleButton> ("");
+    addAndMakeVisible (inDev2Host.get());
     inDev2Host->setTooltip (TRANS("All messages that are received on the MIDI Input device will be copied to the plugin HOST"));
     inDev2Host->setButtonText (TRANS("In Device -> Host"));
     inDev2Host->addListener (this);
 
-    addAndMakeVisible (inDev2HostCh = new ToggleButton ("new toggle button"));
+    inDev2HostCh = std::make_unique<ToggleButton> ("new toggle button");
+    addAndMakeVisible (inDev2HostCh.get());
     inDev2HostCh->setButtonText ("");
     inDev2HostCh->addListener (this);
 
@@ -174,61 +186,61 @@ void CtrlrMIDISettingsRouting::buttonClicked (Button* buttonThatWasClicked)
     //[UserbuttonClicked_Pre]
     //[/UserbuttonClicked_Pre]
 
-    if (buttonThatWasClicked == inDev2OutDev)
+    if (buttonThatWasClicked == inDev2OutDev.get())
     {
         //[UserButtonCode_inDev2OutDev] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiThruD2D, inDev2OutDev->getToggleState());
         //[/UserButtonCode_inDev2OutDev]
     }
-    else if (buttonThatWasClicked == ctrlDev2OutDev)
+    else if (buttonThatWasClicked == ctrlDev2OutDev.get())
     {
         //[UserButtonCode_ctrlDev2OutDev] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiThruC2D, ctrlDev2OutDev->getToggleState());
         //[/UserButtonCode_ctrlDev2OutDev]
     }
-    else if (buttonThatWasClicked == host2OutDev)
+    else if (buttonThatWasClicked == host2OutDev.get())
     {
         //[UserButtonCode_host2OutDev] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiThruH2D, host2OutDev->getToggleState());
         //[/UserButtonCode_host2OutDev]
     }
-    else if (buttonThatWasClicked == host2Host)
+    else if (buttonThatWasClicked == host2Host.get())
     {
         //[UserButtonCode_host2Host] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiThruH2H, host2Host->getToggleState());
         //[/UserButtonCode_host2Host]
     }
-    else if (buttonThatWasClicked == inDev2OutDevCh)
+    else if (buttonThatWasClicked == inDev2OutDevCh.get())
     {
         //[UserButtonCode_inDev2OutDevCh] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiThruD2DChannelize, inDev2OutDevCh->getToggleState());
         //[/UserButtonCode_inDev2OutDevCh]
     }
-    else if (buttonThatWasClicked == ctrlDev2OutDevCh)
+    else if (buttonThatWasClicked == ctrlDev2OutDevCh.get())
     {
         //[UserButtonCode_ctrlDev2OutDevCh] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiThruC2DChannelize, ctrlDev2OutDevCh->getToggleState());
         //[/UserButtonCode_ctrlDev2OutDevCh]
     }
-    else if (buttonThatWasClicked == host2OutDevCh)
+    else if (buttonThatWasClicked == host2OutDevCh.get())
     {
         //[UserButtonCode_host2OutDevCh] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiThruH2DChannelize, host2OutDevCh->getToggleState());
         //[/UserButtonCode_host2OutDevCh]
     }
-    else if (buttonThatWasClicked == host2HostCh)
+    else if (buttonThatWasClicked == host2HostCh.get())
     {
         //[UserButtonCode_host2HostCh] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiThruH2HChannelize, host2HostCh->getToggleState());
         //[/UserButtonCode_host2HostCh]
     }
-    else if (buttonThatWasClicked == inDev2Host)
+    else if (buttonThatWasClicked == inDev2Host.get())
     {
         //[UserButtonCode_inDev2Host] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiThruD2H, inDev2Host->getToggleState());
         //[/UserButtonCode_inDev2Host]
     }
-    else if (buttonThatWasClicked == inDev2HostCh)
+    else if (buttonThatWasClicked == inDev2HostCh.get())
     {
         //[UserButtonCode_inDev2HostCh] -- add your button handler code here..
         owner.setProperty(Ids::panelMidiThruD2HChannelize, inDev2HostCh->getToggleState());

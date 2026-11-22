@@ -59,18 +59,18 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    ScopedPointer<GroupComponent> groupComponent;
-    ScopedPointer<ToggleButton> inDev2OutDev;
-    ScopedPointer<ToggleButton> ctrlDev2OutDev;
-    ScopedPointer<ToggleButton> host2OutDev;
-    ScopedPointer<ToggleButton> host2Host;
-    ScopedPointer<ToggleButton> inDev2OutDevCh;
-    ScopedPointer<ToggleButton> ctrlDev2OutDevCh;
-    ScopedPointer<ToggleButton> host2OutDevCh;
-    ScopedPointer<ToggleButton> host2HostCh;
-    ScopedPointer<Label> label;
-    ScopedPointer<ToggleButton> inDev2Host;
-    ScopedPointer<ToggleButton> inDev2HostCh;
+    std::unique_ptr<GroupComponent> groupComponent;
+    std::unique_ptr<ToggleButton> inDev2OutDev;
+    std::unique_ptr<ToggleButton> ctrlDev2OutDev;
+    std::unique_ptr<ToggleButton> host2OutDev;
+    std::unique_ptr<ToggleButton> host2Host;
+    std::unique_ptr<ToggleButton> inDev2OutDevCh;
+    std::unique_ptr<ToggleButton> ctrlDev2OutDevCh;
+    std::unique_ptr<ToggleButton> host2OutDevCh;
+    std::unique_ptr<ToggleButton> host2HostCh;
+    std::unique_ptr<Label> label;
+    std::unique_ptr<ToggleButton> inDev2Host;
+    std::unique_ptr<ToggleButton> inDev2HostCh;
 
 
     //==============================================================================

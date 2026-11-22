@@ -19,7 +19,7 @@ CtrlrCombo::CtrlrCombo (CtrlrModulator &owner)
       isUpdating (false),
       isSearching (false)
 {
-	valueMap = new CtrlrValueMap();
+	valueMap = std::make_unique<CtrlrValueMap>();
     
     // 1. Attach our fuzzy listener (The code we added earlier)
     addAndMakeVisible (ctrlrCombo = new ComboBox (L"ctrlrCombo"));

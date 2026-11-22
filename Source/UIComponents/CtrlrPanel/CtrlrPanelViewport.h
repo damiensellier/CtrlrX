@@ -16,8 +16,8 @@ class CtrlrMagnifierComponent  : public Component
 	public:
 		CtrlrMagnifierComponent (Component* content_) : scaleFactor (1.0), content (content_)
 		{
-			addAndMakeVisible (content);
-			childBoundsChanged (content);
+			addAndMakeVisible (content.get());
+			childBoundsChanged (content.get());
 		}
 
 		void childBoundsChanged (Component* child)
@@ -37,13 +37,13 @@ class CtrlrMagnifierComponent  : public Component
 		void setViewedComponent (Component* content_)
 		{
 			removeAllChildren();
-			addAndMakeVisible (content);
-			childBoundsChanged (content);
+			addAndMakeVisible (content.get());
+			childBoundsChanged (content.get());
 		}
 
 		void transform()
 		{
-			const Rectangle<int> childArea (getLocalArea (content, content->getLocalBounds()));
+			const Rectangle<int> childArea (getLocalArea (content.get(), content->getLocalBounds()));
 			content->setTransform (AffineTransform::scale ((float) scaleFactor, (float) scaleFactor));
 		}
 
@@ -51,7 +51,7 @@ class CtrlrMagnifierComponent  : public Component
 
 	private:
 		double scaleFactor;
-		ScopedPointer<Component> content;
+		std::unique_ptr<Component> content;
 };
 
 class CtrlrViewportImpl : public CtrlrViewport, public KeyListener

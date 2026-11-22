@@ -52,7 +52,7 @@ public:
 
 private:
 
-	ScopedPointer <CtrlrValueMap> valueMap;
+	std::unique_ptr<CtrlrValueMap> valueMap;
 	bool updatingLookAndFeel = false;
 
     TextButton* ctrlrButton;
