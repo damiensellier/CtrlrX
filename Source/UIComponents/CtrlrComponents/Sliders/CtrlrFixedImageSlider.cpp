@@ -10,8 +10,8 @@ CtrlrFixedImageSlider::CtrlrFixedImageSlider (CtrlrModulator &owner)
     : CtrlrComponent(owner),
       ctrlrSlider (0)
 {
-    valueMap = new CtrlrValueMap();
-    lf = new CtrlrImageSliderLF(*this);
+    valueMap = std::make_unique<CtrlrValueMap>();
+    lf = std::make_unique<CtrlrImageSliderLF>(*this);
     
     /** Tooltip properties */
     setColour (TooltipWindow::textColourId, findColour(Label::textColourId));
@@ -23,7 +23,7 @@ CtrlrFixedImageSlider::CtrlrFixedImageSlider (CtrlrModulator &owner)
     ctrlrSlider->setName ("ctrlrSlider");
 
     ctrlrSlider->addListener (this);
-    ctrlrSlider->setLookAndFeel(lf); // V5.6.28 and before was LookAndFeel_V2, updated to V4
+    ctrlrSlider->setLookAndFeel(lf.get()); // V5.6.28 and before was LookAndFeel_V2, updated to V4
     componentTree.addListener (this);
         
     setProperty (Ids::uiSliderMin, 0);
@@ -236,7 +236,7 @@ void CtrlrFixedImageSlider::valueTreePropertyChanged (ValueTree &treeWhoseProper
         lf->setImage (filmStripImage, (int)getProperty(Ids::resourceImageWidth), (int)getProperty(Ids::resourceImageHeight));
         lf->setPaintMode ((RectanglePlacement)(int)getProperty(Ids::resourceImagePaintMode));
         ctrlrSlider->setLookAndFeel(0);
-        ctrlrSlider->setLookAndFeel(lf);
+        ctrlrSlider->setLookAndFeel(lf.get());
     }
 
     else if (property == Ids::uiSliderVelocityMode

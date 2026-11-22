@@ -10,7 +10,7 @@ CtrlrButton::CtrlrButton (CtrlrModulator &owner)
     : CtrlrComponent(owner),
       ctrlrButton (0)
 {
-	valueMap = new CtrlrValueMap();
+	valueMap = std::make_unique<CtrlrValueMap>();
     addAndMakeVisible (ctrlrButton = new TextButton ("ctrlrButton"));
     ctrlrButton->addListener (this);
     

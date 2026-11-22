@@ -91,13 +91,13 @@ CtrlrFileListBox::CtrlrFileListBox (CtrlrModulator &owner)
 	while (folder.getParentDirectory() != folder)
 		folder = folder.getParentDirectory();
 
-	directoryContentsList = new DirectoryContentsList (0, timeSliceThread);
+	directoryContentsList = std::make_unique<DirectoryContentsList> (nullptr, timeSliceThread);
 	directoryContentsList->setDirectory (folder, true, true);
 	timeSliceThread.startThread (juce::Thread::Priority::normal);
 
-	treeComponent = new CtrlrFileTreeComponent( *this, *directoryContentsList );
+	treeComponent = std::make_unique<CtrlrFileTreeComponent>( *this, *directoryContentsList );
 	treeComponent->addListener (this);
-	addAndMakeVisible (treeComponent);
+	addAndMakeVisible (treeComponent.get());
 
     setProperty (Ids::uiFileListBoxBgColour, (String)findColour(TextButton::buttonColourId).withAlpha(0.0f).toString()); // "0xffffffff"
 	setProperty (Ids::uiFileListLineColour, (String)findColour(TextButton::textColourOffId).toString()); // "0xff000000"
@@ -139,8 +139,8 @@ CtrlrFileListBox::~CtrlrFileListBox()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
 	treeComponent->removeListener (this);
-	delete treeComponent.release();
-	delete directoryContentsList.release();
+	treeComponent.reset();
+	directoryContentsList.reset();
     //[/Destructor_pre]
 
 

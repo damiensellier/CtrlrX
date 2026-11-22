@@ -23,7 +23,7 @@ class CtrlrProgressBar : public CtrlrComponent
         void setComponentText (const String &componentText);
         void customLookAndFeelChanged(LookAndFeelBase *customLookAndFeel = nullptr) {}
     private:
-        ScopedPointer <ProgressBar> bar;
+        std::unique_ptr<ProgressBar> bar;
         String textToDisplay;
         double progress;
 };

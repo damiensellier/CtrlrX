@@ -33,8 +33,9 @@ CtrlrGroup::CtrlrGroup (CtrlrModulator &owner)
     : CtrlrComponent(owner), content(*this)
 	// , label (0) // Updated v5.6.34. Thanks to @dnaldoog
 {
-    addAndMakeVisible (label = new Label ("new label",
-                                          "Group Text"));
+    label = std::make_unique<Label> ("new label",
+                                     "Group Text");
+    addAndMakeVisible (label.get());
     label->setFont (Font (14.0000f, Font::plain)); // Was bold
     label->setJustificationType (Justification::centred);
     label->setEditable (false, false, false);

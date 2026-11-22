@@ -63,7 +63,7 @@ class CtrlrWaveform  : public CtrlrComponent, public FileDragAndDropTarget
 		WeakReference <CtrlrLuaMethod> thumbnailChangedCbk, sourceChangedCbk, fileDroppedCbk;
 		File currentFile;
 		double currentSampleRate;
-		ScopedPointer <AudioThumbnail> audioThumbnail;
+		std::unique_ptr<AudioThumbnail> audioThumbnail;
 		AudioSampleBuffer audioBufferCopy;
 		double drawSecondsStart, drawSecondsEnd; double drawVerticalZoom;
 		StringPairArray metadataForAudioFiles;

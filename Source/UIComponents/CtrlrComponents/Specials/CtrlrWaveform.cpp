@@ -14,7 +14,7 @@ CtrlrWaveform::CtrlrWaveform (CtrlrModulator &owner)
 	  audioBufferCopy(1,0),
 	  qualityForAudioFiles(0)
 {
-	audioThumbnail			= new AudioThumbnail (1, owner.getOwnerPanel().getCtrlrManagerOwner().getAudioFormatManager(), owner.getOwnerPanel().getCtrlrManagerOwner().getAudioThumbnailCache());
+	audioThumbnail = std::make_unique<AudioThumbnail> (1, owner.getOwnerPanel().getCtrlrManagerOwner().getAudioFormatManager(), owner.getOwnerPanel().getCtrlrManagerOwner().getAudioThumbnailCache());
 	audioThumbnail->addChangeListener (this);
 
 	setProperty (Ids::uiWaveformColour, "0xff000000");
@@ -145,7 +145,7 @@ void CtrlrWaveform::handlePopupMenu (const int popupMenuItem)
 			if (format != nullptr)
 			{
 				{
-					ScopedPointer <AudioFormatWriter> writer (format->createWriterFor (outputFile.createOutputStream().get(),
+					std::unique_ptr<AudioFormatWriter> writer (format->createWriterFor (outputFile.createOutputStream().get(),
 																						currentSampleRate,
 																						audioThumbnail->getNumChannels(),
 																						32,
@@ -186,9 +186,9 @@ void CtrlrWaveform::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasCha
 	else if (property == Ids::uiWaveformSourceSamplesPerThumbnailSample)
 	{
 		if (audioThumbnail)
-			delete audioThumbnail.release();
+			audioThumbnail.reset();
 
-		audioThumbnail	= new AudioThumbnail (getProperty(property), owner.getOwnerPanel().getCtrlrManagerOwner().getAudioFormatManager(),
+		audioThumbnail = std::make_unique<AudioThumbnail> (getProperty(property), owner.getOwnerPanel().getCtrlrManagerOwner().getAudioFormatManager(),
 			owner.getOwnerPanel().getCtrlrManagerOwner().getAudioThumbnailCache());
 		audioThumbnail->addChangeListener (this);
 		audioThumbnail->clear();
@@ -243,7 +243,7 @@ void CtrlrWaveform::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasCha
 
 void CtrlrWaveform::changeListenerCallback (ChangeBroadcaster* source)
 {
-	if (source == audioThumbnail)
+	if (source == audioThumbnail.get())
 	{
 		if (thumbnailChangedCbk && !thumbnailChangedCbk.wasObjectDeleted())
 		{

@@ -145,8 +145,8 @@ class CtrlrComponent : public Component,
         Label componentNameLabel;
         WeakReference<CtrlrComponent>::Master masterReference;
         friend class WeakReference<CtrlrComponent>;
-        ScopedPointer <GlowEffect> glowEffect;
-        ScopedPointer <DropShadowEffect> shadowEffect;
+        std::unique_ptr<GlowEffect> glowEffect;
+        std::unique_ptr<DropShadowEffect> shadowEffect;
         WeakReference <CtrlrLuaMethod> mouseMoveCbk, mouseDownCbk, mouseUpCbk, mouseDragCbk, mouseDoubleClickCbk, mouseEnterCbk, mouseExitCbk;
     
 

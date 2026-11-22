@@ -4,7 +4,8 @@
 CtrlrProgressBar::CtrlrProgressBar(CtrlrModulator &owner)
     : CtrlrComponent(owner), progress(-1)
 {
-    addAndMakeVisible (bar = new ProgressBar(progress));
+    bar = std::make_unique<ProgressBar>(progress);
+    addAndMakeVisible (bar.get());
 
     owner.setProperty (Ids::modulatorIsStatic, true);
 	owner.setProperty (Ids::modulatorVstExported, false);

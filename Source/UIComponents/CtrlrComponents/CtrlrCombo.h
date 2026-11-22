@@ -174,7 +174,7 @@ private:
     
     Array <var> values;
     CtrlrComboLF lf;
-    ScopedPointer<CtrlrValueMap> valueMap;
+    std::unique_ptr<CtrlrValueMap> valueMap;
     bool isSearching = false;
     bool isUpdating = false;
     String lastSearchText;

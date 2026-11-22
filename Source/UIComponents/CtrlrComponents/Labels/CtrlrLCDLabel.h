@@ -50,7 +50,7 @@ private:
 
     //==============================================================================
     // Label* ctrlrLabel;
-	ScopedPointer<Label> ctrlrLabel; // Updated v5.6.34. Thanks to @dnaldoog
+	std::unique_ptr<Label> ctrlrLabel; // Updated v5.6.34. Thanks to @dnaldoog
 
     //==============================================================================
     // (prevent copy constructor and operator= being generated..)
