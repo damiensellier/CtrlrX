@@ -63,29 +63,29 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    ScopedPointer<ComboBox> inputDevices;
-    ScopedPointer<ComboBox> controllerDevices;
-    ScopedPointer<ComboBox> outputDevices;
-    ScopedPointer<Label> label;
-    ScopedPointer<Label> label2;
-    ScopedPointer<Label> label3;
-    ScopedPointer<ComboBox> oscProtocol;
-    ScopedPointer<Label> label4;
-    ScopedPointer<Label> oscPort;
-    ScopedPointer<Label> label5;
-    ScopedPointer<Label> label6;
-    ScopedPointer<ToggleButton> oscEnabled;
-    ScopedPointer<Label> label7;
-    ScopedPointer<ComboBox> inputChannel;
-    ScopedPointer<ComboBox> controllerChannel;
-    ScopedPointer<ComboBox> outputChannel;
-    ScopedPointer<Label> label8;
-    ScopedPointer<ComboBox> pluginOutputChannel;
-    ScopedPointer<ToggleButton> pluginOutput;
-    ScopedPointer<Label> label9;
-    ScopedPointer<ToggleButton> pluginInput;
-    ScopedPointer<ToggleButton> pluginInputToHostComp;
-    ScopedPointer<ComboBox> pluginInputChannel;
+    std::unique_ptr<ComboBox> inputDevices;
+    std::unique_ptr<ComboBox> controllerDevices;
+    std::unique_ptr<ComboBox> outputDevices;
+    std::unique_ptr<Label> label;
+    std::unique_ptr<Label> label2;
+    std::unique_ptr<Label> label3;
+    std::unique_ptr<ComboBox> oscProtocol;
+    std::unique_ptr<Label> label4;
+    std::unique_ptr<Label> oscPort;
+    std::unique_ptr<Label> label5;
+    std::unique_ptr<Label> label6;
+    std::unique_ptr<ToggleButton> oscEnabled;
+    std::unique_ptr<Label> label7;
+    std::unique_ptr<ComboBox> inputChannel;
+    std::unique_ptr<ComboBox> controllerChannel;
+    std::unique_ptr<ComboBox> outputChannel;
+    std::unique_ptr<Label> label8;
+    std::unique_ptr<ComboBox> pluginOutputChannel;
+    std::unique_ptr<ToggleButton> pluginOutput;
+    std::unique_ptr<Label> label9;
+    std::unique_ptr<ToggleButton> pluginInput;
+    std::unique_ptr<ToggleButton> pluginInputToHostComp;
+    std::unique_ptr<ComboBox> pluginInputChannel;
 
 
     //==============================================================================

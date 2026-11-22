@@ -58,7 +58,7 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    ScopedPointer<TabbedComponent> midiTabs;
+    std::unique_ptr<TabbedComponent> midiTabs;
 
 
     //==============================================================================

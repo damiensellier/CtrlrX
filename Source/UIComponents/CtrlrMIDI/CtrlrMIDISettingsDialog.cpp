@@ -39,7 +39,8 @@ CtrlrMIDISettingsDialog::CtrlrMIDISettingsDialog (CtrlrPanel &_owner)
     //[Constructor_pre] You can add your own custom stuff here..
     //[/Constructor_pre]
 
-    addAndMakeVisible (midiTabs = new TabbedComponent (TabbedButtonBar::TabsAtTop));
+    midiTabs = std::make_unique<TabbedComponent> (TabbedButtonBar::TabsAtTop);
+    addAndMakeVisible (midiTabs.get());
     midiTabs->setTabBarDepth (30);
     midiTabs->addTab (TRANS("Devices"), Colour (findColour(DocumentWindow::backgroundColourId)), new CtrlrMIDISettingsDevices (owner), true); // Colour (0xa2d2d2d2)
     midiTabs->addTab (TRANS("Routing"), Colour (findColour(DocumentWindow::backgroundColourId)), new CtrlrMIDISettingsRouting (owner), true); // Colour (0xa2d2d2d2)
