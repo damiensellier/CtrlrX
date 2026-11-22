@@ -508,7 +508,7 @@ CtrlrPanelResourceType CtrlrPanelResourceManager::guessType(const File &resource
 	}
 
 	// Audio ?
-	ScopedPointer <AudioFormatReader> audio(owner.getCtrlrManagerOwner().getAudioFormatManager().createReaderFor(resourceFile));
+	std::unique_ptr<AudioFormatReader> audio(owner.getCtrlrManagerOwner().getAudioFormatManager().createReaderFor(resourceFile));
 
 	if (audio != nullptr)
 	{
@@ -522,7 +522,7 @@ CtrlrPanelResourceType CtrlrPanelResourceManager::guessType(const File &resource
 	}
 
 	// XML ?
-	ScopedPointer <XmlElement> xml (XmlDocument::parse (resourceFile).release());
+	std::unique_ptr<XmlElement> xml(XmlDocument::parse(resourceFile));
 
 	if (xml != nullptr)
 	{

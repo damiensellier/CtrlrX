@@ -486,7 +486,7 @@ const ValueTree CtrlrPanel::openBinPanel(const File &panelFile)
 
 	if (panelFile.hasFileExtension(".bpanelz"))
 	{
-		ScopedPointer <FileInputStream> fileInputStream (panelFile.createInputStream().release());
+		std::unique_ptr<FileInputStream> fileInputStream(panelFile.createInputStream());
 
 		if (fileInputStream)
 		{
@@ -496,7 +496,7 @@ const ValueTree CtrlrPanel::openBinPanel(const File &panelFile)
 	}
 	else if (panelFile.hasFileExtension(".bpanel"))
 	{
-		ScopedPointer <FileInputStream> fileInputStream(panelFile.createInputStream().release());
+		std::unique_ptr<FileInputStream> fileInputStream(panelFile.createInputStream());
 		if (fileInputStream)
 		{
 			return (ValueTree::readFromStream (*fileInputStream));
@@ -536,10 +536,10 @@ const ValueTree CtrlrPanel::openXmlPanel(const File &panelFile)
 
 	if (panelFile.hasFileExtension("panelz"))
 	{
-		ScopedPointer <FileInputStream> fz(panelFile.createInputStream().release());
+		std::unique_ptr<FileInputStream> fz(panelFile.createInputStream());
 		if (fz)
 		{
-			GZIPDecompressorInputStream gzInput (fz, false);
+			GZIPDecompressorInputStream gzInput (fz.get(), false);
 			xmlData = gzInput.readEntireStreamAsString();
 		}
 		else
@@ -547,7 +547,7 @@ const ValueTree CtrlrPanel::openXmlPanel(const File &panelFile)
 			_ERR("CtrlrPanel::openXmlPanel can't create input stream for file: " + panelFile.getFullPathName());
 		}
 
-		ScopedPointer <XmlElement> xml(XmlDocument::parse (xmlData).release());
+		std::unique_ptr<XmlElement> xml(XmlDocument::parse(xmlData));
 
 		if (xml)
 		{
@@ -560,7 +560,7 @@ const ValueTree CtrlrPanel::openXmlPanel(const File &panelFile)
 	}
 	else if (panelFile.hasFileExtension("panel"))
 	{
-		ScopedPointer <XmlElement> xml(XmlDocument::parse (panelFile).release());
+		std::unique_ptr<XmlElement> xml(XmlDocument::parse(panelFile));
 		if (xml)
 		{
 			return (ValueTree::fromXml (*xml));
@@ -647,7 +647,7 @@ void CtrlrPanel::writePanelXml(OutputStream &outputStream, CtrlrPanel *panel, co
 
 	panel->sync();
 
-	ScopedPointer <XmlElement> panelXml (panel->getPanelTree().createXml().release());
+	std::unique_ptr<XmlElement> panelXml(panel->getPanelTree().createXml());
 
 	if (compressPanel && panelXml)
 	{
