@@ -59,7 +59,7 @@ CtrlrProcessor::CtrlrProcessor() :
         ctrlrLog                = new CtrlrLog(overridesTree.getProperty (Ids::ctrlrLogToFile));
     #endif
     
-	ctrlrManager			= new CtrlrManager(this, *ctrlrLog);
+	ctrlrManager			= std::make_unique<CtrlrManager>(this, *ctrlrLog);
 
 	if (!ctrlrManager->initEmbeddedInstance())
 	{
@@ -112,12 +112,12 @@ CtrlrProcessor::~CtrlrProcessor() // Updated v5.6.34. Prevents AAX from crashing
     #if JucePlugin_Build_AAX
         // For JUCE_AAX builds:
         // We ensure raw pointers are nullified without deletion to avoid crashes during scan/removal.
-        // ScopedPointer will still automatically delete its content (ctrlrManager) when the CtrlrProcessor object is destroyed.
+        // std::unique_ptr will still automatically delete its content (ctrlrManager) when the CtrlrProcessor object is destroyed.
         ctrlrLog = nullptr;
     #else
         // For all plugin formats *EXCEPT* AAX:
         // Perform explicit deletion for the raw pointer (ctrlrLog).
-        // ScopedPointer (ctrlrManager) will handle its own deletion automatically.
+        // std::unique_ptr (ctrlrManager) will handle its own deletion automatically.
         if (ctrlrLog != nullptr)
         {
             delete ctrlrLog;
