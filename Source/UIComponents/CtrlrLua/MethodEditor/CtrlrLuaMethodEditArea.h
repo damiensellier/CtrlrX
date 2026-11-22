@@ -87,8 +87,8 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    ScopedPointer<TabbedComponent> lowerTabs;
-    ScopedPointer<CtrlrLuaMethodEditorTabs> upperTabs;
+    std::unique_ptr<TabbedComponent> lowerTabs;
+    std::unique_ptr<CtrlrLuaMethodEditorTabs> upperTabs;
 
 
     //==============================================================================

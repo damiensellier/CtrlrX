@@ -228,9 +228,9 @@ CtrlrLuaMethodCodeEditor::CtrlrLuaMethodCodeEditor(CtrlrLuaMethodEditor& _owner,
     addChildComponent(suggestionPopup.get());
 
     // 3. Search Tabs Logic
-    hiddenSearchTabsToggle = new ToggleButton("Hidden Search Tabs");
+    hiddenSearchTabsToggle = std::make_unique<ToggleButton>("Hidden Search Tabs");
     hiddenSearchTabsToggle->setVisible(false);
-    addAndMakeVisible(hiddenSearchTabsToggle);
+    addAndMakeVisible(hiddenSearchTabsToggle.get());
 
     // Connect the hidden toggle to the shared value
     hiddenSearchTabsToggle->getToggleStateValue().referTo(SharedValues::getSearchTabsValue());
@@ -1351,21 +1351,21 @@ public:
 
     void addReplaceComponents()
     {
-        replaceEditor = new TextEditor();
+        replaceEditor = std::make_unique<TextEditor>();
         replaceEditor->setColour(CaretComponent::caretColourId, Colours::black);
         addAndMakeVisible(*replaceEditor);
 
-        replaceLabel = new Label();
+        replaceLabel = std::make_unique<Label>();
         replaceLabel->setText("Replace:", dontSendNotification);
         replaceLabel->setFont(Font(13.00f, Font::plain));
         replaceLabel->setColour(Label::textColourId, Colours::white);
-        replaceLabel->attachToComponent(replaceEditor, true);
+        replaceLabel->attachToComponent(replaceEditor.get(), true);
 
-        replaceButton = new TextButton(">", "Replace Next");
+        replaceButton = std::make_unique<TextButton>(">", "Replace Next");
         replaceButton->addListener(this);
         addAndMakeVisible(*replaceButton);
 
-        replaceAllButton = new TextButton("A", "Replace all in current");
+        replaceAllButton = std::make_unique<TextButton>("A", "Replace all in current");
         replaceAllButton->addListener(this);
         addAndMakeVisible(*replaceAllButton);
 
@@ -1459,11 +1459,11 @@ public:
             {
                 ed->findNext(false, false);
             }
-            else if (button == replaceButton)
+            else if (button == replaceButton.get())
             {
                 ed->replaceNextMatch(editor.getText(), replaceEditor->getText(), caseButton.getToggleState());
             }
-            else if (button == replaceAllButton)
+            else if (button == replaceAllButton.get())
             {
                 ed->replaceAllMatches(editor.getText(), replaceEditor->getText(), caseButton.getToggleState());
             }
@@ -1503,7 +1503,7 @@ public:
         {
             lookInSearch();
         }
-        else if (&textEditor == replaceEditor)
+        else if (&textEditor == replaceEditor.get())
         {
             if (GenericCodeEditorComponent* ed = getOwner())
             {
@@ -1562,9 +1562,9 @@ public:
     ArrowButton searchButton;
     ComboBox    lookInComboBox, searchInComboBox;
     // For replace
-    ScopedPointer<TextEditor> replaceEditor;
-    ScopedPointer<Label> replaceLabel;
-    ScopedPointer<TextButton> replaceButton, replaceAllButton;
+    std::unique_ptr<TextEditor> replaceEditor;
+    std::unique_ptr<Label> replaceLabel;
+    std::unique_ptr<TextButton> replaceButton, replaceAllButton;
 };
 
 //==============================================================================
@@ -1604,8 +1604,8 @@ void GenericCodeEditorComponent::showFindPanel(bool bForReplace)
 {
     if (findPanel == nullptr)
     {
-        findPanel = new FindPanel();
-        addAndMakeVisible(findPanel);
+        findPanel = std::make_unique<FindPanel>();
+        addAndMakeVisible(findPanel.get());
         resized();
     }
 
@@ -1631,8 +1631,8 @@ void GenericCodeEditorComponent::showGoTOPanel()
 {
     if (goToPanel == nullptr)
     {
-        goToPanel = new GoToPanel();
-        addAndMakeVisible(goToPanel);
+        goToPanel = std::make_unique<GoToPanel>();
+        addAndMakeVisible(goToPanel.get());
         resized();
     }
     if (goToPanel != nullptr)

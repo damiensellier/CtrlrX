@@ -36,10 +36,12 @@ CtrlrLuaMethodEditArea::CtrlrLuaMethodEditArea (CtrlrLuaMethodEditor &_owner)
     : owner(_owner),
     sharedSearchTabsValue()
 {
-    addAndMakeVisible (lowerTabs = new TabbedComponent (TabbedButtonBar::TabsAtBottom));
+    lowerTabs = std::make_unique<TabbedComponent> (TabbedButtonBar::TabsAtBottom);
+    addAndMakeVisible (lowerTabs.get());
     lowerTabs->setCurrentTabIndex (-1);
 
-    addAndMakeVisible (upperTabs = new CtrlrLuaMethodEditorTabs (owner));
+    upperTabs = std::make_unique<CtrlrLuaMethodEditorTabs> (owner);
+    addAndMakeVisible (upperTabs.get());
 
 
     //[UserPreSize]
@@ -108,7 +110,7 @@ void CtrlrLuaMethodEditArea::resized()
     lowerTabs->setBounds (0, proportionOfHeight (0.6995f), getWidth() - 0, proportionOfHeight (0.3005f));
     upperTabs->setBounds (0, 0, getWidth() - 0, proportionOfHeight (0.6995f));
     //[UserResized] Add your own custom resize handling here..
-	Component* comps[] = { upperTabs, resizer, lowerTabs  };
+	Component* comps[] = { upperTabs.get(), resizer, lowerTabs.get()  };
 	layoutManager.layOutComponents (comps, 3, 0, 0, getWidth(), getHeight(), true, true);
     //[/UserResized]
 }
@@ -147,7 +149,7 @@ void CtrlrLuaMethodEditArea::mouseDoubleClick (const MouseEvent &e)
 
 CtrlrLuaMethodEditorTabs *CtrlrLuaMethodEditArea::getTabs()
 {
-	return (upperTabs);
+	return (upperTabs.get());
 }
 
 void CtrlrLuaMethodEditArea::insertOutput(const String &textToInsert, const Colour what)
@@ -221,7 +223,7 @@ void CtrlrLuaMethodEditArea::messageLogged (CtrlrLog::CtrlrLogMessage message)
 
 TabbedComponent *CtrlrLuaMethodEditArea::getLowerTabs()
 {
-	return (lowerTabs);
+	return (lowerTabs.get());
 }
 
 bool CtrlrLuaMethodEditArea::keyPressed (const KeyPress &key, Component *originatingComponent) // Updated v5.6.34. was : bool CtrlrLuaMethodEditArea::keyPressed (const KeyPress &key, Component *event)

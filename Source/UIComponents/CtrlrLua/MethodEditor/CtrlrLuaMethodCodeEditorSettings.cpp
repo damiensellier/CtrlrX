@@ -110,7 +110,8 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
       autoCompleteButton (0), // added DAM
       autoCompleteOptionsButton (0) // added JG
 {
-    addAndMakeVisible(label0 = new Label("new label", TRANS("Font:"))); // Added v.5.6.31
+    label0 = std::make_unique<Label>("new label", TRANS("Font:")); // Added v.5.6.31
+    addAndMakeVisible(label0.get());
     label0->setFont(Font(14.00f)); // Added v.5.6.31
     label0->setJustificationType(Justification::centredLeft); // Added v.5.6.31
     label0->setEditable(false, false, false); // Added v.5.6.31
@@ -141,17 +142,20 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     resetToPreviousButton->addListener(this);
     resetToPreviousButton->setColour(TextButton::buttonColourId, findColour(TextButton::buttonColourId));
 	
-    addAndMakeVisible(label1 = new Label("new label", TRANS("Editor background:"))); // Added v.5.6.31
+    label1 = std::make_unique<Label>("new label", TRANS("Editor background:")); // Added v.5.6.31
+    addAndMakeVisible(label1.get());
     label1->setFont(Font(14.00f)); // Added v.5.6.31
     label1->setJustificationType(Justification::centredLeft); // Added v.5.6.31
     label1->setEditable(false, false, false); // Added v.5.6.31
 
-    addAndMakeVisible(label2 = new Label("new label", TRANS("Line numbers background:"))); // Added v.5.6.31
+    label2 = std::make_unique<Label>("new label", TRANS("Line numbers background:")); // Added v.5.6.31
+    addAndMakeVisible(label2.get());
     label2->setFont(Font(14.00f)); // Added v.5.6.31
     label2->setJustificationType(Justification::centredLeft); // Added v.5.6.31
     label2->setEditable(false, false, false); // Added v.5.6.31
  
-    addAndMakeVisible(label3 = new Label("new label", TRANS("Line numbers:"))); // Added v.5.6.31
+    label3 = std::make_unique<Label>("new label", TRANS("Line numbers:")); // Added v.5.6.31
+    addAndMakeVisible(label3.get());
     label3->setFont(Font(14.00f)); // Added v.5.6.31
     label3->setJustificationType(Justification::centredLeft); // Added v.5.6.31
     label3->setEditable(false, false, false); // Added v.5.6.31
@@ -203,7 +207,8 @@ CtrlrLuaMethodCodeEditorSettings::CtrlrLuaMethodCodeEditorSettings (CtrlrLuaMeth
     populateColourComboWithThumbnails(static_cast<ColourComboBox*>(lineNumbersBgColour));
     populateColourComboWithThumbnails(static_cast<ColourComboBox*>(lineNumbersColour));
 
-    addAndMakeVisible(syntaxLabel = new Label("syntaxLabel", TRANS("Syntax Highlighting:")));
+    syntaxLabel = std::make_unique<Label>("syntaxLabel", TRANS("Syntax Highlighting:"));
+    addAndMakeVisible(syntaxLabel.get());
     syntaxLabel->setFont(Font(14.00f));
     syntaxLabel->setJustificationType(Justification::centredLeft);
     syntaxLabel->setEditable(false, false, false);

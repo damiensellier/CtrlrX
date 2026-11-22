@@ -107,7 +107,7 @@ void CtrlrLuaMethodEditor::restoreState(const ValueTree &savedState)
 {
     restoreProperties (savedState, componentTree, nullptr);
 
-    ScopedPointer <XmlElement> treeState(XmlDocument::parse (savedState.getProperty(Ids::luaMethodEditor).toString().upToLastOccurrenceOf(";", false, true)).release());
+    std::unique_ptr<XmlElement> treeState(XmlDocument::parse (savedState.getProperty(Ids::luaMethodEditor).toString().upToLastOccurrenceOf(";", false, true)));
 
     if (treeState)
     {
@@ -129,7 +129,7 @@ void CtrlrLuaMethodEditor::updateRootItem()
 {
     if (methodTree->getRootItem())
     {
-        ScopedPointer <XmlElement> state (methodTree->getOpennessState(true).release());
+        std::unique_ptr<XmlElement> state(methodTree->getOpennessState(true));
         methodTree->deleteRootItem();
         methodTree->setRootItem (new CtrlrValueTreeEditorItem(*this, owner.getCtrlrLuaManager().getMethodManager().getManagerTree(), Ids::luaMethodName));
         if (state)
@@ -868,7 +868,7 @@ void CtrlrLuaMethodEditor::saveSettings()
 
     if (methodTree->getRootItem())
     {
-        ScopedPointer <XmlElement> treeState(methodTree->getOpennessState(true).release());
+        std::unique_ptr<XmlElement> treeState(methodTree->getOpennessState(true));
 
         if (treeState)
         {

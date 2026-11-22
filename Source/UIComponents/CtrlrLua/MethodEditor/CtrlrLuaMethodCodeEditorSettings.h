@@ -96,11 +96,11 @@ private:
     TextButton* resetButton;
     TextButton* resetToPreviousButton;
     Slider* fontSize;
-    ScopedPointer<Label> label0; // Updated v5.6.34. Thanks to @dnaldoog
-    ScopedPointer<Label> label1; // Updated v5.6.34. Thanks to @dnaldoog
-    ScopedPointer<Label> label2; // Updated v5.6.34. Thanks to @dnaldoog
-    ScopedPointer<Label> label3; // Updated v5.6.34. Thanks to @dnaldoog
-    ScopedPointer<Label> syntaxLabel; // Updated v5.6.34. Thanks to @dnaldoog
+    std::unique_ptr<Label> label0; // Updated v5.6.34. Thanks to @dnaldoog
+    std::unique_ptr<Label> label1; // Updated v5.6.34. Thanks to @dnaldoog
+    std::unique_ptr<Label> label2; // Updated v5.6.34. Thanks to @dnaldoog
+    std::unique_ptr<Label> label3; // Updated v5.6.34. Thanks to @dnaldoog
+    std::unique_ptr<Label> syntaxLabel; // Updated v5.6.34. Thanks to @dnaldoog
     CodeEditorComponent* fontTest;
 
     static CodeEditorComponent::ColourScheme& getSharedScheme();

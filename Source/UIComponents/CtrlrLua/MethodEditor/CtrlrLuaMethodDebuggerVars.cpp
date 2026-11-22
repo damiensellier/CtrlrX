@@ -32,7 +32,8 @@
 CtrlrLuaMethodDebuggerVars::CtrlrLuaMethodDebuggerVars (CtrlrLuaMethodEditor &_owner)
     : owner(_owner)
 {
-    addAndMakeVisible (valueList = new TableListBox());
+    valueList = std::make_unique<TableListBox>();
+    addAndMakeVisible (valueList.get());
 
 
     //[UserPreSize]
