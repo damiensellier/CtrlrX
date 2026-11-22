@@ -99,7 +99,7 @@ CtrlrTextEditor *CtrlrTextEditor::readOnlyMultiline(const String &xmlSource, con
 
 void CtrlrTextEditor::setXmlSource (const String &xmlSource)
 {
-	ScopedPointer <XmlElement> xml (XmlDocument::parse(xmlSource).release());
+	std::unique_ptr<XmlElement> xml(XmlDocument::parse(xmlSource));
 	if (xml)
 	{
 		forEachXmlChildElement (*xml, el)
