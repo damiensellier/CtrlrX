@@ -44,7 +44,7 @@ CtrlrProcessor::CtrlrProcessor() :
 
 	if (overridesFile.existsAsFile())
 	{
-		ScopedPointer <XmlElement> xml (XmlDocument(overridesFile).getDocumentElement().release());
+		std::unique_ptr<XmlElement> xml(XmlDocument(overridesFile).getDocumentElement());
 		if (xml)
 		{
 			overridesTree = ValueTree::fromXml (*xml);
@@ -617,7 +617,7 @@ AudioProcessorEditor* CtrlrProcessor::createEditor()
 void CtrlrProcessor::getStateInformation (MemoryBlock& destData)
 {
 	_DBG("CtrlrProcessor::getStateInformation");
-	ScopedPointer <XmlElement> xmlState(ctrlrManager->saveState());
+	std::unique_ptr<XmlElement> xmlState(ctrlrManager->saveState());
 	if (xmlState)
 	{
 		CtrlrProcessor::copyXmlToBinary (*xmlState, destData);
@@ -627,10 +627,10 @@ void CtrlrProcessor::getStateInformation (MemoryBlock& destData)
 void CtrlrProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
 	_DBG("CtrlrProcessor::setStateInformation");
-	ScopedPointer<XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+	std::unique_ptr<XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
 	if (xmlState)
 	{
-		setStateInformation (xmlState);
+		setStateInformation (xmlState.get());
 	}
 }
 
