@@ -106,7 +106,8 @@ ones the plugin packages use. Builds of forks and pull requests never have them,
 ## Invocation
 
 ```bash
-CtrlrPanelProbe [--verbose] [--global-console] [--stdin] [--edit-mode-as-saved] <panel-file> [<script-file>]
+CtrlrPanelProbe [--verbose] [--global-console] [--stdin] [--edit-mode-as-saved]
+                [--answer '<title regex>=<answer>' ...] <panel-file> [<script-file>]
 ```
 
 - `<panel-file>` — a `.panel` (or `.bpanelz`) path, resolved relative to the current directory.
@@ -124,6 +125,9 @@ CtrlrPanelProbe [--verbose] [--global-console] [--stdin] [--edit-mode-as-saved] 
 - `--stdin` — persistent mode; see [below](#persistent-mode---stdin).
 - `--edit-mode-as-saved` — load a panel saved in edit mode the way CtrlrX opens it, instead of in
   run mode; see [Edit mode](#edit-mode). No effect on a panel saved in run mode.
+- `--answer '<title regex>=<answer>'` — answer a dialog instead of dismissing it, for the whole
+  run, also while the panel loads; repeatable. See [Answering dialogs](#answering-dialogs). A bad
+  rule (no `=`, a regex that doesn't compile) is fatal (exit 2).
 
 The **JSON report is written to stdout**; all of CtrlrX's own logging goes to stderr, so stdout is
 always clean, parseable JSON (or a JSON error object on a fatal failure).
@@ -161,7 +165,9 @@ Steps run in order, in one process, against one panel. **State accumulates** —
 whatever steps 1 and 2 did.
 
 Besides `settleMs` / `quietMs`, a script may set `"paintWarnings": false` to turn off the
-end-of-script `paint` warnings (see [Custom components](#custom-components-paint-and-mouse)).
+end-of-script `paint` warnings (see [Custom components](#custom-components-paint-and-mouse)), and
+`"answers": [{"title": "<regex>", "answer": "<answer>"}, …]` to answer the dialogs its steps open
+(see [Answering dialogs](#answering-dialogs)).
 
 ### Settling
 
@@ -567,7 +573,8 @@ call a failure. They are **not** in `errorCount` and do not change the exit code
 ### Dialogs
 
 A modal dialog would block a headless run for ever, so the probe **dismisses every one the moment
-it opens**, as if the user pressed Cancel or closed the window. That is an answer, and the code
+it opens** that no [answer rule](#answering-dialogs) matches, as if the user pressed Cancel or
+closed the window. That is an answer, and the code
 after it runs as if the user gave it: `utils.questionWindow` returns `false`,
 `AlertWindow.showOkCancelBox` returns `false`, `showYesNoCancelBox` returns `0`. So each dismissed
 dialog is listed in the step that opened it, `steps[i].dialogs`, as
@@ -578,7 +585,9 @@ dialog is listed in the step that opened it, `steps[i].dialogs`, as
 | `title` | The dialog's title. |
 | `kind` | `"alert"` (an `AlertWindow`: `utils.infoWindow` / `warnWindow` / `questionWindow`, the `AlertWindow.show…` functions, CtrlrX's own error dialogs), `"fileChooser"`, or `"component"` for any other modal. |
 | `buttons` | The button captions, e.g. `["Erase", "Keep"]`. |
-| `result` | Always `0`: what dismissing returns. |
+| `result` | What the dialog returned: `0` when dismissed; for an answered alert, the button's return value (`utils.questionWindow`: `1` for the first button); `1` for an answered file chooser. |
+| `answer` | Only on an answered dialog: the rule's answer. |
+| `answerError` | Only when a rule matched but the answer could not be given (no such button, the chooser did not accept the path within 3 s): why. The dialog was then dismissed. |
 
 A dialog can flash up on the desktop for a few milliseconds before it is dismissed. The message
 text is not available. Dialogs opened while the panel loaded are in `panel.dialogs`
@@ -587,6 +596,40 @@ one exception: when a `timer` callback raises, CtrlrX disables the callback and 
 in a dialog, *"Timer callback error, timer id that failed was: N"*. The probe turns that one into a
 `"lua"` error on the step, carrying the Lua message, so the run fails rather than going on with a
 dead timer.
+
+#### Answering dialogs
+
+A rule is a title regex (ECMAScript, `std::regex_search`: `^…$` for an exact title) and an
+answer. Give rules with `--answer '<title regex>=<answer>'` (split at the first `=`; for the whole
+run, also while the panel loads, before any script runs) or in a script's `"answers"` list (that
+script only; in `--stdin` mode each line has its own). The first matching rule wins, script rules
+before `--answer` rules.
+
+| Dialog | Answer |
+|---|---|
+| An alert (`utils.questionWindow`, `infoWindow`, `warnWindow`, `AlertWindow.show…`, `AlertWindow:runModalLoop`, CtrlrX's own) or another modal with buttons | The caption of the button to press, e.g. `Erase`. `<caption>\|<text>` also types `<text>` into the dialog's first text box (`utils.askForTextInputWindow`). |
+| A file chooser (`utils.openFileWindow`, `openMultipleFilesWindow`, `saveFileWindow`, `getDirectoryWindow`) | The path to choose: a file, or a directory for `getDirectoryWindow`; relative to the current directory. An empty answer presses Cancel. One path per chooser, also for `openMultipleFilesWindow`. |
+
+```bash
+./CtrlrPanelProbe --answer '^Load preset$=OK' panel.panel script.json
+```
+```json
+{ "answers": [ { "title": "^Erase\\?$", "answer": "Erase" },
+               { "title": "^Save patch", "answer": "out/patch.syx" },
+               { "title": "^File already exists$", "answer": "Overwrite" } ],
+  "steps": [ { "action": "click", "modulator": "saveBtn" } ] }
+```
+
+A save chooser asks *"File already exists"* when the path exists; that is an alert of its own, so
+answer it too (else it is dismissed, the chooser stays open, and its answer fails after 3 s). An
+answered chooser only names the file: the panel's Lua writes it, as with a user.
+
+**Native file choosers.** The probe can answer only JUCE's own file chooser. On Linux it makes
+JUCE use it: a `which` wrapper first on `PATH` (in the temp directory) hides `zenity` and `kdialog`,
+which JUCE would otherwise run for a native chooser (the default of `getDirectoryWindow`, and what
+most panels pass to `openFileWindow`). On macOS and Windows a native chooser is the OS's own: the
+probe can neither answer nor dismiss it, and the run blocks. There, only a chooser opened with
+`useOSNativeDialogBox` false can be probed.
 
 #### Linux: the X display
 
@@ -745,7 +788,7 @@ CtrlrPanelProbe MySynth.panel e.json | jq '.steps[0].returnValue, .summary.error
 
 - **Device rebind** targets the mock devices `"Device 00, port 00"` (in) / `"Device 00, port 01"`
   (out). Any panel's I/O is captured regardless of the device names it shipped with.
-- **Modal dialogs are dismissed**, so the run never hangs (on a display or on headless CI): CtrlrX's
+- **Modal dialogs are dismissed** unless a rule answers them, so the run never hangs (on a display or on headless CI): CtrlrX's
   "Callback error" dialog on a Lua error raised from a *callback*, and every dialog the panel's own
   Lua opens. Each one is listed in `steps[i].dialogs`, and a callback's error is still recorded in
   the step's `errors`; see [Dialogs](#dialogs). Errors from `callLuaMethod` / `eval` come back
