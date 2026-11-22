@@ -160,7 +160,7 @@ class CtrlrModulatorProcessor : public AsyncUpdater, public Expression::Scope, p
 		Expression forwardProcess;
 		Expression reverseProcess;
 		String forwardEvaluationErrors, reverseEvaluationErrors;
-		ScopedPointer <CtrlrOwnedMidiMessage> ctrlrMidiMessage, ctrlrMidiControllerMessage;
+		std::unique_ptr<CtrlrOwnedMidiMessage> ctrlrMidiMessage, ctrlrMidiControllerMessage;
 		CtrlrModulatorValue currentValue;
 		int currentMidiValue, globalIndex; // Updated v5.6.32.
         double maxValue, minValue; // Updated v5.6.32. int to double

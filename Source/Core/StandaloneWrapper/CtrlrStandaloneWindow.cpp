@@ -46,12 +46,12 @@ CtrlrStandaloneWindow::CtrlrStandaloneWindow (const String& title, const Colour&
         if (appProperties != nullptr)
         {
             _DBG("appProperties != nullptr");
-            ScopedPointer <XmlElement> xml(appProperties->getUserSettings()->getXmlValue(CTRLR_PROPERTIES_FILTER_STATE).release());
+            std::unique_ptr<XmlElement> xml(appProperties->getUserSettings()->getXmlValue(CTRLR_PROPERTIES_FILTER_STATE));
             
             if (xml != nullptr)
             {
                 _DBG("xml != nullptr");
-                ctrlrProcessor->setStateInformation (xml);
+                ctrlrProcessor->setStateInformation (xml.get());
             }
 
             AudioProcessorEditor *editor = ctrlrProcessor->createEditorIfNeeded();
@@ -207,11 +207,11 @@ void CtrlrStandaloneWindow::saveStateNow()
 
 		if (data.getSize() > 0)
 		{
-			ScopedPointer <XmlElement> xml(CtrlrProcessor::getXmlFromBinary(data.getData(), (int)data.getSize()));
+			std::unique_ptr<XmlElement> xml(CtrlrProcessor::getXmlFromBinary(data.getData(), (int)data.getSize()));
 
 			if (xml)
 			{
-				appProperties->getUserSettings()->setValue (CTRLR_PROPERTIES_FILTER_STATE, xml);
+				appProperties->getUserSettings()->setValue (CTRLR_PROPERTIES_FILTER_STATE, xml.get());
 			}
 		}
 	}

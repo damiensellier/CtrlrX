@@ -22,7 +22,7 @@ CtrlrLuaMethodManager::CtrlrLuaMethodManager(CtrlrLuaManager &_owner)
 {
 	XmlDocument methodsDocument(String(BinaryData::CtrlrLuaMethodTemplates_xml, BinaryData::CtrlrLuaMethodTemplates_xmlSize));
 
-	ScopedPointer <XmlElement> methodsXml (methodsDocument.getDocumentElement().release());
+	std::unique_ptr<XmlElement> methodsXml(methodsDocument.getDocumentElement());
 
 	if (methodsXml)
 	{

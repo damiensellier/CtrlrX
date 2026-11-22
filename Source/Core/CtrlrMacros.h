@@ -67,8 +67,9 @@
 #define COLOUR2STR(x)											x.toString()
 #define BIN2STR(x)                                              String(BinaryData::x, BinaryData::x ## Size)
 #define STR2LUASTR(x)											x.toUTF8().getAddress()
-#define XML2STR(x)												ScopedPointer <XmlElement> (x.createXml().release())->createDocument("")
-#define DUMPTREE(x,y)                                           ScopedPointer <XmlElement> (x.createXml().release())->createDocument("").substring(0,y)
+// XML2STR, DUMPTREE: the unique_ptr from createXml() lives until the end of the full expression.
+#define XML2STR(x)												x.createXml()->createDocument("")
+#define DUMPTREE(x,y)                                           x.createXml()->createDocument("").substring(0,y)
 #define STR2FONT(x)												getFontManager().getFontFromString(x)
 #define STR2FONTM(m,x)											m.getFontFromString(x)
 #define FONT2STR(x)												getFontManager().getStringFromFont(x)

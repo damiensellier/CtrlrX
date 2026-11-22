@@ -49,5 +49,5 @@ class CtrlrPanelMIDIInputThread : public Thread, public CtrlrMIDIDevice::Listene
 		CtrlrPanel &owner;
 		CtrlrMIDIDevice *inputDevicePtr;
 		CtrlrMIDIDeviceType source;
-		ScopedPointer <CtrlrMidiInputComparator> inputComparator;
+		std::unique_ptr<CtrlrMidiInputComparator> inputComparator;
 };

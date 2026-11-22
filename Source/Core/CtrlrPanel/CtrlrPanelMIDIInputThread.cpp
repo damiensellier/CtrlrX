@@ -12,7 +12,7 @@ CtrlrPanelMIDIInputThread::CtrlrPanelMIDIInputThread(CtrlrPanel &_owner, const C
 		inputComparator(nullptr),
 		source(_source)
 {
-	inputComparator             = new CtrlrMidiInputComparator (owner, source);
+	inputComparator             = std::make_unique<CtrlrMidiInputComparator>(owner, source);
 	junkBuffer.ensureSize(8192);
 	hostInputBuffer.ensureSize(8192);
 	deviceInputBuffer.ensureSize(8192);
@@ -223,7 +223,7 @@ CtrlrMidiInputComparator &CtrlrPanelMIDIInputThread::getInputComparator()
 {
 	if (inputComparator == nullptr)
 	{
-		inputComparator = new CtrlrMidiInputComparator (owner);
+		inputComparator = std::make_unique<CtrlrMidiInputComparator>(owner);
 	}
 
 	return (*inputComparator);
