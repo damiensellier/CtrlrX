@@ -18,13 +18,15 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     : owner(_owner)
 {
     // CTRLRX LOGO SVG
-    addAndMakeVisible (ctrlrLogo = gui::createDrawableButton("CtrlrX", BIN2STR(ctrlrx_logo_svg))); // Updated v5.6.31. It required to drag drop SVG file in the projucer in the icon folder to be embedded
+    ctrlrLogo.reset (gui::createDrawableButton("CtrlrX", BIN2STR(ctrlrx_logo_svg))); // Updated v5.6.31. It required to drag drop SVG file in the projucer in the icon folder to be embedded
+    addAndMakeVisible (ctrlrLogo.get());
     ctrlrLogo->addListener (this);
     ctrlrLogo->setTooltip (TRANS("Visit ctrlr.org"));
     ctrlrLogo->setMouseCursor(MouseCursor::PointingHandCursor);
     
     // "Ctrlr" logo as letters
-    addAndMakeVisible (ctrlrName = new Label ("", TRANS("CtrlrX")));
+    ctrlrName = std::make_unique<Label> ("", TRANS("CtrlrX"));
+    addAndMakeVisible (ctrlrName.get());
     
     ctrlrName->setFont (Font (32, Font::bold)); // was 64 then 52
     ctrlrName->setJustificationType (Justification::topLeft); // was centredLeft
@@ -34,7 +36,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     ctrlrName->setColour (Label::backgroundColourId, Colour(getLookAndFeel().findColour (Label::backgroundColourId))); // Updated v5.6.31 Colour (0x00000000));
     
     // CtrlrX version Label
-    addAndMakeVisible (ctrlrxVersionLabel = new Label ("Version",  "Build version " + _STR(ctrlrRevision)));
+    ctrlrxVersionLabel = std::make_unique<Label> ("Version",  "Build version " + _STR(ctrlrRevision));
+    addAndMakeVisible (ctrlrxVersionLabel.get());
     ctrlrxVersionLabel->setFont (Font (14.00f, Font::plain));
     ctrlrxVersionLabel->setJustificationType (Justification::topLeft);
     ctrlrxVersionLabel->setEditable (false, false, false);
@@ -43,7 +46,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     ctrlrxVersionLabel->setColour (Label::backgroundColourId, Colour(getLookAndFeel().findColour (Label::backgroundColourId)));
     
     // CtrlrX release date Label
-    addAndMakeVisible (ctrlrxReleaseDateLabel = new Label ("Release date", " Released on " + _STR(ctrlrRevisionDate)));
+    ctrlrxReleaseDateLabel = std::make_unique<Label> ("Release date", " Released on " + _STR(ctrlrRevisionDate));
+    addAndMakeVisible (ctrlrxReleaseDateLabel.get());
     ctrlrxReleaseDateLabel->setFont (Font (14.00f, Font::plain));
     ctrlrxReleaseDateLabel->setJustificationType (Justification::topLeft);
     ctrlrxReleaseDateLabel->setEditable (false, false, false);
@@ -62,7 +66,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     String luabindVersion = _STR(LUABIND_VERSION / 1000) + "." + _STR(LUABIND_VERSION / 100 % 100) + "." + _STR(LUABIND_VERSION % 100);
     String boostVersion = _STR(BOOST_VERSION / 100000) + "." + _STR((BOOST_VERSION / 100) % 1000) + "." + _STR(BOOST_VERSION % 100);
     String buildDetails = "JUCE " + juceVersion + " | " + luaVersion + " | LuaBind " + luabindVersion + " | Boost " + boostVersion;
-    addAndMakeVisible (ctrlrxLibsVersionLabel = new Label ("Version",  buildDetails));
+    ctrlrxLibsVersionLabel = std::make_unique<Label> ("Version",  buildDetails);
+    addAndMakeVisible (ctrlrxLibsVersionLabel.get());
     ctrlrxLibsVersionLabel->setFont (Font (12.00f, Font::plain));
     ctrlrxLibsVersionLabel->setJustificationType (Justification::topLeft);
     ctrlrxLibsVersionLabel->setEditable (false, false, false);
@@ -71,7 +76,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     ctrlrxLibsVersionLabel->setColour (Label::backgroundColourId, Colour(getLookAndFeel().findColour (Label::backgroundColourId)));
     
     // Credits Label
-    addAndMakeVisible (creditsLabel = new TextEditor (""));
+    creditsLabel = std::make_unique<TextEditor> ("");
+    addAndMakeVisible (creditsLabel.get());
     creditsLabel->setFont (Font (13.00f, Font::plain));
     creditsLabel->setMultiLine (true, true);
     creditsLabel->setReturnKeyStartsNewLine (true);
@@ -92,33 +98,38 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     
     
     // Github LOGO SVG
-    addAndMakeVisible (githubLogo = gui::createDrawableButton("Github Logo", BIN2STR(github_colour_svg))); // Updated v5.6.31. It required to drag drop SVG file in the projucer in the icon folder to be embedded
+    githubLogo.reset (gui::createDrawableButton("Github Logo", BIN2STR(github_colour_svg))); // Updated v5.6.31. It required to drag drop SVG file in the projucer in the icon folder to be embedded
+    addAndMakeVisible (githubLogo.get());
     githubLogo->addListener (this);
     githubLogo->setTooltip (TRANS("Visit CtrlrX github page"));
     githubLogo->setMouseCursor(MouseCursor::PointingHandCursor);
     
     // Github link
-    addAndMakeVisible (ctrlrxUrl = new HyperlinkButton ("Visit CtrlrX github page", URL ("https://github.com/damiensellier/CtrlrX")));
+    ctrlrxUrl = std::make_unique<HyperlinkButton> ("Visit CtrlrX github page", URL ("https://github.com/damiensellier/CtrlrX"));
+    addAndMakeVisible (ctrlrxUrl.get());
     ctrlrxUrl->setTooltip (TRANS("Visit CtrlrX github page"));
     ctrlrxUrl->setFont(14.00f, Font::plain);
     ctrlrxUrl->setJustificationType(Justification::topLeft);
     ctrlrxUrl->setColour (HyperlinkButton::textColourId, Colour(getLookAndFeel().findColour (PopupMenu::highlightedBackgroundColourId)));
     
     // Donation LOGO SVG
-    addAndMakeVisible (donateLogo = gui::createDrawableButton("Donation Logo", BIN2STR(kofi_svg))); // Updated v5.6.35. It required to drag drop SVG file in the projucer in the icon folder to be embedded
+    donateLogo.reset (gui::createDrawableButton("Donation Logo", BIN2STR(kofi_svg))); // Updated v5.6.35. It required to drag drop SVG file in the projucer in the icon folder to be embedded
+    addAndMakeVisible (donateLogo.get());
     donateLogo->addListener (this);
     donateLogo->setTooltip (TRANS("Donate to the CtrlrX project"));
     donateLogo->setMouseCursor(MouseCursor::PointingHandCursor);
     
     // Donation link
-    addAndMakeVisible (ctrlrxDonateUrl = new HyperlinkButton ("Donate to the CtrlrX project", URL ("https://ko-fi.com/damiensellier"))); // Updated v5.6.35
+    ctrlrxDonateUrl = std::make_unique<HyperlinkButton> ("Donate to the CtrlrX project", URL ("https://ko-fi.com/damiensellier")); // Updated v5.6.35
+    addAndMakeVisible (ctrlrxDonateUrl.get());
     ctrlrxDonateUrl->setTooltip (TRANS("Donate to the CtrlrX project"));
     ctrlrxDonateUrl->setFont(14.00f, Font::plain);
     ctrlrxDonateUrl->setJustificationType(Justification::topLeft);
     ctrlrxDonateUrl->setColour (HyperlinkButton::textColourId, Colour(getLookAndFeel().findColour (PopupMenu::highlightedBackgroundColourId)));
     
     // description Label
-    addAndMakeVisible (descriptionLabel = new TextEditor (""));
+    descriptionLabel = std::make_unique<TextEditor> ("");
+    addAndMakeVisible (descriptionLabel.get());
     descriptionLabel->setFont (Font (13.00f, Font::plain));
     descriptionLabel->setMultiLine (true, true);
     descriptionLabel->setReturnKeyStartsNewLine (true);
@@ -140,13 +151,15 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     
 
     // JUCE & FRIENDS LOGO SVG
-    addAndMakeVisible (vst3AuJuceLogo = gui::createDrawableButton("Copyright Logo", BIN2STR(vst3_au_juce_mini_logo_bg_rnd_svg))); // Updated v5.6.31. It required to drag drop SVG file in the projucer in the icon folder to be embedded
+    vst3AuJuceLogo.reset (gui::createDrawableButton("Copyright Logo", BIN2STR(vst3_au_juce_mini_logo_bg_rnd_svg))); // Updated v5.6.31. It required to drag drop SVG file in the projucer in the icon folder to be embedded
+    addAndMakeVisible (vst3AuJuceLogo.get());
     vst3AuJuceLogo->addListener (this);
     vst3AuJuceLogo->setTooltip (TRANS("Visit ctrlr.org"));
     vst3AuJuceLogo->setMouseCursor(MouseCursor::PointingHandCursor);
     
     // JUCE & FRIENDS Label
-    addAndMakeVisible (copyrightLabel = new TextEditor (""));
+    copyrightLabel = std::make_unique<TextEditor> ("");
+    addAndMakeVisible (copyrightLabel.get());
     copyrightLabel->setFont (Font (13.00f, Font::plain));
     copyrightLabel->setMultiLine (true, true);
     copyrightLabel->setReturnKeyStartsNewLine (true);
@@ -169,7 +182,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     // Line Separator
         
     // Lib Version Info Label
-    addAndMakeVisible (versionInfoLabel = new TextEditor (""));
+    versionInfoLabel = std::make_unique<TextEditor> ("");
+    addAndMakeVisible (versionInfoLabel.get());
     versionInfoLabel->setFont (Font (owner.getFontManager().getDefaultMonoFontName(), 14.0f, Font::plain));
     versionInfoLabel->setFont (Font (14.00f, Font::plain));
     versionInfoLabel->setMultiLine (true, true);
@@ -209,7 +223,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     
     // PANEL EXTRA LABELS
     // Instance Name Label
-    addAndMakeVisible (label = new Label ("new label", TRANS("Instance name")));
+    label = std::make_unique<Label> ("new label", TRANS("Instance name"));
+    addAndMakeVisible (label.get());
     label->setFont (Font (14.00f, Font::plain));
     label->setJustificationType (Justification::topRight);
     label->setEditable (false, false, false);
@@ -217,7 +232,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     label->setColour (Label::backgroundColourId, Colour(getLookAndFeel().findColour (Label::backgroundColourId))); // Updated v5.6.31 Colour (0x00000000));
     
     // Instance version Label
-    addAndMakeVisible (label3 = new Label ("new label", TRANS("Version")));
+    label3 = std::make_unique<Label> ("new label", TRANS("Version"));
+    addAndMakeVisible (label3.get());
     label3->setFont (Font (14.00f, Font::plain));
     label3->setJustificationType (Justification::topRight);
     label3->setEditable (false, false, false);
@@ -226,7 +242,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     
 
     // Author Name Label
-    addAndMakeVisible (label2 = new Label ("new label", TRANS("Author")));
+    label2 = std::make_unique<Label> ("new label", TRANS("Author"));
+    addAndMakeVisible (label2.get());
     label2->setFont (Font (14.00f, Font::plain));
     label2->setJustificationType (Justification::topRight);
     label2->setEditable (false, false, false);
@@ -240,7 +257,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     
     if (!authorEmail.isEmpty())
     {
-        addAndMakeVisible(labelAuthorEmail = new Label("new label", TRANS("Contact")));
+        labelAuthorEmail = std::make_unique<Label>("new label", TRANS("Contact"));
+        addAndMakeVisible(labelAuthorEmail.get());
         labelAuthorEmail->setFont(Font(14.00f, Font::plain));
         labelAuthorEmail->setJustificationType(Justification::topRight);
         labelAuthorEmail->setEditable(false, false, false);
@@ -249,7 +267,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     }
     
     // Author URL Label
-    addAndMakeVisible (label4 = new Label ("new label", TRANS("URL")));
+    label4 = std::make_unique<Label> ("new label", TRANS("URL"));
+    addAndMakeVisible (label4.get());
     label4->setFont (Font (14.00f, Font::plain));
     label4->setJustificationType (Justification::topRight);
     label4->setEditable (false, false, false);
@@ -263,7 +282,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     
 	if (!authorDonateUrl.isEmpty())
 	{
-		addAndMakeVisible(labelDonate = new Label("new label", TRANS("Donate")));
+		labelDonate = std::make_unique<Label>("new label", TRANS("Donate"));
+		addAndMakeVisible(labelDonate.get());
 		labelDonate->setFont(Font(14.00f, Font::plain));
 		labelDonate->setJustificationType(Justification::topRight);
 		labelDonate->setEditable(false, false, false);
@@ -272,14 +292,16 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
 	}
 
 
-    addAndMakeVisible (instanceUrl = new HyperlinkButton ("", URL ("https://juce.com/")));
+    instanceUrl = std::make_unique<HyperlinkButton> ("", URL ("https://juce.com/"));
+    addAndMakeVisible (instanceUrl.get());
     instanceUrl->setTooltip (TRANS("https://juce.com/"));
     instanceUrl->setColour (HyperlinkButton::textColourId, Colour(getLookAndFeel().findColour (PopupMenu::highlightedBackgroundColourId)));
     instanceUrl->setFont(14.00f, Font::plain);
     instanceUrl->setJustificationType(Justification::topLeft);
     
     // Instance Name Field
-    addAndMakeVisible (instanceName = new Label ("", ""));
+    instanceName = std::make_unique<Label> ("", "");
+    addAndMakeVisible (instanceName.get());
     instanceName->setFont (Font (14.00f, Font::bold));
     instanceName->setJustificationType (Justification::topLeft);
     instanceName->setEditable (false, false, false);
@@ -287,7 +309,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     instanceName->setColour (Label::backgroundColourId, Colour(getLookAndFeel().findColour (Label::backgroundColourId))); // Updated v5.6.31 Colour (0x00000000));
     
     // Instance Version Field
-    addAndMakeVisible (instanceVersion = new Label ("", ""));
+    instanceVersion = std::make_unique<Label> ("", "");
+    addAndMakeVisible (instanceVersion.get());
     instanceVersion->setFont (Font (14.00f, Font::plain));
     instanceVersion->setJustificationType (Justification::topLeft);
     instanceVersion->setEditable (false, false, false);
@@ -295,7 +318,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     instanceVersion->setColour (Label::backgroundColourId, Colour(getLookAndFeel().findColour (Label::backgroundColourId))); // Updated v5.6.31 Colour (0x00000000));
     
     // Instance Author Field
-    addAndMakeVisible (instanceAuthor = new Label ("", ""));
+    instanceAuthor = std::make_unique<Label> ("", "");
+    addAndMakeVisible (instanceAuthor.get());
     instanceAuthor->setFont (Font (14.00f, Font::plain));
     instanceAuthor->setJustificationType (Justification::topLeft);
     instanceAuthor->setEditable (false, false, false);
@@ -305,7 +329,8 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     // Instance Author Email Field
 	if (!authorEmail.isEmpty())
 	{
-		addAndMakeVisible(instanceAuthorEmail = new HyperlinkButton(authorEmail,URL("mailto:" + authorEmail)));
+		instanceAuthorEmail = std::make_unique<HyperlinkButton>(authorEmail,URL("mailto:" + authorEmail));
+		addAndMakeVisible(instanceAuthorEmail.get());
         instanceAuthorEmail->setColour (HyperlinkButton::textColourId, Colour(getLookAndFeel().findColour (PopupMenu::highlightedBackgroundColourId)));
         instanceAuthorEmail->setFont(14.00f, Font::plain);
         instanceAuthorEmail->setJustificationType(Justification::topLeft);
@@ -314,14 +339,16 @@ CtrlrAbout::CtrlrAbout (CtrlrManager &_owner)
     // Instance Author Donate URL
 	if (!authorDonateUrl.isEmpty())
 	{
-		addAndMakeVisible(instanceAuthorDonateUrl = new HyperlinkButton(authorDonateUrl, URL(authorDonateUrl)));
+		instanceAuthorDonateUrl = std::make_unique<HyperlinkButton>(authorDonateUrl, URL(authorDonateUrl));
+		addAndMakeVisible(instanceAuthorDonateUrl.get());
         instanceAuthorDonateUrl->setFont(14.00f, Font::plain);
         instanceAuthorDonateUrl->setJustificationType(Justification::topLeft);
         instanceAuthorDonateUrl->setColour (HyperlinkButton::textColourId, Colour(getLookAndFeel().findColour (PopupMenu::highlightedBackgroundColourId)));
 	}
 
     // Instance Description Field
-    addAndMakeVisible (instanceDescription = new TextEditor (""));
+    instanceDescription = std::make_unique<TextEditor> ("");
+    addAndMakeVisible (instanceDescription.get());
     instanceDescription->setMultiLine (true);
     instanceDescription->setReturnKeyStartsNewLine (true);
     instanceDescription->setReadOnly (true);
@@ -529,23 +556,23 @@ void CtrlrAbout::resized()
 void CtrlrAbout::buttonClicked (Button* buttonThatWasClicked)
 {
     // 1. Split the first condition into two separate, explicit checks
-    if (buttonThatWasClicked == ctrlrLogo)
+    if (buttonThatWasClicked == ctrlrLogo.get())
     {
         URL url ("https://github.com/RomanKubiak/ctrlr/discussions");
         url.launchInDefaultBrowser();
     }
-    else if (buttonThatWasClicked == vst3AuJuceLogo)
+    else if (buttonThatWasClicked == vst3AuJuceLogo.get())
     {
         URL url ("https://github.com/RomanKubiak/ctrlr/discussions");
         url.launchInDefaultBrowser();
     }
     // 2. Continue with the rest of your buttons
-    else if (buttonThatWasClicked == donateLogo)
+    else if (buttonThatWasClicked == donateLogo.get())
     {
         URL url ("https://ko-fi.com/damiensellier");
         url.launchInDefaultBrowser();
     }
-    else if (buttonThatWasClicked == githubLogo)
+    else if (buttonThatWasClicked == githubLogo.get())
     {
         URL url ("https://github.com/damiensellier/CtrlrX");
         url.launchInDefaultBrowser();

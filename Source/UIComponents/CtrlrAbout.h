@@ -60,36 +60,36 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    ScopedPointer<Label> ctrlrName;
-    ScopedPointer<Label> ctrlrxVersionLabel;
-    ScopedPointer<Label> ctrlrxReleaseDateLabel;
-    ScopedPointer<Label> ctrlrxLibsVersionLabel;
-    ScopedPointer<Label> label;
-    ScopedPointer<Label> label2;
-    ScopedPointer<Label> labelDonate;
-    ScopedPointer<Label> labelAuthorEmail;
-    ScopedPointer<Label> label3;
-    ScopedPointer<Label> label4;
-    ScopedPointer<Label> instanceVersion;
-    ScopedPointer<Label> instanceAuthor;
-    ScopedPointer<Label> instanceName;
+    std::unique_ptr<Label> ctrlrName;
+    std::unique_ptr<Label> ctrlrxVersionLabel;
+    std::unique_ptr<Label> ctrlrxReleaseDateLabel;
+    std::unique_ptr<Label> ctrlrxLibsVersionLabel;
+    std::unique_ptr<Label> label;
+    std::unique_ptr<Label> label2;
+    std::unique_ptr<Label> labelDonate;
+    std::unique_ptr<Label> labelAuthorEmail;
+    std::unique_ptr<Label> label3;
+    std::unique_ptr<Label> label4;
+    std::unique_ptr<Label> instanceVersion;
+    std::unique_ptr<Label> instanceAuthor;
+    std::unique_ptr<Label> instanceName;
     
-    ScopedPointer<DrawableButton> ctrlrLogo;
-    ScopedPointer<DrawableButton> vst3AuJuceLogo;
-    ScopedPointer<DrawableButton> githubLogo;
-    ScopedPointer<DrawableButton> donateLogo;
+    std::unique_ptr<DrawableButton> ctrlrLogo;
+    std::unique_ptr<DrawableButton> vst3AuJuceLogo;
+    std::unique_ptr<DrawableButton> githubLogo;
+    std::unique_ptr<DrawableButton> donateLogo;
         
-    ScopedPointer<HyperlinkButton> ctrlrxUrl;
-    ScopedPointer<HyperlinkButton> ctrlrxDonateUrl;
-    ScopedPointer<HyperlinkButton> instanceUrl;
-    ScopedPointer<HyperlinkButton> instanceAuthorDonateUrl;
-    ScopedPointer<HyperlinkButton> instanceAuthorEmail;
+    std::unique_ptr<HyperlinkButton> ctrlrxUrl;
+    std::unique_ptr<HyperlinkButton> ctrlrxDonateUrl;
+    std::unique_ptr<HyperlinkButton> instanceUrl;
+    std::unique_ptr<HyperlinkButton> instanceAuthorDonateUrl;
+    std::unique_ptr<HyperlinkButton> instanceAuthorEmail;
     
-    ScopedPointer<TextEditor> versionInfoLabel;
-    ScopedPointer<TextEditor> creditsLabel;
-    ScopedPointer<TextEditor> descriptionLabel;
-    ScopedPointer<TextEditor> copyrightLabel;
-    ScopedPointer<TextEditor> instanceDescription;
+    std::unique_ptr<TextEditor> versionInfoLabel;
+    std::unique_ptr<TextEditor> creditsLabel;
+    std::unique_ptr<TextEditor> descriptionLabel;
+    std::unique_ptr<TextEditor> copyrightLabel;
+    std::unique_ptr<TextEditor> instanceDescription;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CtrlrAbout)
