@@ -338,7 +338,7 @@ const String removeInvalidChars(const String &dataToValidate, const bool showSpe
 ValueTree valueTreeFromXml (const String &dumpedXmlAsString)
 {
 	XmlDocument doc(dumpedXmlAsString);
-	ScopedPointer <XmlElement> xml(doc.getDocumentElement().release());
+	std::unique_ptr<XmlElement> xml(doc.getDocumentElement());
 
 	if (xml)
 	{
@@ -679,7 +679,7 @@ bool getBitOption (const int &storage, const int &optionToGet)
 
 const String dumpTree (const ValueTree &tree)
 {
-	ScopedPointer <XmlElement> xml(tree.createXml().release());
+	std::unique_ptr<XmlElement> xml(tree.createXml());
 	if (xml)
 	{
 		return (xml->createDocument(""));
