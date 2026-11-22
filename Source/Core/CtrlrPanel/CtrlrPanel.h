@@ -309,8 +309,8 @@ class CtrlrPanel:	public ValueTree::Listener,
 		CtrlrPanelEvaluationScope &getPanelEvaluationScope() 											{ return (panelEvaluationScope); }
 		CtrlrGlobalEvaluationScope &getGlobalEvaluationScope() 											{ return (globalEvaluationScope); }
 		const Array<int,CriticalSection> getPanelResources() 											{ return (panelResources); }
-		CtrlrPanelUndoManager *getPanelUndoManager()													{ return (ctrlrPanelUndoManager); }
-		CtrlrPanelUndoManager *getUndoManager()															{ return (ctrlrPanelUndoManager); }
+		CtrlrPanelUndoManager *getPanelUndoManager()													{ return (ctrlrPanelUndoManager.get()); }
+		CtrlrPanelUndoManager *getUndoManager()															{ return (ctrlrPanelUndoManager.get()); }
 		void undo();
 		void redo();
 		void sendMidiProgramChange();
@@ -396,7 +396,7 @@ class CtrlrPanel:	public ValueTree::Listener,
 		CtrlrPanelProcessor processor;
 		CtrlrPanelMIDISnapshot snapshot;
 		CtrlrMIDIDevice *outputDevicePtr;
-		ScopedPointer <CtrlrPanelUndoManager> ctrlrPanelUndoManager;
+		std::unique_ptr<CtrlrPanelUndoManager> ctrlrPanelUndoManager;
 		CtrlrPanelEvaluationScope panelEvaluationScope;
 		CtrlrGlobalEvaluationScope globalEvaluationScope;
 		Array <int,CriticalSection> panelResources;

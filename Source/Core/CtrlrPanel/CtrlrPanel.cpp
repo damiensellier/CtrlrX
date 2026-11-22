@@ -55,7 +55,7 @@ CtrlrPanel::CtrlrPanel(CtrlrManager &_owner, const String &panelName, const int 
 		currentActionIndex(0),
 		indexOfSavedState(-1)
 {
-    ctrlrPanelUndoManager	= new CtrlrPanelUndoManager(*this);
+    ctrlrPanelUndoManager.reset(new CtrlrPanelUndoManager(*this));
     ctrlrLuaManager 		= new CtrlrLuaManager(*this);
 
     if ((bool)getCtrlrManagerOwner().getProperty (Ids::ctrlrLuaDisabled) == false)
@@ -1071,7 +1071,7 @@ const String CtrlrPanel::getUniqueModulatorName(const String &proposedName)
 
 void CtrlrPanel::changeListenerCallback (ChangeBroadcaster* source)
 {
-	if (source == ctrlrPanelUndoManager)
+	if (source == ctrlrPanelUndoManager.get())
 	{
 		Array <const UndoableAction *>actions;
 		ctrlrPanelUndoManager->getActionsInCurrentTransaction (actions);
