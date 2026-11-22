@@ -504,7 +504,7 @@ const Result CtrlrWindows::getDefaultResources(MemoryBlock& dataToWrite)
 
 	MemoryBlock data;
 	{
-		ScopedPointer <FileInputStream> fis (temp.createInputStream());
+		std::unique_ptr<FileInputStream> fis(temp.createInputStream());
 		fis->readIntoMemoryBlock (data);
 	}
 

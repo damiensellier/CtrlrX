@@ -1094,7 +1094,7 @@ const Result CtrlrMac::setBundleInfoCarbon (CtrlrPanel *sourceInfo, const File &
 	if (zipFileEntry)
 	{
 		_DBG("\tgot it");
-		ScopedPointer<InputStream> is (zipFile.createStreamForEntry(*zipFileEntry));
+		std::unique_ptr<InputStream> is(zipFile.createStreamForEntry(*zipFileEntry));
 
 		if (is)
 		{
