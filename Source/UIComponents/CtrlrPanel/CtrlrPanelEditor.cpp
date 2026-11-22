@@ -31,7 +31,8 @@
 CtrlrPanelNotifier::CtrlrPanelNotifier(CtrlrPanelEditor &_owner) // Added back v5.6.31 for file management bottom notification bar
     : owner(_owner), background(Colours::lightgrey)
 {
-    addAndMakeVisible (text = new Label());
+    text = std::make_unique<Label>();
+    addAndMakeVisible (text.get());
     text->addMouseListener (this, true);
     text->setColour (Label::backgroundColourId, Colours::transparentBlack);
     text->setColour (Label::textColourId, Colours::white.withAlpha (0.85f));
@@ -103,16 +104,17 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
     ctrlrComponentSelection.reset(new CtrlrComponentSelection(*this));
     
     // Corrected to use the proper syntax for ScopedPointers
-    ctrlrPanelViewport = new CtrlrPanelViewport(*this);
-    ctrlrPanelProperties = new CtrlrPanelProperties(*this);
-    spacerComponent = new juce::StretchableLayoutResizerBar(&layoutManager, 1, true);
+    ctrlrPanelViewport = std::make_unique<CtrlrPanelViewport>(*this);
+    ctrlrPanelProperties = std::make_unique<CtrlrPanelProperties>(*this);
+    spacerComponent = std::make_unique<juce::StretchableLayoutResizerBar>(&layoutManager, 1, true);
     
-    addAndMakeVisible(ctrlrPanelViewport);
-    addAndMakeVisible(ctrlrPanelProperties);
-    addAndMakeVisible(spacerComponent);
+    addAndMakeVisible(ctrlrPanelViewport.get());
+    addAndMakeVisible(ctrlrPanelProperties.get());
+    addAndMakeVisible(spacerComponent.get());
     
 	// Added back v5.6.31 for file management bottom notification bar
-    addAndMakeVisible(ctrlrPanelNotifier = new CtrlrPanelNotifier(*this));
+    ctrlrPanelNotifier = std::make_unique<CtrlrPanelNotifier>(*this);
+    addAndMakeVisible(ctrlrPanelNotifier.get());
 	
     ctrlrPanelNotifier->setAlwaysOnTop (true);  // Added back v5.6.31 for file management bottom notification bar
     ctrlrPanelNotifier->setVisible (false);  // Added back v5.6.31 for file management bottom notification bar
@@ -126,11 +128,11 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
     layoutManager.setItemLayout(1, 8, 8, 8);
     layoutManager.setItemLayout(2, -0.001, -1.0, -0.3);
     
-    editorComponentsInEditMode[0] = ctrlrPanelViewport;
-    editorComponentsInEditMode[1] = spacerComponent;
-    editorComponentsInEditMode[2] = ctrlrPanelProperties;
+    editorComponentsInEditMode[0] = ctrlrPanelViewport.get();
+    editorComponentsInEditMode[1] = spacerComponent.get();
+    editorComponentsInEditMode[2] = ctrlrPanelProperties.get();
     
-    editorComponents[0] = ctrlrPanelViewport;
+    editorComponents[0] = ctrlrPanelViewport.get();
     
     setProperty(Ids::name, panelName);
     setProperty(Ids::uiPanelEditMode, true);
@@ -256,7 +258,7 @@ CtrlrPanelEditor::CtrlrPanelEditor(CtrlrPanel &_owner, CtrlrManager &_ctrlrManag
 //    setProperty(Ids::uiPanelUIColourHighlightedFill, (String) LookAndFeel_V4::getCurrentColourScheme().getUIColour (ColourScheme::UIColour::highlightedFill).toString());
 //    setProperty(Ids::uiPanelUIColourMenuText, (String) LookAndFeel_V4::getCurrentColourScheme().getUIColour (ColourScheme::UIColour::menuText).toString());
     
-    ctrlrComponentSelection->addChangeListener(ctrlrPanelProperties);
+    ctrlrComponentSelection->addChangeListener(ctrlrPanelProperties.get());
     
     setSize(600, 400);
     
@@ -330,7 +332,7 @@ void CtrlrPanelEditor::resized()
 
 CtrlrComponentSelection *CtrlrPanelEditor::getSelection()
 {
-    return (ctrlrComponentSelection);
+    return (ctrlrComponentSelection.get());
 }
 
 void CtrlrPanelEditor::layoutItems()
@@ -339,12 +341,12 @@ void CtrlrPanelEditor::layoutItems()
     {
         if (getProperty(Ids::uiPanelPropertiesOnRight))
         {
-            Component *comps[] = {ctrlrPanelProperties, spacerComponent, ctrlrPanelViewport};
+            Component *comps[] = {ctrlrPanelProperties.get(), spacerComponent.get(), ctrlrPanelViewport.get()};
             layoutManager.layOutComponents(comps, 3, 0, 0, getWidth(), getHeight(), false, true);
         }
         else
         {
-            Component *comps[] = {ctrlrPanelViewport, spacerComponent, ctrlrPanelProperties};
+            Component *comps[] = {ctrlrPanelViewport.get(), spacerComponent.get(), ctrlrPanelProperties.get()};
             layoutManager.layOutComponents(comps, 3, 0, 0, getWidth(), getHeight(), false, true);
         }
     }
@@ -827,7 +829,7 @@ void CtrlrPanelEditor::notify(const String &notification, CtrlrNotificationCallb
 
         ctrlrPanelNotifier->setNotification (notification, ctrlrNotificationType);
 
-        componentAnimator.animateComponent (ctrlrPanelNotifier, ctrlrPanelNotifier->getBounds(), 0.0f, owner.getProperty(Ids::panelMessageTime), false, 1.0, 1.0);
+        componentAnimator.animateComponent (ctrlrPanelNotifier.get(), ctrlrPanelNotifier->getBounds(), 0.0f, owner.getProperty(Ids::panelMessageTime), false, 1.0, 1.0);
     }
 }
 

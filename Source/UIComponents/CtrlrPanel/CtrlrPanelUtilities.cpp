@@ -74,7 +74,7 @@ void CtrlrPanelUtilities::reloadContent()
 {
     if ((owner.isVisible() && owner.getSelection()->getNumSelected() == 0) || owner.getSelection()->getNumSelected() > 1)
 	{
-		ScopedPointer <XmlElement> xml (owner.getOwner().getPanelTree().createXml().release());
+		std::unique_ptr<XmlElement> xml(owner.getOwner().getPanelTree().createXml());
 		if (xml)
 		{
 			codeDocument.replaceAllContent (xml->createDocument(""));
@@ -85,7 +85,7 @@ void CtrlrPanelUtilities::reloadContent()
 		CtrlrComponent *c =  owner.getSelection()->getSelectedItem(0);
 		if (c)
 		{
-			ScopedPointer <XmlElement> xml (c->getOwner().getModulatorTree().createXml().release());
+			std::unique_ptr<XmlElement> xml(c->getOwner().getModulatorTree().createXml());
 			String doc = xml->createDocument("");
 			if (doc.length() <= 8192)
 			{

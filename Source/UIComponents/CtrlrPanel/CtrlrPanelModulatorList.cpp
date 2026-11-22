@@ -563,7 +563,7 @@ void CtrlrPanelModulatorList::deleteSelected()
 void CtrlrPanelModulatorList::restoreColumns(const String &columnState)
 {
 	XmlDocument doc(columnState);
-	ScopedPointer <XmlElement> xml(doc.getDocumentElement().release());
+	std::unique_ptr<XmlElement> xml(doc.getDocumentElement());
 	if (xml)
 	{
 		if (xml->hasTagName ("TABLELAYOUT"))

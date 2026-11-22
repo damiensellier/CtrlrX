@@ -45,7 +45,7 @@ void CtrlrViewport::deleteContentComp()
     {
         // This sets the content comp to a null pointer before deleting the old one, in case
         // anything tries to use the old one while it's in mid-deletion..
-        ScopedPointer<Component> oldCompDeleter (contentComp);
+        std::unique_ptr<Component> oldCompDeleter (contentComp.get());
         contentComp = nullptr;
     }
     else

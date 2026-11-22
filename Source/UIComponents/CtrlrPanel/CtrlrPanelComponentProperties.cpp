@@ -8,7 +8,8 @@
 CtrlrPanelComponentProperties::CtrlrPanelComponentProperties (CtrlrPanelEditor &_owner)
     : owner(_owner), panelPropertyOpennessState("invalid"), modulatorPropertyOpennessState("invalid")
 {
-    addAndMakeVisible (propertyPanel = new PropertyPanel());
+    propertyPanel = std::make_unique<PropertyPanel>();
+    addAndMakeVisible (propertyPanel.get());
     propertyPanel->getViewport().setScrollBarThickness(owner.getOwner().getOwner().getProperty(Ids::ctrlrScrollbarThickness));
     //[UserPreSize]
 	selectedItems=-1;
@@ -81,7 +82,7 @@ void CtrlrPanelComponentProperties::setTree (const ValueTree &_treeToEdit, const
 		return;
 	}
 
-	ScopedPointer <XmlElement> xml(propertyPanel->getOpennessState().release());
+	std::unique_ptr<XmlElement> xml(propertyPanel->getOpennessState());
 	if (treeToEdit.hasType(Ids::panel))
 	{
 		panelPropertyOpennessState		= *xml;

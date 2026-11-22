@@ -284,7 +284,7 @@ void CtrlrModulatorTreeXmlEditor::resized()
 
 void CtrlrModulatorTreeXmlEditor::setSelectedTree(ValueTree &_selectedTree)
 {
-	ScopedPointer <XmlElement> xml(_selectedTree.createXml().release());
+	std::unique_ptr<XmlElement> xml(_selectedTree.createXml());
 	if (xml)
 	{
 		xmlDocument.replaceAllContent (xml->createDocument(""));
@@ -295,7 +295,7 @@ void CtrlrModulatorTreeXmlEditor::setSelectedTree(ValueTree &_selectedTree)
 
 void CtrlrModulatorTreeXmlEditor::buttonClicked (Button *btn)
 {
-	ScopedPointer <XmlElement> changedXml (XmlDocument::parse (xmlDocument.getAllContent()).release());
+	std::unique_ptr<XmlElement> changedXml(XmlDocument::parse (xmlDocument.getAllContent()));
 
 	if (changedXml)
 	{
