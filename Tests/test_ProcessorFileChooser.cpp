@@ -1,6 +1,8 @@
 #include "test_ProcessorFixture.h"
 
 #include "CtrlrInlineUtilitiesGUI.h"
+#include "CtrlrApplicationWindow/CtrlrEditor.h"
+#include "CtrlrPanel/CtrlrPanelEditor.h"
 
 /**
  * The asynchronous file-chooser helpers in CtrlrInlineUtilitiesGUI.h (namespace FC), through
@@ -108,3 +110,81 @@ TEST_F(FileChooserHelpers, cancel_gives_an_empty_file_or_array)
     EXPECT_TRUE(gotMany.isEmpty());
 }
 
+/**
+ * The C++ callers of the helpers, with a panel: the work after the chooser runs in its callback,
+ * and a callback whose panel or manager is gone does nothing (closing a panel while its chooser
+ * is open must not write a file or touch freed memory; the memcheck gate runs these too).
+ */
+class FileChooserCallers : public ProcessorInstance
+{
+protected:
+    juce::File dir;
+    juce::Array<juce::File> answer;
+    juce::StringArray askedTitles;
+
+    void SetUp() override
+    {
+        ProcessorInstance::SetUp();
+        allowAndRecordDeviceSends(); // the panels open the mock devices; MIDI is not the subject
+        dir = juce::File::getSpecialLocation (juce::File::tempDirectory).getNonexistentChildFile ("ctrlrx-fc-test", "");
+        ASSERT_TRUE(dir.createDirectory());
+        FC::testAnswer() = [this] (const juce::String &title, int) {
+            askedTitles.add (title);
+            return answer;
+        };
+    }
+
+    void TearDown() override
+    {
+        FC::testAnswer() = nullptr;
+        dir.deleteRecursively();
+        ProcessorInstance::TearDown();
+    }
+
+    static void pump() { juce::MessageManager::getInstance()->runDispatchLoopUntil (100); }
+};
+
+TEST_F(FileChooserCallers, save_as_writes_the_answered_file_in_the_callback)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    const juce::File target = dir.getChildFile ("saved.panelz");
+    answer = { target };
+
+    panel->savePanelAs (CtrlrEditor::doExportFileZText);
+    EXPECT_EQ(askedTitles, juce::StringArray ("Panel file XML compressed"));
+    EXPECT_FALSE(target.exists()) << "nothing is written before the answer";
+
+    pump();
+    EXPECT_TRUE(target.existsAsFile());
+    EXPECT_EQ(panel->getProperty (Ids::panelFilePath).toString(), target.getFullPathName());
+}
+
+TEST_F(FileChooserCallers, save_as_does_nothing_when_the_panel_closed_before_the_answer)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    ASSERT_NE(panel->getEditor (false), nullptr);
+    const juce::File target = dir.getChildFile ("saved.panel");
+    answer = { target };
+
+    panel->savePanelAs (CtrlrEditor::doExportFileText);
+    processor->getManager().removePanel (panel->getEditor (false));
+    ASSERT_EQ(processor->getManager().getNumPanels(), 0);
+
+    pump();
+    EXPECT_FALSE(target.exists());
+}
+
+TEST_F(FileChooserCallers, open_opens_the_answered_panel_in_the_callback)
+{
+    answer = { juce::File::getCurrentWorkingDirectory().getChildFile ("fixtures/fixture_lua_values.panel") };
+    const int before = processor->getManager().getNumPanels();
+
+    processor->getManager().openPanelFromFile (nullptr);
+    EXPECT_EQ(askedTitles, juce::StringArray ("Open panel"));
+    EXPECT_EQ(processor->getManager().getNumPanels(), before);
+
+    pump();
+    EXPECT_EQ(processor->getManager().getNumPanels(), before + 1);
+}

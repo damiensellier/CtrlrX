@@ -8,6 +8,7 @@
 #include "CtrlrProcessor.h"
 #include "CtrlrMacros.h"
 #include "CtrlrManager/CtrlrManager.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 
 ValueTree CtrlrPanel::getCleanPanelTree()
 {
@@ -167,6 +168,9 @@ Result CtrlrPanel::savePanel()
     }
     else
     {
+        // A blocking chooser on purpose: canClose() saves an unsaved panel through here and then
+        // closes it, so the answer must come first. John Goodland's line makes the close path
+        // asynchronous (CtrlrPanel::canClose with a callback) and uses FC::saveFileAsync here.
         File ret = askForPanelFileToSave (this, File(owner.getProperty(Ids::panelLastSaveDir)).getChildFile(getVersionString()));
         if (ret != File())
         {
@@ -204,73 +208,87 @@ Result CtrlrPanel::savePanel()
     return res;
 }
 
-const File CtrlrPanel::savePanelAs(const CommandID saveOption)
+void CtrlrPanel::savePanelAs(const CommandID saveOption)
 {
-    File fileToSave;
     File f(getProperty(Ids::panelLastSaveDir));
+    // Added v8.0.100. The file choosers are asynchronous: each format is saved in the chooser's
+    // callback, which does nothing if the panel was closed while the chooser was open.
+    WeakReference<CtrlrPanel> safeThis (this);
     
     if (saveOption == CtrlrEditor::doExportFileText)
     {
-        fileToSave = CtrlrPanel::askForPanelFileToSave (this, f, true, false);
-        
-        if (fileToSave == File())
-            return (fileToSave);
-        
-        savePanelXml (fileToSave, this);
-        setProperty (Ids::panelFilePath, fileToSave.getFullPathName());
-        setProperty (Ids::panelLastSaveDir, fileToSave.getParentDirectory().getFullPathName());
-        
-        // Store current state panelWasDirty before changing the property panelIsDirty to false/0
-        bool panelWasDirty = isPanelDirty(); // Added v5.6.30 (removes asterisk suffix from name in panel tab). Returns getProperty(Ids::panelIsDirty,false); where false is default value if not available
-        
-        setPanelDirty(false); // Updated v5.6.31. false = 0 = notDirty.
-        
-        if (panelWasDirty) // Added v5.6.30. if panelPanelWasDirty = true/1
+        askForPanelFileToSaveAsync (this, f, true, false, [this, safeThis] (const File &fileToSave)
         {
-            setPanelDirty(panelWasDirty); // Added v5.6.30. setProperty(Ids::panelIsDirty, dirty);
-        }
+            if (safeThis == nullptr || fileToSave == File())
+                return;
         
-        getUndoManager()->clearUndoHistory(); // Added v5.6.30
-        updatePanelWindowTitle(); // Added v5.6.30
+            savePanelXml (fileToSave, this);
+            setProperty (Ids::panelFilePath, fileToSave.getFullPathName());
+            setProperty (Ids::panelLastSaveDir, fileToSave.getParentDirectory().getFullPathName());
+        
+            // Store current state panelWasDirty before changing the property panelIsDirty to false/0
+            bool panelWasDirty = isPanelDirty(); // Added v5.6.30 (removes asterisk suffix from name in panel tab). Returns getProperty(Ids::panelIsDirty,false); where false is default value if not available
+        
+            setPanelDirty(false); // Updated v5.6.31. false = 0 = notDirty.
+        
+            if (panelWasDirty) // Added v5.6.30. if panelPanelWasDirty = true/1
+            {
+                setPanelDirty(panelWasDirty); // Added v5.6.30. setProperty(Ids::panelIsDirty, dirty);
+            }
+        
+            getUndoManager()->clearUndoHistory(); // Added v5.6.30
+            updatePanelWindowTitle(); // Added v5.6.30
+        });
     }
     
     
 	if (saveOption == CtrlrEditor::doExportFileZText)
 	{
-		fileToSave = CtrlrPanel::askForPanelFileToSave (this, f, true, true);
+		askForPanelFileToSaveAsync (this, f, true, true, [this, safeThis] (const File &fileToSave)
+		{
+			if (safeThis == nullptr || fileToSave == File())
+				return;
 
-		if (fileToSave == File())
-			return (fileToSave);
-
-		savePanelXml (fileToSave, this, true);
-		setProperty (Ids::panelFilePath, fileToSave.getFullPathName());
-		setProperty (Ids::panelLastSaveDir, fileToSave.getParentDirectory().getFullPathName());
+			savePanelXml (fileToSave, this, true);
+			setProperty (Ids::panelFilePath, fileToSave.getFullPathName());
+			setProperty (Ids::panelLastSaveDir, fileToSave.getParentDirectory().getFullPathName());
+		});
 	}
 	if (saveOption == CtrlrEditor::doExportFileBin)
 	{
-		fileToSave = CtrlrPanel::askForPanelFileToSave (this, f, false, false);
+		askForPanelFileToSaveAsync (this, f, false, false, [this, safeThis] (const File &fileToSave)
+		{
+			if (safeThis == nullptr || fileToSave == File())
+				return;
 
-		if (fileToSave == File())
-			return (fileToSave);
-
-		savePanelBin (fileToSave, this, false);
+			savePanelBin (fileToSave, this, false);
+		});
 	}
 	if (saveOption == CtrlrEditor::doExportFileZBin)
 	{
-		fileToSave = CtrlrPanel::askForPanelFileToSave (this, f, false, true);
+		askForPanelFileToSaveAsync (this, f, false, true, [this, safeThis] (const File &fileToSave)
+		{
+			if (safeThis == nullptr || fileToSave == File())
+				return;
 
-		if (fileToSave == File())
-			return (fileToSave);
-
-		savePanelBin (fileToSave, this, true);
+			savePanelBin (fileToSave, this, true);
+		});
 	}
 	if (saveOption == CtrlrEditor::doExportFileZBinRes)
 	{
-		const String err = exportPanel(this, f);
-		if (err != "")
+		// Asks here and exports in the callback. A cancelled chooser gets exportPanel()'s message.
+		askForPanelFileToSaveAsync (this, f, false, true, [this, safeThis, f] (const File &exportedFile)
 		{
-			AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Panel Export", err);
-		}
+			if (safeThis == nullptr)
+				return;
+
+			const String err = exportedFile == File() ? String ("Destination file does not exist or is invalid")
+			                                          : exportPanel(this, f, exportedFile);
+			if (err != "")
+			{
+				AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Panel Export", err);
+			}
+		});
 	}
 	if (saveOption == CtrlrEditor::doExportFileInstance) // Updated v5.6.34.
 	{
@@ -327,8 +345,6 @@ const File CtrlrPanel::savePanelAs(const CommandID saveOption)
 	{
 		setProperty (Ids::panelUID, generateRandomUnique(STR (Time::currentTimeMillis())));
 	}
-
-	return (fileToSave);
 }
 
 void CtrlrPanel::savePanelVersioned()
@@ -854,14 +870,15 @@ Result CtrlrPanel::savePanelXml(const File &fileToSave, CtrlrPanel *panel, const
 	}
 }
 
-const File CtrlrPanel::askForPanelFileToSave (CtrlrPanel *panel,
+// The file that the panel save chooser starts with: the panel's name and version
+// with the format's extension, in lastBrowsedDir or else in the documents folder.
+const File CtrlrPanel::defaultPanelFileToSave (CtrlrPanel *panel,
 												const File &lastBrowsedDir,
 												const bool isXml,
 												const bool isCompressed)
 {
 	String panelFileName = "Ctrlr Panel";
 	File panelFile;
-	bool useOSDialog = panel ? (bool)panel->getCtrlrManagerOwner().getProperty(Ids::ctrlrNativeFileDialogs) : true;
 	if (panel)
 	{
 		panelFileName = panel->getProperty(Ids::name);
@@ -891,6 +908,17 @@ const File CtrlrPanel::askForPanelFileToSave (CtrlrPanel *panel,
 	{
 		panelFile = File::getSpecialLocation(File::userDocumentsDirectory).getChildFile(panelFileName);
 	}
+
+	return (panelFile);
+}
+
+const File CtrlrPanel::askForPanelFileToSave (CtrlrPanel *panel,
+												const File &lastBrowsedDir,
+												const bool isXml,
+												const bool isCompressed)
+{
+	File panelFile = defaultPanelFileToSave (panel, lastBrowsedDir, isXml, isCompressed);
+	bool useOSDialog = panel ? (bool)panel->getCtrlrManagerOwner().getProperty(Ids::ctrlrNativeFileDialogs) : true;
 
 	if (isXml)
 	{
@@ -952,6 +980,35 @@ const File CtrlrPanel::askForPanelFileToSave (CtrlrPanel *panel,
 	}
 
 	return (File());
+}
+
+// askForPanelFileToSave() with an asynchronous chooser (same title, pattern,
+// native flag and failure notice). The callback gets the chosen file with the format's extension,
+// or File() for Cancel.
+void CtrlrPanel::askForPanelFileToSaveAsync (CtrlrPanel *panel,
+												const File &lastBrowsedDir,
+												const bool isXml,
+												const bool isCompressed,
+												std::function<void (const File &)> callback)
+{
+	const File panelFile = defaultPanelFileToSave (panel, lastBrowsedDir, isXml, isCompressed);
+	const bool useOSDialog = panel ? (bool)panel->getCtrlrManagerOwner().getProperty(Ids::ctrlrNativeFileDialogs) : true;
+	const String extension = isXml ? (isCompressed ? "panelz" : "panel") : (isCompressed ? "bpanelz" : "bpanel");
+	const String title = isXml ? (isCompressed ? "Panel file XML compressed" : "Panel file XML")
+	                           : (isCompressed ? "Panel file binary compressed" : "Panel file binary");
+	WeakReference<CtrlrPanel> safePanel (panel);
+
+	FC::saveFileAsync (title, panelFile, "*." + extension, useOSDialog, [safePanel, extension, callback] (const File &result)
+	{
+		if (result == File())
+		{
+			if (safePanel != nullptr)
+				safePanel->notify ("Save file dialog failed", nullptr, NotifyFailure);
+			callback (File());
+			return;
+		}
+		callback (result.withFileExtension (extension));
+	});
 }
 
 bool CtrlrPanel::isPanelFile(const File &fileToCheck, const bool beThorough)

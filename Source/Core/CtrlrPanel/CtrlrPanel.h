@@ -159,7 +159,7 @@ class CtrlrPanel:	public ValueTree::Listener,
 		Result convertLuaMethodsToFiles(const String dirPath);
 		File getLuaMethodGroupDir(const ValueTree &methodGroup);
 
-		const File savePanelAs(const CommandID saveOption);
+		void savePanelAs(const CommandID saveOption);
 		void savePanelVersioned();
 		Result savePanelXml(const File &fileToSave, CtrlrPanel *panel, const bool compressPanel=false);
 		Result savePanelBin(const File &fileToSave, CtrlrPanel *panel, const bool compressPanel=false);
@@ -186,6 +186,15 @@ class CtrlrPanel:	public ValueTree::Listener,
 													const File &lastBrowsedDir,
 													const bool isXml=true,
 													const bool isCompressed=false);
+		static void askForPanelFileToSaveAsync (CtrlrPanel *panel,
+													const File &lastBrowsedDir,
+													const bool isXml,
+													const bool isCompressed,
+													std::function<void (const File &)> callback);
+		static const File defaultPanelFileToSave (CtrlrPanel *panel,
+													const File &lastBrowsedDir,
+													const bool isXml,
+													const bool isCompressed);
 
 		void luaSavePanel(const CtrlrPanelFileType fileType, const File &file);
 		void setInstanceProperties(const ValueTree &instanceState);
