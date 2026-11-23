@@ -7,6 +7,7 @@
 #include "CtrlrPanel/CtrlrPanelEditor.h"
 #include "CtrlrLuaManager.h"
 #include "CtrlrUtilitiesGUI.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 #include "CtrlrComponents/CtrlrCustomComponent.h"
 #include "CtrlrComponents/CtrlrComponentTypeManager.h"
 #include "CtrlrComponents/Groups/CtrlrTabsComponent.h"
@@ -1303,21 +1304,27 @@ void CtrlrPanelCanvas::exportComponent(CtrlrComponent *componentToExport)
 			owner.setProperty (Ids::lastBrowsedComponentDir, File::getSpecialLocation(File::userDocumentsDirectory).getFullPathName());
 		}
 
-		FileChooser fileChooser ("Ctrlr component file",
+		// The chooser is asynchronous; the callback does nothing if the canvas or the component is gone.
+		Component::SafePointer<CtrlrPanelCanvas> safeThis (this);
+		Component::SafePointer<CtrlrComponent> safeComponent (componentToExport);
+		FC::saveFileAsync ("Ctrlr component file",
 									File(owner.getProperty (Ids::lastBrowsedComponentDir)).getChildFile (componentToExport->getOwner().getName()+".component"),
 									"*.component",
-									owner.getOwner().getCtrlrManagerOwner().getProperty(Ids::ctrlrNativeFileDialogs));
-		if (fileChooser.browseForFileToSave(true))
+									owner.getOwner().getCtrlrManagerOwner().getProperty(Ids::ctrlrNativeFileDialogs),
+									[this, safeThis, safeComponent] (const File &chosenFile)
 		{
-			File fileToSave = fileChooser.getResult().withFileExtension(".component");
+			if (safeThis == nullptr || safeComponent == nullptr || chosenFile == File())
+				return;
+
+			File fileToSave = chosenFile.withFileExtension(".component");
 
 			owner.setProperty (Ids::lastBrowsedComponentDir, fileToSave.getParentDirectory().getFullPathName());
 			std::unique_ptr<FileOutputStream> fileOutputStream(fileToSave.createOutputStream());
 			if (fileOutputStream)
 			{
-				componentToExport->getOwner().getModulatorTree().writeToStream (*fileOutputStream);
+				safeComponent->getOwner().getModulatorTree().writeToStream (*fileOutputStream);
 			}
-		}
+		});
 	}
 }
 

@@ -232,45 +232,51 @@ void CtrlrPanelResourceEditor::paintCell (Graphics& g, int rowNumber, int column
 
 void CtrlrPanelResourceEditor::addResourceFromFile()
 {
-	FileChooser fileChooser ("Resource file",
+	// The chooser is asynchronous; the callback does nothing if the editor was closed.
+	Component::SafePointer<CtrlrPanelResourceEditor> safeThis (this);
+	FC::openMultipleFilesAsync ("Resource file",
 							File(owner.getOwner().getCtrlrManagerOwner().getProperty(Ids::ctrlrLastBrowsedResourceDir))
 							,"*.*"
-							,owner.getOwner().getCtrlrManagerOwner().getProperty(Ids::ctrlrNativeFileDialogs));
-	if (fileChooser.browseForMultipleFilesToOpen(0))
- 	{
-		Array <File> filesToOpen = fileChooser.getResults();
+							,owner.getOwner().getCtrlrManagerOwner().getProperty(Ids::ctrlrNativeFileDialogs)
+							,[this, safeThis] (const Array<File> &filesToOpen)
+	{
+		if (safeThis == nullptr)
+			return;
 
-		for (int i=0; i<filesToOpen.size(); i++)
-		{
-			if (i == 0)
-				owner.getOwner().getCtrlrManagerOwner().setProperty (Ids::ctrlrLastBrowsedResourceDir, filesToOpen[i].getParentDirectory().getFullPathName());
-
-			if (getResourceManager().resourceExists (filesToOpen[i]))
+		if (!filesToOpen.isEmpty())
+	 	{
+			for (int i=0; i<filesToOpen.size(); i++)
 			{
-				if ((bool)owner.getOwner().getCtrlrManagerOwner().getProperty(Ids::ctrlrOverwriteResources) == false)
+				if (i == 0)
+					owner.getOwner().getCtrlrManagerOwner().setProperty (Ids::ctrlrLastBrowsedResourceDir, filesToOpen[i].getParentDirectory().getFullPathName());
+
+				if (getResourceManager().resourceExists (filesToOpen[i]))
 				{
-					if (!SURE("Resource: "+filesToOpen[i].getFileNameWithoutExtension()+" already exists. Overwrite?", this))
+					if ((bool)owner.getOwner().getCtrlrManagerOwner().getProperty(Ids::ctrlrOverwriteResources) == false)
 					{
-						return;
+						if (!SURE("Resource: "+filesToOpen[i].getFileNameWithoutExtension()+" already exists. Overwrite?", this))
+						{
+							return;
+						}
+					}
+
+					int index = getResourceManager().getResourceIndex(filesToOpen[i].getFileNameWithoutExtension());
+
+					if (index >= 0)
+					{
+						getResourceManager().removeResource(index);
+						getResourceManager().addResource (filesToOpen[i]);
 					}
 				}
-
-				int index = getResourceManager().getResourceIndex(filesToOpen[i].getFileNameWithoutExtension());
-
-				if (index >= 0)
+				else
 				{
-					getResourceManager().removeResource(index);
-					getResourceManager().addResource (filesToOpen[i]);
+	 				getResourceManager().addResource (filesToOpen[i]);
 				}
 			}
-			else
-			{
- 				getResourceManager().addResource (filesToOpen[i]);
-			}
-		}
- 	}
+	 	}
 
-	updateTable();
+		updateTable();
+	});
 }
 
 void CtrlrPanelResourceEditor::deleteSelectedResources()

@@ -496,45 +496,50 @@ void CtrlrLuaMethodEditor::addMethodFromFile(ValueTree parentGroup)
         lastBrowsedSourceDir = groupFolder;
     }
 
-    FileChooser fc ("Select LUA files",
+    // The chooser is asynchronous; the callback does nothing if the editor was closed.
+    Component::SafePointer<CtrlrLuaMethodEditor> safeThis (this);
+    FC::openMultipleFilesAsync ("Select LUA files",
                     lastBrowsedSourceDir,
                     "*.lua;*.txt",
-                    owner.getCtrlrManagerOwner().getProperty(Ids::ctrlrNativeFileDialogs));
-
-    if (fc.browseForMultipleFilesToOpen ())
+                    owner.getCtrlrManagerOwner().getProperty(Ids::ctrlrNativeFileDialogs),
+                    [this, safeThis, parentGroup] (const Array<File> &results)
     {
-        Array <File> results = fc.getResults();
+        if (safeThis == nullptr)
+            return;
 
-        for (int i=0; i<results.size(); i++)
-        {    // Check that a method with that name does not already exist
-            String methodName = results[i].getFileNameWithoutExtension();
-            bool nameOK = true;
-            for (int j = 0; j < parentGroup.getNumChildren(); j++)
-            {
-                ValueTree child = parentGroup.getChild(j);
-                if (child.hasType(Ids::luaMethod))
+        if (!results.isEmpty())
+        {
+            for (int i=0; i<results.size(); i++)
+            {    // Check that a method with that name does not already exist
+                String methodName = results[i].getFileNameWithoutExtension();
+                bool nameOK = true;
+                for (int j = 0; j < parentGroup.getNumChildren(); j++)
                 {
-                    if (methodName == child.getProperty(Ids::luaMethodName).toString())
+                    ValueTree child = parentGroup.getChild(j);
+                    if (child.hasType(Ids::luaMethod))
                     {
-                        nameOK = false;
-                        break;
+                        if (methodName == child.getProperty(Ids::luaMethodName).toString())
+                        {
+                            nameOK = false;
+                            break;
+                        }
                     }
                 }
-            }
-            if (nameOK)
-            {
-                getMethodManager().addMethodFromFile(parentGroup, results[i]);
-            }
-            else
-            {
-                AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Add Files", "A method named '"+ methodName +"' already exists in this group, file will be ignored.");
+                if (nameOK)
+                {
+                    getMethodManager().addMethodFromFile(parentGroup, results[i]);
+                }
+                else
+                {
+                    AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Add Files", "A method named '"+ methodName +"' already exists in this group, file will be ignored.");
+                }
             }
         }
-    }
 
-    updateRootItem();
+        updateRootItem();
 
-    saveSettings(); // save settings
+        saveSettings(); // save settings
+    });
 }
 
 void CtrlrLuaMethodEditor::addNewGroup(ValueTree parentGroup)

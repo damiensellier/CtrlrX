@@ -4,6 +4,9 @@
 #include "CtrlrApplicationWindow/CtrlrEditor.h"
 #include "CtrlrPanel/CtrlrPanelEditor.h"
 #include "Native/CtrlrNative.h"
+#include "CtrlrPanel/CtrlrPanelCanvas.h"
+#include "CtrlrPropertyEditors/CtrlrPropertyComponent.h"
+#include "CtrlrMIDI/CtrlrMIDIBuffer.h"
 
 /**
  * The asynchronous file-chooser helpers in CtrlrInlineUtilitiesGUI.h (namespace FC), through
@@ -227,4 +230,117 @@ TEST_F(FileChooserCallers, instance_export_does_nothing_when_the_panel_closed_be
     pump();
     // Nothing under dir: Windows adds the extension, macOS writes inside the answered directory.
     EXPECT_EQ(dir.getNumberOfChildFiles (juce::File::findFilesAndDirectories), 0) << "no export for a closed panel";
+}
+
+// The UI sites. Each one: the answer is used in the callback, and nothing happens (no crash) if
+// the component that asked is gone before the answer.
+TEST_F(FileChooserCallers, canvas_component_export_writes_in_the_callback)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    ASSERT_NE(panel->getEditor (false), nullptr);
+    CtrlrModulator *m = panel->getModulator ("target");
+    ASSERT_NE(m, nullptr);
+    const juce::File target = dir.getChildFile ("target.component");
+    answer = { target };
+
+    panel->getEditor (false)->getCanvas()->exportComponent (m->getComponent());
+    EXPECT_EQ(askedTitles, juce::StringArray ("Ctrlr component file"));
+    EXPECT_FALSE(target.exists());
+
+    pump();
+    ASSERT_TRUE(target.existsAsFile());
+    EXPECT_GT(target.getSize(), 0);
+}
+
+TEST_F(FileChooserCallers, canvas_component_export_does_nothing_when_the_panel_closed_before_the_answer)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    ASSERT_NE(panel->getEditor (false), nullptr);
+    CtrlrModulator *m = panel->getModulator ("target");
+    ASSERT_NE(m, nullptr);
+    answer = { dir.getChildFile ("target.component") };
+
+    panel->getEditor (false)->getCanvas()->exportComponent (m->getComponent());
+    processor->getManager().removePanel (panel->getEditor (false));
+    ASSERT_EQ(processor->getManager().getNumPanels(), 0);
+
+    pump();
+    EXPECT_EQ(dir.getNumberOfChildFiles (juce::File::findFilesAndDirectories), 0);
+}
+
+static juce::Button *firstButtonOf (juce::Component &c)
+{
+    for (auto *child : c.getChildren())
+        if (auto *b = dynamic_cast<juce::Button *> (child))
+            return b;
+    return nullptr;
+}
+
+TEST_F(FileChooserCallers, file_property_sets_the_value_in_the_callback)
+{
+    juce::Value value ("before");
+    CtrlrFileProperty property (value);
+    juce::Button *browse = firstButtonOf (property);
+    ASSERT_NE(browse, nullptr);
+    const juce::File chosen = dir.getChildFile ("chosen.bin");
+    answer = { chosen };
+
+    property.buttonClicked (browse);
+    EXPECT_EQ(askedTitles, juce::StringArray ("Select a file"));
+    EXPECT_EQ(value.toString(), "before");
+
+    pump();
+    EXPECT_EQ(value.toString(), chosen.getFullPathName());
+}
+
+TEST_F(FileChooserCallers, file_property_deleted_before_the_answer_is_left_alone)
+{
+    juce::Value value ("before");
+    auto property = std::make_unique<CtrlrFileProperty> (value);
+    juce::Button *browse = firstButtonOf (*property);
+    ASSERT_NE(browse, nullptr);
+    answer = { dir.getChildFile ("chosen.bin") };
+
+    property->buttonClicked (browse);
+    property.reset();
+
+    pump();
+    EXPECT_EQ(value.toString(), "before");
+}
+
+TEST_F(FileChooserCallers, midi_buffer_loads_the_answered_file_in_the_callback)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    const juce::File syx = dir.getChildFile ("data.syx");
+    const uint8 bytes[] = { 0xf0, 0x01, 0x02, 0xf7 };
+    ASSERT_TRUE(syx.replaceWithData (bytes, sizeof (bytes)));
+    answer = { syx };
+
+    CtrlrMIDIBuffer buffer (*panel);
+    buffer.loadBinFile (juce::File());
+    EXPECT_EQ(askedTitles, juce::StringArray ("Open file"));
+    EXPECT_EQ(buffer.getData().getSize(), 0u);
+
+    pump();
+    EXPECT_EQ(buffer.getData(), juce::MemoryBlock (bytes, sizeof (bytes)));
+}
+
+TEST_F(FileChooserCallers, midi_buffer_deleted_before_the_answer_is_left_alone)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    const juce::File syx = dir.getChildFile ("data.syx");
+    const uint8 bytes[] = { 0xf0, 0x01, 0x02, 0xf7 };
+    ASSERT_TRUE(syx.replaceWithData (bytes, sizeof (bytes)));
+    answer = { syx };
+
+    auto buffer = std::make_unique<CtrlrMIDIBuffer> (*panel);
+    buffer->loadTextFile (juce::File());
+    buffer.reset();
+
+    pump(); // must not touch the deleted buffer
+    SUCCEED();
 }

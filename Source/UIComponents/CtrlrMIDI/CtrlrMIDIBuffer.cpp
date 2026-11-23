@@ -20,6 +20,7 @@
 //[Headers] You can add your own extra header files here...
 #include "stdafx.h"
 #include "CtrlrPanel/CtrlrPanel.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 
 //[/Headers]
 
@@ -555,51 +556,65 @@ void CtrlrMIDIBuffer::buttonClicked (juce::Button* buttonThatWasClicked)
 
 
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
-const File CtrlrMIDIBuffer::browseForFile(const String &mask)
+// Asynchronous: the callback gets the chosen file, or an empty File for Cancel
+// (as the blocking version returned). It does not run if the buffer editor was closed.
+void CtrlrMIDIBuffer::browseForFile(const String &mask, std::function<void (const File &)> callback)
 {
-	FileChooser fc("Open file", lastBrowsedDirectory, mask, true);
-	if (fc.browseForFileToOpen())
+	Component::SafePointer<CtrlrMIDIBuffer> safeThis (this);
+	FC::openFileAsync("Open file", lastBrowsedDirectory, mask, true, [this, safeThis, callback] (const File &result)
 	{
-		if (fc.getResult().existsAsFile())
-		{
-			lastBrowsedDirectory	= fc.getResult().getParentDirectory();
-			return (fc.getResult());
-		}
-	}
+		if (safeThis == nullptr)
+			return;
 
-	return (File());
+		if (result.existsAsFile())
+		{
+			lastBrowsedDirectory	= result.getParentDirectory();
+			callback (result);
+			return;
+		}
+
+		callback (File());
+	});
 }
 
 void CtrlrMIDIBuffer::loadBinFile(const File fileToOpen)
 {
 	_DBG("CtrlrMIDIBuffer::loadBinFile");
+	auto load = [this]
+	{
+		lastFile.loadFileAsData (data);
+		reloadEditor (String::toHexString (data.getData(), (int)data.getSize()), true);
+	};
+
 	if (fileToOpen == File())
 	{
-		lastFile = browseForFile("*.syx;*.bin;*.dat;*.*");
+		browseForFile("*.syx;*.bin;*.dat;*.*", [this, load] (const File &chosen) { lastFile = chosen; load(); });
 	}
 	else
 	{
 		lastFile = fileToOpen;
+		load();
 	}
-
-	lastFile.loadFileAsData (data);
-	reloadEditor (String::toHexString (data.getData(), (int)data.getSize()), true);
 }
 
 void CtrlrMIDIBuffer::loadTextFile(const File fileToOpen)
 {
+	auto load = [this]
+	{
+	    MemoryBlock tmp;
+		tmp.loadFromHexString (lastFile.loadFileAsString());
+		reloadEditor (lastFile.loadFileAsString(), true);
+	};
+
 	if (fileToOpen == File())
 	{
-		lastFile = browseForFile("*.syx;*.bin;*.dat;*.*");
+		browseForFile("*.syx;*.bin;*.dat;*.*", [this, load] (const File &chosen) { lastFile = chosen; load(); });
 	}
 	else
 	{
 		lastFile = fileToOpen;
+		load();
 	}
-
-    MemoryBlock tmp;
-	tmp.loadFromHexString (lastFile.loadFileAsString());
-	reloadEditor (lastFile.loadFileAsString(), true);
 }
 
 CtrlrMIDIBufferTokenSet CtrlrMIDIBuffer::getTokenSetFromMenu()
