@@ -141,6 +141,9 @@ bool CtrlrLuaUtils::questionWindow (const String title, const String message, co
 	return (AlertWindow::showOkCancelBox (AlertWindow::QuestionIcon, title, message, button1Text, button2Text));
 }
 
+// The Lua file windows below stay blocking: a script gets the answer as the return value (or
+// the table), and a callback form would be new Lua API. John Goodland's (dnaldoog) JUCE 8 line
+// has callback forms of these (his v8.30, FileChooser::launchAsync()).
 File CtrlrLuaUtils::openFileWindow(const String &dialogBoxTitle, const File &initialFileOrDirectory,
 									const String &filePatternsAllowed, bool useOSNativeDialogBox)
 {
