@@ -145,7 +145,17 @@ protected:
         ProcessorInstance::TearDown();
     }
 
-    static void pump() { juce::MessageManager::getInstance()->runDispatchLoopUntil (100); }
+    // A loaded panel queues its own messages, and a slow runner (macOS CI) may not reach the
+    // answer within a short pump: positive tests pump until their result shows (5 s at most),
+    // and "nothing happens" tests pump a fixed 500 ms.
+    static void pump() { juce::MessageManager::getInstance()->runDispatchLoopUntil (500); }
+
+    static bool pumpUntil (std::function<bool()> done)
+    {
+        for (int i = 0; i < 100 && ! done(); ++i)
+            juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
+        return done();
+    }
 };
 
 TEST_F(FileChooserCallers, save_as_writes_the_answered_file_in_the_callback)
@@ -159,7 +169,7 @@ TEST_F(FileChooserCallers, save_as_writes_the_answered_file_in_the_callback)
     EXPECT_EQ(askedTitles, juce::StringArray ("Panel file XML compressed"));
     EXPECT_FALSE(target.exists()) << "nothing is written before the answer";
 
-    pump();
+    pumpUntil ([&] { return target.existsAsFile() && panel->getProperty (Ids::panelFilePath).toString() == target.getFullPathName(); });
     EXPECT_TRUE(target.existsAsFile());
     EXPECT_EQ(panel->getProperty (Ids::panelFilePath).toString(), target.getFullPathName());
 }
@@ -189,7 +199,7 @@ TEST_F(FileChooserCallers, open_opens_the_answered_panel_in_the_callback)
     EXPECT_EQ(askedTitles, juce::StringArray ("Open panel"));
     EXPECT_EQ(processor->getManager().getNumPanels(), before);
 
-    pump();
+    pumpUntil ([&] { return processor->getManager().getNumPanels() == before + 1; });
     EXPECT_EQ(processor->getManager().getNumPanels(), before + 1);
 }
 
@@ -208,7 +218,7 @@ TEST_F(FileChooserCallers, instance_export_reports_cancel_after_the_answer)
     EXPECT_EQ(askedTitles, juce::StringArray (juce::String (CTRLR_NEW_INSTANCE_DIALOG_TITLE)));
     EXPECT_EQ(calls, 0) << "the result comes after the answer";
 
-    pump();
+    pumpUntil ([&] { return calls > 0; });
     EXPECT_EQ(calls, 1);
     // savePanelAs() treats exactly this text as a quiet cancel (no alert).
     EXPECT_EQ(got.getErrorMessage(), "User cancelled the export operation.");
@@ -248,7 +258,7 @@ TEST_F(FileChooserCallers, canvas_component_export_writes_in_the_callback)
     EXPECT_EQ(askedTitles, juce::StringArray ("Ctrlr component file"));
     EXPECT_FALSE(target.exists());
 
-    pump();
+    pumpUntil ([&] { return target.existsAsFile() && target.getSize() > 0; });
     ASSERT_TRUE(target.existsAsFile());
     EXPECT_GT(target.getSize(), 0);
 }
@@ -280,7 +290,7 @@ static juce::Button *firstButtonOf (juce::Component &c)
 
 TEST_F(FileChooserCallers, file_property_sets_the_value_in_the_callback)
 {
-    juce::Value value ("before");
+    juce::Value value (juce::var ("before"));
     CtrlrFileProperty property (value);
     juce::Button *browse = firstButtonOf (property);
     ASSERT_NE(browse, nullptr);
@@ -291,13 +301,13 @@ TEST_F(FileChooserCallers, file_property_sets_the_value_in_the_callback)
     EXPECT_EQ(askedTitles, juce::StringArray ("Select a file"));
     EXPECT_EQ(value.toString(), "before");
 
-    pump();
+    pumpUntil ([&] { return value.toString() == chosen.getFullPathName(); });
     EXPECT_EQ(value.toString(), chosen.getFullPathName());
 }
 
 TEST_F(FileChooserCallers, file_property_deleted_before_the_answer_is_left_alone)
 {
-    juce::Value value ("before");
+    juce::Value value (juce::var ("before"));
     auto property = std::make_unique<CtrlrFileProperty> (value);
     juce::Button *browse = firstButtonOf (*property);
     ASSERT_NE(browse, nullptr);
@@ -324,7 +334,7 @@ TEST_F(FileChooserCallers, midi_buffer_loads_the_answered_file_in_the_callback)
     EXPECT_EQ(askedTitles, juce::StringArray ("Open file"));
     EXPECT_EQ(buffer.getData().getSize(), 0u);
 
-    pump();
+    pumpUntil ([&] { return buffer.getData().getSize() == sizeof (bytes); });
     EXPECT_EQ(buffer.getData(), juce::MemoryBlock (bytes, sizeof (bytes)));
 }
 
