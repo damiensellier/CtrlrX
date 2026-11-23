@@ -292,54 +292,62 @@ void CtrlrPanel::savePanelAs(const CommandID saveOption)
 	}
 	if (saveOption == CtrlrEditor::doExportFileInstance) // Updated v5.6.34.
 	{
-		Result res = owner.getNativeObject().exportWithDefaultPanel(this, false, false);
-
-		if (res.failed())
+		owner.getNativeObject().exportWithDefaultPanel(this, false, false, [this, safeThis] (Result res)
 		{
-			if (res.getErrorMessage() == "User cancelled the export operation.")
+			if (safeThis == nullptr)
+				return;
+
+			if (res.failed())
 			{
-				// Silently handle the cancellation. No message box.
-				notify("Panel instance export: Cancelled by user.", nullptr, NotifyFailure);
+				if (res.getErrorMessage() == "User cancelled the export operation.")
+				{
+					// Silently handle the cancellation. No message box.
+					notify("Panel instance export: Cancelled by user.", nullptr, NotifyFailure);
+				}
+				else
+				{
+					notify("Panel instance export: [" + res.getErrorMessage() + "]", nullptr, NotifyFailure);
+					// Handle a true export failure with a warning message.
+					AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Panel export", "Failed to export panel as standalone instance.\n" + res.getErrorMessage());
+				}
 			}
 			else
 			{
-				notify("Panel instance export: [" + res.getErrorMessage() + "]", nullptr, NotifyFailure);
-				// Handle a true export failure with a warning message.
-				AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Panel export", "Failed to export panel as standalone instance.\n" + res.getErrorMessage());
+				notify("Panel instance export: Wrote new panel instance.", nullptr, NotifySuccess);
+				// Handle a successful export.
+				AlertWindow::showMessageBox(AlertWindow::InfoIcon, "Panel export", "Wrote new panel instance");
 			}
-		}
-		else
-		{
-			notify("Panel instance export: Wrote new panel instance.", nullptr, NotifySuccess);
-			// Handle a successful export.
-			AlertWindow::showMessageBox(AlertWindow::InfoIcon, "Panel export", "Wrote new panel instance");
-		}
+		});
 	}
 
 	if (saveOption == CtrlrEditor::doExportFileInstanceRestricted) // Updated v5.6.34.
 	{
-		Result res = owner.getNativeObject().exportWithDefaultPanel(this, true, true);
-
-		if (res.failed())
+		owner.getNativeObject().exportWithDefaultPanel(this, true, true, [this, safeThis] (Result res)
 		{
-			if (res.getErrorMessage() == "User cancelled the export operation.")
+			if (safeThis == nullptr)
+				return;
+
+			if (res.failed())
 			{
-				// Silently handle the cancellation. No message box.
-				notify("Panel instance export: Cancelled by user.", nullptr, NotifyFailure);
+				if (res.getErrorMessage() == "User cancelled the export operation.")
+				{
+					// Silently handle the cancellation. No message box.
+					notify("Panel instance export: Cancelled by user.", nullptr, NotifyFailure);
+				}
+				else
+				{
+					notify("Panel instance export: [" + res.getErrorMessage() + "]", nullptr, NotifyFailure);
+					// Handle a true export failure with a warning message.
+					AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Panel export", "Failed to export panel as standalone instance.\n" + res.getErrorMessage());
+				}
 			}
 			else
 			{
-				notify("Panel instance export: [" + res.getErrorMessage() + "]", nullptr, NotifyFailure);
-				// Handle a true export failure with a warning message.
-				AlertWindow::showMessageBox(AlertWindow::WarningIcon, "Panel export", "Failed to export panel as standalone instance.\n" + res.getErrorMessage());
+				notify("Panel instance export: Wrote new panel instance.", nullptr, NotifySuccess);
+				// Handle a successful export.
+				AlertWindow::showMessageBox(AlertWindow::InfoIcon, "Panel export", "Wrote new panel instance");
 			}
-		}
-		else
-		{
-			notify("Panel instance export: Wrote new panel instance.", nullptr, NotifySuccess);
-			// Handle a successful export.
-			AlertWindow::showMessageBox(AlertWindow::InfoIcon, "Panel export", "Wrote new panel instance");
-		}
+		});
 	}
 	if (saveOption == CtrlrEditor::doExportGenerateUID)
 	{

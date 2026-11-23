@@ -3,6 +3,7 @@
 #include "CtrlrInlineUtilitiesGUI.h"
 #include "CtrlrApplicationWindow/CtrlrEditor.h"
 #include "CtrlrPanel/CtrlrPanelEditor.h"
+#include "Native/CtrlrNative.h"
 
 /**
  * The asynchronous file-chooser helpers in CtrlrInlineUtilitiesGUI.h (namespace FC), through
@@ -187,4 +188,43 @@ TEST_F(FileChooserCallers, open_opens_the_answered_panel_in_the_callback)
 
     pump();
     EXPECT_EQ(processor->getManager().getNumPanels(), before + 1);
+}
+
+// Instance export, through the platform's CtrlrNative. Only Cancel and the closed panel: an
+// answered export copies the test binary (and on Linux writes ~/.local desktop files).
+TEST_F(FileChooserCallers, instance_export_reports_cancel_after_the_answer)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    answer = {};
+    int calls = 0;
+    juce::Result got = juce::Result::ok();
+
+    CtrlrNative &native = processor->getManager().getNativeObject();
+    native.exportWithDefaultPanel (panel, false, false, [&] (juce::Result r) { ++calls; got = r; });
+    EXPECT_EQ(askedTitles, juce::StringArray (juce::String (CTRLR_NEW_INSTANCE_DIALOG_TITLE)));
+    EXPECT_EQ(calls, 0) << "the result comes after the answer";
+
+    pump();
+    EXPECT_EQ(calls, 1);
+    // savePanelAs() treats exactly this text as a quiet cancel (no alert).
+    EXPECT_EQ(got.getErrorMessage(), "User cancelled the export operation.");
+}
+
+TEST_F(FileChooserCallers, instance_export_does_nothing_when_the_panel_closed_before_the_answer)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    ASSERT_NE(panel->getEditor (false), nullptr);
+    const juce::File target = dir.getChildFile ("instance");
+    answer = { target };
+
+    panel->savePanelAs (CtrlrEditor::doExportFileInstance);
+    ASSERT_EQ(askedTitles.size(), 1);
+    processor->getManager().removePanel (panel->getEditor (false));
+    ASSERT_EQ(processor->getManager().getNumPanels(), 0);
+
+    pump();
+    // Nothing under dir: Windows adds the extension, macOS writes inside the answered directory.
+    EXPECT_EQ(dir.getNumberOfChildFiles (juce::File::findFilesAndDirectories), 0) << "no export for a closed panel";
 }

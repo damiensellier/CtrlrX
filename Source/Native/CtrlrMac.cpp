@@ -7,6 +7,7 @@ static const int zero=0;
 #include "CtrlrMac.h"
 #include "CtrlrMacros.h"
 #include "CtrlrLog.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 
 #include <random>
 #include <fstream>
@@ -20,16 +21,17 @@ CtrlrMac::~CtrlrMac()
 {
 }
 
-const Result CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bool isRestricted, const bool signPanel) {
+// Shows the chooser with FC::chooseDirectoryAsync() and writes the instance in its callback.
+void CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bool isRestricted, const bool signPanel,
+                                     std::function<void (juce::Result)> callback) {
     if (panelToWrite == nullptr) {
-        return (Result::fail("MAC native, panel pointer is invalid"));
+        if (callback)
+            callback (Result::fail("MAC native, panel pointer is invalid"));
+        return;
     }
     
     File me = File::getSpecialLocation(File::currentApplicationFile);
     String fileExtension = me.getFileExtension();
-    File newMe;
-    MemoryBlock panelExportData, panelResourcesData;
-    String error;
     PluginLogger logger(me); // Create logger instance
     
     logger.log("Starting exportWithDefaultPanel");
@@ -87,15 +89,33 @@ const Result CtrlrMac::exportWithDefaultPanel(CtrlrPanel* panelToWrite, const bo
     }
     
     // Now, create the FileChooser with the determined initial directory.
-    fc = std::make_unique<FileChooser>(CTRLR_NEW_INSTANCE_DIALOG_TITLE,
-                                       fcInitialDirectory,
-                                       me.getFileExtension(),
-                                       nativeFileChooser); // panelToWrite->getOwner().getProperty(Ids::ctrlrNativeFileDialogs)); // if vst3, this won't work since there's no ctrlr.settings
-    
     // Launch FileChooser to export file and define the new output file name and extension
     // browseForFileToSave(true) to show "cancel | Save" instead of "Cancel | Open" buttons won't work. It will show a filename box (we don't want that) and will force to save a the file with doubled extension such as filename.vst3..vst3
-    if (fc->browseForDirectory()) {
-        newMe = fc->getResult().getChildFile(File::createLegalFileName(panelToWrite->getProperty(Ids::name).toString() + me.getFileExtension()));
+    WeakReference<CtrlrPanel> panelRef (panelToWrite);
+    FC::chooseDirectoryAsync (CTRLR_NEW_INSTANCE_DIALOG_TITLE,
+                              fcInitialDirectory,
+                              me.getFileExtension(),
+                              nativeFileChooser, // panelToWrite->getOwner().getProperty(Ids::ctrlrNativeFileDialogs)); // if vst3, this won't work since there's no ctrlr.settings
+                              [this, panelRef, isRestricted, callback] (const File &chosenDirectory) {
+        // The panel may have been closed while the chooser was open.
+        const Result res = panelRef != nullptr ? writeInstance(panelRef.get(), chosenDirectory, isRestricted)
+                                               : Result::fail("User cancelled the export operation.");
+        if (callback)
+            callback (res);
+    });
+}
+
+// The part of the export after the chooser. chosenDirectory is empty for Cancel.
+const Result CtrlrMac::writeInstance(CtrlrPanel* panelToWrite, const File &chosenDirectory, const bool isRestricted) {
+    File me = File::getSpecialLocation(File::currentApplicationFile);
+    String fileExtension = me.getFileExtension();
+    File newMe;
+    MemoryBlock panelExportData, panelResourcesData;
+    String error;
+    PluginLogger logger(me); // Create logger instance
+    
+    if (chosenDirectory != File()) {
+        newMe = chosenDirectory.getChildFile(File::createLegalFileName(panelToWrite->getProperty(Ids::name).toString() + me.getFileExtension()));
         
         // Check if the file already exists and ask for confirmation before overwriting
         if (newMe.exists()) {

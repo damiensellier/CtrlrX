@@ -15,7 +15,8 @@ class CtrlrWindows : public CtrlrNative
 		/* resource handling */
 		const Result writeResource (void *handle, const LPSTR resourceId, const LPSTR resourceType, const MemoryBlock &resourceData);
 		const Result readResource (void *handle, const LPSTR resourceId, const LPSTR resourceType, MemoryBlock &resourceData);
-		const Result exportWithDefaultPanel(CtrlrPanel*  panelToWrite, const bool isRestricted=false, const bool signPanel=false);
+		void exportWithDefaultPanel(CtrlrPanel*  panelToWrite, const bool isRestricted, const bool signPanel,
+		                            std::function<void (juce::Result)> callback);
 		const Result getDefaultPanel(MemoryBlock &dataToWrite);
 		const Result getDefaultResources(MemoryBlock& dataToWrite);
 		const Result registerFileHandler();
@@ -29,6 +30,7 @@ class CtrlrWindows : public CtrlrNative
         const Result codesignFileWindows(const File& fileToSign, const String& certificatePath, const String& certificatePassword); // Added v5.6.32
 
 private:
+    const Result writeInstance(CtrlrPanel*  panelToWrite, File newMe, const bool isRestricted);
     CtrlrManager& owner;
     std::unique_ptr<FileChooser> fc; // Added v5.6.31
 };
