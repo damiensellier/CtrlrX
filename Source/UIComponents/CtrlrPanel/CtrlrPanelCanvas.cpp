@@ -200,7 +200,21 @@ void CtrlrPanelCanvas::mouseDown (const MouseEvent& e)
 
 	if (!isLayer(e.eventComponent) && editMode && e.mods.isPopupMenu())
 	{
-		handleRightClickOnComponent(e);
+		// Updated v8.0.100. The menu is asynchronous. A right-click with Ctrl/Cmd or Shift also
+		// ran the last two blocks of this function after the blocking menu: they now run after the
+		// menu's action, and only if the clicked component is still there. The blocks between
+		// them are for clicks that don't open a menu.
+		Component::SafePointer<Component> clicked (e.eventComponent);
+		handleRightClickOnComponent(e, [this, e, clicked]
+		{
+			if (clicked == nullptr)
+				return;
+			if (e.mods.isCommandDown())
+				handleLeftClickOnComponent(e);
+			if (e.mods.isShiftDown())
+				startDraggingSelection();
+		});
+		return;
 	}
 
 	if (isLayer(e.eventComponent) && !e.mods.isPopupMenu() && editMode)

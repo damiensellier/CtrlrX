@@ -1,6 +1,11 @@
 #include "test_ProcessorFixture.h"
 
 #include "CtrlrInlineUtilitiesGUI.h"
+#include "CtrlrComponentSelection.h"
+#include "CtrlrComponents/CtrlrComponent.h"
+#include "CtrlrPanel/CtrlrPanelEditor.h"
+#include "CtrlrPanel/CtrlrPanelCanvas.h"
+#include "CtrlrPanel/CtrlrPanelCanvasLayer.h"
 
 /**
  * The asynchronous popup-menu helpers in CtrlrInlineUtilitiesGUI.h (namespace PU), through their
@@ -113,4 +118,188 @@ TEST_F(PopupMenuHelpers, empty_menu_calls_back_with_0_without_asking)
     pump();
     EXPECT_EQ(calls, 1);
     EXPECT_EQ(got, 0);
+}
+
+/**
+ * The C++ callers of the helpers: the action after the menu runs in its callback, and a callback
+ * whose panel or component is gone does nothing (closing a panel while its menu is open must not
+ * touch freed memory; the memcheck gate runs these too).
+ */
+class PopupMenuCallers : public ProcessorInstance
+{
+protected:
+    juce::String answerText; // the item to choose, by its text; empty = dismiss
+    juce::StringArray askedFirstItems;
+    bool answerMissing = false;
+
+    void SetUp() override
+    {
+        ProcessorInstance::SetUp();
+        allowAndRecordDeviceSends(); // the panels open the mock devices; MIDI is not the subject
+        PU::testAnswer() = [this] (const juce::PopupMenu &menu, const juce::PopupMenu::Options &) {
+            juce::PopupMenu::MenuItemIterator first (menu);
+            askedFirstItems.add (first.next() ? first.getItem().text : juce::String());
+            if (answerText.isEmpty())
+                return 0;
+            const int id = idOf (menu, answerText);
+            answerMissing = answerMissing || id == 0;
+            return id;
+        };
+    }
+
+    void TearDown() override
+    {
+        PU::testAnswer() = nullptr;
+        ProcessorInstance::TearDown();
+    }
+
+    static int idOf (const juce::PopupMenu &menu, const juce::String &text)
+    {
+        for (juce::PopupMenu::MenuItemIterator it (menu, true); it.next();)
+            if (it.getItem().text == text && it.getItem().itemID != 0)
+                return it.getItem().itemID;
+        return 0;
+    }
+
+    // As FileChooserCallers: pump until the result shows (5 s at most), or a fixed 500 ms for
+    // "nothing happens".
+    static void pump() { juce::MessageManager::getInstance()->runDispatchLoopUntil (500); }
+
+    static bool pumpUntil (std::function<bool()> done)
+    {
+        for (int i = 0; i < 100 && ! done(); ++i)
+            juce::MessageManager::getInstance()->runDispatchLoopUntil (50);
+        return done();
+    }
+
+    // A right-click on `c` as the canvas gets it (the canvas listens to its components' mouse).
+    static juce::MouseEvent rightClick (juce::Component *c, juce::ModifierKeys extra = {})
+    {
+        const juce::Point<float> pos (5.0f, 5.0f);
+        const juce::Time now = juce::Time::getCurrentTime();
+        const juce::ModifierKeys mods (juce::ModifierKeys::rightButtonModifier | extra.getRawFlags());
+        return juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), pos, mods,
+                                 juce::MouseInputSource::invalidPressure, juce::MouseInputSource::invalidOrientation,
+                                 juce::MouseInputSource::invalidRotation, juce::MouseInputSource::invalidTiltX,
+                                 juce::MouseInputSource::invalidTiltY, c, c, now, pos, now, 1, false);
+    }
+
+    CtrlrPanel *panelInEditMode()
+    {
+        CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+        if (panel == nullptr || panel->getEditor (false) == nullptr)
+            return nullptr;
+        panel->getEditor (false)->setProperty (Ids::uiPanelEditMode, true);
+        return panel;
+    }
+};
+
+TEST_F(PopupMenuCallers, canvas_component_menu_runs_the_action_in_the_callback)
+{
+    CtrlrPanel *panel = panelInEditMode();
+    ASSERT_NE(panel, nullptr);
+    CtrlrComponent *c = panel->getModulator ("target")->getComponent();
+    ASSERT_NE(c, nullptr);
+    answerText = "Send to back";
+
+    panel->getEditor (false)->getCanvas()->mouseDown (rightClick (c));
+    EXPECT_EQ(askedFirstItems, juce::StringArray ("Actions"));
+    EXPECT_FALSE((bool) c->getProperty (Ids::componentSentBack)) << "nothing happens before the answer";
+
+    pumpUntil ([&] { return (bool) c->getProperty (Ids::componentSentBack); });
+    EXPECT_TRUE((bool) c->getProperty (Ids::componentSentBack));
+    EXPECT_FALSE(answerMissing);
+}
+
+TEST_F(PopupMenuCallers, canvas_component_menu_does_nothing_when_the_panel_closed_before_the_answer)
+{
+    CtrlrPanel *panel = panelInEditMode();
+    ASSERT_NE(panel, nullptr);
+    CtrlrComponent *c = panel->getModulator ("target")->getComponent();
+    answerText = "Delete";
+
+    panel->getEditor (false)->getCanvas()->mouseDown (rightClick (c));
+    ASSERT_EQ(askedFirstItems.size(), 1);
+    processor->getManager().removePanel (panel->getEditor (false));
+    ASSERT_EQ(processor->getManager().getNumPanels(), 0);
+
+    pump(); // no crash, no use of the freed canvas (memcheck)
+}
+
+// Ctrl (Cmd on macOS) + right-click: after the blocking menu, mouseDown also toggled the
+// component in the selection. That still happens after the action: Delete acts on the selected
+// component (in the other order the toggle would empty the selection first and nothing would be
+// deleted), and the toggle is skipped because the component is gone.
+TEST_F(PopupMenuCallers, canvas_ctrl_right_click_toggles_the_selection_after_the_action)
+{
+    CtrlrPanel *panel = panelInEditMode();
+    ASSERT_NE(panel, nullptr);
+    CtrlrComponent *c = panel->getModulator ("target")->getComponent();
+    ASSERT_NE(c, nullptr);
+    answerText = "Delete";
+
+    panel->getEditor (false)->getCanvas()->mouseDown (rightClick (c, juce::ModifierKeys::commandModifier));
+    ASSERT_EQ(askedFirstItems.size(), 1);
+    ASSERT_NE(panel->getEditor (false)->getSelection(), nullptr);
+    EXPECT_TRUE(panel->getEditor (false)->getSelection()->isSelected (c)) << "the toggle waits for the menu";
+
+    pumpUntil ([&] { return panel->getModulator ("target") == nullptr; });
+    EXPECT_EQ(panel->getModulator ("target"), nullptr) << "Delete ran on the selected component";
+}
+
+TEST_F(PopupMenuCallers, canvas_shift_right_click_dismissed_keeps_the_selection)
+{
+    CtrlrPanel *panel = panelInEditMode();
+    ASSERT_NE(panel, nullptr);
+    CtrlrComponent *c = panel->getModulator ("target")->getComponent();
+    answerText = ""; // dismissed
+
+    panel->getEditor (false)->getCanvas()->mouseDown (rightClick (c, juce::ModifierKeys::shiftModifier));
+    pump();
+    EXPECT_TRUE(panel->getEditor (false)->getSelection()->isSelected (c));
+    EXPECT_NE(panel->getModulator ("target"), nullptr);
+}
+
+// Right-click with more than one component selected: the multi-selection menu.
+TEST_F(PopupMenuCallers, canvas_multi_selection_menu_runs_the_action_in_the_callback)
+{
+    CtrlrPanel *panel = panelInEditMode();
+    ASSERT_NE(panel, nullptr);
+    CtrlrComponent *a = panel->getModulator ("target")->getComponent();
+    CtrlrComponent *b = panel->getModulator ("other")->getComponent();
+    ASSERT_NE(a, nullptr);
+    ASSERT_NE(b, nullptr);
+    CtrlrComponentSelection *selection = panel->getEditor (false)->getSelection();
+    ASSERT_NE(selection, nullptr);
+    selection->selectOnly (a);
+    selection->addToSelection (b);
+    answerText = "Delete";
+
+    panel->getEditor (false)->getCanvas()->mouseDown (rightClick (a));
+    EXPECT_EQ(askedFirstItems, juce::StringArray ("Edit"));
+    EXPECT_NE(panel->getModulator ("target"), nullptr) << "nothing happens before the answer";
+
+    pumpUntil ([&] { return panel->getModulator ("target") == nullptr && panel->getModulator ("other") == nullptr; });
+    EXPECT_EQ(panel->getModulator ("target"), nullptr);
+    EXPECT_EQ(panel->getModulator ("other"), nullptr);
+    EXPECT_FALSE(answerMissing);
+}
+
+TEST_F(PopupMenuCallers, canvas_layer_menu_adds_the_component_in_the_callback)
+{
+    CtrlrPanel *panel = panelInEditMode();
+    ASSERT_NE(panel, nullptr);
+    CtrlrPanelCanvas *canvas = panel->getEditor (false)->getCanvas();
+    CtrlrPanelCanvasLayer *layer = canvas->getLayerFromArray (0);
+    ASSERT_NE(layer, nullptr);
+    const int before = panel->getNumModulators();
+    answerText = Ids::uiSlider.toString();
+
+    canvas->mouseDown (rightClick (layer));
+    EXPECT_EQ(askedFirstItems.size(), 1);
+    EXPECT_EQ(panel->getNumModulators(), before);
+
+    pumpUntil ([&] { return panel->getNumModulators() == before + 1; });
+    EXPECT_EQ(panel->getNumModulators(), before + 1);
+    EXPECT_FALSE(answerMissing);
 }
