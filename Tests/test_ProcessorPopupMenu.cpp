@@ -13,6 +13,7 @@
 #include "CtrlrComponents/Groups/CtrlrTabsComponent.h"
 #include "CtrlrLua/CtrlrLuaConsole.h"
 #include "CtrlrPanel/CtrlrPanelResourceEditor.h"
+#include "CtrlrPanel/CtrlrPanelProperties.h"
 
 /**
  * The asynchronous popup-menu helpers in CtrlrInlineUtilitiesGUI.h (namespace PU), through their
@@ -514,6 +515,39 @@ TEST_F(PopupMenuCallers, tabs_remove_menu_dismissed_removes_nothing)
 
     pump();
     EXPECT_EQ(numTabs (*tabs), before);
+}
+
+static juce::PropertyComponent *firstPropertyRow (juce::Component *root)
+{
+    if (root == nullptr)
+        return nullptr;
+    if (auto *row = dynamic_cast<juce::PropertyComponent *> (root))
+        return row;
+    for (auto *child : root->getChildren())
+        if (auto *row = firstPropertyRow (child))
+            return row;
+    return nullptr;
+}
+
+// The properties panel is refreshed after the menu, as before, not while it is open: a refresh
+// rebuilds the property rows and scrolls the panel to the top, under the open menu.
+TEST_F(PopupMenuCallers, tabs_remove_menu_refreshes_the_properties_after_the_answer)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    CtrlrComponent *tabs = addComponent (*panel, Ids::uiTabs);
+    ASSERT_NE(tabs, nullptr);
+    tabs->setProperty (Ids::uiTabsAddTab, true); // as the property panel's "add tab"
+    pump();
+    juce::Component::SafePointer<juce::PropertyComponent> row (firstPropertyRow (panel->getEditor (false)->getPropertiesPanel()));
+    ASSERT_NE(row, nullptr);
+    answerText = ""; // dismissed
+
+    tabs->setProperty (Ids::uiTabsRemoveTab, true);
+    ASSERT_EQ(askedFirstItems.size(), 1);
+    EXPECT_NE(row, nullptr) << "the properties must not be rebuilt while the menu is open";
+
+    EXPECT_TRUE(pumpUntil ([&] { return row == nullptr; })) << "the properties are rebuilt after the answer";
 }
 
 // With the tabs gone the callback does nothing: no question (it would block the test).

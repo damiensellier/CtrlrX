@@ -125,6 +125,7 @@ private:
     //[UserVariables]   -- You can add your own custom variables in this section.
 	CtrlrTabsLF lf;
 	WeakReference <CtrlrLuaMethod> tabChangedCbk;
+	bool resettingRemoveTab = false;
     //[/UserVariables]
 
     //==============================================================================

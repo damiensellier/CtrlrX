@@ -408,7 +408,9 @@ void CtrlrTabsComponent::valueTreePropertyChanged (ValueTree &treeWhosePropertyH
 			}
 			// The menu is asynchronous; the removal runs in the callback, which
 			// does nothing if the tabs component is gone. The property is reset at once, as
-			// before; after a removal the properties panel and the layout are refreshed again.
+			// before. The properties panel is refreshed in the callback, after the menu, as
+			// before: a refresh scrolls the panel to the top, which must not happen under the
+			// open menu.
 			Component::SafePointer<CtrlrTabsComponent> safeThis (this);
 			PU::show (m, [this, safeThis] (const int ret)
 			{
@@ -419,16 +421,22 @@ void CtrlrTabsComponent::valueTreePropertyChanged (ValueTree &treeWhosePropertyH
 					if (AlertWindow::showOkCancelBox(AlertWindow::QuestionIcon, "Removing tab", "Are you sure you want to remove this tab? All child components in it will also be removed"))
 					{
 						getComponentTree().removeChild (ret-1, 0);
-						updatePropertiesPanel();
-						if (restoreStateInProgress == false)
-							resized();
 					}
 				}
+				updatePropertiesPanel();  // Updates the property pane with new tab props
+				if (restoreStateInProgress == false)
+					resized();
 			});
-		}
 
-		setProperty(property, false);
-        updatePropertiesPanel();  // Updates the property pane with new tab props
+			// The reset comes back here with false; that call must not refresh the panel.
+			const ScopedValueSetter<bool> resetting (resettingRemoveTab, true);
+			setProperty(property, false);
+		}
+		else if (resettingRemoveTab == false)
+		{
+			setProperty(property, false);
+			updatePropertiesPanel();  // Updates the property pane with new tab props
+		}
 	}
 	else
 	{
