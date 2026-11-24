@@ -882,16 +882,23 @@ void CtrlrFileProperty::buttonClicked (Button* buttonThatWasClicked)
 {
     if (buttonThatWasClicked == browse)
     {
-		FileChooser myChooser ("Select a file",
+		// The chooser is asynchronous; the callback does nothing if the property row is gone.
+		Component::SafePointer<CtrlrFileProperty> safeThis (this);
+		FC::openFileAsync ("Select a file",
 								File::getSpecialLocation (File::userHomeDirectory),
 								"*.*",
-								false);
+								false,
+								[this, safeThis] (const File &result)
+		{
+			if (safeThis == nullptr)
+				return;
 
-        if (myChooser.browseForFileToOpen())
-        {
-			valueToControl = myChooser.getResult().getFullPathName();
-			path->setText (valueToControl.toString(), dontSendNotification);
-        }
+	        if (result != File())
+	        {
+				valueToControl = result.getFullPathName();
+				path->setText (valueToControl.toString(), dontSendNotification);
+	        }
+		});
     }
 }
 

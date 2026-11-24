@@ -8,6 +8,7 @@
 #include "CtrlrPanel/CtrlrPanel.h"
 #include "CtrlrPanel/CtrlrPanelResource.h"
 #include "CtrlrManager/CtrlrManager.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "keys.h"
@@ -309,15 +310,17 @@ const std::string SimpleEmbeddedDataManager::SECTION_DELIMITER = "__END_SECTIONS
 CtrlrLinux::CtrlrLinux(CtrlrManager &_owner) : owner(_owner) {}
 CtrlrLinux::~CtrlrLinux() {}
 
-const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const bool isRestricted, const bool signPanel)
+// Shows the chooser with FC::saveFileAsync() and writes the instance in its callback.
+void CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const bool isRestricted, const bool signPanel,
+                                        std::function<void (juce::Result)> callback)
 {
     if (panelToWrite == nullptr) {
-        return Result::fail("Linux native, panel pointer is invalid");
+        if (callback)
+            callback (Result::fail("Linux native, panel pointer is invalid"));
+        return;
     }
     
     File me = getVST3PluginPath();
-    File newMe;
-    MemoryBlock panelExportData, panelResourcesData;
     
     // Check if the current binary is running as VST3 or VST2/Standalone
     File parentDir = me.getParentDirectory();
@@ -352,12 +355,27 @@ const Result CtrlrLinux::exportWithDefaultPanel(CtrlrPanel *panelToWrite, const 
         _DBG("Standalone export detected. suggestedFile = " + suggestedFile.getFullPathName());
     }
     
-    FileChooser fc(CTRLR_NEW_INSTANCE_DIALOG_TITLE, suggestedFile, filePattern,
-                   panelToWrite->getOwner().getProperty(Ids::ctrlrNativeFileDialogs));
+    WeakReference<CtrlrPanel> panelRef (panelToWrite);
+    FC::saveFileAsync(CTRLR_NEW_INSTANCE_DIALOG_TITLE, suggestedFile, filePattern,
+                      panelToWrite->getOwner().getProperty(Ids::ctrlrNativeFileDialogs),
+                      [this, panelRef, me, isVST3, isVST2, isRestricted, callback] (const File &chosenFile) {
+        // The panel may have been closed while the chooser was open.
+        const Result res = panelRef != nullptr ? writeInstance(panelRef.get(), me, chosenFile, isVST3, isVST2, isRestricted)
+                                               : Result::fail("User cancelled the export operation.");
+        if (callback)
+            callback (res);
+    });
+}
+
+// The part of the export after the chooser. chosenFile is empty for Cancel.
+const Result CtrlrLinux::writeInstance(CtrlrPanel *panelToWrite, const File &me, File chosenFile,
+                                       const bool isVST3, const bool isVST2, const bool isRestricted)
+{
+    File newMe;
+    MemoryBlock panelExportData, panelResourcesData;
     
-    if (fc.browseForFileToSave(true))
+    if (chosenFile != File())
     {
-        File chosenFile = fc.getResult();
         _DBG("FileChooser returned: " + chosenFile.getFullPathName());
         
         if (isVST3) {

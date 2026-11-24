@@ -7,6 +7,7 @@
 #include "CtrlrLuaAudioConverter.h"
 #include "CtrlrModulator/CtrlrModulator.h"
 #include "CtrlrLuaManager.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 
 CtrlrWaveform::CtrlrWaveform (CtrlrModulator &owner)
     : CtrlrComponent(owner),
@@ -115,13 +116,18 @@ void CtrlrWaveform::handlePopupMenu (const int popupMenuItem)
 	{
 		if (audioThumbnail->isFullyLoaded())
 		{
-			FileChooser fc("Load a file", currentFile.getParentDirectory(),
+			// The chooser is asynchronous; the callback does nothing if the waveform is gone.
+			Component::SafePointer<CtrlrWaveform> safeThis (this);
+			FC::openFileAsync("Load a file", currentFile.getParentDirectory(),
 							owner.getOwnerPanel().getCtrlrManagerOwner().getAudioFormatManager().getWildcardForAllFormats(),
-							owner.getOwnerPanel().getCtrlrManagerOwner().getProperty(Ids::ctrlrNativeFileDialogs));
-			if (fc.browseForFileToOpen())
+							owner.getOwnerPanel().getCtrlrManagerOwner().getProperty(Ids::ctrlrNativeFileDialogs),
+							[this, safeThis] (const File &result)
 			{
-				loadFromFile (fc.getResult());
-			}
+				if (safeThis != nullptr && result != File())
+				{
+					loadFromFile (result);
+				}
+			});
 		}
 		else
 		{
@@ -134,42 +140,48 @@ void CtrlrWaveform::handlePopupMenu (const int popupMenuItem)
 	}
 	else if (popupMenuItem == 4098)
 	{
-		FileChooser fc("Save to an audio file", currentFile.getParentDirectory(), owner.getOwnerPanel().getCtrlrManagerOwner().getAudioFormatManager().getWildcardForAllFormats(), true);
-
-		if (fc.browseForFileToSave(true))
+		// The chooser is asynchronous; the callback does nothing if the waveform is gone.
+		Component::SafePointer<CtrlrWaveform> safeThis (this);
+		FC::saveFileAsync("Save to an audio file", currentFile.getParentDirectory(), owner.getOwnerPanel().getCtrlrManagerOwner().getAudioFormatManager().getWildcardForAllFormats(), true, [this, safeThis] (const File &result)
 		{
-			File outputFile = fc.getResult();
+			if (safeThis == nullptr)
+				return;
 
-			AudioFormat *format = owner.getOwnerPanel().getCtrlrManagerOwner().getAudioFormatManager().findFormatForFileExtension (outputFile.getFileExtension());
-
-			if (format != nullptr)
+			if (result != File())
 			{
-				{
-					std::unique_ptr<AudioFormatWriter> writer (format->createWriterFor (outputFile.createOutputStream().get(),
-																						currentSampleRate,
-																						audioThumbnail->getNumChannels(),
-																						32,
-																						metadataForAudioFiles,
-																						qualityForAudioFiles));
+				File outputFile = result;
 
-					if (writer != nullptr)
+				AudioFormat *format = owner.getOwnerPanel().getCtrlrManagerOwner().getAudioFormatManager().findFormatForFileExtension (outputFile.getFileExtension());
+
+				if (format != nullptr)
+				{
 					{
-						writer->writeFromAudioSampleBuffer (audioBufferCopy, 0, audioBufferCopy.getNumSamples());
-					}
-					else
-					{
-						if (owner.getOwnerPanel().getDialogStatus())
-							WARN ("Can't create AudioFormatWriter sampleRate="+String(currentSampleRate)+", channels="+String(audioThumbnail->getNumChannels())+", bitsPerSample=32, qualityIndex="+String(qualityForAudioFiles));
+						std::unique_ptr<AudioFormatWriter> writer (format->createWriterFor (outputFile.createOutputStream().get(),
+																							currentSampleRate,
+																							audioThumbnail->getNumChannels(),
+																							32,
+																							metadataForAudioFiles,
+																							qualityForAudioFiles));
+
+						if (writer != nullptr)
+						{
+							writer->writeFromAudioSampleBuffer (audioBufferCopy, 0, audioBufferCopy.getNumSamples());
+						}
+						else
+						{
+							if (owner.getOwnerPanel().getDialogStatus())
+								WARN ("Can't create AudioFormatWriter sampleRate="+String(currentSampleRate)+", channels="+String(audioThumbnail->getNumChannels())+", bitsPerSample=32, qualityIndex="+String(qualityForAudioFiles));
+						}
 					}
 				}
+				else
+				{
+					if (owner.getOwnerPanel().getDialogStatus())
+						WARN("Can't find AudioFormat for the file: "+outputFile.getFileName());
+					return;
+				}
 			}
-			else
-			{
-				if (owner.getOwnerPanel().getDialogStatus())
-					WARN("Can't find AudioFormat for the file: "+outputFile.getFileName());
-				return;
-			}
-		}
+		});
 	}
 }
 

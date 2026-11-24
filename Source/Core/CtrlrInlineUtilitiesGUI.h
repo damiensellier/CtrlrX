@@ -127,4 +127,99 @@ namespace gui {
                 lf.setColour(id, juce::Colours::black);
     }
 }
+// Added v8.0.100. Asynchronous file choosers, after John Goodland's FC helpers (his v8.49 to v8.79).
+// FileChooser::launchAsync() returns at once and calls the callback once the user has answered,
+// with an empty File (or array) for Cancel. The flags are those of the blocking browseFor...()
+// calls they replace; saveFileAsync() keeps the overwrite question of browseForFileToSave (true).
+// Each helper keeps its FileChooser alive in a std::shared_ptr that the callback holds; JUCE drops
+// the callback when the chooser closes, which ends that cycle. A callback that uses a panel or a
+// component must check that it still exists: the user can close it while the chooser is open.
+namespace FC
+{
+    // Test hook. When set, no chooser is shown: the hook gets the title and the
+    // FileBrowserComponent flags and returns the answer (an empty array for Cancel). The callback
+    // still runs later, from the message loop, as it does after a real chooser.
+    using TestAnswer = std::function<juce::Array<juce::File> (const juce::String &title, int flags)>;
+
+    inline TestAnswer &testAnswer()
+    {
+        static TestAnswer hook;
+        return hook;
+    }
+
+    inline void launchAsync (const juce::String &dialogTitle, const juce::File &initialFileOrDirectory,
+                             const juce::String &filePatternsAllowed, bool useNativeDialog, int flags,
+                             std::function<void (const juce::Array<juce::File> &)> callback)
+    {
+        if (const TestAnswer &hook = testAnswer())
+        {
+            const juce::Array<juce::File> answer = hook (dialogTitle, flags);
+            juce::MessageManager::callAsync ([answer, callback] {
+                if (callback)
+                    callback (answer);
+            });
+            return;
+        }
+
+        auto chooser = std::make_shared<juce::FileChooser> (dialogTitle, initialFileOrDirectory,
+                                                            filePatternsAllowed, useNativeDialog);
+        // The callback runs one message later, once the chooser window is gone: the code after a
+        // blocking chooser ran after it had closed, and it may show an alert.
+        chooser->launchAsync (flags, [chooser, callback] (const juce::FileChooser &fc) {
+            const juce::Array<juce::File> results = fc.getResults();
+            juce::MessageManager::callAsync ([results, callback] {
+                if (callback)
+                    callback (results);
+            });
+        });
+    }
+
+    inline std::function<void (const juce::Array<juce::File> &)> firstOf (std::function<void (const juce::File &)> callback)
+    {
+        return [callback] (const juce::Array<juce::File> &files) {
+            if (callback)
+                callback (files.isEmpty() ? juce::File() : files.getFirst());
+        };
+    }
+
+    inline void saveFileAsync (const juce::String &dialogTitle, const juce::File &initialFileOrDirectory,
+                               const juce::String &filePatternsAllowed, bool useNativeDialog,
+                               std::function<void (const juce::File &)> callback)
+    {
+        launchAsync (dialogTitle, initialFileOrDirectory, filePatternsAllowed, useNativeDialog,
+                     juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles
+                         | juce::FileBrowserComponent::warnAboutOverwriting,
+                     firstOf (std::move (callback)));
+    }
+
+    inline void openFileAsync (const juce::String &dialogTitle, const juce::File &initialFileOrDirectory,
+                               const juce::String &filePatternsAllowed, bool useNativeDialog,
+                               std::function<void (const juce::File &)> callback)
+    {
+        launchAsync (dialogTitle, initialFileOrDirectory, filePatternsAllowed, useNativeDialog,
+                     juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+                     firstOf (std::move (callback)));
+    }
+
+    inline void openMultipleFilesAsync (const juce::String &dialogTitle, const juce::File &initialFileOrDirectory,
+                                        const juce::String &filePatternsAllowed, bool useNativeDialog,
+                                        std::function<void (const juce::Array<juce::File> &)> callback)
+    {
+        launchAsync (dialogTitle, initialFileOrDirectory, filePatternsAllowed, useNativeDialog,
+                     juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles
+                         | juce::FileBrowserComponent::canSelectMultipleItems,
+                     std::move (callback));
+    }
+
+    // For browseForDirectory(). The patterns are passed on as the blocking chooser did.
+    inline void chooseDirectoryAsync (const juce::String &dialogTitle, const juce::File &initialFileOrDirectory,
+                                      const juce::String &filePatternsAllowed, bool useNativeDialog,
+                                      std::function<void (const juce::File &)> callback)
+    {
+        launchAsync (dialogTitle, initialFileOrDirectory, filePatternsAllowed, useNativeDialog,
+                     juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories,
+                     firstOf (std::move (callback)));
+    }
+}
+
 #endif

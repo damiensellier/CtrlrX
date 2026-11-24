@@ -608,16 +608,21 @@ int CtrlrManager::getNextVstIndex()
 
 void CtrlrManager::openPanelFromFile(Component *componentToAttachMenu)
 {
-	FileChooser fc ("Open panel",
+	// The chooser is asynchronous; the callback does nothing if the manager is gone (a plugin
+	// instance closed while the chooser was open).
+	WeakReference<CtrlrManager> safeThis (this);
+	FC::openFileAsync ("Open panel",
 						File(getProperty(Ids::ctrlrLastBrowsedFileDirectory)),
 						"*.panel;*.panelz;*.bpanel;*.bpanelz;*.*",
-						(bool)getProperty(Ids::ctrlrNativeFileDialogs));
-
-	if (fc.browseForFileToOpen())
+						(bool)getProperty(Ids::ctrlrNativeFileDialogs),
+						[this, safeThis] (const File &panelFile)
 	{
-		openPanelInternal(fc.getResult());
-		panelFileOpened (fc.getResult());
-	}
+		if (safeThis == nullptr || panelFile == File())
+			return;
+
+		openPanelInternal(panelFile);
+		panelFileOpened (panelFile);
+	});
 }
 
 void CtrlrManager::panelFileOpened(const File &panelFile)

@@ -135,7 +135,7 @@ public:
 	void codeDocumentTextInserted (const String &newText, int insertIndex);
 	void codeDocumentTextDeleted (int startIndex, int endIndex);
 	ValueTree getState(const Identifier &stateId);
-	const File browseForFile(const String &mask);
+	void browseForFile(const String &mask, std::function<void (const File &)> callback);
 	void restoreState(const ValueTree &savedState);
 	void loadFromProgram(const String &direction, const String &type);
 	LMemoryBlock processFormula(const String &formula);

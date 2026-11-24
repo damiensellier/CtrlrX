@@ -1100,6 +1100,101 @@ def scenario_35_no_x_display(probe):
                 f"scenario 35 every --stdin report carries the warning: {[r.get('warnings') for r in reports]}")
 
 
+DIALOGS = "fixtures/fixture_probe_dialogs.panel"
+
+
+def scenario_36_dialog_answers(probe):
+    # Dialogs answered by title: every blocking Lua form gets the answer, in the
+    # order Lua asks, and a dialog no rule matches is still dismissed. A native file chooser can
+    # be answered only on Linux, where the probe makes JUCE use its own.
+    native = sys.platform.startswith("linux")
+    with tempfile.TemporaryDirectory() as d:
+        for name in ("a.txt", "b.txt"):
+            with open(os.path.join(d, name), "w") as f:
+                f.write(name)
+        answers = [
+            {"title": "^Dialogs: question$", "answer": "Yes"},
+            {"title": "^Dialogs: (info|warn)$", "answer": "OK"},
+            {"title": "^Dialogs: text$", "answer": "OK|typed"},
+            {"title": "^Dialogs: ok-cancel$", "answer": "OK"},
+            {"title": "^Dialogs: yes-no-cancel$", "answer": "No"},
+            {"title": "^Dialogs: run-modal$", "answer": "Go"},
+            {"title": "^Dialogs: open( non-native)?$", "answer": os.path.join(d, "a.txt")},
+            {"title": "^Dialogs: open multiple$", "answer": os.path.join(d, "b.txt")},
+            {"title": "^Dialogs: save$", "answer": os.path.join(d, "new.txt")},
+            {"title": "^Dialogs: directory$", "answer": d},
+        ]
+        steps = [{"action": "callLuaMethod", "method": "dialogsAll", "args": [d, native]},
+                 {"action": "eval", "lua": "return loadAnswer"}]
+        # (form, answer when answered, answer when dismissed)
+        expect = [("questionWindow", "true", "false"), ("infoWindow", "-", "-"), ("warnWindow", "-", "-"),
+                  ("askForTextInputWindow", "typed", "-1"), ("showOkCancelBox", "true", "false"),
+                  ("showYesNoCancelBox", "2", "0"), ("runModalLoop", "7", "0"),
+                  ("openFileWindow", "a.txt", ""), ("openFileWindow non-native", "a.txt", ""),
+                  ("openMultipleFilesWindow", "b.txt", ""), ("saveFileWindow", "new.txt", "")]
+        if native:
+            expect.append(("getDirectoryWindow", os.path.basename(d), ""))
+
+        # Answered: the load dialog by --answer (it opens before the script runs), the rest by
+        # the script's "answers".
+        code, rep, raw = run_script(probe, DIALOGS, {"answers": answers, "steps": steps},
+                                    "--answer", "^Dialogs: load$=Yes")
+        rep = require_report(rep, "scenario 36")
+        require(code == 0, f"scenario 36 answered run expected exit 0, got {code}: {[s['errors'] for s in rep['steps']]}")
+        load = rep["panel"]["dialogs"]
+        require(len(load) == 1 and load[0]["result"] == 1 and load[0]["answer"] == "Yes"
+                and rep["steps"][1]["returnValue"] is True,
+                f"scenario 36 the load dialog is answered by --answer: {load}, {rep['steps'][1].get('returnValue')}")
+        log = [c for c in rep["steps"][0]["console"] if c.startswith("dlg ")]
+        want = [line for name, answer, _ in expect
+                for line in (f"dlg before {name}", f"dlg answer {name}={answer}", f"dlg after {name}")]
+        require(log == want, f"scenario 36 each form gets its answer, in order:\n{log}\nwanted\n{want}")
+        dlg = rep["steps"][0]["dialogs"]
+        require(len(dlg) == len(expect) and all("answer" in x and "answerError" not in x for x in dlg),
+                f"scenario 36 every dialog is listed as answered: {dlg}")
+        require(not os.path.exists(os.path.join(d, "new.txt")),
+                "scenario 36 saveFileWindow only names the file; the panel writes nothing")
+
+        # Unanswered: every dialog answers Cancel, and the entries keep the old shape.
+        code, rep, raw = run_script(probe, DIALOGS, {"steps": steps})
+        rep = require_report(rep, "scenario 36")
+        log = [c for c in rep["steps"][0]["console"] if c.startswith("dlg ")]
+        want = [line for name, _, cancel in expect
+                for line in (f"dlg before {name}", f"dlg answer {name}={cancel}", f"dlg after {name}")]
+        require(code == 0 and log == want, f"scenario 36 unanswered dialogs answer Cancel:\n{log}\nwanted\n{want}")
+        entries = rep["panel"]["dialogs"] + rep["steps"][0]["dialogs"]
+        require(all(x["result"] == 0 and "answer" not in x for x in entries),
+                f"scenario 36 dismissed entries have result 0 and no answer: {entries}")
+
+    # A rule whose button is not there: the dialog is dismissed and the report says why.
+    code, rep, raw = run_script(probe, MIDI, {
+        "answers": [{"title": "Erase", "answer": "Nope"}],
+        "steps": [{"action": "eval", "lua": "return utils.questionWindow('Erase?', 'm', 'Erase', 'Keep')"}]})
+    rep = require_report(rep, "scenario 36")
+    q = rep["steps"][0]["dialogs"]
+    require(code == 0 and rep["steps"][0]["returnValue"] is False and len(q) == 1 and q[0]["result"] == 0
+            and q[0]["answer"] == "Nope" and "Nope" in q[0].get("answerError", ""),
+            f"scenario 36 a missing button is an answerError, and the dialog is dismissed: {q}")
+
+    # Bad rules are a usage error (exit 2), before anything runs.
+    for args, script in ((["--answer", "no-equals-sign"], {"steps": []}),
+                         (["--answer", "([=x"], {"steps": []}),
+                         ([], {"answers": {"title": "x"}, "steps": []}),
+                         ([], {"answers": [{"title": "x"}], "steps": []})):
+        code, rep, raw = run_script(probe, MIDI, script, *args)
+        require(code == 2 and rep is not None and "error" in rep,
+                f"scenario 36 a bad rule {args or script['answers']} should exit 2 with an error: {code} {raw[:300]}")
+
+    # --stdin: a script's answers apply to that script only.
+    q = "return utils.questionWindow('Erase?', 'm', 'Erase', 'Keep')"
+    code, reports = run_stdin(probe, MIDI, [
+        {"answers": [{"title": "^Erase", "answer": "Erase"}], "steps": [{"action": "eval", "lua": q}]},
+        {"steps": [{"action": "eval", "lua": q}]},
+    ])
+    got = [r["steps"][0].get("returnValue") for r in reports]
+    require(code == 0 and got == [True, False], f"scenario 36 --stdin answers are per script: {got}")
+
+
 SCENARIOS = [
     # --- Scenarios 1-16: report structure, exit codes, Lua values, visibility, speed, --stdin ---
     scenario_01_clean_run,
@@ -1148,6 +1243,7 @@ SCENARIOS = [
 
     # --- Scenario 35: no X display is a warning, not a crash ---
     scenario_35_no_x_display,
+    scenario_36_dialog_answers,
 ]
 
 

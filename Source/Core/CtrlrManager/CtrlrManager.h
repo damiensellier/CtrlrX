@@ -373,4 +373,7 @@ class CtrlrManager :    public ValueTree::Listener,
 		ValueTree ctrlrPlayerInstanceResources;
 		CtrlrModulator *invalidModulator;
 		WeakReference <CtrlrLuaMethod> luaCtrlrSaveState, luaCtrlrRestoreState;
+
+		// Last, so it is destroyed first: for callbacks of asynchronous dialogs.
+		JUCE_DECLARE_WEAK_REFERENCEABLE (CtrlrManager)
 };

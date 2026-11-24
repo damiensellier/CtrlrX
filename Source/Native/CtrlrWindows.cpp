@@ -5,6 +5,7 @@
 #include "CtrlrPanel/CtrlrPanel.h"
 #include "CtrlrManager/CtrlrManager.h"
 #include "CtrlrWindows.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 #include <psapi.h>
 
 #include <fstream> // Added v5.6.32
@@ -85,21 +86,21 @@ const Result CtrlrWindows::readResource (void *handle, const LPSTR resourceId, c
 	}
 }
 
-const Result CtrlrWindows::exportWithDefaultPanel(CtrlrPanel*  panelToWrite, const bool isRestricted, const bool signPanel)
+// Shows the chooser with FC::saveFileAsync() and writes the instance in its callback.
+void CtrlrWindows::exportWithDefaultPanel(CtrlrPanel*  panelToWrite, const bool isRestricted, const bool signPanel,
+										  std::function<void (juce::Result)> callback)
 {
 	if (panelToWrite == nullptr)
 	{
-		return (Result::fail("Windows Native: exportWithDefaultPanel got nullptr for panel"));
+		if (callback)
+			callback (Result::fail("Windows Native: exportWithDefaultPanel got nullptr for panel"));
+		return;
 	}
 
 	// 1. Setup Variables & Logger
 	CtrlrManager& manager = panelToWrite->getOwner();
 	File	me = File::getSpecialLocation(File::currentExecutableFile);
-	File	newMe;
-	HANDLE	hResource;
-	MemoryBlock panelExportData,panelResourcesData;
 	PluginLogger logger(me); // Create logger instance
-	String error;
 	logger.log("Starting exportWithDefaultPanel");
 	String fileExtension = me.getFileExtension();
 	logger.log("CtrlrX source fileExtension is :" + fileExtension);
@@ -108,7 +109,9 @@ const Result CtrlrWindows::exportWithDefaultPanel(CtrlrPanel*  panelToWrite, con
 	if (panelToWrite == nullptr)
 	{
 		logger.log("Error: panelToWrite is nullptr");
-		return (Result::fail("Windows Native: exportWithDefaultPanel got nullptr for panel"));
+		if (callback)
+			callback (Result::fail("Windows Native: exportWithDefaultPanel got nullptr for panel"));
+		return;
 	}
 	
 	// 3. Determine Initial Directory (Sticky Logic)
@@ -145,14 +148,33 @@ const Result CtrlrWindows::exportWithDefaultPanel(CtrlrPanel*  panelToWrite, con
 	String defaultFileName = File::createLegalFileName(panelToWrite->getProperty(Ids::name));
 	File defaultFile = targetDir.getChildFile(defaultFileName).withFileExtension(fileExtension);
 	
-	FileChooser exportFc (CTRLR_NEW_INSTANCE_DIALOG_TITLE,
+	WeakReference<CtrlrPanel> panelRef (panelToWrite);
+	FC::saveFileAsync (CTRLR_NEW_INSTANCE_DIALOG_TITLE,
 						  defaultFile,
 						  "*" + fileExtension,
-						  manager.getProperty(Ids::ctrlrNativeFileDialogs));
+						  manager.getProperty(Ids::ctrlrNativeFileDialogs),
+						  [this, panelRef, isRestricted, callback] (const File &chosenFile) {
+		// The panel may have been closed while the chooser was open.
+		const Result res = panelRef != nullptr ? writeInstance(panelRef.get(), chosenFile, isRestricted)
+		                                       : Result::fail("User cancelled the export operation.");
+		if (callback)
+			callback (res);
+	});
+}
+
+// The part of the export after the chooser. newMe is empty for Cancel.
+const Result CtrlrWindows::writeInstance(CtrlrPanel*  panelToWrite, File newMe, const bool isRestricted)
+{
+	CtrlrManager& manager = panelToWrite->getOwner();
+	File	me = File::getSpecialLocation(File::currentExecutableFile);
+	HANDLE	hResource;
+	MemoryBlock panelExportData,panelResourcesData;
+	PluginLogger logger(me); // Create logger instance
+	String error;
+	String fileExtension = me.getFileExtension();
 	
-	if (exportFc.browseForFileToSave(true))
+	if (newMe != File())
 	{
-		newMe = exportFc.getResult();
 		
 		// Save sticky path
 		manager.setProperty("lastExportPath", newMe.getParentDirectory().getFullPathName());

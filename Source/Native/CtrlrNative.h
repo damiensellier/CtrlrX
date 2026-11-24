@@ -25,11 +25,16 @@ class CtrlrNative
 	public:
 		virtual ~CtrlrNative() = default;
 		static CtrlrNative *getNativeObject(CtrlrManager &owner);
-		virtual const Result exportWithDefaultPanel (CtrlrPanel *,
+		// Updated v8.0.100. Asynchronous: the chooser is shown with launchAsync() and the callback
+		// gets the result once, after the export (or at once, if the export can't start). As John
+		// Goodland's (dnaldoog) JUCE 8 line.
+		virtual void exportWithDefaultPanel (CtrlrPanel *,
                                                         const bool,
-                                                        const bool)
+                                                        const bool,
+                                                        std::function<void (juce::Result)> callback)
 		{
-		    return (Result::fail("Native, implement me"));
+		    if (callback)
+		        callback (Result::fail("Native, implement me"));
         }
 		virtual const Result getDefaultPanel(MemoryBlock&)												{ return (Result::fail("Native, implement me")); }
 		virtual const Result getDefaultResources(MemoryBlock&)											{ return (Result::fail("Native, implement me")); }

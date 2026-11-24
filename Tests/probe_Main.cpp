@@ -19,6 +19,7 @@
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <regex>
 #include <set>
 #include <vector>
 #include <fcntl.h>
@@ -123,6 +124,86 @@ namespace
     // (CtrlrLuaMultiTimer::timerCallback) is disabled and announced *only* by its dialog -- no log
     // line, no method marked invalid. CtrlrX has just read the Lua message off the top of the stack
     // and nothing pops it while the dialog runs, so it is read from there before dismissing.
+    //
+    // Added v8.0.100. A dialog can also be *answered*, from a rule given with --answer (the whole
+    // run, also while the panel loads) or in a script's "answers" list (that script only, tried
+    // first). A rule is a title regex and an answer; the first rule whose regex finds a match in
+    // the dialog's title answers it, and a dialog that no rule matches is dismissed as before.
+    //   - alert or other modal: the answer is the caption of the button to press, optionally
+    //     followed by "|<text>" for the dialog's first text box (utils.askForTextInputWindow).
+    //   - fileChooser (JUCE's own FileChooserDialogBox): the answer is the path to choose, a file
+    //     or a directory; an empty answer presses Cancel. The path is put into the chooser (or
+    //     selected in its list, for a multiple-file chooser), then its OK button is pressed.
+    struct DialogAnswer
+    {
+        juce::String titlePattern; // as given, for error messages
+        std::regex title;
+        juce::String answer;       // as given; a file chooser's path
+        juce::String button;       // the part before '|'
+        juce::String text;         // the part after '|'
+        bool hasText = false;
+    };
+
+    bool makeDialogAnswer(const juce::String& titlePattern, const juce::String& answer,
+                          DialogAnswer& out, juce::String& error)
+    {
+        try
+        {
+            out.title = std::regex(titlePattern.toStdString(), std::regex::ECMAScript);
+        }
+        catch (const std::regex_error& e)
+        {
+            error = "bad dialog title regex '" + titlePattern + "': " + e.what();
+            return false;
+        }
+        out.titlePattern = titlePattern;
+        out.answer = answer;
+        out.button = answer.upToFirstOccurrenceOf("|", false, false);
+        out.hasText = answer.containsChar('|');
+        out.text = answer.fromFirstOccurrenceOf("|", false, false);
+        return true;
+    }
+
+    // "<title regex>=<answer>", split at the first '='.
+    bool parseDialogAnswer(const juce::String& rule, DialogAnswer& out, juce::String& error)
+    {
+        if (! rule.containsChar('='))
+        {
+            error = "--answer needs '<title regex>=<answer>', got '" + rule + "'";
+            return false;
+        }
+        return makeDialogAnswer(rule.upToFirstOccurrenceOf("=", false, false),
+                                rule.fromFirstOccurrenceOf("=", false, false), out, error);
+    }
+
+    // A script's "answers": [ { "title": "<regex>", "answer": "<answer>" }, ... ].
+    bool readScriptAnswers(const juce::var& script, std::vector<DialogAnswer>& out, juce::String& error)
+    {
+        out.clear();
+        const juce::var answers = script.getProperty("answers", juce::var());
+        if (answers.isVoid())
+            return true;
+        const juce::Array<juce::var>* list = answers.getArray();
+        if (list == nullptr)
+        {
+            error = "\"answers\" must be a list of {\"title\", \"answer\"} objects";
+            return false;
+        }
+        for (const juce::var& a : *list)
+        {
+            if (! a.hasProperty("title") || ! a.hasProperty("answer"))
+            {
+                error = "every \"answers\" entry needs \"title\" and \"answer\": " + juce::JSON::toString(a, true);
+                return false;
+            }
+            DialogAnswer rule;
+            if (! makeDialogAnswer(a["title"].toString(), a["answer"].toString(), rule, error))
+                return false;
+            out.push_back(rule);
+        }
+        return true;
+    }
+
     struct DismissedDialog
     {
         juce::String title;
@@ -130,6 +211,10 @@ namespace
         juce::StringArray buttons;
         bool isTimerError = false;       // CtrlrX's "Timer callback error" dialog
         juce::String timerErrorMessage;  // its Lua message, when it could be read
+        bool answered = false;           // a rule matched (then `answer` is set)
+        juce::String answer;
+        juce::String answerError;        // why the answer could not be given; then dismissed
+        int result = 0;                  // what the dialog returned: 0 = dismissed
     };
 
     struct ModalDialogSuppressor : private juce::Timer
@@ -139,7 +224,10 @@ namespace
 
         lua_State* luaState = nullptr; // the loaded panel's, for a timer error's message
 
-        // The dialogs dismissed since the last call.
+        std::vector<DialogAnswer> runAnswers;    // --answer
+        std::vector<DialogAnswer> scriptAnswers; // the running script's "answers"
+
+        // The dialogs dismissed or answered since the last call.
         std::vector<DismissedDialog> take()
         {
             std::vector<DismissedDialog> out;
@@ -148,17 +236,226 @@ namespace
         }
 
     private:
+        // How long an answer may take before the dialog is dismissed and the answer reported as
+        // failed: a file list that never shows the file, a click that doesn't close the dialog.
+        static constexpr juce::uint32 ANSWER_TIMEOUT_MS = 3000;
+
+        // A dialog whose answer needs more than one tick: a posted click, or a file chooser that
+        // waits for its file list or for a nested "File already exists" alert.
+        struct Pending
+        {
+            juce::Component::SafePointer<juce::Component> comp;
+            DismissedDialog d;
+            juce::File file;               // fileChooser: the file to choose
+            juce::uint32 startMs = 0;
+            bool clicked = false;
+            int resultIfClosed = 0;
+        };
+
         std::vector<DismissedDialog> dismissed;
+        std::vector<Pending> pending;
 
         void timerCallback() override
         {
+            progressPending();
+
             auto* m = juce::ModalComponentManager::getInstanceWithoutCreating();
             if (m == nullptr || m->getNumModalComponents() == 0)
                 return;
+
+            // Top first, as before; the dismissals then run bottom first, as
+            // cancelAllModalComponents() does.
+            std::vector<juce::Component::SafePointer<juce::Component>> toDismiss;
             for (int i = 0; i < m->getNumModalComponents(); ++i)
-                if (juce::Component* c = m->getModalComponent(i))
-                    dismissed.push_back(describe(*c));
-            m->cancelAllModalComponents();
+            {
+                juce::Component* c = m->getModalComponent(i);
+                if (c == nullptr || isPending(c))
+                    continue;
+                DismissedDialog d = describe(*c);
+                if (const DialogAnswer* a = findAnswer(d.title))
+                {
+                    if (startAnswer(*c, d, *a))
+                        continue;
+                }
+                dismissed.push_back(d);
+                toDismiss.push_back(c);
+            }
+            for (auto it = toDismiss.rbegin(); it != toDismiss.rend(); ++it)
+                if (juce::Component* c = it->getComponent())
+                    c->exitModalState(0);
+        }
+
+        const DialogAnswer* findAnswer(const juce::String& title) const
+        {
+            const std::string t = title.toStdString();
+            for (const auto* rules : { &scriptAnswers, &runAnswers })
+                for (const DialogAnswer& a : *rules)
+                    if (std::regex_search(t, a.title))
+                        return &a;
+            return nullptr;
+        }
+
+        bool isPending(const juce::Component* c) const
+        {
+            for (const Pending& p : pending)
+                if (p.comp.getComponent() == c)
+                    return true;
+            return false;
+        }
+
+        template <typename T>
+        static void findAll(juce::Component& root, std::vector<T*>& out)
+        {
+            for (int i = 0; i < root.getNumChildComponents(); ++i)
+            {
+                juce::Component* child = root.getChildComponent(i);
+                if (auto* t = dynamic_cast<T*>(child))
+                    out.push_back(t);
+                findAll(*child, out);
+            }
+        }
+
+        // Starts answering c. Returns false if the answer can't be given: then d carries the
+        // reason and the caller dismisses the dialog.
+        bool startAnswer(juce::Component& c, DismissedDialog& d, const DialogAnswer& a)
+        {
+            d.answered = true;
+            d.answer = a.answer;
+
+            if (auto* box = dynamic_cast<juce::FileChooserDialogBox*>(&c))
+            {
+                std::vector<juce::FileBrowserComponent*> browsers;
+                findAll(*box, browsers);
+                if (browsers.empty())
+                {
+                    d.answerError = "no file browser in the chooser";
+                    return false;
+                }
+                if (a.answer.isEmpty())
+                    return false; // Cancel
+
+                const juce::File f = juce::File::getCurrentWorkingDirectory().getChildFile(a.answer);
+                juce::FileBrowserComponent& fb = *browsers.front();
+                if (f.isDirectory())
+                {
+                    fb.setRoot(f);
+                    fb.setFileName({});
+                }
+                else
+                {
+                    fb.setRoot(f.getParentDirectory());
+                    fb.setFileName(f.getFileName());
+                }
+                pending.push_back({ &c, d, f, juce::Time::getMillisecondCounter(), false, 1 });
+                return true;
+            }
+
+            std::vector<juce::TextButton*> buttons;
+            findAll(c, buttons);
+            juce::TextButton* button = nullptr;
+            for (auto* b : buttons)
+                if (b->getButtonText() == a.button)
+                    button = b;
+            if (button == nullptr)
+            {
+                d.answerError = "no button '" + a.button + "'";
+                return false;
+            }
+            if (a.hasText)
+            {
+                std::vector<juce::TextEditor*> editors;
+                findAll(c, editors);
+                if (editors.empty())
+                {
+                    d.answerError = "no text box for '" + a.text + "'";
+                    return false;
+                }
+                editors.front()->setText(a.text, false);
+            }
+
+            if (auto* alert = dynamic_cast<juce::AlertWindow*>(&c))
+            {
+                // What the button's click does (AlertWindow::exitAlert), at once: Lua gets the
+                // answer in the same tick as a dismissal.
+                d.result = button->getCommandID();
+                dismissed.push_back(d);
+                alert->exitModalState(button->getCommandID());
+                return true;
+            }
+
+            // Another modal: a real click, which its listeners handle on the next message.
+            pending.push_back({ &c, d, {}, juce::Time::getMillisecondCounter(), true, button->getCommandID() });
+            button->triggerClick();
+            return true;
+        }
+
+        void progressPending()
+        {
+            const juce::uint32 now = juce::Time::getMillisecondCounter();
+            std::vector<Pending> still;
+            std::vector<juce::Button*> toClick;
+            std::vector<juce::Component::SafePointer<juce::Component>> toDismiss;
+            for (Pending& p : pending)
+            {
+                juce::Component* c = p.comp.getComponent();
+                if (c == nullptr || ! c->isCurrentlyModal(false))
+                {
+                    p.d.result = p.clicked ? p.resultIfClosed : 0;
+                    if (! p.clicked)
+                        p.d.answerError = "the dialog closed before it was answered";
+                    dismissed.push_back(p.d);
+                    continue;
+                }
+                if (now - p.startMs > ANSWER_TIMEOUT_MS)
+                {
+                    p.d.answerError = p.clicked ? "the dialog stayed open after the click"
+                                                : "the chooser did not accept " + p.file.getFullPathName();
+                    dismissed.push_back(p.d);
+                    toDismiss.push_back(c);
+                    continue;
+                }
+                if (! p.clicked)
+                    if (juce::Button* ok = fileChooserReady(*c, p.file))
+                    {
+                        p.clicked = true;
+                        toClick.push_back(ok);
+                    }
+                still.push_back(p);
+            }
+            pending.swap(still);
+            for (auto& c : toDismiss)
+                if (c != nullptr)
+                    c->exitModalState(0);
+            // Posted clicks: a nested alert ("File already exists") opens on a later message.
+            for (juce::Button* b : toClick)
+                b->triggerClick();
+        }
+
+        // The chooser's OK button once the chooser has f as its selection, else nullptr.
+        static juce::Button* fileChooserReady(juce::Component& box, const juce::File& f)
+        {
+            std::vector<juce::FileBrowserComponent*> browsers;
+            findAll(box, browsers);
+            if (browsers.empty())
+                return nullptr;
+            juce::FileBrowserComponent& fb = *browsers.front();
+            if (fb.getSelectedFile(0) != f)
+            {
+                // A multiple-file chooser takes its selection from the list, which fills in on a
+                // background thread: select the file once it is there.
+                if (auto* list = fb.getDisplayComponent())
+                    list->setSelectedFile(f);
+                if (fb.getSelectedFile(0) != f)
+                    return nullptr;
+            }
+            if (! fb.currentFileIsValid())
+                return nullptr;
+            std::vector<juce::TextButton*> buttons;
+            findAll(box, buttons);
+            for (auto* b : buttons)
+                if (b->isRegisteredForShortcut(juce::KeyPress(juce::KeyPress::returnKey)))
+                    return b->isEnabled() ? b : nullptr;
+            return nullptr;
         }
 
         DismissedDialog describe(juce::Component& c) const
@@ -690,7 +987,14 @@ namespace
             for (const auto& b : d.buttons)
                 buttons.add(b);
             probeReport::setProp(v, "buttons", buttons);
-            probeReport::setProp(v, "result", 0); // dismissed: what Cancel / closing the window returns
+            // 0 when dismissed: what Cancel / closing the window returns
+            probeReport::setProp(v, "result", d.result);
+            if (d.answered) // only then, so a run without answers keeps the old report
+            {
+                probeReport::setProp(v, "answer", d.answer);
+                if (d.answerError.isNotEmpty())
+                    probeReport::setProp(v, "answerError", d.answerError);
+            }
             out.add(v);
 
             if (d.isTimerError && errors != nullptr)
@@ -1960,6 +2264,39 @@ namespace
         xInternAtoms(display, const_cast<char**>(names), numNames, 0, atoms);
         return true;
     }
+
+    // Added v8.0.100. Make JUCE show its own file chooser, which the probe can answer.
+    //
+    // On Linux a FileChooser with useOSNativeDialogBox (the default, and what most panels pass to
+    // utils.openFileWindow) runs zenity or kdialog when `which` finds one
+    // (FileChooser::isPlatformDialogAvailable). That is another process: the probe can't see,
+    // dismiss or answer it, so the run blocks until someone closes it. A `which` first on PATH
+    // that reports both as missing makes JUCE fall back to its FileChooserDialogBox, as on a
+    // machine without them. Any other name goes to the real `which`. Returns false if the
+    // wrapper could not be written; then native choosers stay.
+    bool hideNativeFileChoosers()
+    {
+        const juce::File dir = juce::File::getSpecialLocation(juce::File::tempDirectory)
+                                   .getChildFile("ctrlrx-probe-no-native-choosers-" + juce::String((int) getuid()));
+        const juce::File which = dir.getChildFile("which");
+        const juce::String body = "#!/bin/sh\n"
+                                  "# CtrlrPanelProbe: hide zenity and kdialog from JUCE (see probe_Main.cpp)\n"
+                                  "case \"$1\" in zenity|kdialog) exit 1;; esac\n"
+                                  "PATH=\"${PATH#*:}\" exec which \"$@\"\n";
+        if (which.loadFileAsString() != body)
+        {
+            // Parallel probes: write a temporary file and move it into place.
+            if (! dir.createDirectory())
+                return false;
+            juce::TemporaryFile tmp(which);
+            if (! tmp.getFile().replaceWithText(body, false, false, "\n") || ! tmp.getFile().setExecutePermission(true)
+                || ! tmp.overwriteTargetFileWithTemporary())
+                return false;
+        }
+        const char* path = std::getenv("PATH");
+        const juce::String newPath = dir.getFullPathName() + ":" + (path != nullptr ? path : "/usr/bin:/bin");
+        return setenv("PATH", newPath.toRawUTF8(), 1) == 0;
+    }
    #endif
 }
 
@@ -1984,6 +2321,7 @@ int main(int argc, char** argv)
     // line, so a suite pays the ~0.9 s process startup once instead of per test),
     // --edit-mode-as-saved (load a panel saved in edit mode as CtrlrX opens it, not in run mode).
     juce::StringArray positional;
+    std::vector<DialogAnswer> runAnswers; // --answer '<title regex>=<answer>', repeatable
     bool verbose = false;
     bool globalConsole = false;
     bool stdinMode = false;
@@ -1995,11 +2333,19 @@ int main(int argc, char** argv)
         else if (a == "--global-console")      globalConsole = true;
         else if (a == "--stdin")               stdinMode = true;
         else if (a == "--edit-mode-as-saved")  editModeAsSaved = true;
+        else if (a == "--answer")
+        {
+            juce::String error;
+            DialogAnswer rule;
+            if (i + 1 >= argc || ! parseDialogAnswer(juce::String::fromUTF8(argv[++i]), rule, error))
+                failFatal("bad --answer", error.isNotEmpty() ? error : juce::String("--answer needs a value"));
+            runAnswers.push_back(rule);
+        }
         else if (! a.startsWith("-"))          positional.add(a);
     }
     if (positional.isEmpty())
         failFatal("usage: CtrlrPanelProbe [--verbose] [--global-console] [--stdin] [--edit-mode-as-saved] "
-                  "<panel-file> [<script-file>]",
+                  "[--answer '<title regex>=<answer>' ...] <panel-file> [<script-file>]",
                   "CtrlrPanelProbe drives a CtrlrX panel from a JSON script and reports what it did "
                   "-- MIDI out, Lua errors, final state. No hardware; on Linux, an X display only for "
                   "modal dialogs (xvfb-run). See Doc/PanelProbe.md.");
@@ -2039,6 +2385,7 @@ int main(int argc, char** argv)
         displayWarning = "no X display (DISPLAY="
                        + (displayName.isEmpty() ? juce::String("unset, so :0.0") : displayName)
                        + "): a modal dialog will crash the probe; run it under xvfb-run";
+    hideNativeFileChoosers();
    #endif
 
     juce::ScopedJuceInitialiser_GUI juceGui;
@@ -2049,6 +2396,7 @@ int main(int argc, char** argv)
     // them, rather than an untracked native/GTK box.
     juce::LookAndFeel::getDefaultLookAndFeel().setUsingNativeAlertWindows(false);
     ModalDialogSuppressor dialogSuppressor;
+    dialogSuppressor.runAnswers = runAnswers;
     g_dialogSuppressor = &dialogSuppressor;
 
     // Reuse the test mock MIDI subsystem. NiceMock (not StrictMock) because there is no gtest
@@ -2098,6 +2446,9 @@ int main(int argc, char** argv)
 
     if (! stdinMode)
     {
+        juce::String answersError;
+        if (! readScriptAnswers(script, dialogSuppressor.scriptAnswers, answersError))
+            failFatal("script parse error", answersError);
         const juce::var report = runScript(session, script, globalConsole, 0);
         emitAndExit(report, (int) report.getProperty("summary", juce::var())
                                        .getProperty("exitCode", juce::var(0)));
@@ -2137,6 +2488,16 @@ int main(int argc, char** argv)
             continue;
         }
 
+        juce::String answersError;
+        if (! readScriptAnswers(lineScript, dialogSuppressor.scriptAnswers, answersError))
+        {
+            juce::var err = probeReport::makeObject();
+            probeReport::setProp(err, "reportVersion", PROBE_REPORT_VERSION);
+            probeReport::setProp(err, "error", "script parse error");
+            probeReport::setProp(err, "detail", answersError);
+            writeReport(err, true);
+            continue;
+        }
         const size_t logStart = logCapture.entries.size();
         writeReport(runScript(session, lineScript, globalConsole, logStart), true);
     }
