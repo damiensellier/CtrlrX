@@ -9,6 +9,8 @@
 #include "CtrlrLua/MethodEditor/CtrlrLuaMethodEditor.h"
 #include "CtrlrLuaManager.h"
 #include "CtrlrPropertyEditors/CtrlrPropertyComponent.h"
+#include "CtrlrComponents/Specials/CtrlrXYSurface.h"
+#include "CtrlrComponents/Groups/CtrlrTabsComponent.h"
 
 /**
  * The asynchronous popup-menu helpers in CtrlrInlineUtilitiesGUI.h (namespace PU), through their
@@ -132,6 +134,7 @@ class PopupMenuCallers : public ProcessorInstance
 {
 protected:
     juce::String answerText; // the item to choose, by its text; empty = dismiss
+    bool answerFirstItem = false; // or choose the first item
     juce::StringArray askedFirstItems;
     bool answerMissing = false;
 
@@ -142,6 +145,8 @@ protected:
         PU::testAnswer() = [this] (const juce::PopupMenu &menu, const juce::PopupMenu::Options &) {
             juce::PopupMenu::MenuItemIterator first (menu);
             askedFirstItems.add (first.next() ? first.getItem().text : juce::String());
+            if (answerFirstItem)
+                return first.getItem().itemID;
             if (answerText.isEmpty())
                 return 0;
             const int id = idOf (menu, answerText);
@@ -434,4 +439,96 @@ TEST_F(PopupMenuCallers, sysex_token_menu_label_deleted_before_the_answer_is_lef
 
     pump(); // no use of the deleted label (memcheck)
     EXPECT_EQ(value.toString(), "F0 00 F7");
+}
+
+// Components: the XY surface's menu and the tabs' "remove tab" menu. They are added through the
+// canvas, as the editor does.
+static CtrlrComponent *addComponent (CtrlrPanel &panel, const juce::Identifier &type)
+{
+    CtrlrPanelCanvas *canvas = panel.getEditor (false)->getCanvas();
+    return canvas->addNewComponent (type, juce::Point<int> (10, 10), canvas->getLayerFromArray (0));
+}
+
+TEST_F(PopupMenuCallers, xy_surface_menu_runs_the_action_in_the_callback)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    auto *xy = dynamic_cast<CtrlrXYSurface *> (addComponent (*panel, Ids::uiXYSurface));
+    ASSERT_NE(xy, nullptr);
+    const bool before = (bool) xy->getProperty (Ids::uiXYSuraceXFlip);
+    answerText = "Flip min/max for X axis";
+
+    xy->showPopupMenu();
+    EXPECT_EQ(askedFirstItems.size(), 1);
+    EXPECT_EQ((bool) xy->getProperty (Ids::uiXYSuraceXFlip), before);
+
+    pumpUntil ([&] { return (bool) xy->getProperty (Ids::uiXYSuraceXFlip) != before; });
+    EXPECT_NE((bool) xy->getProperty (Ids::uiXYSuraceXFlip), before);
+    EXPECT_FALSE(answerMissing);
+}
+
+TEST_F(PopupMenuCallers, xy_surface_menu_does_nothing_when_the_panel_closed_before_the_answer)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    auto *xy = dynamic_cast<CtrlrXYSurface *> (addComponent (*panel, Ids::uiXYSurface));
+    ASSERT_NE(xy, nullptr);
+    answerText = "Flip min/max for Y axis";
+
+    xy->showPopupMenu();
+    ASSERT_EQ(askedFirstItems.size(), 1);
+    processor->getManager().removePanel (panel->getEditor (false));
+    ASSERT_EQ(processor->getManager().getNumPanels(), 0);
+
+    pump(); // no use of the deleted surface (memcheck)
+}
+
+static int numTabs (CtrlrComponent &tabs)
+{
+    int n = 0;
+    for (const auto &child : tabs.getComponentTree())
+        n += child.hasType (Ids::uiTabsTab) ? 1 : 0;
+    return n;
+}
+
+// Choosing a tab asks "Are you sure ...?" with a blocking alert, which a test can't answer (and
+// which needs a window): the choice itself is checked by hand in the GUI. Here: the property
+// that opens the menu is reset at once, as before, and a dismissed menu removes nothing.
+TEST_F(PopupMenuCallers, tabs_remove_menu_dismissed_removes_nothing)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    CtrlrComponent *tabs = addComponent (*panel, Ids::uiTabs);
+    ASSERT_NE(tabs, nullptr);
+    tabs->setProperty (Ids::uiTabsAddTab, true); // as the property panel's "add tab"
+    tabs->setProperty (Ids::uiTabsAddTab, true);
+    const int before = numTabs (*tabs);
+    ASSERT_GT(before, 0);
+    answerText = ""; // dismissed
+
+    tabs->setProperty (Ids::uiTabsRemoveTab, true);
+    EXPECT_EQ(askedFirstItems.size(), 1);
+    EXPECT_FALSE((bool) tabs->getProperty (Ids::uiTabsRemoveTab)) << "the property is reset at once, as before";
+
+    pump();
+    EXPECT_EQ(numTabs (*tabs), before);
+}
+
+// With the tabs gone the callback does nothing: no question (it would block the test).
+TEST_F(PopupMenuCallers, tabs_remove_menu_does_nothing_when_the_panel_closed_before_the_answer)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    CtrlrComponent *tabs = addComponent (*panel, Ids::uiTabs);
+    ASSERT_NE(tabs, nullptr);
+    tabs->setProperty (Ids::uiTabsAddTab, true); // as the property panel's "add tab"
+    tabs->setProperty (Ids::uiTabsAddTab, true);
+    answerFirstItem = true;
+
+    tabs->setProperty (Ids::uiTabsRemoveTab, true);
+    ASSERT_EQ(askedFirstItems.size(), 1);
+    processor->getManager().removePanel (panel->getEditor (false));
+    ASSERT_EQ(processor->getManager().getNumPanels(), 0);
+
+    pump();
 }

@@ -25,6 +25,7 @@
 #include "../CtrlrComponentTypeManager.h"
 #include "CtrlrModulator/CtrlrModulator.h"
 #include "CtrlrUtilitiesGUI.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 #include "CtrlrPanel/CtrlrPanel.h"
 #include "CtrlrLog.h"
 #include "CtrlrPanel/CtrlrPanelResource.h"
@@ -341,34 +342,40 @@ void CtrlrXYSurface::showPopupMenu()
 	m.addSubMenu ("X Axis", modsX);
 	m.addSubMenu ("Y Axis", modsY);
 
-	const int ret = m.show();
-
-	if (ret == 1)
+	// The menu is asynchronous; the code after it runs in the callback, which
+	// does nothing if the surface is gone.
+	Component::SafePointer<CtrlrXYSurface> safeThis (this);
+	PU::show (m, [this, safeThis] (const int ret)
 	{
-		setProperty (Ids::uiXYSuraceXFlip, !getProperty(Ids::uiXYSuraceXFlip));
-		return;
-	}
+		if (safeThis == nullptr)
+			return;
 
-	if (ret == 2)
-	{
-		setProperty (Ids::uiXYSuraceYFlip, !getProperty(Ids::uiXYSuraceYFlip));
-		return;
-	}
+		if (ret == 1)
+		{
+			setProperty (Ids::uiXYSuraceXFlip, !getProperty(Ids::uiXYSuraceXFlip));
+			return;
+		}
 
-	if (ret > 2 && ret <= 3+modulatorList.size())
-	{
-		const int modulatorIndexOnList = ret - 3 - 1;
-		setProperty (Ids::uiXYSurfaceDestinationX, modulatorList[modulatorIndexOnList]);
-		return;
-	}
+		if (ret == 2)
+		{
+			setProperty (Ids::uiXYSuraceYFlip, !getProperty(Ids::uiXYSuraceYFlip));
+			return;
+		}
 
-	if (ret > 3+modulatorList.size())
-	{
-		const int modulatorIndexOnList = ret - 4 - 1 - modulatorList.size();
-		setProperty (Ids::uiXYSurfaceDestinationY, modulatorList[modulatorIndexOnList]);
-		return;
-	}
+		if (ret > 2 && ret <= 3+modulatorList.size())
+		{
+			const int modulatorIndexOnList = ret - 3 - 1;
+			setProperty (Ids::uiXYSurfaceDestinationX, modulatorList[modulatorIndexOnList]);
+			return;
+		}
 
+		if (ret > 3+modulatorList.size())
+		{
+			const int modulatorIndexOnList = ret - 4 - 1 - modulatorList.size();
+			setProperty (Ids::uiXYSurfaceDestinationY, modulatorList[modulatorIndexOnList]);
+			return;
+		}
+	});
 }
 
 const PopupMenu CtrlrXYSurface::getModulatorListAsMenu(const int startIndex, const String &itemToSelect)

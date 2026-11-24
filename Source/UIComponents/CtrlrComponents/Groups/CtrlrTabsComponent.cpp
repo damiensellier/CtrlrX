@@ -7,6 +7,7 @@
 #include "CtrlrTabsComponent.h"
 #include "CtrlrPanel/CtrlrPanelEditor.h"
 #include "CtrlrLuaManager.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 
 CtrlrTabsLF::CtrlrTabsLF(CtrlrTabsComponent &_owner) : owner(_owner)
 {
@@ -405,14 +406,25 @@ void CtrlrTabsComponent::valueTreePropertyChanged (ValueTree &treeWhosePropertyH
 			{
 				m.addItem (i+1, ctrlrTabs->getTabNames() [i]);
 			}
-			const int ret = m.show();
-			if (ret > 0)
+			// The menu is asynchronous; the removal runs in the callback, which
+			// does nothing if the tabs component is gone. The property is reset at once, as
+			// before; after a removal the properties panel and the layout are refreshed again.
+			Component::SafePointer<CtrlrTabsComponent> safeThis (this);
+			PU::show (m, [this, safeThis] (const int ret)
 			{
-				if (AlertWindow::showOkCancelBox(AlertWindow::QuestionIcon, "Removing tab", "Are you sure you want to remove this tab? All child components in it will also be removed"))
+				if (safeThis == nullptr)
+					return;
+				if (ret > 0)
 				{
-					getComponentTree().removeChild (ret-1, 0);
+					if (AlertWindow::showOkCancelBox(AlertWindow::QuestionIcon, "Removing tab", "Are you sure you want to remove this tab? All child components in it will also be removed"))
+					{
+						getComponentTree().removeChild (ret-1, 0);
+						updatePropertiesPanel();
+						if (restoreStateInProgress == false)
+							resized();
+					}
 				}
-			}
+			});
 		}
 
 		setProperty(property, false);
