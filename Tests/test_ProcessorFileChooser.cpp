@@ -130,8 +130,12 @@ protected:
     {
         ProcessorInstance::SetUp();
         allowAndRecordDeviceSends(); // the panels open the mock devices; MIDI is not the subject
-        dir = juce::File::getSpecialLocation (juce::File::tempDirectory).getNonexistentChildFile ("ctrlrx-fc-test", "");
-        ASSERT_TRUE(dir.createDirectory());
+        // ctest -j runs these tests as parallel processes: a shared name lets one test's
+        // TearDown delete the directory another test is writing to
+        const auto *test = ::testing::UnitTest::GetInstance()->current_test_info();
+        dir = juce::File::getSpecialLocation (juce::File::tempDirectory)
+                  .getChildFile (juce::String ("ctrlrx_fc_") + test->name() + "_" + juce::Uuid().toString());
+        ASSERT_TRUE(dir.createDirectory().wasOk());
         FC::testAnswer() = [this] (const juce::String &title, int) {
             askedTitles.add (title);
             return answer;
