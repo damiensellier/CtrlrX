@@ -6,6 +6,8 @@
 #include "CtrlrPanel/CtrlrPanelEditor.h"
 #include "CtrlrPanel/CtrlrPanelCanvas.h"
 #include "CtrlrPanel/CtrlrPanelCanvasLayer.h"
+#include "CtrlrLua/MethodEditor/CtrlrLuaMethodEditor.h"
+#include "CtrlrLuaManager.h"
 
 /**
  * The asynchronous popup-menu helpers in CtrlrInlineUtilitiesGUI.h (namespace PU), through their
@@ -301,5 +303,57 @@ TEST_F(PopupMenuCallers, canvas_layer_menu_adds_the_component_in_the_callback)
 
     pumpUntil ([&] { return panel->getNumModulators() == before + 1; });
     EXPECT_EQ(panel->getNumModulators(), before + 1);
+    EXPECT_FALSE(answerMissing);
+}
+
+// The Lua method editor's tree: the group menu and the method menu.
+static juce::StringArray methodNames (const juce::ValueTree &tree)
+{
+    juce::StringArray names;
+    for (const auto &child : tree)
+        if (child.hasProperty (Ids::luaMethodName))
+            names.add (child.getProperty (Ids::luaMethodName).toString());
+    return names;
+}
+
+TEST_F(PopupMenuCallers, lua_editor_group_menu_runs_the_action_in_the_callback)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    CtrlrLuaMethodEditor editor (*panel);
+    juce::ValueTree root = panel->getCtrlrLuaManager().getMethodManager().getManagerTree();
+    juce::StringArray sorted = methodNames (root);
+    sorted.sortNatural();
+    ASSERT_NE(methodNames (root), sorted) << "the fixture's methods must start unsorted";
+    answerText = "Sort by name";
+
+    editor.itemClicked (rightClick (&editor), root);
+    EXPECT_EQ(askedFirstItems, juce::StringArray ("Group operations"));
+    EXPECT_NE(methodNames (root), sorted) << "nothing happens before the answer";
+
+    pumpUntil ([&] { return methodNames (root) == sorted; });
+    EXPECT_EQ(methodNames (root), sorted);
+    EXPECT_FALSE(answerMissing);
+}
+
+// "Remove method" asks "Delete the selected method?" after the menu. With the editor gone the
+// callback does nothing: no question (it would block the test), the method stays.
+TEST_F(PopupMenuCallers, lua_editor_method_menu_does_nothing_when_the_editor_closed_before_the_answer)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    auto editor = std::make_unique<CtrlrLuaMethodEditor> (*panel);
+    juce::ValueTree root = panel->getCtrlrLuaManager().getMethodManager().getManagerTree();
+    juce::ValueTree method = root.getChildWithProperty (Ids::luaMethodName, "onTargetChange");
+    ASSERT_TRUE(method.isValid());
+    const int before = methodNames (root).size();
+    answerText = "Remove method";
+
+    editor->itemClicked (rightClick (editor.get()), method);
+    EXPECT_EQ(askedFirstItems, juce::StringArray ("Method onTargetChange"));
+    editor.reset();
+
+    pump();
+    EXPECT_EQ(methodNames (root).size(), before);
     EXPECT_FALSE(answerMissing);
 }
