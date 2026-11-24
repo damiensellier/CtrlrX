@@ -11,6 +11,8 @@
 #include "CtrlrPropertyEditors/CtrlrPropertyComponent.h"
 #include "CtrlrComponents/Specials/CtrlrXYSurface.h"
 #include "CtrlrComponents/Groups/CtrlrTabsComponent.h"
+#include "CtrlrLua/CtrlrLuaConsole.h"
+#include "CtrlrPanel/CtrlrPanelResourceEditor.h"
 
 /**
  * The asynchronous popup-menu helpers in CtrlrInlineUtilitiesGUI.h (namespace PU), through their
@@ -532,3 +534,80 @@ TEST_F(PopupMenuCallers, tabs_remove_menu_does_nothing_when_the_panel_closed_bef
 
     pump();
 }
+
+// The rest: the Lua console's snips menu, the resource editor's row menu, and the macOS signing
+// identity menu.
+TEST_F(PopupMenuCallers, lua_console_snips_menu_runs_the_action_in_the_callback)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    CtrlrLuaConsole console (*panel);
+    juce::TextButton snipsButton ("Snips");
+    const bool before = (bool) panel->getProperty (Ids::uiLuaConsoleInputRemoveAfterRun);
+    answerText = "Toggle input removal after run";
+
+    console.snipsItemClicked (&snipsButton);
+    EXPECT_EQ(askedFirstItems, juce::StringArray ("Add input to snips"));
+    EXPECT_EQ((bool) panel->getProperty (Ids::uiLuaConsoleInputRemoveAfterRun), before);
+
+    pumpUntil ([&] { return (bool) panel->getProperty (Ids::uiLuaConsoleInputRemoveAfterRun) != before; });
+    EXPECT_NE((bool) panel->getProperty (Ids::uiLuaConsoleInputRemoveAfterRun), before);
+    EXPECT_FALSE(answerMissing);
+}
+
+TEST_F(PopupMenuCallers, lua_console_deleted_before_the_answer_is_left_alone)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    auto console = std::make_unique<CtrlrLuaConsole> (*panel);
+    juce::TextButton snipsButton ("Snips");
+    const bool before = (bool) panel->getProperty (Ids::uiLuaConsoleInputRemoveAfterRun);
+    answerText = "Toggle input removal after run";
+
+    console->snipsItemClicked (&snipsButton);
+    console.reset();
+
+    pump();
+    EXPECT_EQ((bool) panel->getProperty (Ids::uiLuaConsoleInputRemoveAfterRun), before);
+}
+
+TEST_F(PopupMenuCallers, resource_editor_row_menu_does_nothing_when_the_editor_closed_before_the_answer)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    auto editor = std::make_unique<CtrlrPanelResourceEditor> (*panel->getEditor (false));
+    answerText = "More info";
+
+    editor->cellClicked (0, 1, rightClick (editor.get()));
+    EXPECT_EQ(askedFirstItems, juce::StringArray ("Resource"));
+    editor.reset();
+
+    pump(); // no use of the deleted editor (memcheck)
+}
+
+#if JUCE_MAC
+// Only macOS has `security find-identity`. With no signing identity on the machine the menu has
+// CtrlrX's ad-hoc entry; either way the first item is an identity.
+TEST_F(PopupMenuCallers, mac_signing_identity_menu_sets_the_identity_in_the_callback)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    juce::String firstItem;
+    PU::testAnswer() = [&] (const juce::PopupMenu &menu, const juce::PopupMenu::Options &) {
+        juce::PopupMenu::MenuItemIterator it (menu);
+        if (! it.next())
+            return 0;
+        firstItem = it.getItem().text;
+        return it.getItem().itemID;
+    };
+    panel->setProperty (Ids::panelCertificateMacId, "");
+
+    panel->setProperty (Ids::panelCertificateMacSelectId, true);
+    ASSERT_TRUE(firstItem.isNotEmpty());
+    EXPECT_FALSE((bool) panel->getProperty (Ids::panelCertificateMacSelectId)) << "the button property is reset at once";
+    EXPECT_EQ(panel->getProperty (Ids::panelCertificateMacId).toString(), "");
+
+    pumpUntil ([&] { return panel->getProperty (Ids::panelCertificateMacId).toString() == firstItem; });
+    EXPECT_EQ(panel->getProperty (Ids::panelCertificateMacId).toString(), firstItem);
+}
+#endif

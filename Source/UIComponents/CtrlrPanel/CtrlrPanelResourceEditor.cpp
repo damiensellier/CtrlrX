@@ -332,12 +332,20 @@ void CtrlrPanelResourceEditor::cellClicked(int rowNumber, int columnId, const Mo
 		PopupMenu m;
 		m.addSectionHeader ("Resource");
 		m.addItem (1, "More info");
-		const int ret = m.show();
 
-		if (ret == 1)
+		// The menu is asynchronous; the code after it runs in the callback,
+		// which does nothing if the editor is gone.
+		Component::SafePointer<CtrlrPanelResourceEditor> safeThis (this);
+		PU::show (m, [this, safeThis, rowNumber] (const int ret)
 		{
-			showResourceInfo(rowNumber);
-		}
+			if (safeThis == nullptr)
+				return;
+
+			if (ret == 1)
+			{
+				showResourceInfo(rowNumber);
+			}
+		});
 	}
 }
 

@@ -4,6 +4,7 @@
 #include "CtrlrPanel/CtrlrPanel.h"
 
 #include "CtrlrLuaConsole.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 
 
 const StringArray joinFileArray (const Array<File> ar)
@@ -223,25 +224,32 @@ void CtrlrLuaConsole::snipsItemClicked(Button *b)
 	m.addSubMenu ("Run snip", getSnipsMenu(1024));
 	m.addSubMenu ("Remove snip", getSnipsMenu(4096));
 	m.addItem (2, "Toggle input removal after run", true, (bool)owner.getProperty(Ids::uiLuaConsoleInputRemoveAfterRun));
-	const int ret = m.showAt(b);
+	// The menu is asynchronous; the code after it runs in the callback, which
+	// does nothing if the console is gone.
+	Component::SafePointer<CtrlrLuaConsole> safeThis (this);
+	PU::showAt (m, b, [this, safeThis] (const int ret)
+	{
+		if (safeThis == nullptr)
+			return;
 
-	if (ret == 1)
-	{
-		snips.add (inputDocument.getAllContent());
-	}
-	if (ret >= 1024 && ret < 4096)
-	{
-		runCode (snips[ret-1024]);
-	}
-	if (ret >= 4096)
-	{
-		snips.remove (ret-4096);
-	}
-	if (ret == 2)
-	{
-		owner.setProperty (Ids::uiLuaConsoleInputRemoveAfterRun, !owner.getProperty(Ids::uiLuaConsoleInputRemoveAfterRun));
-	}
-	owner.setProperty (Ids::uiLuaConsoleSnips, snips.joinIntoString("$"));
+		if (ret == 1)
+		{
+			snips.add (inputDocument.getAllContent());
+		}
+		if (ret >= 1024 && ret < 4096)
+		{
+			runCode (snips[ret-1024]);
+		}
+		if (ret >= 4096)
+		{
+			snips.remove (ret-4096);
+		}
+		if (ret == 2)
+		{
+			owner.setProperty (Ids::uiLuaConsoleInputRemoveAfterRun, !owner.getProperty(Ids::uiLuaConsoleInputRemoveAfterRun));
+		}
+		owner.setProperty (Ids::uiLuaConsoleSnips, snips.joinIntoString("$"));
+	});
 }
 
 StringArray CtrlrLuaConsole::getMenuBarNames()
