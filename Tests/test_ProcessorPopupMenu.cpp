@@ -8,6 +8,7 @@
 #include "CtrlrPanel/CtrlrPanelCanvasLayer.h"
 #include "CtrlrLua/MethodEditor/CtrlrLuaMethodEditor.h"
 #include "CtrlrLuaManager.h"
+#include "CtrlrPropertyEditors/CtrlrPropertyComponent.h"
 
 /**
  * The asynchronous popup-menu helpers in CtrlrInlineUtilitiesGUI.h (namespace PU), through their
@@ -356,4 +357,81 @@ TEST_F(PopupMenuCallers, lua_editor_method_menu_does_nothing_when_the_editor_clo
     pump();
     EXPECT_EQ(methodNames (root).size(), before);
     EXPECT_FALSE(answerMissing);
+}
+
+// The property editors: the multi-MIDI list's Add menu and the SysEx editor's token menu.
+static juce::Button *buttonNamed (juce::Component &c, const juce::String &name)
+{
+    for (auto *child : c.getChildren())
+        if (auto *b = dynamic_cast<juce::Button *> (child))
+            if (b->getName() == name)
+                return b;
+    return nullptr;
+}
+
+TEST_F(PopupMenuCallers, multi_midi_add_appends_the_chosen_message_in_the_callback)
+{
+    juce::Value value (juce::var (""));
+    CtrlrMultiMidiPropertyComponent property (value);
+    juce::Button *add = buttonNamed (property, "Add Multi");
+    ASSERT_NE(add, nullptr);
+    answerText = "Program Change";
+
+    property.buttonClicked (add);
+    EXPECT_EQ(askedFirstItems.size(), 1);
+    EXPECT_EQ(value.toString(), "");
+
+    pumpUntil ([&] { return value.toString().isNotEmpty(); });
+    EXPECT_EQ(value.toString(), "ProgramChange,-1");
+    EXPECT_FALSE(answerMissing);
+}
+
+TEST_F(PopupMenuCallers, multi_midi_add_deleted_before_the_answer_is_left_alone)
+{
+    juce::Value value (juce::var ("CC,-2,-1"));
+    auto property = std::make_unique<CtrlrMultiMidiPropertyComponent> (value);
+    juce::Button *add = buttonNamed (*property, "Add Multi");
+    ASSERT_NE(add, nullptr);
+    answerText = "SysEx";
+
+    property->buttonClicked (add);
+    property.reset();
+
+    pump();
+    EXPECT_EQ(value.toString(), "CC,-2,-1");
+}
+
+TEST_F(PopupMenuCallers, sysex_token_menu_sets_the_label_in_the_callback)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    juce::Value value (juce::var ("F0 00 F7"));
+    CtrlrSysExEditor editor (value, panel);
+    juce::Label target;
+    target.setText ("00", juce::dontSendNotification);
+    answerText = "SysEx Start";
+
+    editor.showTokenMenuForLabel (&target);
+    EXPECT_EQ(askedFirstItems, juce::StringArray ("Insert variable"));
+    EXPECT_EQ(target.getText(), "00");
+
+    pumpUntil ([&] { return target.getText() == "f0"; });
+    EXPECT_EQ(target.getText(), "f0");
+    EXPECT_FALSE(answerMissing);
+}
+
+TEST_F(PopupMenuCallers, sysex_token_menu_label_deleted_before_the_answer_is_left_alone)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    juce::Value value (juce::var ("F0 00 F7"));
+    CtrlrSysExEditor editor (value, panel);
+    auto target = std::make_unique<juce::Label>();
+    answerText = "SysEx EOM";
+
+    editor.showTokenMenuForLabel (target.get());
+    target.reset();
+
+    pump(); // no use of the deleted label (memcheck)
+    EXPECT_EQ(value.toString(), "F0 00 F7");
 }
