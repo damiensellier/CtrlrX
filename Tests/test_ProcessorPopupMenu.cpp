@@ -486,6 +486,53 @@ TEST_F(PopupMenuCallers, xy_surface_menu_does_nothing_when_the_panel_closed_befo
     pump(); // no use of the deleted surface (memcheck)
 }
 
+// In edit mode a right-click on the surface opens only the editor's component menu (the canvas
+// opens that one). With the blocking menus the surface menu opened first and the editor's menu
+// after it closed; with asynchronous menus both would open at once.
+TEST_F(PopupMenuCallers, xy_surface_right_click_in_edit_mode_opens_no_surface_menu)
+{
+    CtrlrPanel *panel = panelInEditMode();
+    ASSERT_NE(panel, nullptr);
+    ASSERT_TRUE(panel->getEditMode());
+    auto *xy = dynamic_cast<CtrlrXYSurface *> (addComponent (*panel, Ids::uiXYSurface));
+    ASSERT_NE(xy, nullptr);
+
+    xy->mouseDown (rightClick (xy));
+    pump();
+    EXPECT_EQ(askedFirstItems.size(), 0) << askedFirstItems.joinIntoString (", ");
+}
+
+// After a panel is loaded in edit mode, bootstrapPanel() tells the panel "not in edit mode" (it
+// reads the editor's property from the panel's own tree), while the editor and its canvas are in
+// edit mode. The surface must follow the editor, as the canvas does: still no surface menu.
+TEST_F(PopupMenuCallers, xy_surface_right_click_follows_the_editors_edit_mode)
+{
+    CtrlrPanel *panel = panelInEditMode();
+    ASSERT_NE(panel, nullptr);
+    auto *xy = dynamic_cast<CtrlrXYSurface *> (addComponent (*panel, Ids::uiXYSurface));
+    ASSERT_NE(xy, nullptr);
+    panel->editModeChanged (false); // as bootstrapPanel() after a load in edit mode
+    ASSERT_FALSE(panel->getEditMode());
+    ASSERT_TRUE((bool) panel->getEditor (false)->getProperty (Ids::uiPanelEditMode));
+
+    xy->mouseDown (rightClick (xy));
+    pump();
+    EXPECT_EQ(askedFirstItems.size(), 0) << askedFirstItems.joinIntoString (", ");
+}
+
+TEST_F(PopupMenuCallers, xy_surface_right_click_outside_edit_mode_opens_the_surface_menu)
+{
+    CtrlrPanel *panel = loadPanel ("fixture_lua_values.panel");
+    ASSERT_NE(panel, nullptr);
+    ASSERT_FALSE(panel->getEditMode());
+    auto *xy = dynamic_cast<CtrlrXYSurface *> (addComponent (*panel, Ids::uiXYSurface));
+    ASSERT_NE(xy, nullptr);
+
+    xy->mouseDown (rightClick (xy));
+    ASSERT_EQ(askedFirstItems.size(), 1);
+    EXPECT_EQ(askedFirstItems[0], "Flip min/max for X axis");
+}
+
 static int numTabs (CtrlrComponent &tabs)
 {
     int n = 0;

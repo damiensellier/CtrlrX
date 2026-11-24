@@ -27,6 +27,7 @@
 #include "CtrlrUtilitiesGUI.h"
 #include "CtrlrInlineUtilitiesGUI.h"
 #include "CtrlrPanel/CtrlrPanel.h"
+#include "CtrlrPanel/CtrlrPanelEditor.h"
 #include "CtrlrLog.h"
 #include "CtrlrPanel/CtrlrPanelResource.h"
 //[/Headers]
@@ -210,7 +211,15 @@ void CtrlrXYSurface::mouseDown (const MouseEvent& e)
     //[UserCode_mouseDown] -- Add your code here...
 	if (e.mods.isPopupMenu())
 	{
-		showPopupMenu();
+		// Updated v8.0.100 In edit mode only the panel editor's component menu opens. Before,
+		// the blocking surface menu opened first and the editor's menu after it closed; with
+		// asynchronous menus both would open at once. Edit mode is read where the canvas reads
+		// it (the editor's property): after loading a panel in edit mode, the panel's own flag
+		// says "not in edit mode" until edit mode is switched off and on again.
+		CtrlrPanelEditor *editor = owner.getOwnerPanel().getEditor (false);
+		const bool editMode = editor != nullptr && (bool)editor->getProperty (Ids::uiPanelEditMode);
+		if (editMode == false)
+			showPopupMenu();
 	}
 	else if (e.eventComponent == this)
 	{
