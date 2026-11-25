@@ -14,6 +14,7 @@
 #include "CtrlrLua/CtrlrLuaConsole.h"
 #include "CtrlrPanel/CtrlrPanelResourceEditor.h"
 #include "CtrlrPanel/CtrlrPanelProperties.h"
+#include "CtrlrPanel/CtrlrPanelComponentProperties.h"
 
 /**
  * The asynchronous popup-menu helpers in CtrlrInlineUtilitiesGUI.h (namespace PU), through their
@@ -595,6 +596,55 @@ TEST_F(PopupMenuCallers, tabs_remove_menu_refreshes_the_properties_after_the_ans
     EXPECT_NE(row, nullptr) << "the properties must not be rebuilt while the menu is open";
 
     EXPECT_TRUE(pumpUntil ([&] { return row == nullptr; })) << "the properties are rebuilt after the answer";
+}
+
+// The canvas tests above end with a component selected in edit mode, so the properties panel shows
+// its rows, among them the layer row, which reads the canvas when it is built. When the editor is
+// deleted its tabs hide the properties, and a rebuild on hiding built that row inside the dying
+// editor (an access violation on Windows, now and then; the same on 5.6.37). Hiding must not
+// rebuild the rows.
+static CtrlrPanelComponentProperties *componentProperties (juce::Component *root)
+{
+    if (root == nullptr)
+        return nullptr;
+    if (auto *props = dynamic_cast<CtrlrPanelComponentProperties *> (root))
+        return props;
+    for (auto *child : root->getChildren())
+        if (auto *props = componentProperties (child))
+            return props;
+    return nullptr;
+}
+
+TEST_F(PopupMenuCallers, properties_hidden_keep_their_rows)
+{
+    CtrlrPanel *panel = panelInEditMode();
+    ASSERT_NE(panel, nullptr);
+    panel->getEditor (false)->getSelection()->selectOnly (panel->getModulator ("target")->getComponent());
+    pump();
+    CtrlrPanelComponentProperties *props = componentProperties (panel->getEditor (false)->getPropertiesPanel());
+    ASSERT_NE(props, nullptr);
+    ASSERT_TRUE(props->isVisible());
+    juce::Component::SafePointer<juce::PropertyComponent> row (firstPropertyRow (props));
+    ASSERT_NE(row, nullptr);
+
+    props->setVisible (false);
+    EXPECT_NE(row, nullptr) << "hiding the properties must not rebuild their rows";
+
+    props->setVisible (true);
+    EXPECT_EQ(row, nullptr) << "showing them rebuilds the rows, as before";
+}
+
+// The user's path: close a panel in edit mode with a component selected (no crash, on every OS).
+TEST_F(PopupMenuCallers, closing_a_panel_with_a_selected_component)
+{
+    CtrlrPanel *panel = panelInEditMode();
+    ASSERT_NE(panel, nullptr);
+    panel->getEditor (false)->getSelection()->selectOnly (panel->getModulator ("target")->getComponent());
+    pump();
+
+    processor->getManager().removePanel (panel->getEditor (false));
+    EXPECT_EQ(processor->getManager().getNumPanels(), 0);
+    pump();
 }
 
 // With the tabs gone the callback does nothing: no question (it would block the test).
