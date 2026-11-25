@@ -1516,7 +1516,7 @@ void CtrlrMultiMidiPropertyComponent::buttonClicked(Button* buttonThatWasClicked
 			const char* defaultCsv;
 		};
 
-		const StandardType standardTypes[] = {
+		static const StandardType standardTypes[] = {
 			{ "CC",              "CC,-2,-1" },
 			{ "Program Change",  "ProgramChange,-1" },
 			{ "SysEx",           "SysEx,F0 00 xx F7" },
@@ -1536,36 +1536,43 @@ void CtrlrMultiMidiPropertyComponent::buttonClicked(Button* buttonThatWasClicked
         }
 
         // Show popup and handle selection
-		int ret = m.show();
+		// The menu is asynchronous; the code after it runs in the callback,
+		// which does nothing if the property component is gone.
+		Component::SafePointer<CtrlrMultiMidiPropertyComponent> safeThis (this);
+		PU::show (m, [this, safeThis, templateKeys, standardStartId] (const int ret)
+		{
+			if (safeThis == nullptr)
+				return;
 
-		if (ret <= 0)
-			return; // cancelled
+			if (ret <= 0)
+				return; // cancelled
 
-        if (ret <= templateKeys.size()) // XML template
-        {
-            String data = templates.getValue(templateKeys[ret - 1], "");
-			if (data.isNotEmpty())
+			if (ret <= templateKeys.size()) // XML template
 			{
-				String currentValue = valueToControl.toString();
-				if (currentValue.isNotEmpty())
-					valueToControl = currentValue + ":" + data;
-				else
-					valueToControl = data;
-				refresh();
-			}
-        } else // Standard MIDI type
-        {
-            int index = ret - standardStartId;
-			if (index >= 0 && index < numElementsInArray(standardTypes))
+				String data = templates.getValue(templateKeys[ret - 1], "");
+				if (data.isNotEmpty())
+				{
+					String currentValue = valueToControl.toString();
+					if (currentValue.isNotEmpty())
+						valueToControl = currentValue + ":" + data;
+					else
+						valueToControl = data;
+					refresh();
+				}
+			} else // Standard MIDI type
 			{
-				String currentValue = valueToControl.toString();
-				if (currentValue.isNotEmpty())
-					valueToControl = currentValue + ":" + standardTypes[index].defaultCsv;
-				else
-					valueToControl = standardTypes[index].defaultCsv;
-				refresh();
+				int index = ret - standardStartId;
+				if (index >= 0 && index < numElementsInArray(standardTypes))
+				{
+					String currentValue = valueToControl.toString();
+					if (currentValue.isNotEmpty())
+						valueToControl = currentValue + ":" + standardTypes[index].defaultCsv;
+					else
+						valueToControl = standardTypes[index].defaultCsv;
+					refresh();
+				}
 			}
-        }
+		});
     }
 	else if (buttonThatWasClicked == removeMulti)
 	{
@@ -2021,50 +2028,60 @@ void CtrlrSysExEditor::showTokenMenuForLabel(Label* l)
 	m.addSubMenu("Global variable[3]", nm);
 
 	// --- Show menu ---
-	const int ret = m.show();
-
-	// --- Handle selection ---
-	if      (ret == 1) l->setText("yy", sendNotification);
-	else if (ret == 2) l->setText("0y", sendNotification);
-	else if (ret == 3) l->setText("LS", sendNotification);
-	else if (ret == 4) l->setText("MS", sendNotification);
-	else if (ret == 5) l->setText("ls", sendNotification);
-	else if (ret == 6) l->setText("ms", sendNotification);
-	else if (ret == 7) l->setText("r1", sendNotification);
-	else if (ret == 8) l->setText("r2", sendNotification);
-	else if (ret == 9) l->setText("r3", sendNotification);
-	else if (ret == 10) l->setText("r4", sendNotification);
-	else if (ret == 11) l->setText("f0", sendNotification);
-	else if (ret == 12) l->setText("f7", sendNotification);
-	else if (ret == 13) l->setText("z5", sendNotification);
-	else if (ret == 14) l->setText("X5", sendNotification);
-	else if (ret == 15) l->setText("w5", sendNotification);
-	else if (ret == 16) l->setText("tc", sendNotification);
-	else if (ret == 17) l->setText("O5", sendNotification);
-	else if (ret == 18) l->setText("ii", sendNotification);
-	else if (ret >= 19 && ret < 27) l->setText("q" + String(ret-19), sendNotification);
-	else if (ret >= 27 && ret < 43) l->setText("k" + String::toHexString(ret-27), sendNotification);
-	else if (ret >= 43 && ret < 59) l->setText("o" + String::toHexString(ret-43), sendNotification);
-	else if (ret >= 59 && ret < 75) l->setText("p" + String::toHexString(ret-59), sendNotification);
-	else if (ret >= 75 && ret < 91) l->setText("n" + String::toHexString(ret-75), sendNotification);
-	else if (ret > 1024 && ret < 4096)
+	// The menu is asynchronous; the code after it runs in the callback, which
+	// does nothing if the editor or the label is gone.
+	Component::SafePointer<CtrlrSysExEditor> safeThis (this);
+	Component::SafePointer<Label> safeLabel (l);
+	PU::show (m, [this, safeThis, safeLabel] (const int ret)
 	{
-		ValueTree vendor = owner->getCtrlrManagerOwner().getIDManager().getVendorTree().getChild(ret-1024);
-		const String vendorId = vendor.getProperty(Ids::id).toString();
-		if (vendorId.length() == 2) l->setText(vendorId, sendNotification);
-		else if (vendorId.length() == 6)
+		if (safeThis == nullptr || safeLabel == nullptr)
+			return;
+
+		Label *l = safeLabel.getComponent();
+
+		// --- Handle selection ---
+		if      (ret == 1) l->setText("yy", sendNotification);
+		else if (ret == 2) l->setText("0y", sendNotification);
+		else if (ret == 3) l->setText("LS", sendNotification);
+		else if (ret == 4) l->setText("MS", sendNotification);
+		else if (ret == 5) l->setText("ls", sendNotification);
+		else if (ret == 6) l->setText("ms", sendNotification);
+		else if (ret == 7) l->setText("r1", sendNotification);
+		else if (ret == 8) l->setText("r2", sendNotification);
+		else if (ret == 9) l->setText("r3", sendNotification);
+		else if (ret == 10) l->setText("r4", sendNotification);
+		else if (ret == 11) l->setText("f0", sendNotification);
+		else if (ret == 12) l->setText("f7", sendNotification);
+		else if (ret == 13) l->setText("z5", sendNotification);
+		else if (ret == 14) l->setText("X5", sendNotification);
+		else if (ret == 15) l->setText("w5", sendNotification);
+		else if (ret == 16) l->setText("tc", sendNotification);
+		else if (ret == 17) l->setText("O5", sendNotification);
+		else if (ret == 18) l->setText("ii", sendNotification);
+		else if (ret >= 19 && ret < 27) l->setText("q" + String(ret-19), sendNotification);
+		else if (ret >= 27 && ret < 43) l->setText("k" + String::toHexString(ret-27), sendNotification);
+		else if (ret >= 43 && ret < 59) l->setText("o" + String::toHexString(ret-43), sendNotification);
+		else if (ret >= 59 && ret < 75) l->setText("p" + String::toHexString(ret-59), sendNotification);
+		else if (ret >= 75 && ret < 91) l->setText("n" + String::toHexString(ret-75), sendNotification);
+		else if (ret > 1024 && ret < 4096)
 		{
-			int index = byteValueLabels.indexOf(l);
-			if (byteValueLabels[index+1] && byteValueLabels[index+2])
+			ValueTree vendor = owner->getCtrlrManagerOwner().getIDManager().getVendorTree().getChild(ret-1024);
+			const String vendorId = vendor.getProperty(Ids::id).toString();
+			if (vendorId.length() == 2) l->setText(vendorId, sendNotification);
+			else if (vendorId.length() == 6)
 			{
-				byteValueLabels[index]->setText(vendorId.substring(0,2), dontSendNotification);
-				byteValueLabels[index+1]->setText(vendorId.substring(2,4), dontSendNotification);
-				byteValueLabels[index+2]->setText(vendorId.substring(4,6), dontSendNotification);
+				int index = byteValueLabels.indexOf(l);
+				if (byteValueLabels[index+1] && byteValueLabels[index+2])
+				{
+					byteValueLabels[index]->setText(vendorId.substring(0,2), dontSendNotification);
+					byteValueLabels[index+1]->setText(vendorId.substring(2,4), dontSendNotification);
+					byteValueLabels[index+2]->setText(vendorId.substring(4,6), dontSendNotification);
+				}
 			}
 		}
-	}
-	else if (ret == 8192) l->setText("tp", sendNotification);
-	else if (ret == 8193) l->setText("tb", sendNotification);
+		else if (ret == 8192) l->setText("tp", sendNotification);
+		else if (ret == 8193) l->setText("tb", sendNotification);
+	});
 }
 
 //==============================================================================

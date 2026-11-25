@@ -1037,57 +1037,64 @@ void CtrlrLuaMethodEditor::itemClicked (const MouseEvent &e, ValueTree &item)
             m.addItem (6, "Sort by name");
             m.addItem (7, "Sort by size");
 
-            const int ret = m.show();
+            // The menu is asynchronous; the code after it runs in the callback,
+            // which does nothing if the editor is gone.
+            Component::SafePointer<CtrlrLuaMethodEditor> safeThis (this);
+            PU::show (m, [this, safeThis, item, isMethodGroup] (const int ret)
+            {
+                if (safeThis == nullptr)
+                    return;
 
-            if (ret == 1)
-            {
-                addNewMethod (item);
-            }
-            else if (ret == 2)
-            {
-                addMethodFromFile (item);
-            }
-            else if (ret == 10)
-            {
-                addNewTable(item);
-            }
-            else if (ret == 11)
-            {
-                addNewClass(item);
-            }
-            else if (ret == 3)
-            {
-                addNewGroup (item);
-            }
-            else if (ret == 4)
-            {
-                if (isMethodGroup)
-                {    // Case of a method group => remove group
-                    removeGroup(item);
+                if (ret == 1)
+                {
+                    addNewMethod (item);
                 }
-                else
-                {    // Case of to root element => export to files
-                    convertToFiles();
+                else if (ret == 2)
+                {
+                    addMethodFromFile (item);
                 }
-            }
-            else if (ret == 5)
-            {
-                renameGroup (item);
-            }
-            else if (ret == 6)
-            {
-                ChildSorter sorter(true,*this);
-                getMethodManager().getManagerTree().sort (sorter, nullptr, false);
+                else if (ret == 10)
+                {
+                    addNewTable(item);
+                }
+                else if (ret == 11)
+                {
+                    addNewClass(item);
+                }
+                else if (ret == 3)
+                {
+                    addNewGroup (item);
+                }
+                else if (ret == 4)
+                {
+                    if (isMethodGroup)
+                    {    // Case of a method group => remove group
+                        removeGroup(item);
+                    }
+                    else
+                    {    // Case of to root element => export to files
+                        convertToFiles();
+                    }
+                }
+                else if (ret == 5)
+                {
+                    renameGroup (item);
+                }
+                else if (ret == 6)
+                {
+                    ChildSorter sorter(true,*this);
+                    getMethodManager().getManagerTree().sort (sorter, nullptr, false);
 
-                triggerAsyncUpdate();
-            }
-            else if (ret == 7)
-            {
-                ChildSorter sorter(false,*this);
-                getMethodManager().getManagerTree().sort (sorter, nullptr, false);
+                    triggerAsyncUpdate();
+                }
+                else if (ret == 7)
+                {
+                    ChildSorter sorter(false,*this);
+                    getMethodManager().getManagerTree().sort (sorter, nullptr, false);
 
-                triggerAsyncUpdate();
-            }
+                    triggerAsyncUpdate();
+                }
+            });
         }
         else if (item.hasType(Ids::luaMethod))
         {
@@ -1104,33 +1111,40 @@ void CtrlrLuaMethodEditor::itemClicked (const MouseEvent &e, ValueTree &item)
             m.addSeparator();
             m.addItem (2,"Remove method");
 
-            const int ret = m.show();
+            // The menu is asynchronous; the code after it runs in the callback,
+            // which does nothing if the editor is gone.
+            Component::SafePointer<CtrlrLuaMethodEditor> safeThis (this);
+            PU::show (m, [this, safeThis, item] (const int ret)
+            {
+                if (safeThis == nullptr)
+                    return;
 
-            if (ret == 11)
-            {
-                /* convert a in-memory method to a file based one */
-            }
-            else if (ret == 12)
-            {
-                /* locate a missing file on disk */
-            }
-            else if (ret == 10)
-            {
-                /* convert a method from a file to a in-memory property */
-            }
-            else if (ret == 2)
-            {
-                /* remove a method */
-                if (SURE("Delete the selected method?", this))
+                if (ret == 11)
                 {
-                    {
-                        methodEditArea->closeTabWithMethod (item);
-                        getMethodManager().removeMethod (item.getProperty(Ids::uuid).toString());
-                    }
-
-                    triggerAsyncUpdate();
+                    /* convert a in-memory method to a file based one */
                 }
-            }
+                else if (ret == 12)
+                {
+                    /* locate a missing file on disk */
+                }
+                else if (ret == 10)
+                {
+                    /* convert a method from a file to a in-memory property */
+                }
+                else if (ret == 2)
+                {
+                    /* remove a method */
+                    if (SURE("Delete the selected method?", this))
+                    {
+                        {
+                            methodEditArea->closeTabWithMethod (item);
+                            getMethodManager().removeMethod (item.getProperty(Ids::uuid).toString());
+                        }
+
+                        triggerAsyncUpdate();
+                    }
+                }
+            });
         }
     }
 }

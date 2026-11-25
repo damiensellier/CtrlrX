@@ -13,6 +13,7 @@
 #include "JuceClasses/LMemoryBlock.h"
 #include "CtrlrMIDI/CtrlrMIDISettingsDialog.h"
 #include "CtrlrComponents/CtrlrComponent.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 
 CtrlrPanel::CtrlrPanel(CtrlrManager &_owner)
 		: owner(_owner),
@@ -468,7 +469,9 @@ void CtrlrPanel::setProperty (const Identifier& name, const var &newValue, const
 }
 
 
-juce::String CtrlrPanel::getCodeSigningIdentityFromPopup() // Updated v5.6.34. FIXED The Apple certificates where not showing up properly.
+// Updated v8.0.100. The menu is asynchronous: the chosen identity goes to onChosen, which is not
+// called on Cancel, on an error, or if the panel is gone.
+void CtrlrPanel::getCodeSigningIdentityFromPopup(std::function<void (const juce::String &)> onChosen) // Updated v5.6.34. FIXED The Apple certificates where not showing up properly.
 {
     juce::String debugType = "MAC_SIGNING";
 
@@ -551,14 +554,20 @@ juce::String CtrlrPanel::getCodeSigningIdentityFromPopup() // Updated v5.6.34. F
                     menu.addItem(i + 1, identities[i]);
                 }
 
-                int result = menu.show();
-
-                if (result > 0)
+                WeakReference<CtrlrPanel> safeThis (this);
+                PU::show (menu, [safeThis, identities, debugType, onChosen] (const int result)
                 {
-                    juce::String selected = identities[result - 1];
-                    std::cout << debugType << " - Selected Identity: " << selected << std::endl;
-                    return selected;
-                }
+                    if (safeThis == nullptr)
+                        return;
+
+                    if (result > 0)
+                    {
+                        juce::String selected = identities[result - 1];
+                        std::cout << debugType << " - Selected Identity: " << selected << std::endl;
+                        if (onChosen)
+                            onChosen (selected);
+                    }
+                });
             }
             else
             {
@@ -573,16 +582,14 @@ juce::String CtrlrPanel::getCodeSigningIdentityFromPopup() // Updated v5.6.34. F
         else
         {
             juce::Result::fail("Error: Code signing identity retrieval process did not finish properly.");
-            return "";
+            return;
         }
     }
     else
     {
         juce::Result::fail("Error: Failed to start the code signing identity retrieval process.");
-        return "";
+        return;
     }
-
-    return juce::String();
 }
 
 void CtrlrPanel::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChanged, const Identifier &property)
@@ -701,13 +708,15 @@ void CtrlrPanel::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChange
             if ((bool)getProperty(property) == true) // on button click
             {
                 // Launch the popup to select the certificate identity
-                String selectedIdentity = getCodeSigningIdentityFromPopup();
-                
-                if (selectedIdentity.isNotEmpty())
+                // The popup is asynchronous: the property is set once an identity is chosen.
+                getCodeSigningIdentityFromPopup ([this] (const String &selectedIdentity)
                 {
-                    // Set the property with the selected certificate identity
-                    setProperty(Ids::panelCertificateMacId, selectedIdentity);
-                }
+                    if (selectedIdentity.isNotEmpty())
+                    {
+                        // Set the property with the selected certificate identity
+                        setProperty(Ids::panelCertificateMacId, selectedIdentity);
+                    }
+                });
             }
             setProperty(property, false);
     }

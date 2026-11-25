@@ -222,4 +222,76 @@ namespace FC
     }
 }
 
+// Added v8.0.100. Asynchronous popup menus, after John Goodland's PU helpers (his v8.04 to v8.79).
+// PopupMenu::showMenuAsync() returns at once and calls the callback with the chosen item ID, or 0
+// when the menu was dismissed. show() and showAt() pass the options of the blocking
+// PopupMenu::show() and showAt() they replace, so the menu opens where it did. A callback that
+// uses a component must check that it still exists: Lua or the host can delete it while the menu
+// is open.
+namespace PU
+{
+    // Test hook. When set, no menu is shown: the hook gets the menu and its options and returns
+    // the item ID to choose (0 = dismissed). The callback still runs later, from the message loop,
+    // as it does after a real menu.
+    using TestAnswer = std::function<int (const juce::PopupMenu &menu, const juce::PopupMenu::Options &options)>;
+
+    inline TestAnswer &testAnswer()
+    {
+        static TestAnswer hook;
+        return hook;
+    }
+
+    inline void showMenuAsync (const juce::PopupMenu &menu, const juce::PopupMenu::Options &options,
+                               std::function<void (int)> callback)
+    {
+        // JUCE opens no window for a menu without items and never calls back; the blocking show()
+        // returned 0, and the code after it ran.
+        if (! juce::PopupMenu::MenuItemIterator (menu).next())
+        {
+            juce::MessageManager::callAsync ([callback] {
+                if (callback)
+                    callback (0);
+            });
+            return;
+        }
+
+        if (const TestAnswer &hook = testAnswer())
+        {
+            const int answer = hook (menu, options);
+            juce::MessageManager::callAsync ([answer, callback] {
+                if (callback)
+                    callback (answer);
+            });
+            return;
+        }
+
+        // The menu window takes a copy of the items, so the caller's menu may go out of scope.
+        juce::PopupMenu shown (menu);
+        // The callback runs one message later, once the menu window is gone: JUCE calls it while
+        // the window still exists, and the code after a blocking show() ran after it had closed
+        // (it may open an alert, a file chooser or another menu).
+        shown.showMenuAsync (options, [callback] (int result) {
+            juce::MessageManager::callAsync ([result, callback] {
+                if (callback)
+                    callback (result);
+            });
+        });
+    }
+
+    // For PopupMenu::show(): at the mouse position.
+    inline void show (const juce::PopupMenu &menu, std::function<void (int)> callback)
+    {
+        showMenuAsync (menu, juce::PopupMenu::Options(), std::move (callback));
+    }
+
+    // For PopupMenu::showAt (component).
+    inline void showAt (const juce::PopupMenu &menu, juce::Component *target, std::function<void (int)> callback)
+    {
+        juce::PopupMenu::Options options;
+        if (target != nullptr)
+            options = options.withTargetComponent (target);
+        showMenuAsync (menu, options, std::move (callback));
+    }
+}
+
 #endif

@@ -130,7 +130,8 @@ public:
 	void handleLeftClickOnComponent(const MouseEvent &e);
 	void handleRightClickOnCanvas(const MouseEvent &e);
 	void handleRightClickOnTabs(const MouseEvent &e);
-	void handleRightClickOnComponent(const MouseEvent &e);
+	void handleRightClickOnComponent(const MouseEvent &e, std::function<void()> afterMenu = nullptr);
+	void handleComponentMenuResult (const int ret, CtrlrComponent *c, const MouseEvent &e, const PopupMenu &componentSubMenu);
 	void handleRightClickOnMultiSelection(const MouseEvent &e);
 	void pasteGroupComponent(const ValueTree &groupTree, const int destinationX=-1, const int destinationY=-1);
 	void pasteGroupComponent(const ValueTree &groupTree, const MouseEvent &e);

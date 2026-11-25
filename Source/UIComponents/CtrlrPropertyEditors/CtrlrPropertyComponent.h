@@ -604,7 +604,8 @@ class CtrlrMultiMidiPropertyComponent  : public Component,
 		
 		void updateButtonIcons(); // Updated v5.6.35. Helper function for Multi MIDI Message. Thanks to @dnaldoog
 	
-		MultiMidiAlert questionWindow;
+		// MultiMidiAlert questionWindow; // Not used. As a member it put a hidden window on the
+		// desktop for every multi-MIDI property (an AlertWindow is a top-level window).
 		StringArray values;
 		Value valueToControl;
 		StringPairArray templates;

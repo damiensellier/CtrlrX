@@ -582,10 +582,10 @@ dialog is listed in the step that opened it, `steps[i].dialogs`, as
 
 | Field | Meaning |
 |---|---|
-| `title` | The dialog's title. |
-| `kind` | `"alert"` (an `AlertWindow`: `utils.infoWindow` / `warnWindow` / `questionWindow`, the `AlertWindow.show…` functions, CtrlrX's own error dialogs), `"fileChooser"`, or `"component"` for any other modal. |
-| `buttons` | The button captions, e.g. `["Erase", "Keep"]`. |
-| `result` | What the dialog returned: `0` when dismissed; for an answered alert, the button's return value (`utils.questionWindow`: `1` for the first button); `1` for an answered file chooser. |
+| `title` | The dialog's title. A popup menu has none: the probe names it `menu: <its first item>` (on a JUCE 6.0.8 build only `menu`, see below). |
+| `kind` | `"alert"` (an `AlertWindow`: `utils.infoWindow` / `warnWindow` / `questionWindow`, the `AlertWindow.show…` functions, CtrlrX's own error dialogs), `"fileChooser"`, `"menu"` (a `PopupMenu`: Lua's `PopupMenu:show` / `showAt`), or `"component"` for any other modal. |
+| `buttons` | The button captions, e.g. `["Erase", "Keep"]`; for a menu, the texts of its items, section headers included (not those of its submenus). |
+| `result` | What the dialog returned: `0` when dismissed; for an answered alert, the button's return value (`utils.questionWindow`: `1` for the first button); `1` for an answered file chooser; the chosen item's ID for a menu. |
 | `answer` | Only on an answered dialog: the rule's answer. |
 | `answerError` | Only when a rule matched but the answer could not be given (no such button, the chooser did not accept the path within 3 s): why. The dialog was then dismissed. |
 
@@ -609,6 +609,7 @@ before `--answer` rules.
 |---|---|
 | An alert (`utils.questionWindow`, `infoWindow`, `warnWindow`, `AlertWindow.show…`, `AlertWindow:runModalLoop`, CtrlrX's own) or another modal with buttons | The caption of the button to press, e.g. `Erase`. `<caption>\|<text>` also types `<text>` into the dialog's first text box (`utils.askForTextInputWindow`). |
 | A file chooser (`utils.openFileWindow`, `openMultipleFilesWindow`, `saveFileWindow`, `getDirectoryWindow`) | The path to choose: a file, or a directory for `getDirectoryWindow`; relative to the current directory. An empty answer presses Cancel. One path per chooser, also for `openMultipleFilesWindow`. |
+| A popup menu (`PopupMenu:show`, `showAt`) | The text of the item to choose, with `>` between a submenu and its item: `Second`, `More>Deep`. Match the menu by its first item, e.g. a section header: `^menu: Presets$`. |
 
 ```bash
 ./CtrlrPanelProbe --answer '^Load preset$=OK' panel.panel script.json
@@ -619,6 +620,10 @@ before `--answer` rules.
                { "title": "^File already exists$", "answer": "Overwrite" } ],
   "steps": [ { "action": "click", "modulator": "saveBtn" } ] }
 ```
+
+The probe finds a menu's items through their accessibility handlers. JUCE 6.0.8 (the 5.6.x
+builds) has none, so there a menu is always named `menu` and can only be dismissed; a rule that
+matches it gives an `answerError`.
 
 A save chooser asks *"File already exists"* when the path exists; that is an alert of its own, so
 answer it too (else it is dismissed, the chooser stays open, and its answer fails after 3 s). An

@@ -19,6 +19,7 @@
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <optional>
 #include <regex>
 #include <set>
 #include <vector>
@@ -134,6 +135,11 @@ namespace
     //   - fileChooser (JUCE's own FileChooserDialogBox): the answer is the path to choose, a file
     //     or a directory; an empty answer presses Cancel. The path is put into the chooser (or
     //     selected in its list, for a multiple-file chooser), then its OK button is pressed.
+    //   - menu (a PopupMenu): the answer is the text of the item to choose, with '>' between a
+    //     submenu and its item ("Send to layer>Layer 1"). A menu has no title, so the probe names
+    //     it "menu: <its first item>" and lists its items as its buttons. The items are found
+    //     through their accessibility handlers, which JUCE 6.0.8 does not have: there a menu is
+    //     only "menu" and can only be dismissed.
     struct DialogAnswer
     {
         juce::String titlePattern; // as given, for error messages
@@ -250,6 +256,8 @@ namespace
             juce::uint32 startMs = 0;
             bool clicked = false;
             int resultIfClosed = 0;
+            // menu: the chosen item ID. JUCE sets it from an async update after the menu closed.
+            std::shared_ptr<std::optional<int>> menuResult;
         };
 
         std::vector<DismissedDialog> dismissed;
@@ -322,6 +330,9 @@ namespace
             d.answered = true;
             d.answer = a.answer;
 
+            if (d.kind == "menu")
+                return startMenuAnswer(c, d, a);
+
             if (auto* box = dynamic_cast<juce::FileChooserDialogBox*>(&c))
             {
                 std::vector<juce::FileBrowserComponent*> browsers;
@@ -389,6 +400,110 @@ namespace
             return true;
         }
 
+        // A menu: open each submenu of the path, then choose the last item. The item ID is read
+        // from the menu's modal result, as the code that showed the menu gets it.
+        bool startMenuAnswer(juce::Component& menu, DismissedDialog& d, const DialogAnswer& a)
+        {
+           #if JUCE_VERSION < 0x060100
+            juce::ignoreUnused(menu, a);
+            d.answerError = "menu answers need JUCE 6.1 or later (item accessibility)";
+            return false;
+           #else
+            juce::StringArray path;
+            path.addTokens(a.answer, ">", "");
+            juce::Component* window = &menu;
+            std::vector<juce::Component*> windows { &menu };
+            for (int i = 0; i < path.size(); ++i)
+            {
+                juce::Component* item = findMenuItem(*window, path[i]);
+                if (item == nullptr)
+                {
+                    d.answerError = "no item '" + path[i] + "'";
+                    return false;
+                }
+                const juce::AccessibilityActions& actions = item->getAccessibilityHandler()->getActions();
+                if (i < path.size() - 1)
+                {
+                    if (! actions.invoke(juce::AccessibilityActionType::showMenu))
+                    {
+                        d.answerError = "item '" + path[i] + "' has no submenu";
+                        return false;
+                    }
+                    window = newestMenuWindow(menu, windows);
+                    if (window == nullptr)
+                    {
+                        d.answerError = "the submenu '" + path[i] + "' did not open";
+                        return false;
+                    }
+                    windows.push_back(window);
+                    continue;
+                }
+                if (! actions.contains(juce::AccessibilityActionType::press))
+                {
+                    d.answerError = "item '" + path[i] + "' can't be chosen";
+                    return false;
+                }
+                auto result = std::make_shared<std::optional<int>>();
+                juce::ModalComponentManager::getInstance()->attachCallback(
+                    &menu, juce::ModalCallbackFunction::create([result](int r) { *result = r; }));
+                pending.push_back({ &menu, d, {}, juce::Time::getMillisecondCounter(), true, 0, result });
+                actions.invoke(juce::AccessibilityActionType::press);
+                return true;
+            }
+            d.answerError = "empty menu answer";
+            return false;
+           #endif
+        }
+
+       #if JUCE_VERSION >= 0x060100
+        // The items of this menu window in menu order (section headers too), not those of a
+        // submenu window inside it.
+        static void findMenuItems(juce::Component& window, std::vector<juce::Component*>& out)
+        {
+            for (auto* child : window.getChildren())
+            {
+                if (child->getName() == "menu")
+                    continue;
+                if (auto* h = child->getAccessibilityHandler())
+                    if (h->getRole() == juce::AccessibilityRole::menuItem)
+                    {
+                        out.push_back(child);
+                        continue;
+                    }
+                findMenuItems(*child, out);
+            }
+        }
+
+        static juce::Component* findMenuItem(juce::Component& window, const juce::String& text)
+        {
+            std::vector<juce::Component*> items;
+            findMenuItems(window, items);
+            for (auto* item : items)
+                if (item->getAccessibilityHandler()->getTitle() == text)
+                    return item;
+            return nullptr;
+        }
+
+        // The menu window opened last that is not one of `known`: a submenu opens on the desktop,
+        // or inside the menu's parent component when the menu has one.
+        static juce::Component* newestMenuWindow(juce::Component& menu, const std::vector<juce::Component*>& known)
+        {
+            auto isNew = [&known](juce::Component* c) {
+                return c != nullptr && c->getName() == "menu" && c->isShowing()
+                    && std::find(known.begin(), known.end(), c) == known.end();
+            };
+            juce::Desktop& desktop = juce::Desktop::getInstance();
+            for (int i = desktop.getNumComponents(); --i >= 0;)
+                if (isNew(desktop.getComponent(i)))
+                    return desktop.getComponent(i);
+            if (auto* parent = menu.getParentComponent())
+                for (int i = parent->getNumChildComponents(); --i >= 0;)
+                    if (isNew(parent->getChildComponent(i)))
+                        return parent->getChildComponent(i);
+            return nullptr;
+        }
+       #endif
+
         void progressPending()
         {
             const juce::uint32 now = juce::Time::getMillisecondCounter();
@@ -398,9 +513,10 @@ namespace
             for (Pending& p : pending)
             {
                 juce::Component* c = p.comp.getComponent();
-                if (c == nullptr || ! c->isCurrentlyModal(false))
+                const bool menuDone = p.menuResult == nullptr || p.menuResult->has_value();
+                if ((c == nullptr || ! c->isCurrentlyModal(false)) && menuDone)
                 {
-                    p.d.result = p.clicked ? p.resultIfClosed : 0;
+                    p.d.result = p.menuResult != nullptr ? **p.menuResult : p.clicked ? p.resultIfClosed : 0;
                     if (! p.clicked)
                         p.d.answerError = "the dialog closed before it was answered";
                     dismissed.push_back(p.d);
@@ -464,10 +580,23 @@ namespace
             d.title = c.getName();
             d.kind = dynamic_cast<juce::AlertWindow*>(&c) != nullptr           ? "alert"
                    : dynamic_cast<juce::FileChooserDialogBox*>(&c) != nullptr ? "fileChooser"
+                   : c.getName() == "menu"                                    ? "menu" // JUCE's PopupMenu window
                                                                                 : "component";
             for (int i = 0; i < c.getNumChildComponents(); ++i)
                 if (auto* b = dynamic_cast<juce::TextButton*>(c.getChildComponent(i)))
                     d.buttons.add(b->getButtonText());
+
+           #if JUCE_VERSION >= 0x060100
+            if (d.kind == "menu")
+            {
+                std::vector<juce::Component*> items;
+                findMenuItems(c, items);
+                for (auto* item : items)
+                    d.buttons.add(item->getAccessibilityHandler()->getTitle());
+                if (! d.buttons.isEmpty())
+                    d.title = "menu: " + d.buttons[0];
+            }
+           #endif
 
             if (d.kind == "alert" && d.title.startsWith("Timer callback error"))
             {

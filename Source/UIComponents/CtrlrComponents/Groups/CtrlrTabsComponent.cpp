@@ -7,6 +7,7 @@
 #include "CtrlrTabsComponent.h"
 #include "CtrlrPanel/CtrlrPanelEditor.h"
 #include "CtrlrLuaManager.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 
 CtrlrTabsLF::CtrlrTabsLF(CtrlrTabsComponent &_owner) : owner(_owner)
 {
@@ -405,18 +406,37 @@ void CtrlrTabsComponent::valueTreePropertyChanged (ValueTree &treeWhosePropertyH
 			{
 				m.addItem (i+1, ctrlrTabs->getTabNames() [i]);
 			}
-			const int ret = m.show();
-			if (ret > 0)
+			// The menu is asynchronous; the removal runs in the callback, which
+			// does nothing if the tabs component is gone. The property is reset at once, as
+			// before. The properties panel is refreshed in the callback, after the menu, as
+			// before: a refresh scrolls the panel to the top, which must not happen under the
+			// open menu.
+			Component::SafePointer<CtrlrTabsComponent> safeThis (this);
+			PU::show (m, [this, safeThis] (const int ret)
 			{
-				if (AlertWindow::showOkCancelBox(AlertWindow::QuestionIcon, "Removing tab", "Are you sure you want to remove this tab? All child components in it will also be removed"))
+				if (safeThis == nullptr)
+					return;
+				if (ret > 0)
 				{
-					getComponentTree().removeChild (ret-1, 0);
+					if (AlertWindow::showOkCancelBox(AlertWindow::QuestionIcon, "Removing tab", "Are you sure you want to remove this tab? All child components in it will also be removed"))
+					{
+						getComponentTree().removeChild (ret-1, 0);
+					}
 				}
-			}
-		}
+				updatePropertiesPanel();  // Updates the property pane with new tab props
+				if (restoreStateInProgress == false)
+					resized();
+			});
 
-		setProperty(property, false);
-        updatePropertiesPanel();  // Updates the property pane with new tab props
+			// The reset comes back here with false; that call must not refresh the panel.
+			const ScopedValueSetter<bool> resetting (resettingRemoveTab, true);
+			setProperty(property, false);
+		}
+		else if (resettingRemoveTab == false)
+		{
+			setProperty(property, false);
+			updatePropertiesPanel();  // Updates the property pane with new tab props
+		}
 	}
 	else
 	{

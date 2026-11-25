@@ -696,6 +696,13 @@ void CtrlrPanelComponentProperties::refreshTargetModulationPropertyList (const V
 
 void CtrlrPanelComponentProperties::visibilityChanged()
 {
+	// Updated v8.0.100 Rebuild the rows only when the properties become visible. When the editor
+	// is deleted, its tabs hide this component, and a rebuild then built the rows of the selected
+	// component inside the dying editor: the layer row read its deleted canvas (a crash on
+	// Windows). Thanks to @dnaldoog (his v8.04).
+	if (!isVisible())
+		return;
+
 	propertyPanel->clear();
 	refreshAll();
 }

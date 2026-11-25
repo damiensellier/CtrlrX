@@ -1530,6 +1530,10 @@ LPopupMenu::LPopupMenu()
 {
 }
 
+// Lua's PopupMenu:show() and showAt() stay blocking: a script gets the chosen item as the return
+// value, and that works on JUCE 8 (JUCE_MODAL_LOOPS_PERMITTED). John Goodland's (dnaldoog) JUCE 8
+// line has forms that pump the message loop around showMenuAsync() instead (his v8.71,
+// PU::showMenuSync, showMenuSyncAtComponent and showMenuSyncAtArea).
 int LPopupMenu::show(int itemIDThatMustBeVisible,
               int minimumWidth,
               int maximumNumColumns,

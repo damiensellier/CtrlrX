@@ -1195,6 +1195,52 @@ def scenario_36_dialog_answers(probe):
     require(code == 0 and got == [True, False], f"scenario 36 --stdin answers are per script: {got}")
 
 
+def scenario_37_menu_answers(probe):
+    # Lua popup menus (they stay blocking): a menu is answered by item text, a submenu item by
+    # "More>Deep", and a rule whose item is not there is an answerError (the menu is dismissed).
+    # The probe names a menu by its first item, which JUCE 6.0.8 can't read: there every menu is
+    # "menu", is dismissed, and its rule fails with an answerError.
+    steps = [{"action": "callLuaMethod", "method": "dialogsMenus"}]
+    forms = [("show", "Second", 2), ("show height", "More>Deep", 31),
+             ("showAt area", "First", 1), ("showAt component", "Nope", 0)]
+    answers = [{"title": f"^menu: Menus: {form}$|^menu$", "answer": answer} for form, answer, _ in forms]
+
+    def menu_log(rep):
+        return [c for c in rep["steps"][0]["console"] if c.startswith("dlg ")]
+
+    code, rep, raw = run_script(probe, DIALOGS, {"answers": answers, "steps": steps})
+    rep = require_report(rep, "scenario 37")
+    require(code == 0, f"scenario 37 expected exit 0, got {code}: {rep['steps'][0]['errors']}")
+    menus = rep["steps"][0]["dialogs"]
+    require(len(menus) == len(forms) and all(m["kind"] == "menu" for m in menus),
+            f"scenario 37 every Lua menu is listed as a menu: {menus}")
+    if menus[0]["title"] == "menu":
+        # JUCE 6.0.8: no item accessibility
+        want = [line for form, _, _ in forms
+                for line in (f"dlg before {form}", f"dlg answer {form}=0", f"dlg after {form}")]
+        require(menu_log(rep) == want and all(m["result"] == 0 and "answerError" in m for m in menus),
+                f"scenario 37 (JUCE 6) the menus are dismissed with an answerError: {menu_log(rep)} {menus}")
+        return
+    want = [line for form, _, result in forms
+            for line in (f"dlg before {form}", f"dlg answer {form}={result}", f"dlg after {form}")]
+    require(menu_log(rep) == want, f"scenario 37 each menu gets its answer, in order:\n{menu_log(rep)}\nwanted\n{want}")
+    require([m["title"] for m in menus] == [f"menu: Menus: {form}" for form, _, _ in forms],
+            f"scenario 37 a menu is named by its first item: {[m['title'] for m in menus]}")
+    require(menus[0]["buttons"] == ["Menus: show", "First", "Second", "More"],
+            f"scenario 37 a menu lists its items as buttons: {menus[0]['buttons']}")
+    require([m["result"] for m in menus] == [result for _, _, result in forms],
+            f"scenario 37 result is the chosen item ID: {[m['result'] for m in menus]}")
+    require(all("answerError" not in m for m in menus[:3]) and "Nope" in menus[3].get("answerError", ""),
+            f"scenario 37 a missing item is an answerError: {menus}")
+
+    # Unanswered: every menu returns 0, as when the user clicks outside it.
+    code, rep, raw = run_script(probe, DIALOGS, {"steps": steps})
+    rep = require_report(rep, "scenario 37")
+    want = [line for form, _, _ in forms
+            for line in (f"dlg before {form}", f"dlg answer {form}=0", f"dlg after {form}")]
+    require(code == 0 and menu_log(rep) == want, f"scenario 37 unanswered menus return 0: {menu_log(rep)}")
+
+
 SCENARIOS = [
     # --- Scenarios 1-16: report structure, exit codes, Lua values, visibility, speed, --stdin ---
     scenario_01_clean_run,
@@ -1244,6 +1290,7 @@ SCENARIOS = [
     # --- Scenario 35: no X display is a warning, not a crash ---
     scenario_35_no_x_display,
     scenario_36_dialog_answers,
+    scenario_37_menu_answers,
 ]
 
 

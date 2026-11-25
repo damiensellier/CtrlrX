@@ -25,7 +25,9 @@
 #include "../CtrlrComponentTypeManager.h"
 #include "CtrlrModulator/CtrlrModulator.h"
 #include "CtrlrUtilitiesGUI.h"
+#include "CtrlrInlineUtilitiesGUI.h"
 #include "CtrlrPanel/CtrlrPanel.h"
+#include "CtrlrPanel/CtrlrPanelEditor.h"
 #include "CtrlrLog.h"
 #include "CtrlrPanel/CtrlrPanelResource.h"
 //[/Headers]
@@ -209,7 +211,15 @@ void CtrlrXYSurface::mouseDown (const MouseEvent& e)
     //[UserCode_mouseDown] -- Add your code here...
 	if (e.mods.isPopupMenu())
 	{
-		showPopupMenu();
+		// Updated v8.0.100 In edit mode only the panel editor's component menu opens. Before,
+		// the blocking surface menu opened first and the editor's menu after it closed; with
+		// asynchronous menus both would open at once. Edit mode is read where the canvas reads
+		// it (the editor's property): after loading a panel in edit mode, the panel's own flag
+		// says "not in edit mode" until edit mode is switched off and on again.
+		CtrlrPanelEditor *editor = owner.getOwnerPanel().getEditor (false);
+		const bool editMode = editor != nullptr && (bool)editor->getProperty (Ids::uiPanelEditMode);
+		if (editMode == false)
+			showPopupMenu();
 	}
 	else if (e.eventComponent == this)
 	{
@@ -341,34 +351,40 @@ void CtrlrXYSurface::showPopupMenu()
 	m.addSubMenu ("X Axis", modsX);
 	m.addSubMenu ("Y Axis", modsY);
 
-	const int ret = m.show();
-
-	if (ret == 1)
+	// The menu is asynchronous; the code after it runs in the callback, which
+	// does nothing if the surface is gone.
+	Component::SafePointer<CtrlrXYSurface> safeThis (this);
+	PU::show (m, [this, safeThis] (const int ret)
 	{
-		setProperty (Ids::uiXYSuraceXFlip, !getProperty(Ids::uiXYSuraceXFlip));
-		return;
-	}
+		if (safeThis == nullptr)
+			return;
 
-	if (ret == 2)
-	{
-		setProperty (Ids::uiXYSuraceYFlip, !getProperty(Ids::uiXYSuraceYFlip));
-		return;
-	}
+		if (ret == 1)
+		{
+			setProperty (Ids::uiXYSuraceXFlip, !getProperty(Ids::uiXYSuraceXFlip));
+			return;
+		}
 
-	if (ret > 2 && ret <= 3+modulatorList.size())
-	{
-		const int modulatorIndexOnList = ret - 3 - 1;
-		setProperty (Ids::uiXYSurfaceDestinationX, modulatorList[modulatorIndexOnList]);
-		return;
-	}
+		if (ret == 2)
+		{
+			setProperty (Ids::uiXYSuraceYFlip, !getProperty(Ids::uiXYSuraceYFlip));
+			return;
+		}
 
-	if (ret > 3+modulatorList.size())
-	{
-		const int modulatorIndexOnList = ret - 4 - 1 - modulatorList.size();
-		setProperty (Ids::uiXYSurfaceDestinationY, modulatorList[modulatorIndexOnList]);
-		return;
-	}
+		if (ret > 2 && ret <= 3+modulatorList.size())
+		{
+			const int modulatorIndexOnList = ret - 3 - 1;
+			setProperty (Ids::uiXYSurfaceDestinationX, modulatorList[modulatorIndexOnList]);
+			return;
+		}
 
+		if (ret > 3+modulatorList.size())
+		{
+			const int modulatorIndexOnList = ret - 4 - 1 - modulatorList.size();
+			setProperty (Ids::uiXYSurfaceDestinationY, modulatorList[modulatorIndexOnList]);
+			return;
+		}
+	});
 }
 
 const PopupMenu CtrlrXYSurface::getModulatorListAsMenu(const int startIndex, const String &itemToSelect)
