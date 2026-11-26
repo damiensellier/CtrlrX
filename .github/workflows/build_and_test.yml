@@ -8,6 +8,11 @@ on:
         description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
         required: false
         default: false
+      full_build:
+        type: boolean
+        description: 'Full build, as for a release (ThinLTO, universal macOS). Off: the fast build of push and PR runs'
+        required: false
+        default: false
   # Skip pushes/PRs that only touch *.md or *.txt files. `paths` (with `!` negation) instead of
   # `paths-ignore`, because some .txt files ARE build inputs and must be re-included: a later
   # pattern overrides an earlier one. Tag pushes ignore path filters, so releases still run.
@@ -74,13 +79,52 @@ jobs:
           - name: macOS
             os: macos-15
             pluginval-binary: pluginval.app/Contents/MacOS/pluginval
-            extra-flags: -G Ninja -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+            # CMAKE_OSX_ARCHITECTURES comes from the "Choose fast or full build" step
+            extra-flags: -G Ninja
           - name: Windows
             os: windows-2022
             pluginval-binary: ./pluginval.exe
             extra-flags: -G Ninja
 
     steps:
+      # Full build = the release build: ThinLTO (MSVC: /GL + /LTCG), universal macOS. It runs on
+      # tags, on pushes to master and the Maintenance branches, and on a manual run with full_build.
+      # Every other run (branch pushes, PRs) is a fast build: no LTO, macOS arm64 only. Most of
+      # the build time is in the LTO links, and CI only runs the arm64 slice anyway.
+      # The rule matches branch names, not the repository, so forks behave the same.
+      - name: Choose fast or full build
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          FULL_INPUT: ${{ inputs.full_build }}
+        run: |
+          FULL=false
+          if [[ "$REF" == refs/tags/v* ]]; then
+            FULL=true; WHY="tag ${REF#refs/tags/}"
+          elif [[ "$EVENT" == push && ( "$REF" == refs/heads/master || "$REF" == refs/heads/*-Maintenance \
+                  || "$REF" == refs/heads/8.0.0-Maintenance-JUCE-8-Sgorpi-UPGRADE ) ]]; then
+            FULL=true; WHY="push to ${REF#refs/heads/}"
+          elif [[ "$EVENT" == workflow_dispatch && "$FULL_INPUT" == true ]]; then
+            FULL=true; WHY="manual run with full_build"
+          else
+            WHY="$EVENT on ${REF#refs/heads/}"
+          fi
+          if [ "$FULL" = true ]; then
+            echo "CTRLRX_LTO=THIN" >> "$GITHUB_ENV"
+            echo "ARTIFACT_SUFFIX=" >> "$GITHUB_ENV"
+            ARCHS="arm64;x86_64"
+          else
+            echo "CTRLRX_LTO=OFF" >> "$GITHUB_ENV"
+            if [ "$RUNNER_OS" = macOS ]; then SUFFIX=-arm64-noLTO; else SUFFIX=-noLTO; fi
+            echo "ARTIFACT_SUFFIX=$SUFFIX" >> "$GITHUB_ENV"
+            ARCHS="arm64"
+          fi
+          if [ "$RUNNER_OS" = macOS ]; then
+            echo "OSX_ARCH_FLAG=-DCMAKE_OSX_ARCHITECTURES=\"$ARCHS\"" >> "$GITHUB_ENV"
+          fi
+          VARIANT=$([ "$FULL" = true ] && echo full || echo fast)
+          echo "Build: **$VARIANT** ($WHY)" | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Setup MSVC (Windows)
         uses: ilammy/msvc-dev-cmd@v1
 
@@ -173,6 +217,8 @@ jobs:
           -DCMAKE_C_COMPILER_LAUNCHER=sccache
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
           -DCTRLRX_USE_LUAJIT=ON
+          -DCTRLRX_LTO=${{ env.CTRLRX_LTO }}
+          ${{ env.OSX_ARCH_FLAG }}
           ${{ matrix.extra-flags }} .
 
       - name: Build Project
@@ -217,7 +263,7 @@ jobs:
       - name: Upload CtrlrPanelProbe
         uses: actions/upload-artifact@v4
         with:
-          name: CtrlrPanelProbe-${{ matrix.name }}
+          name: CtrlrPanelProbe-${{ matrix.name }}${{ env.ARTIFACT_SUFFIX }}
           path: CtrlrPanelProbe-${{ matrix.name }}.zip
           if-no-files-found: warn
 
@@ -235,7 +281,8 @@ jobs:
           echo "AUV3_PATH=$ARTIFACTS_PATH/AUv3/${{ env.PRODUCT_NAME }}.appex" >> $GITHUB_ENV
           echo "CLAP_PATH=$ARTIFACTS_PATH/CLAP/${{ env.PRODUCT_NAME }}.clap" >> $GITHUB_ENV
           echo "STANDALONE_PATH=$ARTIFACTS_PATH/Standalone/${{ env.PRODUCT_NAME }}.app" >> $GITHUB_ENV
-          echo "ARTIFACT_NAME=${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-${{ matrix.name }}" >> $GITHUB_ENV
+          # A fast build's artefacts carry ARTIFACT_SUFFIX (-noLTO, -arm64-noLTO): not for release
+          echo "ARTIFACT_NAME=${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-${{ matrix.name }}${{ env.ARTIFACT_SUFFIX }}" >> $GITHUB_ENV
 
       - name: Pluginval Verification Pass
         run: |
@@ -405,7 +452,8 @@ jobs:
         run: |
           iscc "Packaging\Windows\installer.iss"
           find -iname "*.exe"
-          mv "Packaging/Windows/Output/${{ env.ARTIFACT_NAME }}.exe" "${{ env.ARTIFACTS_PATH }}/"
+          # installer.iss names the file without ARTIFACT_SUFFIX
+          mv "Packaging/Windows/Output/${{ env.PRODUCT_NAME }}-${{ env.VERSION }}-Windows.exe" "${{ env.ARTIFACTS_PATH }}/${{ env.ARTIFACT_NAME }}.exe"
 
       - name: Codesign with Azure Trusted Signing (Windows Installer)
         if: ${{ matrix.name == 'Windows' && env.HAVE_AZURE_CLIENT_SECRET == 'true' }}
@@ -442,21 +490,21 @@ jobs:
         if: ${{ matrix.name == 'Linux' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ctrlrx-debian-package
+          name: ctrlrx-debian-package${{ env.ARTIFACT_SUFFIX }}
           path: build/*.deb
 
       - name: Upload RPM Package (Linux)
         if: ${{ matrix.name == 'Linux' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ctrlrx-rpm-package
+          name: ctrlrx-rpm-package${{ env.ARTIFACT_SUFFIX }}
           path: build/*.rpm
 
       - name: Upload Tarball Package (Linux)
         if: ${{ matrix.name == 'Linux' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ctrlrx-tarball-package
+          name: ctrlrx-tarball-package${{ env.ARTIFACT_SUFFIX }}
           path: build/*.tar.gz
 
       - name: Upload pkg (macOS)
@@ -545,7 +593,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: CtrlrPanelProbe-${{ matrix.name }}
+          name: CtrlrPanelProbe-${{ matrix.name }}${{ env.ARTIFACT_SUFFIX }}
           path: CtrlrPanelProbe-${{ matrix.name }}.zip
           if-no-files-found: warn
           overwrite: true
