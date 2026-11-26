@@ -270,6 +270,9 @@ include(XcodePrettify)
 # Added v8.0.100 CTRLRX_LTO, so that CI push and PR builds can skip LTO
 #   FULL (default): JUCE's juce_recommended_lto_flags, the release build.
 #   OFF: no LTO. The fast CI builds use it: the link only joins the objects.
+# GCC 10+ gets -flto=auto instead of JUCE's plain -flto. With -flto, GCC runs its LTRANS jobs in
+# parallel only under a make jobserver; Ninja has none, so they run one after the other. The
+# output doesn't depend on the number of jobs.
 set(CTRLRX_LTO "FULL" CACHE STRING "Link-time optimisation in Release builds: FULL or OFF")
 set_property(CACHE CTRLRX_LTO PROPERTY STRINGS FULL OFF)
 if(NOT CTRLRX_LTO MATCHES "^(FULL|OFF)$")
@@ -277,7 +280,12 @@ if(NOT CTRLRX_LTO MATCHES "^(FULL|OFF)$")
 endif()
 
 add_library(ctrlrx_lto_flags INTERFACE)
-if(CTRLRX_LTO STREQUAL "FULL")
+if(CTRLRX_LTO STREQUAL "OFF")
+    # nothing
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
+    target_compile_options(ctrlrx_lto_flags INTERFACE $<$<CONFIG:Release>:-flto=auto>)
+    target_link_libraries(ctrlrx_lto_flags INTERFACE $<$<CONFIG:Release>:-flto=auto>)
+else()
     target_link_libraries(ctrlrx_lto_flags INTERFACE juce::juce_recommended_lto_flags)
 endif()
 message(STATUS "CtrlrX: CTRLRX_LTO=${CTRLRX_LTO} (Release only)")
