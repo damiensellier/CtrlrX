@@ -138,6 +138,10 @@ python3 ../../Tests/ci_check_test_results.py --allow ../../Tests/known_failures_
 
 - CI (`.github/workflows/build_and_test.yml`) builds and tests on Linux, macOS and Windows. A PR
   must be green against the allowlists `Tests/known_failures_{linux,macos,windows}.txt`.
+  Branch pushes and PRs get a *fast* build: no LTO, macOS arm64 only. Tags, pushes to `master`
+  and to the Maintenance branches, and manual runs with `full_build` get the *full* (release)
+  build: ThinLTO, universal macOS. To start a full run of a branch:
+  `gh workflow run build_and_test.yml --ref <branch> -f full_build=true`.
 - Don't add a test to an allowlist without a comment that gives the reason. Some listed tests are
   **specification tests**: they describe the behaviour we want. Remove them from the list when
   the behaviour is fixed; don't delete the test.
