@@ -265,6 +265,24 @@ include(Assets)
 include(XcodePrettify)
 
 # -----------------------------------------------------------------------
+# Link-time optimisation (Release only)
+# -----------------------------------------------------------------------
+# Added v8.0.100 CTRLRX_LTO, so that CI push and PR builds can skip LTO
+#   FULL (default): JUCE's juce_recommended_lto_flags, the release build.
+#   OFF: no LTO. The fast CI builds use it: the link only joins the objects.
+set(CTRLRX_LTO "FULL" CACHE STRING "Link-time optimisation in Release builds: FULL or OFF")
+set_property(CACHE CTRLRX_LTO PROPERTY STRINGS FULL OFF)
+if(NOT CTRLRX_LTO MATCHES "^(FULL|OFF)$")
+    message(FATAL_ERROR "CTRLRX_LTO must be FULL or OFF, not '${CTRLRX_LTO}'")
+endif()
+
+add_library(ctrlrx_lto_flags INTERFACE)
+if(CTRLRX_LTO STREQUAL "FULL")
+    target_link_libraries(ctrlrx_lto_flags INTERFACE juce::juce_recommended_lto_flags)
+endif()
+message(STATUS "CtrlrX: CTRLRX_LTO=${CTRLRX_LTO} (Release only)")
+
+# -----------------------------------------------------------------------
 # Linking
 # -----------------------------------------------------------------------
 target_link_libraries(SharedCode INTERFACE
@@ -284,7 +302,7 @@ target_link_libraries(SharedCode INTERFACE
     juce_gui_extra
     juce_product_unlocking
     juce::juce_recommended_config_flags
-    juce::juce_recommended_lto_flags
+    ctrlrx_lto_flags
     juce::juce_recommended_warning_flags
 )
 
