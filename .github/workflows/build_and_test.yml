@@ -38,8 +38,10 @@ env:
   HOMEBREW_NO_AUTO_UPDATE: 1
   SCCACHE_GHA_ENABLED: true
   SCCACHE_CACHE_MULTIARCH: 1
-  # Outlive the long MSVC /LTCG links (~12 min without compiles), so the post-step stats are real
-  SCCACHE_IDLE_TIMEOUT: 1800
+  # 0 = the sccache server never quits. It must outlive the longest link of a full build: with
+  # 1800, the server quit during the 28 min universal macOS links, and the post-step stats then
+  # showed a new, empty server (0 requests).
+  SCCACHE_IDLE_TIMEOUT: 0
   IPP_DIR: C:\Program Files (x86)\Intel\oneAPI\ipp\latest\lib\cmake\ipp
 
 defaults:
