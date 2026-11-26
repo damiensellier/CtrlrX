@@ -265,6 +265,46 @@ include(Assets)
 include(XcodePrettify)
 
 # -----------------------------------------------------------------------
+# Link-time optimisation (Release only)
+# -----------------------------------------------------------------------
+# Added v8.0.100 CTRLRX_LTO, so that CI push and PR builds can skip LTO
+#   THIN (default): ThinLTO on Clang and AppleClang, the release build. Full LTO merges the
+#         whole program into one module in every final link and optimises it on one thread;
+#         ThinLTO optimises each module on its own, on all cores.
+#   FULL: full LTO, JUCE's juce_recommended_lto_flags (the release build before 8.0.100).
+#   OFF:  no LTO. The fast CI builds use it: the link only joins the objects.
+# MSVC has no ThinLTO: THIN and FULL both use JUCE's /GL + /LTCG.
+# GCC has no ThinLTO either: THIN and FULL both use -flto=auto (GCC 10+) instead of JUCE's plain
+# -flto. With -flto, GCC runs its LTRANS jobs in parallel only under a make jobserver; Ninja has
+# none, so they run one after the other. The output doesn't depend on the number of jobs.
+set(CTRLRX_LTO "THIN" CACHE STRING "Link-time optimisation in Release builds: THIN, FULL or OFF")
+set_property(CACHE CTRLRX_LTO PROPERTY STRINGS THIN FULL OFF)
+if(NOT CTRLRX_LTO MATCHES "^(THIN|FULL|OFF)$")
+    message(FATAL_ERROR "CTRLRX_LTO must be THIN, FULL or OFF, not '${CTRLRX_LTO}'")
+endif()
+
+add_library(ctrlrx_lto_flags INTERFACE)
+if(CTRLRX_LTO STREQUAL "OFF")
+    # nothing
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
+    target_compile_options(ctrlrx_lto_flags INTERFACE $<$<CONFIG:Release>:-flto=auto>)
+    target_link_libraries(ctrlrx_lto_flags INTERFACE $<$<CONFIG:Release>:-flto=auto>)
+elseif(CTRLRX_LTO STREQUAL "THIN"
+       AND CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$"
+       AND NOT CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+    target_compile_options(ctrlrx_lto_flags INTERFACE $<$<CONFIG:Release>:-flto=thin>)
+    target_link_libraries(ctrlrx_lto_flags INTERFACE $<$<CONFIG:Release>:-flto=thin>)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+        # The Xcode 15 workaround of juce_recommended_lto_flags
+        target_link_libraries(ctrlrx_lto_flags INTERFACE
+            $<$<CONFIG:Release>:-Wl,-weak_reference_mismatches,weak>)
+    endif()
+else()
+    target_link_libraries(ctrlrx_lto_flags INTERFACE juce::juce_recommended_lto_flags)
+endif()
+message(STATUS "CtrlrX: CTRLRX_LTO=${CTRLRX_LTO} (Release only)")
+
+# -----------------------------------------------------------------------
 # Linking
 # -----------------------------------------------------------------------
 target_link_libraries(SharedCode INTERFACE
@@ -284,7 +324,7 @@ target_link_libraries(SharedCode INTERFACE
     juce_gui_extra
     juce_product_unlocking
     juce::juce_recommended_config_flags
-    juce::juce_recommended_lto_flags
+    ctrlrx_lto_flags
     juce::juce_recommended_warning_flags
 )
 
